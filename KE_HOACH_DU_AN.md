@@ -50,7 +50,13 @@ Mỗi thành viên phải hoàn thành đồng thời:
 
 Không tính “đã đọc”, “đã họp”, “đã review code của bạn” hoặc “chạy lại demo nhóm” là hoàn thành kỹ năng lập trình. Pair programming phải ghi rõ phần mỗi người viết và mỗi người phải giải thích, sửa lỗi, chạy lại độc lập. Bài thực hành trên nhánh cá nhân được giữ làm minh chứng; chỉ một phiên bản dùng chung được hợp nhất vào sản phẩm để tránh bốn hệ thống xác thực/cache/upload trùng nhau.
 
-Tên chưa được cung cấp nên dùng TV1–TV4; thay bằng tên thật khi nhóm nhận việc. Lịch 6 tuần và 100 điểm công việc/người là **ước lượng lập kế hoạch**, không phải thời hạn hay thang điểm của giảng viên.
+Danh sách thành viên chính thức:
+- **TV1 (Nhóm trưởng)**: 2312741 — Nguyễn Thanh Tâm
+- **TV2**: 2312796 — Ngô Quốc Trường Vĩ
+- **TV3**: 2312786 — Huỳnh Quốc Trung
+- **TV4**: 2312739 — Nguyễn Hữu Trung Sơn
+Người review & nghiệm thu toàn bộ: **Nguyễn Thanh Tâm (Nhóm trưởng)**.
+Lịch 6 tuần và 100 điểm công việc/người là **ước lượng lập kế hoạch**, không phải thời hạn hay thang điểm của giảng viên.
 
 ### 1.3. Sản phẩm bàn giao khi dự án được thực hiện xong
 
@@ -230,7 +236,7 @@ Search/query có thể dựng từ seed ngay tuần 2, nhưng nghiệm thu tìm 
 
 ### 4.2. Kế hoạch 6 tuần
 
-| Tuần | TV1 | TV2 | TV3 | TV4 | Cổng hoàn thành |
+| Tuần | TV1 — Thanh Tâm (Leader) | TV2 — Trường Vĩ | TV3 — Quốc Trung | TV4 — Trung Sơn | Cổng hoàn thành |
 |---|---|---|---|---|---|
 | 1 | Auth contracts/Identity/JWT, pipeline/CI; register/login tối thiểu | Category schema/CRUD nền, UI shell, Google contract | ERD/migrations, Draft CRUD nền/Nutrition, concurrency spike | Compose/Nginx/MinIO/health nền, storage contract, logout | G0 giữa tuần: stack chạy; G1 cuối tuần: đăng ký → đăng nhập → category → Draft |
 | 2 | Profile/dashboard, lockout/rate limit, welcome email, auth tests | Category UI/detail, Google login, list/filter/sort/page, FTS đầu tiên | Ingredients/steps/wizard/detail, refresh rotation, ownership/version tests | Upload/metadata/primary/delete/resize + UI progress; publish/unpublish | G2: Draft đủ nguyên liệu/bước/ảnh; publish được; không sửa chéo owner |
@@ -243,9 +249,9 @@ Mỗi tuần có một buổi tích hợp và một buổi demo ngắn. Test và
 
 File giao việc theo từng người và từng tuần: [PHAN_CHIA_CONG_VIEC_6_TUAN.md](PHAN_CHIA_CONG_VIEC_6_TUAN.md). Các mốc G0–G7 giữ nguyên ý nghĩa để tương thích task A1–D7; nhiều mốc có thể cùng nằm trong một tuần.
 
-## 5. PHẦN 1 — TV1: Tài khoản, hồ sơ và nền tảng dùng chung
+## 5. PHẦN 1 — TV1 — Nguyễn Thanh Tâm (2312741 - Nhóm trưởng): Tài khoản, hồ sơ và nền tảng dùng chung
 
-**Đầu ra:** người dùng đăng ký, đăng nhập email, xem/sửa hồ sơ, nhận welcome email; nền tảng auth và xử lý lỗi có thể được các phần khác dùng ngay. FR chính: AUTH-001/002/006/007, JOB-001, OBS-002. Review: TV2.
+**Đầu ra:** người dùng đăng ký, đăng nhập email, xem/sửa hồ sơ, nhận welcome email; nền tảng auth và xử lý lỗi có thể được các phần khác dùng ngay. FR chính: AUTH-001/002/006/007, JOB-001, OBS-002. Review: Nguyễn Thanh Tâm (Tự rà soát & nghiệm thu).
 
 | Task | Việc thực hiện theo thứ tự | Phụ thuộc | Điểm dự kiến | Nghiệm thu |
 |---|---|---|---:|---|
@@ -262,9 +268,9 @@ Test đặc thù: email trùng; password thiếu từng tiêu chí; role không 
 
 Bàn giao sớm: auth DTO/interfaces, lấy currentUser, account fixtures và cách gắn Authorization header ở G1. Cuối tuần 1 bàn giao auth tối thiểu; từ tuần 2 các thành viên khác dùng auth thật, mock chỉ để phát triển UI trước hợp đồng.
 
-## 6. PHẦN 2 — TV2: Danh mục, khám phá và tìm kiếm
+## 6. PHẦN 2 — TV2 — Ngô Quốc Trường Vĩ (2312796): Danh mục, khám phá và tìm kiếm
 
-**Đầu ra:** Admin CRUD danh mục; Guest khám phá công thức bằng trang chủ, danh mục, tìm kiếm tiếng Việt, lọc/sắp xếp/phân trang; Google login tích hợp thật. FR chính: CAT-001…005, RCP-001, SRCH-001…004, AUTH-003. Review: TV3.
+**Đầu ra:** Admin CRUD danh mục; Guest khám phá công thức bằng trang chủ, danh mục, tìm kiếm tiếng Việt, lọc/sắp xếp/phân trang; Google login tích hợp thật. FR chính: CAT-001…005, RCP-001, SRCH-001…004, AUTH-003. Review: Nguyễn Thanh Tâm (Nhóm trưởng).
 
 | Task | Việc thực hiện theo thứ tự | Phụ thuộc | Điểm dự kiến | Nghiệm thu |
 |---|---|---|---:|---|
@@ -281,9 +287,9 @@ Test đặc thù: category rỗng 200; slug không tồn tại 404; Author khôn
 
 Bàn giao sớm: CategoryDto, RecipeSummaryDto, PagedResult, query params, dữ liệu danh mục seed. Tránh tạo endpoint FTS mới cho profile/category chỉ để đủ kỹ năng; TV1/TV3/TV4 thực hành FTS trên dataset recipe dùng chung ở nhánh cá nhân.
 
-## 7. PHẦN 3 — TV3: Soạn thảo công thức, nguyên liệu và bước làm
+## 7. PHẦN 3 — TV3 — Huỳnh Quốc Trung (2312786): Soạn thảo công thức, nguyên liệu và bước làm
 
-**Đầu ra:** Author/Admin tạo Draft, chỉnh sửa đầy đủ công thức/dinh dưỡng, quản lý nguyên liệu và các bước; chi tiết công thức và dashboard; token refresh rotation. FR chính: RCP-002/003/004/009/010, AUTH-004. Review: TV4.
+**Đầu ra:** Author/Admin tạo Draft, chỉnh sửa đầy đủ công thức/dinh dưỡng, quản lý nguyên liệu và các bước; chi tiết công thức và dashboard; token refresh rotation. FR chính: RCP-002/003/004/009/010, AUTH-004. Review: Nguyễn Thanh Tâm (Nhóm trưởng).
 
 | Task | Việc thực hiện theo thứ tự | Phụ thuộc | Điểm dự kiến | Nghiệm thu |
 |---|---|---|---:|---|
@@ -300,9 +306,9 @@ Test đặc thù: title biên; cookTime=0; servings<=0; CategoryId không tồn 
 
 Bàn giao sớm: entity/DTO/status/RowVersion, endpoint draft và fixture đủ ingredient+step cho TV4 thử publish. TV3 chủ trì tích hợp migration trên main, nhưng mỗi người phải tự viết migration của mình; chủ trì không làm thay schema cho cả nhóm.
 
-## 8. PHẦN 4 — TV4: Xuất bản, ảnh, SEO và vận hành
+## 8. PHẦN 4 — TV4 — Nguyễn Hữu Trung Sơn (2312739): Xuất bản, ảnh, SEO và vận hành
 
-**Đầu ra:** quản lý trạng thái công thức, upload/primary/delete ảnh và resize; sitemap, health/tracing; đóng gói/triển khai và độ bền; logout. FR chính: RCP-005/006/007/008, FILE-001/002, JOB-002/003, OBS-001/003, AUTH-005. Review: TV1.
+**Đầu ra:** quản lý trạng thái công thức, upload/primary/delete ảnh và resize; sitemap, health/tracing; đóng gói/triển khai và độ bền; logout. FR chính: RCP-005/006/007/008, FILE-001/002, JOB-002/003, OBS-001/003, AUTH-005. Review: Nguyễn Thanh Tâm (Nhóm trưởng).
 
 | Task | Việc thực hiện theo thứ tự | Phụ thuộc | Điểm dự kiến | Nghiệm thu |
 |---|---|---|---:|---|
@@ -327,7 +333,7 @@ SRS không có một danh sách mang tên “skill” độc lập. Danh mục d
 
 Ký hiệu trong ô: **SP** = đóng góp vào sản phẩm chung; **LAB** = tự viết một phiên bản nhỏ trên nhánh `practice/TVn/...`, có test, được lưu và demo, không merge code trùng vào main. Mỗi LAB phải dùng stack thật của đề khi kỹ năng yêu cầu DB/cache/storage/provider; mock chỉ dùng cho unit/error tests, không thay toàn bộ integration.
 
-| Mã / kỹ năng và nguồn | TV1 phải thực hiện | TV2 phải thực hiện | TV3 phải thực hiện | TV4 phải thực hiện |
+| Mã / kỹ năng và nguồn | TV1 (Thanh Tâm) phải thực hiện | TV2 (Trường Vĩ) phải thực hiện | TV3 (Quốc Trung) phải thực hiện | TV4 (Trung Sơn) phải thực hiện |
 |---|---|---|---|---|
 | K01 Phân tích SRS, FR/NFR, ADR, API contract (tr. 6–16, 43) | SP ADR auth + test mapping | SP ADR search/cache + mapping | SP ADR schema/version + mapping | SP ADR delete/media + mapping |
 | K02 C#/.NET10 Minimal APIs, REST/version, Scalar/RFC7807 (14–15, 47, 61–69) | SP Auth group + lỗi | SP Category/Search group + lỗi | SP Recipe/child group + lỗi | SP Image/status group + lỗi |
@@ -352,7 +358,7 @@ Ký hiệu trong ô: **SP** = đóng góp vào sản phẩm chung; **LAB** = t�
 | K21 xUnit/unit>=80%, API happy+error, Jest/RTL, Playwright (43) | SP auth + LAB recipe API/UI/E2E | SP category/search API/UI/E2E | SP recipe API/UI/E2E | SP media/publish API/UI/E2E |
 | K22 k6/p50/p95/p99, EXPLAIN/N+1/cache hit, CWV/Lighthouse (40–41) | LAB chạy tải/search query + đo trang của mình | SP query/k6; đo trang của mình | SP concurrency/query; k6 + đo trang của mình | SP metrics/load; EXPLAIN + đo trang của mình |
 | K23 Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling (43–44, 48, 53) | SP CI build; tự deploy, restore DB/file, test 2 API | SP FE Docker/CI; tự deploy/restore/test 2 API | SP migration startup; tự deploy/restore/test 2 API | SP Compose/Nginx; tự deploy/restore/test 2 API |
-| K24 Git/PR/review/CI/static analysis/architecture test/secret scan/docs (14, 42–43) | PR cá nhân + review TV4 + ADR/runbook + CI | PR cá nhân + review TV1 + ADR/runbook + CI | PR cá nhân + review TV2 + ADR/runbook + CI | PR cá nhân + review TV3 + ADR/runbook + CI |
+| K24 Git/PR/review/CI/static analysis/architecture test/secret scan/docs (14, 42–43) | PR cá nhân + Tâm review + ADR/runbook + CI | PR cá nhân + Tâm review + ADR/runbook + CI | PR cá nhân + Tâm review + ADR/runbook + CI | PR cá nhân + Tâm review + ADR/runbook + CI |
 
 ### 9.1. Bài thực hành cá nhân thống nhất, tránh học mỗi người một kiểu
 
@@ -462,10 +468,10 @@ Không dùng Lighthouse score thay thế mọi chỉ số CWV hay chứng minh I
 ### 12.1. Quy tắc phối hợp
 
 - Nhánh tính năng `feat/TVn-ma-task`; nhánh lab `practice/TVn/Lx`. PR nhỏ theo use case, ghi FR/NFR/Kxx và bước kiểm thử.
-- Review vòng: TV2 review TV1; TV3 review TV2; TV4 review TV3; TV1 review TV4. Ít nhất một approval trước merge.
+- Quy trình review PR: Nguyễn Thanh Tâm (Nhóm trưởng) trực tiếp review và duyệt toàn bộ PR của các thành viên (Trường Vĩ, Quốc Trung, Trung Sơn) cũng như tự kiểm tra code của mình trước khi merge vào nhánh chính.
 - API/shared DTO/schema thay đổi phải cập nhật contract trước và báo người tích hợp; không tự sửa tên field rồi để frontend khác lỗi.
-- Mỗi người tự viết migration. TV3 điều phối thứ tự/rebase migrations; test migrate DB sạch và nâng cấp từ bản trước trước merge.
-- TV1 điều phối pipeline/auth, TV2 public UI/query/cache, TV3 aggregate/schema, TV4 deploy/storage/jobs. Các file dùng chung chỉ một người sửa tại một thời điểm theo task đã nhận.
+- Mỗi người tự viết migration. TV3 (Quốc Trung) điều phối thứ tự/rebase migrations; test migrate DB sạch và nâng cấp từ bản trước trước merge.
+- Nguyễn Thanh Tâm điều phối pipeline/auth/review, Ngô Quốc Trường Vĩ phụ trách public UI/query/cache, Huỳnh Quốc Trung phụ trách aggregate/schema, Nguyễn Hữu Trung Sơn phụ trách deploy/storage/jobs. Các file dùng chung chỉ một người sửa tại một thời điểm theo task đã nhận.
 - Shared service tích hợp một bản; bài lab giữ nhánh/tag/commit riêng. Không copy folder bốn bản backend/frontend vào sản phẩm để chứng minh chia việc.
 - Không đưa secret hoặc dữ liệu tài khoản thật vào evidence. Log cần redaction; account demo dùng dữ liệu seed.
 
@@ -504,12 +510,12 @@ Reviewer/ngày: [điền khi được xác nhận]
 Lỗi còn lại/ảnh hưởng: [ghi rõ]
 ```
 
-| Thành viên | Phần nghiệp vụ | Skill SP+LAB | Tự deploy/restore | Review + demo | Trạng thái ban đầu |
-|---|---|---|---|---|---|
-| TV1 | A1–A7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
-| TV2 | B1–B7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
-| TV3 | C1–C7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
-| TV4 | D1–D7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
+| Thành viên | MSSV | Phần nghiệp vụ | Skill SP+LAB | Tự deploy/restore | Review (Tâm duyệt) + demo | Trạng thái ban đầu |
+|---|---|---|---|---|---|---|
+| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
+| TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
+| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 0/24 đã xác nhận | Chưa làm | Chưa làm | Chưa làm |
 
 ### 12.5. Demo và release cuối kỳ
 

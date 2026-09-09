@@ -1,6 +1,13 @@
 # PHÂN CHIA CÔNG VIỆC CULINARY BLOG — 4 NGƯỜI, 6 TUẦN
 
-Cập nhật: 09/09/2026. Thành viên: TV1–TV4 (thay bằng tên thật khi nhận việc). Tuần 1 tính từ ngày nhóm bắt đầu; chưa có ngày bắt đầu cụ thể nên không tự gán lịch ngày tháng.
+Cập nhật: 09/09/2026.
+Danh sách thành viên:
+- **TV1 (Nhóm trưởng)**: 2312741 — Nguyễn Thanh Tâm
+- **TV2**: 2312796 — Ngô Quốc Trường Vĩ
+- **TV3**: 2312786 — Huỳnh Quốc Trung
+- **TV4**: 2312739 — Nguyễn Hữu Trung Sơn
+Người review & nghiệm thu toàn bộ: **Nguyễn Thanh Tâm (Nhóm trưởng)**.
+Tuần 1 tính từ ngày nhóm bắt đầu; chưa có ngày bắt đầu cụ thể nên không tự gán lịch ngày tháng.
 
 Nguồn yêu cầu: SRS Culinary Blog v1.0.0, 71 trang. Tài liệu liên quan: [Kế hoạch dự án tổng thể](KE_HOACH_DU_AN.md), đặc biệt mục 2 về các mâu thuẫn cần chốt và mục 10–11 về 34 FR/30 NFR. File này dùng để giao việc, theo dõi tiến độ và nghiệm thu cá nhân. Mọi công việc dưới đây hiện **Chưa làm**; việc ghi lịch không phải bằng chứng đã triển khai.
 
@@ -8,18 +15,18 @@ Nguồn yêu cầu: SRS Culinary Blog v1.0.0, 71 trang. Tài liệu liên quan: 
 
 Mỗi người làm đầy đủ frontend, backend, cơ sở dữ liệu, validation/bảo mật, cache/tìm kiếm, file/jobs, SEO, quan sát, kiểm thử và triển khai. Phân công theo nghiệp vụ, không chia một người chỉ frontend, một người chỉ backend. Công nghệ giữ nguyên đề: .NET10 Minimal APIs/Clean Architecture/CQRS–MediatR/EF Core; PostgreSQL16; Next.js App Router/TypeScript; Redis7; MinIO; Hangfire; Serilog/OpenTelemetry; Docker/Nginx.
 
-| Người | Phần chính và task trong kế hoạch tổng thể | FR chịu trách nhiệm chính | Reviewer |
-|---|---|---|---|
-| TV1 | Tài khoản/hồ sơ, nền tảng auth/logging/CI — A1–A7 | FR-AUTH-001/002/006/007; FR-JOB-001; FR-OBS-002 | TV2 |
-| TV2 | Danh mục/khám phá/tìm kiếm, Google login — B1–B7 | FR-CAT-001…005; FR-RCP-001; FR-SRCH-001…004; FR-AUTH-003 | TV3 |
-| TV3 | Soạn thảo Recipe/nguyên liệu/bước/dinh dưỡng, refresh token — C1–C7 | FR-RCP-002/003/004/009/010; FR-AUTH-004 | TV4 |
-| TV4 | Xuất bản/media/SEO/vận hành, logout — D1–D7 | FR-RCP-005/006/007/008; FR-FILE-001/002; FR-JOB-002/003; FR-OBS-001/003; FR-AUTH-005 | TV1 |
+| Thành viên | MSSV | Phần chính và task trong kế hoạch tổng thể | FR chịu trách nhiệm chính | Người review |
+|---|---|---|---|---|
+| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | Tài khoản/hồ sơ, nền tảng auth/logging/CI — A1–A7 | FR-AUTH-001/002/006/007; FR-JOB-001; FR-OBS-002 | Nguyễn Thanh Tâm (Tự rà soát & nghiệm thu) |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | Danh mục/khám phá/tìm kiếm, Google login — B1–B7 | FR-CAT-001…005; FR-RCP-001; FR-SRCH-001…004; FR-AUTH-003 | Nguyễn Thanh Tâm (Nhóm trưởng) |
+| TV3 — Huỳnh Quốc Trung | 2312786 | Soạn thảo Recipe/nguyên liệu/bước/dinh dưỡng, refresh token — C1–C7 | FR-RCP-002/003/004/009/010; FR-AUTH-004 | Nguyễn Thanh Tâm (Nhóm trưởng) |
+| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | Xuất bản/media/SEO/vận hành, logout — D1–D7 | FR-RCP-005/006/007/008; FR-FILE-001/002; FR-JOB-002/003; FR-OBS-001/003; FR-AUTH-005 | Nguyễn Thanh Tâm (Nhóm trưởng) |
 
 Chủ trì phải giao đủ UI → API → dữ liệu → test → docs của phần mình. Công cụ dùng chung chỉ tích hợp một phiên bản vào sản phẩm. Những kỹ năng chưa có cơ hội thực hành trong phần chính phải tự viết LAB trên nhánh cá nhân và demo; chỉ review hoặc chạy code của người khác chưa đủ. Giữ mức 100 điểm công việc dự kiến/người trong kế hoạch tổng thể, không coi đây là điểm chấm của giảng viên.
 
 ## 2. Lịch tổng hợp 6 tuần
 
-| Tuần | TV1 | TV2 | TV3 | TV4 | Cổng hoàn thành |
+| Tuần | TV1 — Thanh Tâm (Leader) | TV2 — Trường Vĩ | TV3 — Quốc Trung | TV4 — Trung Sơn | Cổng hoàn thành |
 |---|---|---|---|---|---|
 | 1 | Auth contracts/Identity/JWT, pipeline/CI; register/login tối thiểu | Category schema/CRUD nền, UI shell, Google contract | ERD/migrations, Draft CRUD nền/Nutrition, concurrency spike | Compose/Nginx/MinIO/health nền, storage contract, logout | G0 giữa tuần: stack chạy; G1 cuối tuần: đăng ký → đăng nhập → category → Draft |
 | 2 | Profile/dashboard, lockout/rate limit, welcome email, auth tests | Category UI/detail, Google login, list/filter/sort/page, FTS đầu tiên | Ingredients/steps/wizard/detail, refresh rotation, ownership/version tests | Upload/metadata/primary/delete/resize + UI progress; publish/unpublish | G2: Draft đủ nguyên liệu/bước/ảnh; publish được; không sửa chéo owner |
@@ -33,9 +40,9 @@ Mỗi tuần có một buổi tích hợp và một buổi demo ngắn. Test và
 
 ## 3. Giao việc chi tiết cho từng thành viên
 
-Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được review. Mã task A–D tham chiếu trực tiếp kế hoạch tổng thể; task lớn được chia qua nhiều tuần, không chờ làm xong toàn bộ module mới tích hợp.
+Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được review. Mã task A–D tham chiếu trực tiếp kế hoạch tổng thể; task lớn được chia qua nhiều tuần, không chờ làm xong toàn bộ module mới tích hợp. Tất cả các PR đều do **Nguyễn Thanh Tâm (Nhóm trưởng)** review và phê duyệt.
 
-### 3.1. TV1 — Tài khoản và hồ sơ
+### 3.1. TV1 — Nguyễn Thanh Tâm (2312741 - Nhóm trưởng) — Tài khoản và hồ sơ
 
 | Tuần / task | Việc phải làm | Đầu ra và điều kiện nghiệm thu |
 |---|---|---|
@@ -43,10 +50,10 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 | 2 — A2, A3, A4, A7 | Lockout/rate limit; profile/dashboard; RHF/Zod forms; SMTP welcome job/retry; kiểm thử auth | Form có inline errors; không đổi email/role qua profile; credential sai thông báo chung; email nhận trong Mailhog, job lỗi có retry |
 | 3 — A5, A6, A7 | Log correlation/redaction; tích hợp Google/refresh/logout do các bạn bàn giao; LAB FTS/Redis/OutputCache, upload/resize/SEO | Theo dõi request bằng log; token/password không vào log; có PR lab search không dấu và cache invalidation, MinIO/SEO |
 | 4 — A6, A7 | Bổ sung OAuth/rotation/concurrency và các kỹ năng còn thiếu; security/Jest/RTL/E2E register/login, coverage | 24/24 ô kỹ năng có code/test/demo; Application >=80%; lỗi auth/rate limit/secret có negative tests |
-| 5 — A7 | Tự build/deploy Nginx/Compose; backup/restore DB/file; test2 API; review TV4, sửa lỗi tích hợp và README/ADR | Khởi động từ checkout sạch; restore được dữ liệu; có số đo trang mình và báo cáo bảo mật |
-| 6 — A7 | Regression, chốt evidence/docs, demo tài khoản/hồ sơ và lab ngoài phần chính | Reviewer TV2 xác nhận; demo độc lập; đăng ký/đăng nhập E2E pass; bàn giao không còn lỗi chặn luồng |
+| 5 — A7 | Tự build/deploy Nginx/Compose; backup/restore DB/file; test2 API; review task TV4 (Trung Sơn), sửa lỗi tích hợp và README/ADR | Khởi động từ checkout sạch; restore được dữ liệu; có số đo trang mình và báo cáo bảo mật |
+| 6 — A7 | Regression, chốt evidence/docs, demo tài khoản/hồ sơ và lab ngoài phần chính | Tự rà soát & xác nhận; demo độc lập; đăng ký/đăng nhập E2E pass; bàn giao không còn lỗi chặn luồng |
 
-### 3.2. TV2 — Danh mục và khám phá
+### 3.2. TV2 — Ngô Quốc Trường Vĩ (2312796) — Danh mục và khám phá
 
 | Tuần / task | Việc phải làm | Đầu ra và điều kiện nghiệm thu |
 |---|---|---|
@@ -54,10 +61,10 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 | 2 — B2, B3, B4, B7 | UI quản lý/detail category; Google Code+PKCE/Auth.js/backend verification; list/filter/sort/page; FTS trigger/config/GIN | Google login tích hợp; filter AND/page đúng; query “pho” tìm “phở”; search không lộ Draft |
 | 3 — B3, B5, B6 | Search SSR hoàn chỉnh; Redis category/search, OutputCache/ISR isolation; LAB Identity/refresh/concurrency/media/jobs | Đủ các FR tìm kiếm/danh mục; cache invalidation sau mutation; có PR lab ngoài phần chính |
 | 4 — B6, B7 | Hoàn tất LAB SMTP/resize/sitemap/ownership; k6/EXPLAIN/cache-hit; responsive/a11y/Jest/RTL/Playwright | 24/24 kỹ năng; query plan và số đo cache; Google invalid-token và Admin permission tests; search E2E |
-| 5 — B7 | Tự deploy/restore/test2 API; review TV1; sửa SEO/CWV/JS bundle và docs | Có số đo và giới hạn; public pages metadata/canonical/noindex đúng; startup độc lập |
-| 6 — B7 | Regression, demo category/search/Google và kỹ năng bổ sung; chốt evidence | Reviewer TV3 xác nhận; không sai tổng phân trang/lộ private data; bàn giao API/types/query docs |
+| 5 — B7 | Tự deploy/restore/test2 API; Nguyễn Thanh Tâm (Nhóm trưởng) review; sửa SEO/CWV/JS bundle và docs | Có số đo và giới hạn; public pages metadata/canonical/noindex đúng; startup độc lập |
+| 6 — B7 | Regression, demo category/search/Google và kỹ năng bổ sung; chốt evidence | Reviewer Nguyễn Thanh Tâm xác nhận; không sai tổng phân trang/lộ private data; bàn giao API/types/query docs |
 
-### 3.3. TV3 — Soạn thảo công thức
+### 3.3. TV3 — Huỳnh Quốc Trung (2312786) — Soạn thảo công thức
 
 | Tuần / task | Việc phải làm | Đầu ra và điều kiện nghiệm thu |
 |---|---|---|
@@ -65,10 +72,10 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 | 2 — C2, C3, C4, C5 | Ingredients/steps/wizard/detail; ownership/renumber/concurrency; refresh rotation/hash/family và client handling | Draft đủ nguyên liệu/bước cho publish; không sửa chéo owner; hai writer/refresh đồng thời không ghi sai |
 | 3 — C4, C6, C7 | Hoàn thiện editor/dashboard/detail/Nutrition/JSON-LD; LAB Google/MinIO/jobs và cache/FTS còn thiếu | UI nối bộ ảnh TV4, query TV2; optimistic rollback và conflict reload; lab có code/test |
 | 4 — C6, C7 | LAB SMTP/resize/sitemap/ops; xUnit/API/Jest/RTL/Playwright create; architecture/concurrency tests | 24/24 kỹ năng; coverage>=80%; nested transaction rollback đúng, childId khác recipe bị từ chối |
-| 5 — C7 | Tự deploy/restore/test2 API; điều phối migration sạch/nâng cấp; review TV2; số đo query/CWV/E2E | Migrations chạy lặp trên môi trường đã quy định; 5 critical E2E tích hợp; docs schema/version đầy đủ |
-| 6 — C7 | Regression, demo tạo/sửa/nguyên liệu/bước và lab; chốt evidence | Reviewer TV4 xác nhận; tự giải thích aggregate/UoW/version/owned data; bàn giao test và DB docs |
+| 5 — C7 | Tự deploy/restore/test2 API; điều phối migration sạch/nâng cấp; Nguyễn Thanh Tâm (Nhóm trưởng) review; số đo query/CWV/E2E | Migrations chạy lặp trên môi trường đã quy định; 5 critical E2E tích hợp; docs schema/version đầy đủ |
+| 6 — C7 | Regression, demo tạo/sửa/nguyên liệu/bước và lab; chốt evidence | Reviewer Nguyễn Thanh Tâm xác nhận; tự giải thích aggregate/UoW/version/owned data; bàn giao test và DB docs |
 
-### 3.4. TV4 — Xuất bản, ảnh và vận hành
+### 3.4. TV4 — Nguyễn Hữu Trung Sơn (2312739) — Xuất bản, ảnh và vận hành
 
 | Tuần / task | Việc phải làm | Đầu ra và điều kiện nghiệm thu |
 |---|---|---|
@@ -76,16 +83,16 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 | 2 — D1, D2, D3, D4 | Upload/metadata/primary/delete, MIME/magic bytes/size; resize; uploader progress; publish/unpublish | 4 định dạng <=5MiB, original/300×300/800×600; đúng1 primary; publish cần dữ liệu theo ADR; không lộ Draft |
 | 3 — D3, D4, D5, D6 | Archive/delete theo ADR; sitemap/robots/OG/JSON-LD; OTEL/metrics; LAB Identity/Google/refresh/forms/FTS | Đủ FR media/status/jobs/health; queue persistent; sitemap Published-only; có PR lab ngoài phần chính |
 | 4 — D5, D6, D7 | Hoàn tất LAB; retry/race/security/publish E2E; backup/restore, health failure, shared cache/multi-worker | 24/24 kỹ năng; xóa-vs-resize không tái sinh file sai; restore và lỗi dependency có bằng chứng |
-| 5 — D5, D7 | Tự deploy/restore/test2 API; review TV3; HTTPS/CORS/volumes, load/SEO/runbook | Staging đầy đủ; trace HTTP→DB; Nginx/health đúng; số đo và giới hạn được ghi rõ |
-| 6 — D7 | Regression/release, demo publish/media/ops và lab; chốt evidence | Reviewer TV1 xác nhận; 5 E2E pass; runbook, backup/restore và secrets instructions bàn giao |
+| 5 — D5, D7 | Tự deploy/restore/test2 API; Nguyễn Thanh Tâm (Nhóm trưởng) review; HTTPS/CORS/volumes, load/SEO/runbook | Staging đầy đủ; trace HTTP→DB; Nginx/health đúng; số đo và giới hạn được ghi rõ |
+| 6 — D7 | Regression/release, demo publish/media/ops và lab; chốt evidence | Reviewer Nguyễn Thanh Tâm xác nhận; 5 E2E pass; runbook, backup/restore và secrets instructions bàn giao |
 
 ## 4. Phụ thuộc, bàn giao và cân bằng khối lượng
 
-1. Giữa tuần 1: TV1 bàn giao auth contract, TV2 Category/list DTO, TV3 Recipe/schema/version, TV4 storage/deploy contracts. Dựng mock UI theo contract trong lúc API chưa sẵn sàng.
+1. Giữa tuần 1: TV1 (Thanh Tâm) bàn giao auth contract, TV2 (Trường Vĩ) Category/list DTO, TV3 (Quốc Trung) Recipe/schema/version, TV4 (Trung Sơn) storage/deploy contracts. Dựng mock UI theo contract trong lúc API chưa sẵn sàng.
 2. Cuối tuần 1: chốt auth thật + Category + Draft tối thiểu (G1). Nếu chưa đạt thì xử lý ngay các task nền trước tính năng phụ thuộc, ghi ảnh hưởng lịch.
-3. Tuần 2: TV3 bàn giao ingredient/step để TV4 publish; TV4 bàn giao ảnh/URLs/progress để TV3 tích hợp editor/detail. TV2 dùng seed để phát triển search sớm, nghiệm thu lại trên dữ liệu publish thật.
+3. Tuần 2: TV3 (Quốc Trung) bàn giao ingredient/step để TV4 (Trung Sơn) publish; TV4 (Trung Sơn) bàn giao ảnh/URLs/progress để TV3 (Quốc Trung) tích hợp editor/detail. TV2 (Trường Vĩ) dùng seed để phát triển search sớm, nghiệm thu lại trên dữ liệu publish thật.
 4. Tuần 3: cùng kiểm tra vòng đời đăng ký → category → Draft → ảnh/nguyên liệu/bước → publish → search → unpublish. Thống nhất invalidation API/Redis/ISR và thời gian cập nhật sitemap.
-5. Tuần 4–5: kiểm thử và đo xuyên hệ thống; không để một người tự nhận toàn bộ QA/DevOps. TV1 hỗ trợ observability, TV2 public SEO/sitemap, TV3 mutation/cache invalidation cho TV4; chủ trì và reviewer vẫn rõ ràng.
+5. Tuần 4–5: kiểm thử và đo xuyên hệ thống; không để một người tự nhận toàn bộ QA/DevOps. TV1 (Thanh Tâm) hỗ trợ observability, TV2 (Trường Vĩ) public SEO/sitemap, TV3 (Quốc Trung) mutation/cache invalidation cho TV4 (Trung Sơn); chủ trì rõ ràng và người review là Tâm (Nhóm trưởng).
 6. Tuần 6: chốt phạm vi, sửa lỗi và regression; không mở thêm bình luận/rating/bookmark hoặc tính năng ngoài SRS.
 
 Mỗi tuần: đầu tuần xác nhận task và phụ thuộc; giữa tuần tích hợp PR; cuối tuần demo sản phẩm + cập nhật evidence cá nhân. Nếu mất một mốc, ghi task thiếu/người xử lý/hạn bù/ảnh hưởng; không chuyển hết lab sang tuần cuối.
@@ -96,7 +103,7 @@ SRS không có một danh sách mang tên “skill” độc lập. Danh mục d
 
 Ký hiệu trong ô: **SP** = đóng góp vào sản phẩm chung; **LAB** = tự viết một phiên bản nhỏ trên nhánh `practice/TVn/...`, có test, được lưu và demo, không merge code trùng vào main. Mỗi LAB phải dùng stack thật của đề khi kỹ năng yêu cầu DB/cache/storage/provider; mock chỉ dùng cho unit/error tests, không thay toàn bộ integration.
 
-| Mã / kỹ năng và nguồn | TV1 phải thực hiện | TV2 phải thực hiện | TV3 phải thực hiện | TV4 phải thực hiện |
+| Mã / kỹ năng và nguồn | TV1 (Thanh Tâm) phải thực hiện | TV2 (Trường Vĩ) phải thực hiện | TV3 (Quốc Trung) phải thực hiện | TV4 (Trung Sơn) phải thực hiện |
 |---|---|---|---|---|
 | K01 Phân tích SRS, FR/NFR, ADR, API contract (tr. 6–16, 43) | SP ADR auth + test mapping | SP ADR search/cache + mapping | SP ADR schema/version + mapping | SP ADR delete/media + mapping |
 | K02 C#/.NET10 Minimal APIs, REST/version, Scalar/RFC7807 (14–15, 47, 61–69) | SP Auth group + lỗi | SP Category/Search group + lỗi | SP Recipe/child group + lỗi | SP Image/status group + lỗi |
@@ -121,11 +128,11 @@ Ký hiệu trong ô: **SP** = đóng góp vào sản phẩm chung; **LAB** = t�
 | K21 xUnit/unit>=80%, API happy+error, Jest/RTL, Playwright (43) | SP auth + LAB recipe API/UI/E2E | SP category/search API/UI/E2E | SP recipe API/UI/E2E | SP media/publish API/UI/E2E |
 | K22 k6/p50/p95/p99, EXPLAIN/N+1/cache hit, CWV/Lighthouse (40–41) | LAB chạy tải/search query + đo trang của mình | SP query/k6; đo trang của mình | SP concurrency/query; k6 + đo trang của mình | SP metrics/load; EXPLAIN + đo trang của mình |
 | K23 Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling (43–44, 48, 53) | SP CI build; tự deploy, restore DB/file, test 2 API | SP FE Docker/CI; tự deploy/restore/test 2 API | SP migration startup; tự deploy/restore/test 2 API | SP Compose/Nginx; tự deploy/restore/test 2 API |
-| K24 Git/PR/review/CI/static analysis/architecture test/secret scan/docs (14, 42–43) | PR cá nhân + review TV4 + ADR/runbook + CI | PR cá nhân + review TV1 + ADR/runbook + CI | PR cá nhân + review TV2 + ADR/runbook + CI | PR cá nhân + review TV3 + ADR/runbook + CI |
+| K24 Git/PR/review/CI/static analysis/architecture test/secret scan/docs (14, 42–43) | PR cá nhân + Tâm review + ADR/runbook + CI | PR cá nhân + Tâm review + ADR/runbook + CI | PR cá nhân + Tâm review + ADR/runbook + CI | PR cá nhân + Tâm review + ADR/runbook + CI |
 
 ### 5.1. Bài thực hành cá nhân thống nhất, tránh học mỗi người một kiểu
 
-Mỗi người tạo nhánh riêng từ skeleton G1, dùng database/schema/bucket prefix riêng cho lab và không thao tác dữ liệu production. TVn tự thực hiện:
+Mỗi người tạo nhánh riêng từ skeleton G1, dùng database/schema/bucket prefix riêng cho lab và không thao tác dữ liệu production. Từng thành viên tự thực hiện:
 
 - **L1 — Danh tính và bảo mật:** register/login/PBKDF2; JWT; Google Code+PKCE/Auth.js + backend verify; refresh hash/rotation/reuse; logout; test Guest/Author/owner/non-owner/Admin/VerifiedAuthor. Nếu không có Google credentials, đánh dấu phần integration ngoài còn chờ; không coi mock là hoàn tất Google login.
 - **L2 — Recipe nhỏ từ đầu đến cuối:** entity/owned Nutrition, migration/seed, Minimal API/CQRS/validators/UoW, query/mutation, RowVersion 2 writer, soft delete/audit; wizard RHF/Zod và detail. Ít nhất 1 Command và 1 Query do chính người đó viết.
@@ -138,43 +145,43 @@ Nếu phần SP đã đáp ứng đầy đủ một nội dung LAB thì dùng PR
 
 ### 5.2. Cách xác nhận đủ skill
 
-Với mỗi Kxx, mỗi TVn phải có bản ghi `TVn-Kxx`: FR/NFR liên quan, đường dẫn code hoặc config, commit/PR, test/lệnh chạy, kết quả thực tế, ảnh/log/video phù hợp, reviewer và ngày xác nhận. Với ô gồm nhiều kỹ thuật, đánh dấu từng kỹ thuật con; thiếu một phần thì ô chưa hoàn thành.
+Với mỗi Kxx, mỗi thành viên phải có bản ghi minh chứng: FR/NFR liên quan, đường dẫn code hoặc config, commit/PR, test/lệnh chạy, kết quả thực tế, ảnh/log/video phù hợp, reviewer là Nguyễn Thanh Tâm (Nhóm trưởng) xác nhận và ghi ngày. Với ô gồm nhiều kỹ thuật, đánh dấu từng kỹ thuật con; thiếu một phần thì ô chưa hoàn thành.
 
 Tổng tối thiểu **24 × 4 = 96 ô minh chứng**, không phải 96 bài triển khai trùng lặp. Một PR được tham chiếu nhiều ô nếu thật sự chứa các kỹ năng đó. Chỉ công nhận cá nhân hoàn thành khi **24/24 ô** có bằng chứng và demo độc lập, không lấy trung bình giữa thành viên để bù thiếu.
 
 ## 6. Mốc minh chứng và kiểm tra hoàn thành
 
-| Thời điểm | Yêu cầu chung cho TV1, TV2, TV3, TV4 |
+| Thời điểm | Yêu cầu chung cho 4 thành viên (Thanh Tâm, Trường Vĩ, Quốc Trung, Trung Sơn) |
 |---|---|
 | Cuối tuần 1 | Có môi trường cá nhân, PR kiến trúc/API/schema hoặc cấu hình của mình; mở sổ K01–K24; lab nền bắt đầu sau G1 |
 | Cuối tuần 2 | Phần nghiệp vụ chính chạy end-to-end ở mức ban đầu; rà từng kỹ năng thiếu để lập LAB tuần 3–4 |
-| Cuối tuần 3 | Đủ34 FR bản tích hợp; có code lab các mảng ngoài chuyên trách; review kỹ năng chưa đạt, không chỉ đếm số PR |
-| Cuối tuần 4 | Mỗi người 24/24 ô K có code/config + test + demo + reviewer; các kỹ thuật con trong mỗi ô đều được kiểm tra |
+| Cuối tuần 3 | Đủ 34 FR bản tích hợp; có code lab các mảng ngoài chuyên trách; review kỹ năng chưa đạt, không chỉ đếm số PR |
+| Cuối tuần 4 | Mỗi người 24/24 ô K có code/config + test + demo + reviewer Tâm xác nhận; các kỹ thuật con trong mỗi ô đều được kiểm tra |
 | Cuối tuần 5 | Mỗi người tự deploy/backup/restore/test2 API; có số đo performance/a11y/SEO; 5 critical E2E pass |
-| Cuối tuần 6 | Regression pass, evidence hoàn chỉnh, reviewer xác nhận và demo độc lập; release/docs được bàn giao |
+| Cuối tuần 6 | Regression pass, evidence hoàn chỉnh, reviewer Tâm xác nhận và demo độc lập; release/docs được bàn giao |
 
 Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là lần xác minh lại trên bản staging tích hợp. Nếu thiếu Google credentials hoặc môi trường đo, ghi đúng phần còn chờ; mock không thay integration và không đánh dấu kỹ năng hoàn thành giả.
 
-| Người | Phần công việc | Kỹ năng xác nhận | Deploy/restore staging | Demo cuối kỳ | Trạng thái hiện tại |
-|---|---|---|---|---|---|
-| TV1 | A1–A7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
-| TV2 | B1–B7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
-| TV3 | C1–C7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
-| TV4 | D1–D7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
+| Thành viên | MSSV | Phần công việc | Kỹ năng xác nhận | Deploy/restore staging | Demo cuối kỳ | Trạng thái hiện tại |
+|---|---|---|---|---|---|---|
+| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
+| TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
+| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 0/24 | Chưa làm | Chưa làm | Chưa làm |
 
 Mẫu một bản ghi:
 
 ```text
-Tuần / Người / Task: 2 / TV3 / C3
+Tuần / Người / Task: 2 / Huỳnh Quốc Trung (TV3) / C3
 FR/NFR/Kỹ năng: FR-RCP-010; NFR-SEC-006; K02,K04,K05,K06,K07,K21
 Trạng thái: Chưa làm | Đang làm | Chờ tích hợp | Chờ review | Hoàn thành
 Đầu ra, đường dẫn code/config, PR/commit:
 Test/lệnh chạy, môi trường, kết quả thực tế:
 Minh chứng ảnh/log/video/coverage (không có secret):
-Reviewer và ngày xác nhận:
+Reviewer (Nguyễn Thanh Tâm) và ngày xác nhận:
 Trở ngại, người hỗ trợ, hạn xử lý:
 ```
 
-Một task chỉ hoàn thành khi đúng FR/ADR, UI/API/DB nối thật, quyền/validation/cache/job phù hợp, test và CI pass, docs cập nhật, có reviewer và evidence cá nhân. Toàn nhóm phải đối chiếu **34 FR, 30 NFR, 10 CONS**, 33 endpoint baseline và các route bổ sung được chốt. Application line coverage>=80%; API có happy/error cases; 5 Playwright flows: register, login, create recipe, publish, search. Các chỉ số cụ thể theo mục11 kế hoạch tổng thể; ghi rõ chưa đạt nếu chưa đo hoặc chỉ có thiết kế.
+Một task chỉ hoàn thành khi đúng FR/ADR, UI/API/DB nối thật, quyền/validation/cache/job phù hợp, test và CI pass, docs cập nhật, có reviewer Tâm duyệt và evidence cá nhân. Toàn nhóm phải đối chiếu **34 FR, 30 NFR, 10 CONS**, 33 endpoint baseline và các route bổ sung được chốt. Application line coverage>=80%; API có happy/error cases; 5 Playwright flows: register, login, create recipe, publish, search. Các chỉ số cụ thể theo mục 11 kế hoạch tổng thể; ghi rõ chưa đạt nếu chưa đo hoặc chỉ có thiết kế.
 
-Mỗi người demo dự kiến15–20 phút: tính năng chính, kỹ năng ngoài phần chính, giải thích code/test và xử lý một lỗi do reviewer chọn. **Sản phẩm đạt yêu cầu và từng người đủ24/24 nhóm kỹ năng là hai điều kiện riêng, đều phải được đáp ứng trong kế hoạch6 tuần.**
+Mỗi người demo dự kiến 15–20 phút: tính năng chính, kỹ năng ngoài phần chính, giải thích code/test và xử lý một lỗi do reviewer Tâm chọn. **Sản phẩm đạt yêu cầu và từng người đủ 24/24 nhóm kỹ năng là hai điều kiện riêng, đều phải được đáp ứng trong kế hoạch 6 tuần.**
