@@ -17,7 +17,7 @@ Mỗi thành viên làm việc trên một nhánh riêng biệt theo định d�
 
 1. **Clone repository về máy**:
    ```bash
-   git clone https://github.com/2312741-sudo/PTUDWNC.git
+   git clone https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16.git
    cd PTUDWNC
    ```
 2. **Tạo và chuyển sang nhánh riêng từ `main`**:
