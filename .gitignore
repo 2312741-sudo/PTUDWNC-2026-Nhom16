@@ -1,0 +1,31 @@
+## Build & Compiler Outputs
+*bin\\*
+*bin\*
+[Bb]in/
+[Oo]bj/
+**/[Bb]in/
+**/[Oo]bj/
+**/bin\Debug/
+**/bin\Release/
+**/Debug/
+**/Release/
+
+## Visual Studio & IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+## Package cache
+*.nupkg
+**/packages/
+!**/packages/build/

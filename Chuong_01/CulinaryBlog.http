@@ -1,0 +1,85 @@
+@baseUrl = http://localhost:5081
+@categoryId = {{createCategory.response.body.$.id}}
+@recipeId = {{createRecipe.response.body.$.id}}
+
+### 1. Tạo danh mục (đổi tên nếu chạy lại trước khi xóa dữ liệu cũ)
+# @name createCategory
+POST {{baseUrl}}/api/v1/categories
+Content-Type: application/json
+
+{"name":"Món Chính HTTP", "description":"Bài tập chương 1"}
+
+### 2. Danh sách danh mục
+GET {{baseUrl}}/api/v1/categories?page=1&pageSize=10&search=HTTP&sortBy=name&descending=false
+
+### 3. Chi tiết danh mục
+GET {{baseUrl}}/api/v1/categories/{{categoryId}}
+
+### 4. Cập nhật danh mục
+PUT {{baseUrl}}/api/v1/categories/{{categoryId}}
+Content-Type: application/json
+
+{"name":"Món Chính HTTP", "description":"Đã cập nhật"}
+
+### 5. Tạo công thức
+# @name createRecipe
+POST {{baseUrl}}/api/v1/recipes
+Content-Type: application/json
+
+{
+  "title": "Cơm chiên trứng",
+  "description": "Bữa ăn nhanh",
+  "instructions": "Đánh trứng, đảo cơm, nêm và phục vụ.",
+  "prepTimeMinutes": 10,
+  "cookTimeMinutes": 15,
+  "servings": 2,
+  "difficulty": "Easy",
+  "categoryId": "{{categoryId}}",
+  "authorId": "11111111-1111-1111-1111-111111111111"
+}
+
+### 6. Danh sách công thức: kết hợp đầy đủ bộ lọc
+GET {{baseUrl}}/api/v1/recipes?page=1&pageSize=5&categoryId={{categoryId}}&difficulty=Easy&minCookTime=10&maxCookTime=30&search=trứng&sortBy=cooktimeminutes&descending=true
+
+### 7. Chi tiết công thức có Category
+GET {{baseUrl}}/api/v1/recipes/{{recipeId}}
+
+### 8. Nested resource
+GET {{baseUrl}}/api/v1/categories/{{categoryId}}/recipes?page=1&pageSize=10&difficulty=Easy
+
+### 9. Cập nhật toàn bộ công thức
+PUT {{baseUrl}}/api/v1/recipes/{{recipeId}}
+Content-Type: application/json
+
+{
+  "title": "Cơm chiên trứng",
+  "description": "Bữa ăn nhanh",
+  "instructions": "Đánh trứng, đảo cơm, nêm và phục vụ.",
+  "prepTimeMinutes": 10,
+  "cookTimeMinutes": 15,
+  "servings": 4,
+  "difficulty": "Easy",
+  "categoryId": "{{categoryId}}",
+  "authorId": "11111111-1111-1111-1111-111111111111"
+}
+
+### 10. Xóa danh mục còn công thức: mong đợi 409
+DELETE {{baseUrl}}/api/v1/categories/{{categoryId}}
+
+### 11. Xóa công thức: 204
+DELETE {{baseUrl}}/api/v1/recipes/{{recipeId}}
+
+### 12. Xóa danh mục: 204
+DELETE {{baseUrl}}/api/v1/categories/{{categoryId}}
+
+### 13. Không còn công thức: 404
+GET {{baseUrl}}/api/v1/recipes/{{recipeId}}
+
+### 14. Query sai: 400
+GET {{baseUrl}}/api/v1/recipes?minCookTime=30&maxCookTime=10
+
+### 15. Phân trang sai: 400
+GET {{baseUrl}}/api/v1/categories?pageSize=101
+
+### 16. OpenAPI
+GET {{baseUrl}}/openapi/v1.json
