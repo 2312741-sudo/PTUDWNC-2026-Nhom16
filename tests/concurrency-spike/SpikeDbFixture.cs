@@ -35,7 +35,7 @@ public sealed class SpikeDbFixture : IAsyncLifetime
         await ctx.Database.EnsureDeletedAsync();
         await ctx.Database.EnsureCreatedAsync();   // tạo cả AspNetUsers + Recipe tables
 
-        ctx.Users.Add(new ApplicationUser
+        ctx.Users.Add(new RecipeAuthorUser
         {
             Id = AuthorId, UserName = "author@spike.local", NormalizedUserName = "AUTHOR@SPIKE.LOCAL",
             Email = "author@spike.local", NormalizedEmail = "AUTHOR@SPIKE.LOCAL", EmailConfirmed = true,

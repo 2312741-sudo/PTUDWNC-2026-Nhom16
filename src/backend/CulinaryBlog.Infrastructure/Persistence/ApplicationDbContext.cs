@@ -11,11 +11,11 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 
 /// <summary>
 /// DbContext DUY NHẤT của hệ thống. Kế thừa IdentityDbContext để có bảng AspNetUsers/Roles... (SRS 7.7).
-/// C1 (TV3) sở hữu cụm Recipe; Category/ApplicationUser/RefreshToken là bản tối thiểu cho solo dev,
+/// C1 (TV3) sở hữu cụm Recipe; Category/RecipeAuthorUser/RefreshToken là bản tối thiểu cho solo dev,
 /// sẽ được TV2/TV1 mở rộng khi tích hợp (một context duy nhất — không tạo bản thứ hai).
 /// </summary>
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser, IdentityRole, string>(options), IApplicationDbContext
+    : IdentityDbContext<RecipeAuthorUser, IdentityRole, string>(options), IApplicationDbContext
 {
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();

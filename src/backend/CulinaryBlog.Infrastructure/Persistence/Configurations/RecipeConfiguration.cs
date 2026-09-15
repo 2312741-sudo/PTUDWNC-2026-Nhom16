@@ -56,7 +56,7 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
             .WithMany()
             .HasForeignKey(r => r.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);          // chặn xóa category còn recipe (FR-CAT-005 → 409)
-        b.HasOne<ApplicationUser>()
+        b.HasOne<RecipeAuthorUser>()
             .WithMany()
             .HasForeignKey(r => r.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);

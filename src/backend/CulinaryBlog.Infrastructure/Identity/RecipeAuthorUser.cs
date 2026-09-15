@@ -9,7 +9,7 @@ namespace CulinaryBlog.Infrastructure.Identity;
 /// LƯU Ý VAI TRÒ: bản tối thiểu (custom columns theo SRS) để C1 chạy độc lập và FK Recipe.AuthorId là thật.
 /// TV1 (task A1) sở hữu Identity đầy đủ: roles/policy/PBKDF2/JWT/seed. Khi tích hợp, TV1 mở rộng chính class này.
 /// </summary>
-public class ApplicationUser : IdentityUser<string>
+public class RecipeAuthorUser : IdentityUser<string>
 {
     public string DisplayName { get; set; } = string.Empty;   // <=100, NOT NULL
     public string? AvatarUrl { get; set; }                    // <=500, nullable

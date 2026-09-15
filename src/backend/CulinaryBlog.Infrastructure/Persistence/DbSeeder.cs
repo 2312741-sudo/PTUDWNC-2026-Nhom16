@@ -59,10 +59,10 @@ public static class DbSeeder
         await db.SaveChangesAsync(ct);
     }
 
-    private static ApplicationUser NewUser(string email, string displayName)
+    private static RecipeAuthorUser NewUser(string email, string displayName)
     {
         var id = Guid.NewGuid().ToString();
-        return new ApplicationUser
+        return new RecipeAuthorUser
         {
             Id = id,
             UserName = email,

@@ -22,7 +22,7 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 
         b.HasIndex(t => t.TokenHash).IsUnique().HasDatabaseName("IDX_RefreshToken_Hash");
 
-        b.HasOne<ApplicationUser>()
+        b.HasOne<RecipeAuthorUser>()
             .WithMany()
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);           // SRS 7.8
