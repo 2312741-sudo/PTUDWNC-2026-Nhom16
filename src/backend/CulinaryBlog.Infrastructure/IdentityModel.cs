@@ -15,6 +15,8 @@ public sealed class ApplicationUser : IdentityUser
 }
 public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
+    public DbSet<Category> Categories => Set<Category>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -27,5 +29,25 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
         builder.Entity<IdentityRole>().HasData(
             new IdentityRole { Id = "role-author", Name = CulinaryBlog.Domain.Roles.Author, NormalizedName = "AUTHOR", ConcurrencyStamp = "role-author-v1" },
             new IdentityRole { Id = "role-admin", Name = CulinaryBlog.Domain.Roles.Admin, NormalizedName = "ADMIN", ConcurrencyStamp = "role-admin-v1" });
+
+        builder.Entity<Category>(b =>
+        {
+            b.ToTable("Categories");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            b.Property(x => x.Slug).HasMaxLength(120).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(500);
+            b.Property(x => x.ImageUrl).HasMaxLength(500);
+            b.Property(x => x.OrderIndex).HasDefaultValue(0);
+            b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            b.Property(x => x.CreatedAt).IsRequired();
+            b.Property(x => x.UpdatedAt).IsRequired();
+            b.Ignore(x => x.RecipesCount);
+
+            b.HasQueryFilter(x => !x.IsDeleted);
+
+            b.HasIndex(x => x.Slug).IsUnique();
+            b.HasIndex(x => x.Name);
+        });
     }
 }
