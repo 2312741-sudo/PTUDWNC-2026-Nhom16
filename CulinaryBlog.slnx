@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/backend/" />
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/concurrency-spike/">
+    <Project Path="tests/concurrency-spike/ConcurrencySpike.csproj" />
+  </Folder>
+</Solution>
