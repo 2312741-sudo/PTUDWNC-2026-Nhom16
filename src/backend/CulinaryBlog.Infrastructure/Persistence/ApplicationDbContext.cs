@@ -13,6 +13,9 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 /// DbContext DUY NHẤT của hệ thống. Kế thừa IdentityDbContext để có bảng AspNetUsers/Roles... (SRS 7.7).
 /// C1 (TV3) sở hữu cụm Recipe; Category/RecipeAuthorUser/RefreshToken là bản tối thiểu cho solo dev,
 /// sẽ được TV2/TV1 mở rộng khi tích hợp (một context duy nhất — không tạo bản thứ hai).
+///
+/// IApplicationDbContext được hiện thực tường minh bằng IQueryable: lớp Application không phụ thuộc
+/// EF Core (quyết định D18, kiểm chứng bằng architecture test - NFR-MAINT-004).
 /// </summary>
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<RecipeAuthorUser, IdentityRole, string>(options), IApplicationDbContext
@@ -23,6 +26,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    IQueryable<Recipe> IApplicationDbContext.Recipes => Recipes;
+
+    IQueryable<RecipeIngredient> IApplicationDbContext.RecipeIngredients => RecipeIngredients;
+
+    IQueryable<RecipeStep> IApplicationDbContext.RecipeSteps => RecipeSteps;
+
+    IQueryable<RecipeImage> IApplicationDbContext.RecipeImages => RecipeImages;
+
+    void IApplicationDbContext.Add<TEntity>(TEntity entity) => Add(entity);
+
+    void IApplicationDbContext.Remove<TEntity>(TEntity entity) => Remove(entity);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
