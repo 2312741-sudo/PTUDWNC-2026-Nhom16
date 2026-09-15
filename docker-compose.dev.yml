@@ -1,0 +1,16 @@
+# Postgres 16 tối thiểu để chạy migration + spike của C1 (dev).
+# Chạy: docker compose -f docker-compose.dev.yml up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: culinaryblog-pg
+    environment:
+      POSTGRES_DB: culinaryblog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
