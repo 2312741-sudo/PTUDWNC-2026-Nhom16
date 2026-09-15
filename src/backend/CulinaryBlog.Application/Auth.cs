@@ -9,12 +9,14 @@ public sealed record AuthResponse(string AccessToken, string TokenType, int Expi
 public sealed record RegisterCommand(string Email, string Password, string DisplayName) : IRequest<AuthResponse>;
 public sealed record LoginCommand(string Email, string Password) : IRequest<AuthResponse>;
 public sealed record GetMeQuery : IRequest<UserDto>;
+public sealed record UpdateProfileCommand(string DisplayName, string? AvatarUrl, string? Bio) : IRequest<UserDto>;
 public interface ICurrentUser { string? UserId { get; } bool IsInRole(string role); }
 public interface IIdentityService
 {
     Task<AuthResponse> RegisterAsync(RegisterCommand command, CancellationToken ct);
     Task<AuthResponse> LoginAsync(LoginCommand command, CancellationToken ct);
     Task<UserDto> GetAsync(string id, CancellationToken ct);
+    Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct);
 }
 public sealed class AppException(int status, string code, string message) : Exception(message)
 {
@@ -33,6 +35,10 @@ public sealed class GetMeHandler(IIdentityService identity, ICurrentUser user) :
 {
     public Task<UserDto> Handle(GetMeQuery request, CancellationToken ct) => identity.GetAsync(user.UserId ?? throw new AppException(401, "auth.unauthorized", "Vui lòng đăng nhập."), ct);
 }
+public sealed class UpdateProfileHandler(IIdentityService identity, ICurrentUser user) : IRequestHandler<UpdateProfileCommand, UserDto>
+{
+    public Task<UserDto> Handle(UpdateProfileCommand request, CancellationToken ct) => identity.UpdateAsync(user.UserId ?? throw new AppException(401, "auth.unauthorized", "Vui lòng đăng nhập."), request, ct);
+}
 public sealed class RegisterValidator : AbstractValidator<RegisterCommand>
 {
     public RegisterValidator()
@@ -42,6 +48,15 @@ public sealed class RegisterValidator : AbstractValidator<RegisterCommand>
             .Matches("[A-Z]").Matches("[a-z]").Matches("[0-9]").Matches("[^a-zA-Z0-9]");
         RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(100)
             .Must(x => x is not null && !x.Any(char.IsControl) && !x.Contains('<') && !x.Contains('>'));
+    }
+}
+public sealed class UpdateProfileValidator : AbstractValidator<UpdateProfileCommand>
+{
+    public UpdateProfileValidator()
+    {
+        RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(100).Must(x => !x.Any(char.IsControl) && !x.Contains('<') && !x.Contains('>'));
+        RuleFor(x => x.AvatarUrl).MaximumLength(500).Must(x => x is null || Uri.TryCreate(x, UriKind.Absolute, out _));
+        RuleFor(x => x.Bio).MaximumLength(2000).Must(x => x is null || !x.Any(char.IsControl));
     }
 }
 public sealed class LoginValidator : AbstractValidator<LoginCommand>

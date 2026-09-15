@@ -6,7 +6,7 @@ using Npgsql;
 
 namespace CulinaryBlog.Infrastructure;
 
-public sealed class IdentityService(UserManager<ApplicationUser> users, AuthDbContext db, JwtService jwt) : IIdentityService
+public sealed class IdentityService(UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signIn, AuthDbContext db, JwtService jwt, IWelcomeEmailQueue welcome) : IIdentityService
 {
     public async Task<AuthResponse> RegisterAsync(RegisterCommand command, CancellationToken ct)
     {
@@ -24,6 +24,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, AuthDbCo
             var roleResult = await users.AddToRoleAsync(user, Roles.Author);
             if (!roleResult.Succeeded) throw new InvalidOperationException("Unable to assign Author role.");
             await transaction.CommitAsync(ct);
+            await welcome.EnqueueAsync(new WelcomeEmail(user.Email!, user.DisplayName), ct);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
@@ -35,10 +36,24 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, AuthDbCo
     {
         ct.ThrowIfCancellationRequested();
         var user = await users.FindByEmailAsync(command.Email.Trim());
-        if (user is null || !await users.CheckPasswordAsync(user, command.Password))
+        if (user is null) throw new AppException(401, "auth.invalid_credentials", "Email hoặc mật khẩu không đúng.");
+        var check = await signIn.CheckPasswordSignInAsync(user, command.Password, lockoutOnFailure: true);
+        if (check.IsLockedOut) throw new AppException(423, "auth.locked", "Email hoặc mật khẩu không đúng.");
+        if (!check.Succeeded)
             throw new AppException(401, "auth.invalid_credentials", "Email hoặc mật khẩu không đúng.");
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
         return jwt.Issue(await ToDto(user));
+    }
+    public async Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(id) ?? throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản.");
+        if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
+        user.DisplayName = new DisplayName(command.DisplayName).Value;
+        user.AvatarUrl = command.AvatarUrl;
+        user.Bio = command.Bio;
+        var result = await users.UpdateAsync(user);
+        if (!result.Succeeded) throw new InvalidOperationException("Unable to update profile.");
+        return await ToDto(user);
     }
     public async Task<UserDto> GetAsync(string id, CancellationToken ct)
     {
