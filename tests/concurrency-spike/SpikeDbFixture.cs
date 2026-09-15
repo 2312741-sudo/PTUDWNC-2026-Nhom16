@@ -3,7 +3,7 @@ using CulinaryBlog.Infrastructure.Identity;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Infrastructure.Persistence.Interceptors;
 using Microsoft.EntityFrameworkCore;
-using Xunit;                                    
+using Xunit;
 namespace ConcurrencySpike;
 
 /// <summary>
@@ -37,9 +37,15 @@ public sealed class SpikeDbFixture : IAsyncLifetime
 
         ctx.Users.Add(new RecipeAuthorUser
         {
-            Id = AuthorId, UserName = "author@spike.local", NormalizedUserName = "AUTHOR@SPIKE.LOCAL",
-            Email = "author@spike.local", NormalizedEmail = "AUTHOR@SPIKE.LOCAL", EmailConfirmed = true,
-            DisplayName = "Spike Author", IsActive = true, CreatedAt = DateTime.UtcNow,
+            Id = AuthorId,
+            UserName = "author@spike.local",
+            NormalizedUserName = "AUTHOR@SPIKE.LOCAL",
+            Email = "author@spike.local",
+            NormalizedEmail = "AUTHOR@SPIKE.LOCAL",
+            EmailConfirmed = true,
+            DisplayName = "Spike Author",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
             SecurityStamp = Guid.NewGuid().ToString()
         });
 

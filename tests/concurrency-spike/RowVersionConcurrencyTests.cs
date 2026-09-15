@@ -1,7 +1,7 @@
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using Xunit;    
+using Xunit;
 namespace ConcurrencySpike;
 
 /// <summary>
