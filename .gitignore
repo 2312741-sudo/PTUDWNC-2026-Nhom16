@@ -6,3 +6,6 @@
 **/TestResults/
 .local/
 .DS_Store
+
+env.ps1
+.vscode/
