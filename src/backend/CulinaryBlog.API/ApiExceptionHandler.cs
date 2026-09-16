@@ -13,7 +13,7 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).Distinct().ToArray()))
             { Status = 400, Title = "Dữ liệu không hợp lệ.", Extensions = { ["code"] = "validation.failed" } };
         else if (exception is AppException app)
-            details = new() { Status = app.Status, Title = app.Message, Extensions = { ["code"] = app.Code } };
+            details = new() { Status = app.Status, Title = app.Message, Detail = app.Message, Extensions = { ["code"] = app.Code } };
         else if (exception is BadHttpRequestException)
             details = new() { Status = 400, Title = "JSON hoặc yêu cầu không hợp lệ.", Extensions = { ["code"] = "request.invalid" } };
         else

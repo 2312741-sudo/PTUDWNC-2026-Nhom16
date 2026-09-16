@@ -16,7 +16,13 @@ OpenAPI tag: `Categories`
 | `GET` | `/api/v1/categories/{slug}` | Guest / Public | `200 OK` | `404 Not Found` | Lấy chi tiết một danh mục theo slug URL-friendly. |
 | `POST` | `/api/v1/categories` | `AdminPolicy` | `201 Created` + `Location` | `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `409 Conflict` | Admin tạo danh mục mới. Slug được tự động sinh không dấu, đảm bảo unique. |
 | `PUT` | `/api/v1/categories/{id}` | `AdminPolicy` | `200 OK` | `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `409 Conflict` | Admin cập nhật danh mục. Slug được bảo toàn nguyên vẹn theo D15/ADR. |
-| `DELETE` | `/api/v1/categories/{id}` | `AdminPolicy` | `204 NoContent` | `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `409 Conflict` | Admin xóa mềm danh mục. Bị chặn trả về `409` nếu còn công thức liên kết (D09, FR-CAT-005). |
+| `DELETE` | `/api/v1/categories/{id}` | `AdminPolicy` | `204 NoContent` | `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `409 Conflict` | Admin xóa danh mục (**hard delete** theo SRS v1.1.1 C07). Bị chặn trả về `409` nếu còn công thức liên kết (D09, FR-CAT-005). |
+
+> **Ghi chú SRS v1.1.1:**
+> - Toàn bộ response thành công được wrap trong `{ "data": ... }` (C08).
+> - Cache danh mục có TTL = 60 phút (C03).
+> - Xóa danh mục là **Hard Delete** (xóa entity khỏi database) khi không còn recipes (C07).
+> - Tên danh mục `Name` có ràng buộc UNIQUE trong cơ sở dữ liệu (C09).
 
 ---
 

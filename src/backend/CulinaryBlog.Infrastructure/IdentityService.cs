@@ -11,7 +11,15 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
     public async Task<AuthResponse> RegisterAsync(RegisterCommand command, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        var user = new ApplicationUser { Email = command.Email.Trim(), UserName = command.Email.Trim(), DisplayName = new DisplayName(command.DisplayName).Value };
+        var resolvedName = command.ResolvedName;
+        var resolvedUserName = command.ResolvedUserName;
+        var user = new ApplicationUser
+        {
+            Email = command.Email.Trim(),
+            UserName = resolvedUserName.Trim(),
+            DisplayName = new DisplayName(resolvedName).Value,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
         try
         {
             var result = await users.CreateAsync(user, command.Password);
@@ -32,6 +40,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         }
         return jwt.Issue(await ToDto(user));
     }
+
     public async Task<AuthResponse> LoginAsync(LoginCommand command, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
@@ -44,17 +53,19 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
         return jwt.Issue(await ToDto(user));
     }
+
     public async Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(id) ?? throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản.");
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
-        user.DisplayName = new DisplayName(command.DisplayName).Value;
+        user.DisplayName = new DisplayName(command.ResolvedName).Value;
         user.AvatarUrl = command.AvatarUrl;
         user.Bio = command.Bio;
         var result = await users.UpdateAsync(user);
         if (!result.Succeeded) throw new InvalidOperationException("Unable to update profile.");
         return await ToDto(user);
     }
+
     public async Task<UserDto> GetAsync(string id, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
@@ -62,5 +73,16 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
         return await ToDto(user);
     }
-    private async Task<UserDto> ToDto(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, (await users.GetRolesAsync(user)).ToArray(), user.AvatarUrl, user.Bio);
+
+    private async Task<UserDto> ToDto(ApplicationUser user) => new(
+        user.Id,
+        user.Email!,
+        user.DisplayName,
+        user.UserName ?? user.Email!,
+        (await users.GetRolesAsync(user)).ToArray(),
+        user.AvatarUrl,
+        user.Bio,
+        user.EmailConfirmed,
+        user.CreatedAt,
+        user.DisplayName);
 }

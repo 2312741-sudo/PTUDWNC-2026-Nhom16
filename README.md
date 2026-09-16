@@ -46,16 +46,16 @@ Dự án được phân chia theo chiều dọc nghiệp vụ (mỗi thành viê
 Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô hình **CQRS** (MediatR), tuân thủ nghiêm ngặt nguyên tắc phân tầng và tiêu chuẩn RESTful:
 
 1. **Phân hệ Xác thực & Phân quyền (TV1 - Nguyễn Thanh Tâm)**:
-   - **Đăng ký tài khoản (`POST /api/v1/auth/register`)**: Tự động cấp quyền `Author`, mã hóa mật khẩu theo tiêu chuẩn ASP.NET Core Identity (PBKDF2 100.000 iterations), kiểm tra trùng lặp email bất kể hoa thường, cấp ngay Access Token JWT (thời hạn 15 phút).
-   - **Đăng nhập (`POST /api/v1/auth/login`)**: Xác thực tài khoản với `SignInManager`. Trả thông báo lỗi mờ chung khi sai thông tin để chống user enumeration.
+   - **Đăng ký tài khoản (`POST /api/v1/auth/register`)**: Chuẩn hóa theo SRS v1.1.1 §8.1 (`fullName`, `userName`, `email`, `password`), tự động cấp quyền `Author`, mã hóa mật khẩu theo tiêu chuẩn ASP.NET Core Identity (PBKDF2 100.000 iterations), kiểm tra trùng lặp email bất kể hoa thường, cấp ngay Access Token JWT (15 phút) và Refresh Token (7 ngày) kèm `expiresAt` (ISO 8601).
+   - **Đăng nhập (`POST /api/v1/auth/login`)**: Xác thực tài khoản với `SignInManager`. Trả thông báo lỗi mờ chung khi sai thông tin để chống user enumeration. Toàn bộ response bọc chuẩn `{ "data": ... }`.
    - **Cơ chế Khóa tài khoản (Account Lockout)**: Tự động khóa tạm thời tài khoản 15 phút khi người dùng đăng nhập sai 5 lần liên tiếp. Trả về mã lỗi HTTP `423 Locked` kèm mã lỗi `auth.locked`.
    - **Giới hạn tần suất gọi API (Rate Limiting)**: Áp dụng thuật toán Fixed Window giới hạn **10 requests/phút/IP** trên các endpoint nhạy cảm (`register`, `login`). Khi vượt ngưỡng, hệ thống trả về HTTP `429 Too Many Requests` kèm header chuẩn `Retry-After: 60`.
    - **Quản lý Hồ sơ người dùng (`GET` & `PATCH /api/v1/auth/me`)**:
-     - Xem thông tin cá nhân hiện tại của người dùng đang đăng nhập qua Bearer token.
-     - Cho phép cập nhật có chọn lọc (`displayName`, `avatarUrl`, `bio`).
+     - Xem thông tin cá nhân hiện tại của người dùng đang đăng nhập qua Bearer token: bao gồm `id`, `fullName`, `email`, `userName`, `avatarUrl`, `roles`, `emailConfirmed`, `createdAt`.
+     - Cho phép cập nhật có chọn lọc (`fullName`, `avatarUrl`, `bio`).
      - Áp dụng FluentValidation nghiêm ngặt: chặn ký tự điều khiển, chặn injection thẻ HTML (`<`, `>`), xác thực định dạng URL ảnh đại diện (`http://` hoặc `https://`).
      - **Bảo mật tuyệt đối**: Ngăn chặn hoàn toàn việc can thiệp thay đổi `email` hoặc tự nâng cấp `roles` qua API hồ sơ.
-   - **Đăng xuất an toàn (`POST /api/v1/auth/logout`)**: Yêu cầu Bearer Token hợp lệ, trả về `204 NoContent`. Thiết kế sẵn seam để mở rộng thu hồi Refresh Token (kết hợp với TV3).
+   - **Đăng xuất an toàn (`POST /api/v1/auth/logout`)**: Yêu cầu Bearer Token hợp lệ, thu hồi Refresh Token và trả về `204 NoContent`.
    - **Xử lý Tác vụ nền (Background Worker - Welcome Email)**:
      - Sử dụng `System.Threading.Channels` (`UnboundedChannel`) để đẩy tác vụ gửi email chào mừng vào hàng đợi phi đồng bộ ngay sau khi giao dịch cơ sở dữ liệu commit thành công, không làm chậm response của người dùng.
      - Tự động mã hóa tên hiển thị qua `WebUtility.HtmlEncode` để phòng chống tấn công HTML Injection qua email.
@@ -63,13 +63,17 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
      - Tuyệt đối không log thông tin nhạy cảm (secrets, tokens, passwords).
 
 2. **Phân hệ Danh mục Ẩm thực (TV2 - Ngô Quốc Trường Vĩ)**:
-   - Thực thể `Category` với định danh GUID, hỗ trợ thứ tự sắp xếp (`OrderIndex`) và cờ xóa mềm (`IsDeleted`).
-   - Bộ chuyển đổi `SlugHelper` chuẩn hóa tiếng Việt có dấu thành URL slug thân thiện tự động.
-   - Hệ thống Endpoint CRUD `/api/v1/categories` được bảo vệ bằng chính sách phân quyền `AdminPolicy`.
-   - Đặc tả phân trang D11 chuẩn với cấu trúc kết quả `PagedResult<T>` và metadata `PaginationMeta`.
+   - Thực thể `Category` với định danh GUID, hỗ trợ thứ tự sắp xếp (`OrderIndex`), ràng buộc `Name` duy nhất (UNIQUE) và `Slug` duy nhất (C09).
+   - Bộ chuyển đổi `SlugHelper` chuẩn hóa tiếng Việt có dấu thành URL slug thân thiện tự động, tự động thêm suffix số (e.g., `-2`, `-3`) nếu có va chạm slug.
+   - Cơ chế xóa danh mục: **Hard Delete** xóa entity khỏi DB (C07), áp dụng ràng buộc bảo vệ toàn vẹn: chặn xóa và trả HTTP `409 Conflict` nếu danh mục còn bất kỳ công thức nào.
+   - Bộ nhớ đệm danh mục: `IMemoryCache` với thời gian sống TTL **60 phút** (C03).
+   - Hệ thống Endpoint CRUD `/api/v1/categories` được bảo vệ bằng chính sách phân quyền `AdminPolicy`, toàn bộ response bọc chuẩn `{ "data": ... }` (C08).
+   - Đặc tả phân trang chuẩn với cấu trúc kết quả `PagedResult<T>` và kích thước trang mặc định `pageSize = 12` (C04).
 
 3. **Phân hệ Recipe Aggregate & Kiểm thử Tương tranh (TV3 - Huỳnh Quốc Trung)**:
-   - Mô hình hóa Domain Recipe Aggregate gồm: `Recipe`, Value Object `Nutrition`, `RecipeIngredient`, `RecipeStep`, `RecipeImage`.
+   - Mô hình hóa Domain Recipe Aggregate gồm: `Recipe`, Value Object `Nutrition`, `RecipeIngredient` (chuẩn hóa thuộc tính `OrderIndex` theo C06), `RecipeStep` (chuẩn hóa thuộc tính `TimerMinutes` theo C05), `RecipeImage`.
+   - Chiến lược xóa công thức: **Soft Delete** (`IsDeleted = true`), kết hợp Global Query Filter và giữ nguyên các file ảnh trên MinIO (C01).
+   - Điều kiện xuất bản công thức (Publish): Bắt buộc phải có **ít nhất 1 nguyên liệu VÀ ít nhất 1 bước thực hiện** (C02); nếu thiếu dữ liệu trả về HTTP `422 Unprocessable Entity` với mã lỗi `RECIPE_PUBLISH_INCOMPLETE`.
    - Cơ chế kiểm soát tương tranh lạc quan (Optimistic Concurrency Control) dựa trên cột `RowVersion` (PostgreSQL `xmin`), ngăn chặn hoàn toàn lỗi mất cập nhật (Lost Update) khi 2 tác giả chỉnh sửa cùng lúc.
    - Kiểm thử cô lập Concurrency Spike chứng minh khả năng rollback toàn phần của giao dịch khi có lỗi ở bảng con và đảm bảo bất biến khi xuất bản công thức.
 
@@ -83,6 +87,24 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
    - Reverse proxy Nginx (`nginx/nginx.dev.conf`) điều hướng thông suốt giữa frontend và backend API.
 
 ---
+
+### 3.5. Đồng bộ Chuẩn hóa Toàn Diện theo SRS v1.1.1 (Giải quyết 9 Mâu thuẫn C01–C09)
+
+Dự án đã giải quyết triệt để 9 mâu thuẫn nội tại được phát hiện trong tài liệu gốc theo **SRS v1.1.1** (tham chiếu [Báo cáo Mâu thuẫn](docs/root/SRS_Contradictions_Report.md)):
+
+| Mã | Vấn đề mâu thuẫn ban đầu | Quyết định chuẩn hóa SRS v1.1.1 | Hiện thực trong Source Code & Tests |
+|:---:|---|---|---|
+| **C01** | Xóa Recipe: Hard Delete vs Soft Delete | **Soft Delete** (`IsDeleted = true`). Giữ file MinIO. | BaseEntity Global Query Filter, Recipe soft delete |
+| **C02** | Điều kiện publish: chỉ Steps vs Steps + Ingredients | **≥ 1 Ingredient VÀ ≥ 1 Step**. Thiếu trả HTTP 422. | Domain validation `RECIPE_PUBLISH_INCOMPLETE` |
+| **C03** | Category cache TTL: 60 phút vs 30 phút | **60 phút** cho IMemoryCache danh mục. | `CacheService` / In-memory TTL = 60 mins |
+| **C04** | Default page size: 12 vs 10 | **pageSize = 12** mặc định cho tất cả endpoints. | Query pagination DTOs, Default PageSize = 12 |
+| **C05** | Tên trường bước thực hiện: TimerMinutes vs DurationMinutes | Chuẩn hóa **`TimerMinutes`**. | `RecipeStep.TimerMinutes` (Entity, DTO, DB) |
+| **C06** | Tên trường nguyên liệu: OrderIndex vs SortOrder | Chuẩn hóa **`OrderIndex`**. | `RecipeIngredient.OrderIndex` (Entity, DTO, DB) |
+| **C07** | Xóa Category: Hard Delete vs Soft Delete | **Hard Delete** (xóa khỏi DB, chặn 409 nếu có món). | `CategoryRepository.DeleteAsync` xóa entity |
+| **C08** | Response wrapper: có nơi thiếu `data` | **Toàn bộ response thành công wrap trong `{ data }`**. | API endpoints & Frontend `api.ts` tự unwrap |
+| **C09** | Category uniqueness: Name UNIQUE vs Slug suffix | **`Name` UNIQUE trong DB**; Slug suffix nếu va chạm. | PostgreSQL Index UNIQUE Name & Slug generator |
+| **§8.1** | Auth API format không khớp FR chi tiết | Bổ sung `fullName`, `userName`, `emailConfirmed`, `createdAt`, `expiresAt`. | DTOs, Handlers, Database mapping, Frontend types |
+
 
 ### 3.2. Giao diện Người dùng (Frontend Next.js 15 App Router & Tailwind CSS)
 
@@ -222,7 +244,9 @@ dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 
 - 📋 [Kế hoạch phân chia công việc 6 tuần](PHAN_CHIA_CONG_VIEC_6_TUAN.md)
 - 📖 [Kế hoạch tổng thể & Giải quyết xung đột SRS](KE_HOACH_DU_AN.md)
-- 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm (SRS v1.0.0)](docs/root/SRS_Culinary_Blog_v1.0.0.md)
+- 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm chính thức (SRS v1.1.1)](docs/root/SRS_Culinary_Blog_v1.1.1.md)
+- 📑 [Báo cáo Mâu thuẫn Nội tại SRS (C01–C09)](docs/root/SRS_Contradictions_Report.md)
+- 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm (Bản gốc v1.0.0)](docs/root/SRS_Culinary_Blog_v1.0.0.md)
 - 🔐 [Hợp đồng API Xác thực (Auth Contract)](docs/AUTH_CONTRACT.md)
 - 🗂️ [Hợp đồng API Danh mục (Category Contract)](docs/CATEGORY_CONTRACT.md)
 - 🍲 [Hợp đồng Danh sách Công thức (Recipe List Contract)](docs/RECIPE_LIST_CONTRACT.md)

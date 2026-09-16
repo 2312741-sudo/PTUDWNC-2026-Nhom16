@@ -23,7 +23,7 @@ Trong tài liệu SRS Culinary Blog v1.0.0, có các điểm mâu thuẫn cần 
 * Tên danh mục hỗ trợ độ dài **từ 2 đến 100 ký tự** (D15).
 * Slug danh mục được tự động sinh không dấu, chuyển chữ thường, thay khoảng trắng/ký tự đặc biệt bằng dấu gạch ngang `-`, độ dài tối đa 120 ký tự.
 * **Cập nhật danh mục giữ nguyên slug:** Khi cập nhật danh mục, slug ban đầu không thay đổi nhằm bảo vệ tính toàn vẹn của các URL SEO và tránh gãy liên kết bên ngoài.
-* **Cơ chế xóa (Soft Delete & Conflict Guard):** Áp dụng xóa mềm `IsDeleted = true`. Chặn xóa và trả mã lỗi **`409 Conflict` (`category.delete_has_recipes`)** nếu danh mục vẫn còn bất kỳ công thức nào (kể cả món `Draft` hay `Archived`) theo đúng yêu cầu FR-CAT-005.
+* **Cơ chế xóa (Hard Delete & Conflict Guard theo SRS v1.1.1 - C07):** Áp dụng xóa cứng (Hard Delete — xóa entity khỏi database) theo đúng chuẩn hóa của SRS v1.1.1 (FR-CAT-005). Chặn xóa và trả mã lỗi **`409 Conflict` (`category.delete_has_recipes`)** nếu danh mục vẫn còn bất kỳ công thức nào (kể cả món `Draft` hay `Archived`) để bảo vệ tính toàn vẹn dữ liệu.
 
 ### 2.2. Thứ tự hiển thị danh mục (D29)
 * API `GET /api/v1/categories` mặc định sắp xếp theo **`OrderIndex` tăng dần**, sau đó sắp theo **`Name` tăng dần** để phục vụ việc điều hướng thanh menu (Navigation) của ban quản trị linh hoạt.

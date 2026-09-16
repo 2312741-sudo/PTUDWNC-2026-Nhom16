@@ -30,9 +30,13 @@ builder.Services.AddSingleton(sp =>
 });
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddDbContext<AuthDbContext>(options => options.UseNpgsql(
-    builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
-    pg => pg.CommandTimeout(30)));
+builder.Services.AddDbContext<AuthDbContext>(options =>
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
+        pg => pg.CommandTimeout(30));
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.User.RequireUniqueEmail = true;
@@ -138,18 +142,21 @@ app.UseAuthorization();
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing")) { app.MapOpenApi(); app.MapScalarApiReference(); }
 var auth = app.MapGroup("/api/v1/auth").WithTags("Authentication");
 auth.MapPost("/register", async (RegisterCommand command, ISender sender, CancellationToken ct) =>
-    Results.Created("/api/v1/auth/me", await sender.Send(command, ct)))
-    .WithName("Register").Produces<AuthResponse>(201).ProducesValidationProblem().ProducesProblem(409).RequireRateLimiting("auth");
+{
+    var res = await sender.Send(command, ct);
+    return Results.Created("/api/v1/auth/me", new { data = res });
+})
+    .WithName("Register").Produces<object>(201).ProducesValidationProblem().ProducesProblem(409).RequireRateLimiting("auth");
 
 auth.MapPost("/login", async (LoginCommand command, ISender sender, CancellationToken ct) =>
-    Results.Ok(await sender.Send(command, ct)))
-    .WithName("Login").Produces<AuthResponse>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
+    Results.Ok(new { data = await sender.Send(command, ct) }))
+    .WithName("Login").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
 
-auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(new GetMeQuery(), ct)))
-    .RequireAuthorization().WithName("GetMe").Produces<UserDto>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(new { data = await sender.Send(new GetMeQuery(), ct) }))
+    .RequireAuthorization().WithName("GetMe").Produces<object>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
-auth.MapPatch("/me", async (UpdateProfileCommand command, ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(command, ct)))
-    .RequireAuthorization().WithName("UpdateMe").Produces<UserDto>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+auth.MapPatch("/me", async (UpdateProfileCommand command, ISender sender, CancellationToken ct) => Results.Ok(new { data = await sender.Send(command, ct) }))
+    .RequireAuthorization().WithName("UpdateMe").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
 auth.MapPost("/logout", async (LogoutCommand? command, ISender sender, CancellationToken ct) =>
 {
@@ -160,30 +167,30 @@ auth.MapPost("/logout", async (LogoutCommand? command, ISender sender, Cancellat
 
 var categories = app.MapGroup("/api/v1/categories").WithTags("Categories");
 categories.MapGet("", async (ISender sender, CancellationToken ct) =>
-    Results.Ok(await sender.Send(new GetCategoriesQuery(), ct)))
-    .WithName("GetCategories").Produces<IReadOnlyList<CategoryDto>>(200);
+    Results.Ok(new { data = await sender.Send(new GetCategoriesQuery(), ct) }))
+    .WithName("GetCategories").Produces<object>(200);
 
 categories.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
-    Results.Ok(await sender.Send(new GetCategoryBySlugQuery(slug), ct)))
-    .WithName("GetCategoryBySlug").Produces<CategoryDto>(200).ProducesProblem(404);
+    Results.Ok(new { data = await sender.Send(new GetCategoryBySlugQuery(slug), ct) }))
+    .WithName("GetCategoryBySlug").Produces<object>(200).ProducesProblem(404);
 
 categories.MapPost("", async (CreateCategoryCommand command, ISender sender, CancellationToken ct) =>
 {
     var created = await sender.Send(command, ct);
-    return Results.Created($"/api/v1/categories/{created.Slug}", created);
+    return Results.Created($"/api/v1/categories/{created.Slug}", new { data = created });
 })
     .RequireAuthorization("AdminPolicy").WithName("CreateCategory")
-    .Produces<CategoryDto>(201).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(409);
+    .Produces<object>(201).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(409);
 
 categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryCommand command, ISender sender, CancellationToken ct) =>
 {
     if (id != command.Id)
         return Results.BadRequest(new Microsoft.AspNetCore.Mvc.ProblemDetails { Status = 400, Title = "Id trong URL không khớp với body.", Extensions = { ["code"] = "request.invalid" } });
     var updated = await sender.Send(command, ct);
-    return Results.Ok(updated);
+    return Results.Ok(new { data = updated });
 })
     .RequireAuthorization("AdminPolicy").WithName("UpdateCategory")
-    .Produces<CategoryDto>(200).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
+    .Produces<object>(200).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
 
 categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
 {

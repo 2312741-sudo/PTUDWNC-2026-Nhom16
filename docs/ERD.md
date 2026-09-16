@@ -1,8 +1,8 @@
-# ERD — Culinary Blog (ĐỐI CHIẾU TRỰC TIẾP SRS v1.0.0)
+# ERD — Culinary Blog (ĐỐI CHIẾU TRỰC TIẾP SRS v1.1.1)
 
-> Nguồn: SRS_Culinary_Blog_v1.0.0.pdf — **Chương 6.4 (ERD tóm tắt)** và **Chương 7 (Mô hình Dữ liệu, tr.54–60)**.
-> SRS chỉ mô tả ERD bằng bảng chữ, **không có hình vẽ** → sơ đồ dưới đây là bản vẽ chính thức của nhóm.
-> DB: PostgreSQL 16, EF Core 10 Code First. Mọi entity nghiệp vụ kế thừa `BaseEntity` + Soft Delete;
+> Nguồn: SRS Culinary Blog v1.1.1 — **Chương 6.4 (ERD tóm tắt)** và **Chương 7 (Mô hình Dữ liệu)**.
+> Đã chuẩn hóa toàn bộ 9 mâu thuẫn nội tại C01–C09: Recipe xóa mềm (Soft Delete `IsDeleted`), Category xóa cứng (Hard Delete), Step dùng `TimerMinutes`, Ingredient dùng `OrderIndex`.
+> DB: PostgreSQL 16, EF Core 10 Code First. Mọi entity nghiệp vụ kế thừa `BaseEntity` + Soft Delete (Recipe);
 > **RefreshToken là ngoại lệ** (cấu trúc riêng, xem ghi chú D24).
 
 ```mermaid

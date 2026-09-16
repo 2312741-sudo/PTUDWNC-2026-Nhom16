@@ -43,6 +43,12 @@ public sealed class CategoryRepository(AuthDbContext db) : ICategoryRepository
         return Task.CompletedTask;
     }
 
+    public Task DeleteAsync(Category category, CancellationToken ct)
+    {
+        db.Categories.Remove(category);
+        return Task.CompletedTask;
+    }
+
     public Task SaveChangesAsync(CancellationToken ct) =>
         db.SaveChangesAsync(ct);
 }

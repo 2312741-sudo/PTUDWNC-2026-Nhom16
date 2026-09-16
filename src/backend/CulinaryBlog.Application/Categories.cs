@@ -44,6 +44,7 @@ public interface ICategoryRepository
     Task<int> CountRecipesAsync(Guid categoryId, CancellationToken ct);
     Task AddAsync(Category category, CancellationToken ct);
     Task UpdateAsync(Category category, CancellationToken ct);
+    Task DeleteAsync(Category category, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
 
@@ -146,8 +147,7 @@ public sealed class DeleteCategoryHandler(ICategoryRepository repository) : IReq
                 "Không thể xoá danh mục vì vẫn còn công thức liên kết.");
         }
 
-        category.MarkDeleted();
-        await repository.UpdateAsync(category, ct);
+        await repository.DeleteAsync(category, ct);
         await repository.SaveChangesAsync(ct);
 
         return Unit.Value;

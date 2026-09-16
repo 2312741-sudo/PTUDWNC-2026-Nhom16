@@ -9,7 +9,7 @@ Danh sách thành viên:
 Người review & nghiệm thu toàn bộ: **Nguyễn Thanh Tâm (Nhóm trưởng)**.
 Tuần 1 tính từ ngày nhóm bắt đầu; chưa có ngày bắt đầu cụ thể nên không tự gán lịch ngày tháng.
 
-Nguồn yêu cầu: SRS Culinary Blog v1.0.0, 71 trang. Tài liệu liên quan: [Kế hoạch dự án tổng thể](KE_HOACH_DU_AN.md), đặc biệt mục 2 về các mâu thuẫn cần chốt và mục 10–11 về 34 FR/30 NFR. File này dùng để giao việc, theo dõi tiến độ và nghiệm thu cá nhân. Mọi công việc dưới đây hiện **Chưa làm**; việc ghi lịch không phải bằng chứng đã triển khai.
+Nguồn yêu cầu: **SRS Culinary Blog v1.1.1** (đã giải quyết toàn bộ 9 mâu thuẫn nội tại C01–C09 và chuẩn hóa Auth API §8.1). Tài liệu liên quan: [Kế hoạch dự án tổng thể](KE_HOACH_DU_AN.md), [Báo cáo mâu thuẫn nội tại](docs/root/SRS_Contradictions_Report.md). File này dùng để giao việc, theo dõi tiến độ và nghiệm thu cá nhân.
 
 ## 1. Nguyên tắc và phạm vi mỗi người
 

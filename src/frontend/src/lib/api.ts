@@ -8,7 +8,8 @@ export async function getCategories(): Promise<Category[]> {
       next: { revalidate: 3600 },
     });
     if (!res.ok) throw new Error('Không thể tải danh sách danh mục.');
-    return await res.json();
+    const json = await res.json();
+    return json.data ?? json;
   } catch (error) {
     console.error('Error in getCategories:', error);
     return [];
@@ -22,7 +23,8 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Không thể tải chi tiết danh mục.');
-    return await res.json();
+    const json = await res.json();
+    return json.data ?? json;
   } catch (error) {
     console.error('Error in getCategoryBySlug:', error);
     return null;
@@ -48,7 +50,7 @@ export async function createCategory(
       return { success: false, error: result.title || result.detail || 'Lỗi khi tạo danh mục.' };
     }
 
-    return { success: true, data: result };
+    return { success: true, data: result.data ?? result };
   } catch (err: any) {
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
@@ -74,7 +76,7 @@ export async function updateCategory(
       return { success: false, error: result.title || result.detail || 'Lỗi khi cập nhật danh mục.' };
     }
 
-    return { success: true, data: result };
+    return { success: true, data: result.data ?? result };
   } catch (err: any) {
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
@@ -92,10 +94,15 @@ export async function deleteCategory(
       },
     });
 
-    if (res.status === 204) return { success: true };
+    if (res.status === 204 || res.ok) {
+      return { success: true };
+    }
 
-    const result = await res.json();
-    return { success: false, error: result.title || result.detail || 'Không thể xóa danh mục.' };
+    const result = await res.json().catch(() => ({}));
+    return {
+      success: false,
+      error: result.title || result.detail || 'Lỗi khi xoá danh mục.',
+    };
   } catch (err: any) {
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
@@ -120,7 +127,7 @@ export async function getMe(token: string): Promise<{ success: boolean; data?: i
     }
 
     const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: data.data ?? data };
   } catch (err: any) {
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
@@ -149,7 +156,7 @@ export async function updateProfile(
       };
     }
 
-    return { success: true, data: result };
+    return { success: true, data: result.data ?? result };
   } catch (err: any) {
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
@@ -173,4 +180,3 @@ export async function logout(token: string): Promise<{ success: boolean; error?:
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
 }
-
