@@ -168,8 +168,8 @@ auth.MapPost("/logout", async (LogoutCommand? command, ISender sender, Cancellat
     .RequireAuthorization().WithName("Logout").Produces(204).ProducesProblem(401);
 
 auth.MapPost("/google", async (GoogleLoginCommand command, ISender sender, CancellationToken ct) =>
-    Results.Ok(await sender.Send(command, ct)))
-    .WithName("GoogleLogin").Produces<AuthResponse>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502);
+    Results.Ok(new { data = await sender.Send(command, ct) }))
+    .WithName("GoogleLogin").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502);
 
 var categories = app.MapGroup("/api/v1/categories").WithTags("Categories");
 categories.MapGet("", async (ISender sender, CancellationToken ct) =>

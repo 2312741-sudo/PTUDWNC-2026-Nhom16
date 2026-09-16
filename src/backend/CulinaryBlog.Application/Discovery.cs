@@ -93,13 +93,13 @@ public sealed class GetRecipesValidator : AbstractValidator<GetRecipesQuery>
 
         When(x => x.MaxCookTime.HasValue, () =>
         {
-            RuleFor(x => x.MaxCookTime!.Value)
+            RuleFor(x => x.MaxCookTime)
                 .GreaterThanOrEqualTo(0).WithMessage("Thời gian nấu tối đa không được âm.");
         });
 
         When(x => x.MinServings.HasValue, () =>
         {
-            RuleFor(x => x.MinServings!.Value)
+            RuleFor(x => x.MinServings)
                 .GreaterThan(0).WithMessage("Số khẩu phần tối thiểu phải lớn hơn 0.");
         });
     }
@@ -140,13 +140,13 @@ public sealed class SearchRecipesValidator : AbstractValidator<SearchRecipesQuer
 
         When(x => x.MaxCookTime.HasValue, () =>
         {
-            RuleFor(x => x.MaxCookTime!.Value)
+            RuleFor(x => x.MaxCookTime)
                 .GreaterThanOrEqualTo(0).WithMessage("Thời gian nấu tối đa không được âm.");
         });
 
         When(x => x.MinServings.HasValue, () =>
         {
-            RuleFor(x => x.MinServings!.Value)
+            RuleFor(x => x.MinServings)
                 .GreaterThan(0).WithMessage("Số khẩu phần tối thiểu phải lớn hơn 0.");
         });
     }

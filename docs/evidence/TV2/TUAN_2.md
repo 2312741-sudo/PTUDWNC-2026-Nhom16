@@ -3,9 +3,9 @@
 - **Người thực hiện**: Ngô Quốc Trường Vĩ (MSSV: 2312796) — TV2
 - **Phần việc phụ trách**: Danh mục, khám phá và tìm kiếm; Đăng nhập Google
 - **Mã task tuần 2**: B2, B3, B4, B7 (nền tuần 2)
-- **Nhánh Git**: `feat/TV2-week2-discovery-search-google`
+- **Nhánh Git**: `feat/TV2-week2-discovery-search`
 - **Ngày hoàn thành**: 16/09/2026
-- **Trạng thái**: Hoàn thành 100% mục tiêu Tuần 2 (Đã test pass 22/22 tests, đạt mốc G2)
+- **Trạng thái**: Hoàn thành 100% mục tiêu Tuần 2 (Đã test pass 36/36 tests, đạt mốc G2)
 
 ---
 
@@ -21,8 +21,11 @@
   - `src/backend/CulinaryBlog.Infrastructure/RecipeRepository.cs`: Truy vấn LINQ parameterized kết hợp bộ lọc AND (`CategoryId`, `Difficulty`, `MaxCookTime`, `MinServings`), sắp xếp theo allowlist an toàn.
   - `src/backend/CulinaryBlog.API/Program.cs`: Endpoint `GET /api/v1/recipes`.
   - `src/frontend/src/app/recipes/page.tsx` & `src/frontend/src/components/RecipeCard.tsx`: Giao diện duyệt món ăn kèm sidebar bộ lọc và điều hướng phân trang.
+  - `src/frontend/src/app/categories/[slug]/page.tsx`: Giao diện chi tiết danh mục hiển thị danh sách món ăn thực tế thuộc danh mục.
 - **Test / Lệnh chạy, môi trường, kết quả thực tế**:
   - Test `GetRecipes_only_returns_published_and_applies_and_filters` -> PASS.
+  - Test `GetRecipes_pagination_calculates_bounds_and_handles_clamping` -> PASS.
+  - Test `GetRecipes_validator_rejects_invalid_inputs` -> PASS.
   - Bảo mật dữ liệu: các món `Draft` và `Archived` tuyệt đối không bị lọt vào response public.
 - **Reviewer xác nhận**: Nguyễn Thanh Tâm (Nhóm trưởng) — Ngày: 16/09/2026.
 
@@ -40,6 +43,7 @@
   - `docs/SEARCH_AND_DISCOVERY_CONTRACT.md`.
 - **Test / Lệnh chạy, môi trường, kết quả thực tế**:
   - Test `SearchRecipes_finds_by_unaccented_keyword_and_rejects_short_queries` -> PASS.
+  - Test `SearchRecipes_with_filters_and_sorting` -> PASS.
   - Gõ từ khóa `"pho"` tìm thấy chính xác món `"Phở Bò Gia Truyền"`.
   - Từ khóa ngắn $q < 2$ bị chặn và trả về lỗi `400 Bad Request` kèm Problem Details.
 - **Reviewer xác nhận**: Nguyễn Thanh Tâm (Nhóm trưởng) — Ngày: 16/09/2026.
@@ -68,9 +72,9 @@
 - **Trạng thái**: Hoàn thành
 - **Đầu ra, đường dẫn code/config, PR/commit**:
   - `tests/CulinaryBlog.Tests/DiscoveryAndSearchTests.cs`: Toàn bộ test suite kiểm tra tìm kiếm, lọc, phân trang và Google Login.
-  - Giao diện các trang `/recipes`, `/search`, `/auth/login` được thiết kế responsive theo Tailwind CSS cho 3 mốc: 320px (Mobile), 768px (Tablet), 1200px (Desktop).
+  - Giao diện các trang `/recipes`, `/search`, `/auth/login`, `/categories/[slug]` được thiết kế responsive theo Tailwind CSS cho 3 mốc: 320px (Mobile), 768px (Tablet), 1200px (Desktop).
 - **Test / Lệnh chạy, môi trường, kết quả thực tế**:
-  - Chạy `dotnet test`: 22/22 tests pass 100% (gồm 7 tests Kiến trúc, 12 tests Category, 3 tests Discovery & Search).
+  - Chạy `dotnet test`: 36/36 tests pass 100% (gồm 18 tests Kiến trúc & Validator, 12 tests Category, 6 tests Discovery & Search).
 - **Reviewer xác nhận**: Nguyễn Thanh Tâm (Nhóm trưởng) — Ngày: 16/09/2026.
 
 ---
@@ -80,26 +84,29 @@
 ### Kết quả chạy lệnh `dotnet test`
 ```
 Test run for CulinaryBlog.Tests.dll (.NETCoreApp,Version=v10.0)
-Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22, Duration: 53 ms
+Passed! - Failed: 0, Passed: 36, Skipped: 0, Total: 36, Duration: 63 ms
 ```
 
-Danh sách 22 tests đã đạt:
+Danh sách các tests chính:
 1. `DiscoveryAndSearchTests.GetRecipes_only_returns_published_and_applies_and_filters`: PASS
-2. `DiscoveryAndSearchTests.SearchRecipes_finds_by_unaccented_keyword_and_rejects_short_queries`: PASS
-3. `DiscoveryAndSearchTests.GoogleLogin_creates_author_or_links_account`: PASS
-4. `CategoryTests.Category_domain_creates_and_validates_properties`: PASS
-5. `CategoryTests.Category_domain_rejects_invalid_names`: PASS
-6. `CategoryTests.SlugHelper_generates_vietnamese_slug_correctly`: PASS
-7. `CategoryTests.CreateCategory_validator_catches_invalid_inputs`: PASS
-8. `CategoryTests.CreateCategory_handler_creates_and_generates_unique_slug`: PASS
-9. `CategoryTests.UpdateCategory_preserves_slug_and_validates_uniqueness`: PASS
-10. `CategoryTests.DeleteCategory_blocks_when_recipes_exist_and_soft_deletes_when_empty`: PASS
-11. `CategoryTests.GetCategories_orders_by_order_index_then_name`: PASS
-12. `CategoryTests.PaginationMeta_calculates_page_bounds_correctly`: PASS
-13. `ArchitectureTests.Inner_layers_do_not_reference_infrastructure_or_web`: PASS
-14. `ArchitectureTests.Display_name_rejects_invalid_values`: PASS
-15. `ArchitectureTests.Validation_pipeline_stops_handler_on_invalid_password`: PASS
-... và các tests nền tảng khác.
+2. `DiscoveryAndSearchTests.GetRecipes_pagination_calculates_bounds_and_handles_clamping`: PASS
+3. `DiscoveryAndSearchTests.GetRecipes_validator_rejects_invalid_inputs`: PASS
+4. `DiscoveryAndSearchTests.SearchRecipes_finds_by_unaccented_keyword_and_rejects_short_queries`: PASS
+5. `DiscoveryAndSearchTests.SearchRecipes_with_filters_and_sorting`: PASS
+6. `DiscoveryAndSearchTests.GoogleLogin_creates_author_or_links_account`: PASS
+7. `CategoryTests.Category_domain_creates_and_validates_properties`: PASS
+8. `CategoryTests.Category_domain_rejects_invalid_names`: PASS
+9. `CategoryTests.SlugHelper_generates_vietnamese_slug_correctly`: PASS
+10. `CategoryTests.CreateCategory_validator_catches_invalid_inputs`: PASS
+11. `CategoryTests.CreateCategory_handler_creates_and_generates_unique_slug`: PASS
+12. `CategoryTests.UpdateCategory_preserves_slug_and_validates_uniqueness`: PASS
+13. `CategoryTests.DeleteCategory_blocks_when_recipes_exist_and_soft_deletes_when_empty`: PASS
+14. `CategoryTests.GetCategories_orders_by_order_index_then_name`: PASS
+15. `CategoryTests.PaginationMeta_calculates_page_bounds_correctly`: PASS
+16. `ArchitectureTests.Inner_layers_do_not_reference_infrastructure_or_web`: PASS
+17. `ArchitectureTests.Display_name_rejects_invalid_values`: PASS
+18. `ArchitectureTests.Validation_pipeline_stops_handler_on_invalid_password`: PASS
+... và các tests nền tảng khác đạt chuẩn 100%.
 
 ---
 

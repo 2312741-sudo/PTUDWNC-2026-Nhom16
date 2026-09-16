@@ -178,19 +178,19 @@ public sealed class FakeIdentityServiceForGoogle : IIdentityService
             throw new AppException(401, "auth.google_email_unverified", "Email Google chưa được xác minh.");
 
         var user = Users.GetValueOrDefault(payload.Email) ?? new UserDto(
-            Id: Guid.NewGuid().ToString("N"),
-            Email: payload.Email,
-            DisplayName: payload.Name,
-            Roles: [Roles.Author]
+            Guid.NewGuid().ToString("N"),
+            payload.Email,
+            payload.Name,
+            [Roles.Author]
         );
 
         Users[payload.Email] = user;
 
         return Task.FromResult(new AuthResponse(
-            AccessToken: "fake-jwt-token",
-            TokenType: "Bearer",
-            ExpiresIn: 900,
-            User: user
+            "fake-jwt-token",
+            "Bearer",
+            900,
+            user
         ));
     }
 
@@ -284,5 +284,97 @@ public sealed class DiscoveryAndSearchTests
         fakeAuth.EmailVerified = false;
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(new GoogleLoginCommand("valid-token"), CancellationToken.None));
         Assert.Equal(401, ex.Status);
+    }
+
+    [Fact]
+    public async Task GetRecipes_pagination_calculates_bounds_and_handles_clamping()
+    {
+        var repo = new FakeRecipeRepository();
+        var handler = new GetRecipesHandler(repo);
+
+        var catId = Guid.NewGuid();
+        for (var i = 1; i <= 25; i++)
+        {
+            repo.Recipes.Add(new Recipe(
+                $"Món ngon số {i:D2}",
+                $"mon-ngon-so-{i:D2}",
+                $"Mô tả cho món ngon số {i}",
+                "",
+                10,
+                15,
+                2,
+                RecipeDifficultyValues.Easy,
+                catId,
+                "author1",
+                null,
+                RecipeStatusValues.Published));
+        }
+
+        // Test page size 10, page 1 -> 10 items, total 25, totalPages 3, hasNext true, hasPrev false
+        var page1 = await handler.Handle(new GetRecipesQuery(Page: 1, PageSize: 10), CancellationToken.None);
+        Assert.Equal(10, page1.Data.Count);
+        Assert.Equal(25, page1.Meta.Total);
+        Assert.Equal(3, page1.Meta.TotalPages);
+        Assert.True(page1.Meta.HasNextPage);
+        Assert.False(page1.Meta.HasPreviousPage);
+
+        // Test page 3 -> 5 items, hasNext false, hasPrev true
+        var page3 = await handler.Handle(new GetRecipesQuery(Page: 3, PageSize: 10), CancellationToken.None);
+        Assert.Equal(5, page3.Data.Count);
+        Assert.False(page3.Meta.HasNextPage);
+        Assert.True(page3.Meta.HasPreviousPage);
+
+        // Test negative page and overly large pageSize -> clamped to valid bounds
+        var clamped = await handler.Handle(new GetRecipesQuery(Page: -5, PageSize: 100), CancellationToken.None);
+        Assert.Equal(1, clamped.Meta.Page);
+        Assert.Equal(50, clamped.Meta.PageSize);
+    }
+
+    [Fact]
+    public async Task GetRecipes_validator_rejects_invalid_inputs()
+    {
+        var validator = new GetRecipesValidator();
+
+        // Invalid difficulty
+        var invalidDiff = await validator.ValidateAsync(new GetRecipesQuery(Difficulty: "SuperHard"));
+        Assert.False(invalidDiff.IsValid);
+        Assert.Contains(invalidDiff.Errors, e => e.PropertyName == "Difficulty");
+
+        // Invalid MaxCookTime (< 0)
+        var invalidCookTime = await validator.ValidateAsync(new GetRecipesQuery(MaxCookTime: -10));
+        Assert.False(invalidCookTime.IsValid);
+        Assert.Contains(invalidCookTime.Errors, e => e.PropertyName == "MaxCookTime");
+
+        // Invalid MinServings (<= 0)
+        var invalidServings = await validator.ValidateAsync(new GetRecipesQuery(MinServings: 0));
+        Assert.False(invalidServings.IsValid);
+        Assert.Contains(invalidServings.Errors, e => e.PropertyName == "MinServings");
+
+        // Valid inputs pass
+        var valid = await validator.ValidateAsync(new GetRecipesQuery(Difficulty: "Medium", MaxCookTime: 45, MinServings: 2));
+        Assert.True(valid.IsValid);
+    }
+
+    [Fact]
+    public async Task SearchRecipes_with_filters_and_sorting()
+    {
+        var repo = new FakeRecipeRepository();
+        var handler = new SearchRecipesHandler(repo);
+
+        var catA = Guid.NewGuid();
+        var catB = Guid.NewGuid();
+
+        repo.Recipes.Add(new Recipe("Canh Chua Cá Lóc", "canh-chua-ca-loc", "Món canh đậm đà miền Tây", "", 20, 30, 4, RecipeDifficultyValues.Medium, catA, "author1", null, RecipeStatusValues.Published));
+        repo.Recipes.Add(new Recipe("Canh Bí Đỏ Thịt Bằm", "canh-bi-do-thit-bam", "Canh ngọt thanh bổ dưỡng", "", 10, 15, 2, RecipeDifficultyValues.Easy, catB, "author1", null, RecipeStatusValues.Published));
+        repo.Recipes.Add(new Recipe("Cá Kho Tộ", "ca-kho-to", "Cá kho tộ đậm vị mặn ngọt", "", 15, 45, 4, RecipeDifficultyValues.Hard, catA, "author1", null, RecipeStatusValues.Published));
+
+        // Search "kho" -> 1 item ("Cá Kho Tộ")
+        var searchKho = await handler.Handle(new SearchRecipesQuery("kho"), CancellationToken.None);
+        Assert.Single(searchKho.Data);
+        Assert.Equal("Cá Kho Tộ", searchKho.Data[0].Title);
+
+        // Search "canh" -> 2 items ("Canh Chua Cá Lóc", "Canh Bí Đỏ Thịt Bằm")
+        var searchCanh = await handler.Handle(new SearchRecipesQuery("canh"), CancellationToken.None);
+        Assert.Equal(2, searchCanh.Data.Count);
     }
 }
