@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
@@ -38,10 +39,24 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     options.Password.RequireLowercase = true;
     options.Password.RequireDigit = true;
     options.Password.RequireNonAlphanumeric = true;
-}).AddRoles<IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.AllowedForNewUsers = true;
+}).AddRoles<IdentityRole>().AddEntityFrameworkStores<AuthDbContext>().AddSignInManager();
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddSingleton<WelcomeEmailQueue>();
+builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
+builder.Services.AddHostedService<WelcomeEmailWorker>();
+builder.Services.AddRateLimiter(options =>
+{
+    var permitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 10;
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, _) => { context.HttpContext.Response.Headers.RetryAfter = "60"; return ValueTask.CompletedTask; };
+    options.AddPolicy("auth", http => RateLimitPartition.GetFixedWindowLimiter(
+        http.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
@@ -108,16 +123,17 @@ app.UseSerilogRequestLogging(options =>
 });
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-if (app.Environment.IsDevelopment()) { app.MapOpenApi(); app.MapScalarApiReference(); }
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing")) { app.MapOpenApi(); app.MapScalarApiReference(); }
 var auth = app.MapGroup("/api/v1/auth").WithTags("Authentication");
 auth.MapPost("/register", async (RegisterCommand command, ISender sender, CancellationToken ct) =>
     Results.Created("/api/v1/auth/me", await sender.Send(command, ct)))
-    .WithName("Register").Produces<AuthResponse>(201).ProducesValidationProblem().ProducesProblem(409);
+    .WithName("Register").Produces<AuthResponse>(201).ProducesValidationProblem().ProducesProblem(409).RequireRateLimiting("auth");
 auth.MapPost("/login", async (LoginCommand command, ISender sender, CancellationToken ct) =>
     Results.Ok(await sender.Send(command, ct)))
-    .WithName("Login").Produces<AuthResponse>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403);
+    .WithName("Login").Produces<AuthResponse>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
 auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(new GetMeQuery(), ct)))
     .RequireAuthorization().WithName("GetMe").Produces<UserDto>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
@@ -156,6 +172,8 @@ categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationT
     .RequireAuthorization("AdminPolicy").WithName("DeleteCategory")
     .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
 
+auth.MapPatch("/me", async (UpdateProfileCommand command, ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(command, ct)))
+    .RequireAuthorization().WithName("UpdateMe").Produces<UserDto>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 app.Run();
 
 public partial class Program;
