@@ -45,6 +45,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 }).AddRoles<IdentityRole>().AddEntityFrameworkStores<AuthDbContext>().AddSignInManager();
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddSingleton<WelcomeEmailQueue>();
 builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
 builder.Services.AddHostedService<WelcomeEmailWorker>();
@@ -135,6 +136,42 @@ auth.MapPost("/login", async (LoginCommand command, ISender sender, Cancellation
     .WithName("Login").Produces<AuthResponse>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
 auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(new GetMeQuery(), ct)))
     .RequireAuthorization().WithName("GetMe").Produces<UserDto>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+var categories = app.MapGroup("/api/v1/categories").WithTags("Categories");
+categories.MapGet("", async (ISender sender, CancellationToken ct) =>
+    Results.Ok(await sender.Send(new GetCategoriesQuery(), ct)))
+    .WithName("GetCategories").Produces<IReadOnlyList<CategoryDto>>(200);
+
+categories.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
+    Results.Ok(await sender.Send(new GetCategoryBySlugQuery(slug), ct)))
+    .WithName("GetCategoryBySlug").Produces<CategoryDto>(200).ProducesProblem(404);
+
+categories.MapPost("", async (CreateCategoryCommand command, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(command, ct);
+    return Results.Created($"/api/v1/categories/{created.Slug}", created);
+})
+    .RequireAuthorization("AdminPolicy").WithName("CreateCategory")
+    .Produces<CategoryDto>(201).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(409);
+
+categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryCommand command, ISender sender, CancellationToken ct) =>
+{
+    if (id != command.Id)
+        return Results.BadRequest(new Microsoft.AspNetCore.Mvc.ProblemDetails { Status = 400, Title = "Id trong URL không khớp với body.", Extensions = { ["code"] = "request.invalid" } });
+    var updated = await sender.Send(command, ct);
+    return Results.Ok(updated);
+})
+    .RequireAuthorization("AdminPolicy").WithName("UpdateCategory")
+    .Produces<CategoryDto>(200).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
+
+categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteCategoryCommand(id), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AdminPolicy").WithName("DeleteCategory")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
+
 auth.MapPatch("/me", async (UpdateProfileCommand command, ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(command, ct)))
     .RequireAuthorization().WithName("UpdateMe").Produces<UserDto>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 app.Run();
