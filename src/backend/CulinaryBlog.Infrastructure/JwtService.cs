@@ -17,19 +17,28 @@ public sealed class JwtSettings
             throw new InvalidOperationException("Configure Jwt:SigningKey (at least 64 UTF-8 bytes), Issuer and Audience through secrets/environment.");
     }
 }
+
 public sealed class JwtService(JwtSettings settings, TimeProvider clock)
 {
     public AuthResponse Issue(UserDto user)
     {
         var now = clock.GetUtcNow().UtcDateTime;
+        var expiresAtUtc = now.AddMinutes(15);
         var claims = new List<Claim> {
             new(JwtRegisteredClaimNames.Sub, user.Id), new("userId", user.Id),
             new(JwtRegisteredClaimNames.Email, user.Email), new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
         claims.AddRange(user.Roles.Select(role => new Claim("role", role)));
-        var token = new JwtSecurityToken(settings.Issuer, settings.Audience, claims, now, now.AddMinutes(15),
+        var token = new JwtSecurityToken(settings.Issuer, settings.Audience, claims, now, expiresAtUtc,
             new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.SigningKey)), SecurityAlgorithms.HmacSha256));
-        return new(new JwtSecurityTokenHandler().WriteToken(token), "Bearer", 900, user);
+
+        return new AuthResponse(
+            AccessToken: new JwtSecurityTokenHandler().WriteToken(token),
+            RefreshToken: null,
+            TokenType: "Bearer",
+            ExpiresIn: 900,
+            ExpiresAt: new DateTimeOffset(expiresAtUtc),
+            User: user);
     }
 }

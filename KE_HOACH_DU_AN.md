@@ -2,7 +2,7 @@
 
 Ngày biên soạn: 09/09/2026 · Dự án: CULINARY-BLOG-V1 · Môn: Phát triển ứng dụng Web nâng cao.
 
-Nguồn: `SRS_Culinary_Blog_v1.0.0.pdf`, phiên bản 1.0.0 ngày 04/06/2026, 71 trang, tại `/Users/nthtam/Downloads/SRS_Culinary_Blog_v1.0.0.pdf`. Số trang dẫn dưới đây là số trang PDF. Đã đọc toàn bộ 8 chương, lịch sử tài liệu và 3 phụ lục. Một số bảng trong PDF bị tràn khỏi mép phải, đặc biệt trang 28–29, 47–48 và 63–65; phần thiếu được đối chiếu giữa các chương, không được xem là dữ liệu đã xác nhận nếu vẫn còn mâu thuẫn.
+Nguồn: `SRS_Culinary_Blog_v1.0.0.pdf` (phiên bản 1.0.0 ngày 04/06/2026) và tài liệu chuẩn hóa chính thức **`SRS_Culinary_Blog_v1.1.1.md`** (Approved ngày 16/09/2026, giải quyết dứt điểm 9 mâu thuẫn C01–C09 và chuẩn hóa Auth API §8.1). Đã đọc toàn bộ 8 chương, lịch sử tài liệu và 3 phụ lục. Mọi khác biệt và mâu thuẫn trước đây đã được Lead Systems Architect phê duyệt giải quyết theo SRS v1.1.1.
 
 Đây là **một tài liệu kế hoạch tổng hợp**, không phải mã nguồn ứng dụng đã hoàn thành. Mọi trạng thái công việc ban đầu là **Chưa làm**. Tài liệu giữ phạm vi đề, tổ chức lại theo phụ thuộc triển khai và thêm cơ chế đánh giá từng cá nhân. Các quy ước đề xuất để xử lý mâu thuẫn không phải thay đổi SRS đã được giảng viên phê duyệt.
 
@@ -69,7 +69,20 @@ Lịch 6 tuần và 100 điểm công việc/người là **ước lượng lậ
 
 ## 2. Điểm cần thống nhất trước khi viết code
 
-Nguồn SRS chứa các cách mô tả không đồng nhất. Bảng này giúp nhóm làm việc được ngay với **phương án dự kiến**; đầu tuần 1 ghi ADR/Change Request và gửi giảng viên xác nhận những thay đổi tác động yêu cầu. Có thể dựng khung, môi trường và mẫu UI trong lúc chờ; không tự coi điểm mâu thuẫn đã được phê duyệt.
+> [!IMPORTANT]
+> **Cập nhật ngày 16/09/2026**: Phiên bản **SRS v1.1.1** đã được Lead Systems Architect phê duyệt chính thức, giải quyết dứt điểm 9 mâu thuẫn nội tại (C01–C09) và chuẩn hóa Auth API §8.1:
+> - **C01 (Xóa Recipe)**: Chốt **Soft Delete** (`IsDeleted = true`, query filter `!IsDeleted`). File ảnh trên MinIO được giữ nguyên.
+> - **C02 (Publish Recipe)**: Chốt điều kiện **≥ 1 ingredient VÀ ≥ 1 step**. Vi phạm trả về HTTP 422 `RECIPE_PUBLISH_INCOMPLETE`.
+> - **C03 (TTL Cache Category)**: Chốt **60 phút** (`IMemoryCache` / Redis).
+> - **C04 (Default Page Size)**: Chốt **pageSize = 12** (thống nhất giữa Recipes và Search).
+> - **C05 (Field Name Step)**: Chốt **`TimerMinutes`** (thay vì DurationMinutes).
+> - **C06 (Field Name Ingredient)**: Chốt **`OrderIndex`** (thay vì SortOrder).
+> - **C07 (Xóa Category)**: Chốt **Hard Delete** (xóa entity khỏi DB, chặn HTTP 409 nếu còn recipes).
+> - **C08 (Response Format)**: **Toàn bộ response thành công LUÔN wrap trong `{ "data": ... }`**.
+> - **C09 (Category Uniqueness)**: Chốt `Name` UNIQUE và `Slug` UNIQUE trong cơ sở dữ liệu.
+> - **Auth API §8.1**: Bổ sung `fullName`, `userName`, `emailConfirmed`, `createdAt`, chuẩn hóa `expiresAt`.
+
+Nguồn SRS bản 1.0.0 trước đây chứa các cách mô tả không đồng nhất. Bảng dưới đây đối chiếu các điểm D01–D29 với các quyết định đã được chuẩn hóa trong SRS v1.1.1:
 
 | Mã | Điểm khác nhau trong SRS | Phương án dự kiến / việc cần chốt | Phụ trách |
 |---|---|---|---|
@@ -81,7 +94,7 @@ Nguồn SRS chứa các cách mô tả không đồng nhất. Bảng này giúp 
 | D06 | Logout cần Bearer nhưng luồng phụ cho phép token hết hạn tr. 22 | Dự kiến endpoint yêu cầu Bearer như chương 8; nếu hỗ trợ logout bằng refresh token phải đặc tả riêng cơ chế chứng minh quyền sở hữu | TV4 |
 | D07 | Publish chỉ cần step tr. 31; phụ lục tr. 68 cần cả ingredient và step | Dự kiến ít nhất 1 nguyên liệu và 1 bước; không bắt buộc ảnh vì SRS không nêu; lặp trạng thái trả 200 | TV4 + TV3 |
 | D08 | Recipe hard delete/cascade tr. 32–33 đối lập soft delete tr. 43, 54, 64 | Dự kiến soft delete để phù hợp mô hình dữ liệu/độ bền. Không xóa vật lý ảnh của recipe còn cần khôi phục. Xóa ảnh riêng vẫn chạy job; purge recipe/file chỉ sau chính sách lưu giữ được chốt | TV4 |
-| D09 | Category xóa entity tr. 27 nhưng soft delete tr. 63; chưa rõ đếm archived/deleted | Dự kiến soft delete; chặn nếu còn recipe chưa xóa ở bất kỳ trạng thái nào, gồm Archived; xác định riêng liên kết recipe đã soft-delete | TV2 |
+| D09 | Category xóa entity tr. 27 nhưng soft delete tr. 63 (C07) | **Đã chốt trong SRS v1.1.1 (C07)**: Xóa Category là **Hard Delete** (xóa entity khỏi DB, trả 204). Chặn 409 Conflict nếu danh mục còn bất kỳ recipe nào. | TV2 |
 | D10 | IMemoryCache category 60 phút; OutputCache list/detail 15/60 phút; NFR dùng Redis 30/5/1 phút | Dự kiến Redis shared cache category/detail/search = 30/5/1 phút; OutputCache public list = 15 phút, public detail tối đa 5 phút. Invalidation cả API lẫn ISR; không cache chung response có Draft/Archived | TV2 + TV4 |
 | D11 | items/totalCount và sort=-createdAt/pageSize=12 đối lập data/meta, sortBy/sortOrder/pageSize=10 | Dự kiến data/meta, sortBy/sortOrder; mặc định page=1, pageSize=12, max=50; sortBy=createdAt, sortOrder=desc. Adapter nếu cần tương thích; một schema duy nhất | TV2 |
 | D12 | List tr. 28 có Draft/Archived của owner nhưng bước lọc bỏ Archived; chapter 8 chỉ Published | Public UI chỉ Published; dashboard gọi cùng query với phạm vi quyền rõ ràng: Author của mình, Admin theo quyền. Bổ sung tham số scope/status cho dashboard bằng ADR, không tin authorId từ client để cấp quyền | TV3 + TV2 |

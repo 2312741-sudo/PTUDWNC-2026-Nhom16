@@ -31,13 +31,17 @@ export default function ProfileDashboardPage() {
       const demoUser: User = {
         id: 'tv1-demo-uuid',
         email: '2312741@dlu.edu.vn',
+        fullName: 'Nguyễn Thanh Tâm',
+        userName: '2312741',
         displayName: 'Nguyễn Thanh Tâm',
         roles: ['Author'],
         avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
         bio: 'Nhóm trưởng nhóm 16 — Phụ trách xác thực, hồ sơ và bảo mật hệ thống.',
+        emailConfirmed: true,
+        createdAt: '2026-09-16T10:00:00Z',
       };
       setUser(demoUser);
-      setDisplayName(demoUser.displayName);
+      setDisplayName(demoUser.fullName || demoUser.displayName);
       setAvatarUrl(demoUser.avatarUrl || '');
       setBio(demoUser.bio || '');
       setLoading(false);

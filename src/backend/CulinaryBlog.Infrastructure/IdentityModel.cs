@@ -8,6 +8,8 @@ namespace CulinaryBlog.Infrastructure;
 public sealed class ApplicationUser : IdentityUser
 {
     public string DisplayName { get; set; } = "";
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string FullName { get => DisplayName; set => DisplayName = value; }
     public string? AvatarUrl { get; set; }
     public string? Bio { get; set; }
     public bool IsActive { get; set; } = true;

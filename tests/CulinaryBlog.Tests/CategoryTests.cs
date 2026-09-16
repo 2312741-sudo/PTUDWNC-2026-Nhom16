@@ -46,6 +46,12 @@ public sealed class FakeCategoryRepository : ICategoryRepository
 
     public Task UpdateAsync(Category category, CancellationToken ct) => Task.CompletedTask;
 
+    public Task DeleteAsync(Category category, CancellationToken ct)
+    {
+        Categories.Remove(category);
+        return Task.CompletedTask;
+    }
+
     public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
 }
 
@@ -151,12 +157,11 @@ public sealed class CategoryTests
         Assert.Equal(409, ex.Status);
         Assert.Equal("category.delete_has_recipes", ex.Code);
 
-        // Danh mục rỗng -> xoá thành công (soft-delete)
+        // Danh mục rỗng -> xoá thành công (hard-delete theo C07)
         var cat2 = await createHandler.Handle(new("Món Trộn", null, null, 2), CancellationToken.None);
         await deleteHandler.Handle(new(cat2.Id), CancellationToken.None);
 
-        var deletedCat = repo.Categories.First(c => c.Id == cat2.Id);
-        Assert.True(deletedCat.IsDeleted);
+        Assert.DoesNotContain(repo.Categories, c => c.Id == cat2.Id);
     }
 
     [Fact]
