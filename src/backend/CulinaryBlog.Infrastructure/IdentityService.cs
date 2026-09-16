@@ -62,5 +62,5 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
         return await ToDto(user);
     }
-    private async Task<UserDto> ToDto(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, (await users.GetRolesAsync(user)).ToArray());
+    private async Task<UserDto> ToDto(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, (await users.GetRolesAsync(user)).ToArray(), user.AvatarUrl, user.Bio);
 }

@@ -64,6 +64,12 @@ export default function Header() {
               <Shield className="w-3.5 h-3.5" />
               Quản trị DM
             </Link>
+            <Link
+              href="/dashboard/profile"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 text-neutral-800 rounded-lg hover:bg-neutral-200 transition-colors text-xs font-semibold"
+            >
+              Hồ sơ (A3)
+            </Link>
           </nav>
 
           {/* Auth Buttons */}

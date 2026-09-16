@@ -9,3 +9,10 @@
 
 env.ps1
 .vscode/
+
+# Frontend dependencies and build
+**/node_modules/
+**/.next/
+**/out/
+*.tsbuildinfo
+next-env.d.ts

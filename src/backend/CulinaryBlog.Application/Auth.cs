@@ -4,7 +4,7 @@ using CulinaryBlog.Domain;
 
 namespace CulinaryBlog.Application;
 
-public sealed record UserDto(string Id, string Email, string DisplayName, string[] Roles);
+public sealed record UserDto(string Id, string Email, string DisplayName, string[] Roles, string? AvatarUrl = null, string? Bio = null);
 public sealed record AuthResponse(string AccessToken, string TokenType, int ExpiresIn, UserDto User);
 public sealed record RegisterCommand(string Email, string Password, string DisplayName) : IRequest<AuthResponse>;
 public sealed record LoginCommand(string Email, string Password) : IRequest<AuthResponse>;
@@ -55,8 +55,24 @@ public sealed class UpdateProfileValidator : AbstractValidator<UpdateProfileComm
     public UpdateProfileValidator()
     {
         RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(100).Must(x => !x.Any(char.IsControl) && !x.Contains('<') && !x.Contains('>'));
-        RuleFor(x => x.AvatarUrl).MaximumLength(500).Must(x => x is null || Uri.TryCreate(x, UriKind.Absolute, out _));
+        RuleFor(x => x.AvatarUrl).MaximumLength(500).Must(x => x is null || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)));
         RuleFor(x => x.Bio).MaximumLength(2000).Must(x => x is null || !x.Any(char.IsControl));
+    }
+}
+public sealed record LogoutCommand(string? RefreshToken = null) : IRequest;
+public sealed class LogoutHandler : IRequestHandler<LogoutCommand>
+{
+    public Task Handle(LogoutCommand request, CancellationToken ct)
+    {
+        // Tuần 1: access-token-only. Revoke refresh token thật gắn khi C5 (rotation) merge — tuần 2.
+        return Task.CompletedTask;
+    }
+}
+public sealed class LogoutValidator : AbstractValidator<LogoutCommand>
+{
+    public LogoutValidator()
+    {
+        RuleFor(x => x.RefreshToken).MaximumLength(500);
     }
 }
 public sealed class LoginValidator : AbstractValidator<LoginCommand>

@@ -7,8 +7,10 @@ Trạng thái: đã triển khai để tích hợp; các lựa chọn D02/D03/D1
 | POST /auth/register | email, password, displayName | 201 + Location `/api/v1/auth/me`, AuthResponse | 400 validation/JSON, 409 email trùng |
 | POST /auth/login | email, password | 200 AuthResponse | 400 validation, 401 thông tin sai, 403 inactive |
 | GET /auth/me | Bearer JWT | 200 UserDto | 401 thiếu/sai/hết hạn JWT, 403 inactive, 404 user không còn |
+| PATCH /auth/me | Bearer JWT + { displayName, avatarUrl?, bio? } | 200 UserDto | 400 validation/JSON, 401 unauthorized, 403 inactive, 404 user không còn |
+| POST /auth/logout | Bearer JWT + { "refreshToken" } (tuần 1 optional) | 204 NoContent | 401 thiếu/sai token; SRS FR-AUTH-005 yêu cầu body refreshToken khi có refresh (tuần 2) |
 
-`UserDto`: `{ id: string, email: string, displayName: string, roles: string[] }`.
+`UserDto`: `{ id: string, email: string, displayName: string, roles: string[], avatarUrl?: string | null, bio?: string | null }`.
 `AuthResponse`: `{ accessToken: string, tokenType: "Bearer", expiresIn: 900, user: UserDto }`.
 Chưa có `refreshToken`; TV3 cần bổ sung contract trước khi tích hợp rotation. TV4 chưa thể nghiệm thu revoke/logout với phiên bản access-token-only này. Google do TV2 bàn giao riêng.
 

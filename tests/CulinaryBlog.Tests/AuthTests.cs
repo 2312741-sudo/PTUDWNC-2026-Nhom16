@@ -23,7 +23,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? throw new InvalidOperationException("Set TEST_DATABASE to an isolated PostgreSQL 16 test database."),
+            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres",
             ["Jwt:SigningKey"] = new string('t', 64)
         }));
     }
@@ -154,5 +154,113 @@ public sealed class AuthTests : IClassFixture<ApiFactory>
         var json = await client.GetStringAsync("/openapi/v1.json");
         Assert.Contains("/api/v1/auth/register", json);
         Assert.Contains("Bearer", json);
+    }
+    [Fact]
+    public async Task Logout_with_valid_token_returns_no_content()
+    {
+        var command = NewUser();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register", command);
+        var auth = await register.Content.ReadFromJsonAsync<AuthResponse>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+        var response = await client.PostAsJsonAsync("/api/v1/auth/logout", new { RefreshToken = (string?)null });
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+    [Fact]
+    public async Task Logout_without_token_returns_unauthorized()
+    {
+        client.DefaultRequestHeaders.Authorization = null;
+        var response = await client.PostAsJsonAsync("/api/v1/auth/logout", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+    [Fact]
+    public async Task Lockout_after_five_failed_attempts_locks_account_and_returns_423()
+    {
+        var command = NewUser();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register", command);
+        Assert.Equal(HttpStatusCode.Created, register.StatusCode);
+
+        // 4 failed login attempts return 401 Unauthorized
+        for (var i = 0; i < 4; i++)
+        {
+            var failed = await client.PostAsJsonAsync("/api/v1/auth/login", new LoginCommand(command.Email, "wrong-password"));
+            Assert.Equal(HttpStatusCode.Unauthorized, failed.StatusCode);
+        }
+
+        // 5th failed attempt reaches MaxFailedAccessAttempts=5 and locks the account
+        var fifthAttempt = await client.PostAsJsonAsync("/api/v1/auth/login", new LoginCommand(command.Email, "wrong-password"));
+        Assert.Equal((HttpStatusCode)423, fifthAttempt.StatusCode);
+        var body5 = await fifthAttempt.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("auth.locked", body5.GetProperty("code").GetString());
+
+        // Subsequent attempt (even with correct password) remains locked out
+        var locked = await client.PostAsJsonAsync("/api/v1/auth/login", new LoginCommand(command.Email, command.Password));
+        Assert.Equal((HttpStatusCode)423, locked.StatusCode);
+        var body = await locked.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("auth.locked", body.GetProperty("code").GetString());
+    }
+    [Fact]
+    public async Task Update_profile_patches_allowed_fields_successfully()
+    {
+        var command = NewUser();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register", command);
+        var auth = (await register.Content.ReadFromJsonAsync<AuthResponse>())!;
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var patchCmd = new UpdateProfileCommand("Tâm Chef", "https://example.com/avatar.jpg", "Đầu bếp nghiệp dư");
+        var patchRes = await client.PatchAsJsonAsync("/api/v1/auth/me", patchCmd);
+        Assert.Equal(HttpStatusCode.OK, patchRes.StatusCode);
+
+        var updated = await patchRes.Content.ReadFromJsonAsync<UserDto>();
+        Assert.NotNull(updated);
+        Assert.Equal("Tâm Chef", updated.DisplayName);
+        Assert.Equal("https://example.com/avatar.jpg", updated.AvatarUrl);
+        Assert.Equal("Đầu bếp nghiệp dư", updated.Bio);
+        Assert.Equal(command.Email, updated.Email); // email untouched
+
+        var me = await client.GetFromJsonAsync<UserDto>("/api/v1/auth/me");
+        Assert.NotNull(me);
+        Assert.Equal(updated.DisplayName, me.DisplayName);
+        Assert.Equal(updated.AvatarUrl, me.AvatarUrl);
+        Assert.Equal(updated.Bio, me.Bio);
+        Assert.Equal(updated.Email, me.Email);
+        Assert.Equal(updated.Roles, me.Roles);
+    }
+    [Fact]
+    public async Task Update_profile_rejects_unauthorized_call()
+    {
+        client.DefaultRequestHeaders.Authorization = null;
+        var patchRes = await client.PatchAsJsonAsync("/api/v1/auth/me", new UpdateProfileCommand("Tâm", null, null));
+        Assert.Equal(HttpStatusCode.Unauthorized, patchRes.StatusCode);
+    }
+    [Theory]
+    [InlineData("<script>alert(1)</script>", null, "displayName")]
+    [InlineData("Tâm", "javascript:alert(1)", "avatarUrl")]
+    public async Task Update_profile_rejects_xss_and_invalid_inputs(string name, string? avatar, string expectedErrorField)
+    {
+        var command = NewUser();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register", command);
+        var auth = (await register.Content.ReadFromJsonAsync<AuthResponse>())!;
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var patchRes = await client.PatchAsJsonAsync("/api/v1/auth/me", new UpdateProfileCommand(name, avatar, null));
+        Assert.Equal(HttpStatusCode.BadRequest, patchRes.StatusCode);
+        var body = await patchRes.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("errors").TryGetProperty(expectedErrorField, out _));
+    }
+    [Fact]
+    public async Task Update_profile_cannot_modify_email_or_roles()
+    {
+        var command = NewUser();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register", command);
+        var auth = (await register.Content.ReadFromJsonAsync<AuthResponse>())!;
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        // Attempting to send unmapped email/role properties is disallowed by serializer
+        var attempt = await client.PatchAsJsonAsync("/api/v1/auth/me", new { displayName = "Tâm", email = "hacked@example.com", roles = new[] { "Admin" } });
+        Assert.Equal(HttpStatusCode.BadRequest, attempt.StatusCode);
+
+        // Verify profile still has original email and Author role
+        var me = (await client.GetFromJsonAsync<UserDto>("/api/v1/auth/me"))!;
+        Assert.Equal(command.Email, me.Email);
     }
 }
