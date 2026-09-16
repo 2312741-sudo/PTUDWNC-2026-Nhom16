@@ -59,6 +59,22 @@ public sealed class UpdateProfileValidator : AbstractValidator<UpdateProfileComm
         RuleFor(x => x.Bio).MaximumLength(2000).Must(x => x is null || !x.Any(char.IsControl));
     }
 }
+public sealed record LogoutCommand(string? RefreshToken = null) : IRequest;
+public sealed class LogoutHandler : IRequestHandler<LogoutCommand>
+{
+    public Task Handle(LogoutCommand request, CancellationToken ct)
+    {
+        // Tuần 1: access-token-only. Revoke refresh token thật gắn khi C5 (rotation) merge — tuần 2.
+        return Task.CompletedTask;
+    }
+}
+public sealed class LogoutValidator : AbstractValidator<LogoutCommand>
+{
+    public LogoutValidator()
+    {
+        RuleFor(x => x.RefreshToken).MaximumLength(500);
+    }
+}
 public sealed class LoginValidator : AbstractValidator<LoginCommand>
 {
     public LoginValidator()

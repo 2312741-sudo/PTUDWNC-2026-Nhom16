@@ -1,9 +1,12 @@
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
+using CulinaryBlog.API;
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -59,6 +62,12 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
+builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
+builder.Services.AddHealthChecks()
+    .AddCheck<LivenessHealthCheck>("liveness", tags: ["live"])
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready", "all"])
+    .AddCheck<RedisHealthCheck>("redis", tags: ["ready", "all"])
+    .AddCheck<MinIOHealthCheck>("minio", tags: ["all"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<JwtSettings>((options, jwt) =>
 {
@@ -137,6 +146,12 @@ auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(aw
     .RequireAuthorization().WithName("GetMe").Produces<UserDto>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 auth.MapPatch("/me", async (UpdateProfileCommand command, ISender sender, CancellationToken ct) => Results.Ok(await sender.Send(command, ct)))
     .RequireAuthorization().WithName("UpdateMe").Produces<UserDto>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+auth.MapPost("/logout", async (LogoutCommand? command, ISender sender, CancellationToken ct) =>
+    { await sender.Send(command ?? new LogoutCommand(), ct); return Results.NoContent(); })
+    .RequireAuthorization().WithName("Logout").Produces(204).ProducesProblem(401);
+app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
 app.Run();
 
 public partial class Program;

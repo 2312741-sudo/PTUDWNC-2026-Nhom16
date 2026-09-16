@@ -155,4 +155,21 @@ public sealed class AuthTests : IClassFixture<ApiFactory>
         Assert.Contains("/api/v1/auth/register", json);
         Assert.Contains("Bearer", json);
     }
+    [Fact]
+    public async Task Logout_with_valid_token_returns_no_content()
+    {
+        var command = NewUser();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register", command);
+        var auth = await register.Content.ReadFromJsonAsync<AuthResponse>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+        var response = await client.PostAsJsonAsync("/api/v1/auth/logout", new { RefreshToken = (string?)null });
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+    [Fact]
+    public async Task Logout_without_token_returns_unauthorized()
+    {
+        client.DefaultRequestHeaders.Authorization = null;
+        var response = await client.PostAsJsonAsync("/api/v1/auth/logout", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
