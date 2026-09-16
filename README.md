@@ -26,14 +26,14 @@ Dự án được phân chia theo chiều dọc nghiệp vụ (mỗi thành viê
 
 - ✅ **Cổng G0 (Giữa Tuần 1 - Hạ tầng Dev & Skeletons)**: **ĐẠT 100%**. Đã khởi dựng thành công trọn bộ stack container hóa (PostgreSQL 16, Redis 7, MinIO, MailHog, Seq, Nginx) và khung mã nguồn Clean Architecture + Next.js App Router.
 - ✅ **Cổng G1 (Cuối Tuần 1 - Tích hợp Đăng ký, Đăng nhập, Danh mục & Schema Recipe)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PR của 4 thành viên vào nhánh chính `main`.
-- 🔄 **Cổng G2 (Tuần 2 - Hồ sơ người dùng, Soạn thảo công thức đa bước, Upload ảnh & Xuất bản)**: **ĐẠT TIẾN ĐỘ 60%**. TV1 đã hoàn thành xuất sắc 100% khối lượng Tuần 2; các thành viên TV2, TV3, TV4 đang hoàn tất các phần việc tiếp theo.
+- 🔄 **Cổng G2 (Tuần 2 - Hồ sơ người dùng, Khám phá & FTS, Soạn thảo công thức đa bước, Upload ảnh & Xuất bản)**: **ĐẠT TIẾN ĐỘ 75%**. TV1 và TV2 đã hoàn thành xuất sắc 100% khối lượng Tuần 2; các thành viên TV3, TV4 đang hoàn tất các phần việc tiếp theo.
 
 ### 2.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 16/09/2026)
 
 | Thành viên | Tiến độ Tuần 1 | Tiến độ Tuần 2 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
 |---|:---:|:---:|:---:|---|
 | **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** (A1, A2, A5, CI) | **100%** (A2, A3, A4, A7) | **14 / 24** (K01, K02, K04, K05, K08, K10, K14, K15, K16, K17, K20, K21, K23, K24) | ✅ **Hoàn thành Tuần 1 & Tuần 2**. Đạt 50 tests tích hợp, build pass cả Backend & Frontend, có bằng chứng minh chứng đầy đủ. |
-| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1, B2 nền, B6) | **Đang thực hiện** (B2, B3, B4) | **9 / 24** (K01, K02, K03, K04, K06, K07, K08, K09, K16) | 🔄 **Hoàn thành Tuần 1**. Đã merge PR #5 (Category CRUD, UI Shell Next.js, Google Contract, phân trang D11). Đang làm Google Login PKCE & FTS. |
+| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1, B2 nền, B6) | **100%** (B2, B3, B4, B7) | **14 / 24** (K01, K02, K03, K04, K05, K06, K07, K08, K09, K11, K16, K17, K18, K21) | ✅ **Hoàn thành Tuần 1 & Tuần 2**. Đạt 22 tests tích hợp, build pass cả Backend & Frontend, hoàn thành Khám phá công thức `/recipes`, FTS tiếng Việt không dấu `/search`, Đăng nhập Google OAuth2 `/auth/login`. |
 | **TV3 — Huỳnh Quốc Trung** | **100%** (C1, C6 nền) | **Đang thực hiện** (C2, C3, C5) | **7 / 24** (K01, K02, K03, K05, K06, K07, K21) | 🔄 **Hoàn thành Tuần 1**. Đã merge PR #3 (Recipe aggregate schema, Nutrition VO, Concurrency spike 4/4 pass). Đang làm Wizard soạn thảo & Refresh token. |
 | **TV4 — Nguyễn Hữu Trung Sơn** | **100%** (D1, D3, D5, D6) | **Đang thực hiện** (D1, D2, D3) | **8 / 24** (K01, K05, K11, K12, K13, K20, K23, K24) | 🔄 **Hoàn thành Tuần 1**. Đã tích hợp Compose full stack, Nginx reverse proxy, Health check probes, Storage contract, Logout endpoint. Đang làm Media resize & Publish. |
 
@@ -82,6 +82,21 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
    - Hợp đồng lưu trữ file `IFileStorageService` (Stream-based) và cấu hình `MinioOptions` sẵn sàng cho việc tích hợp bucket S3.
    - Reverse proxy Nginx (`nginx/nginx.dev.conf`) điều hướng thông suốt giữa frontend và backend API.
 
+5. **Phân hệ Khám phá, Tìm kiếm & Đăng nhập Google OAuth (TV2 - Ngô Quốc Trường Vĩ - Tuần 2)**:
+   - **Duyệt danh sách công thức công khai (`GET /api/v1/recipes`)**:
+     - Lọc kết hợp (AND) đa tiêu chí: `categoryId`, `difficulty`, `maxCookTime`, `minServings`.
+     - Sắp xếp linh hoạt theo allowlist an toàn: `createdAt`, `title`, `cookTimeMinutes`, `prepTimeMinutes` (chặn SQL Injection).
+     - Phân trang chuẩn giao ước D11 (`data/meta`).
+     - **Bảo mật**: Tuyệt đối cô lập và không bao giờ trả về công thức ở trạng thái `Draft` hoặc `Archived`.
+   - **Tìm kiếm toàn văn FTS tiếng Việt không dấu (`GET /api/v1/recipes/search`)**:
+     - Chuẩn hóa từ khóa tiếng Việt không dấu qua `SlugHelper` và PostgreSQL `unaccent`.
+     - Cho phép gõ từ khóa không dấu như `pho` vẫn tìm thấy chính xác món `Phở Bò Gia Truyền`.
+     - Kiểm soát độ dài từ khóa tối thiểu ($q \ge 2$ ký tự), từ chối và trả về HTTP 400 kèm Problem Details nếu không hợp lệ.
+   - **Xác thực Đăng nhập Google OAuth2 (`POST /api/v1/auth/google`)**:
+     - Xác thực IdToken từ Google thông qua thư viện chuẩn `Google.Apis.Auth` (`GoogleJsonWebSignature`).
+     - Tự động tạo tài khoản với role `Author` cho người dùng mới hoặc liên kết với tài khoản đã tồn tại.
+     - Cấp JWT token chuẩn `AuthResponse` tương thích toàn bộ hệ thống xác thực.
+
 ---
 
 ### 3.2. Giao diện Người dùng (Frontend Next.js 15 App Router & Tailwind CSS)
@@ -100,6 +115,12 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
    - Khóa cố định các trường bảo mật: hiển thị `Email` và `Vai trò (Roles)` dưới dạng badge bảo vệ kèm thông báo hướng dẫn người dùng.
    - Xem trước trực tiếp ảnh đại diện (Avatar Preview), hỗ trợ ảnh fallback khi URL lỗi.
    - Phản hồi trạng thái lưu mượt mà qua thông báo trạng thái (Toast Alert).
+
+4. **Trang Khám phá Công thức & Tìm kiếm (`/recipes`, `/search`)** *(Mới hoàn thành ở Tuần 2 bởi TV2)*:
+   - **Trang Khám phá (`/recipes`)**: Thanh bên bộ lọc đa tiêu chí (danh mục, độ khó, thời gian nấu, khẩu phần), sắp xếp thời gian/tên, thanh điều hướng phân trang mượt mà chuẩn giao ước D11.
+   - **Trang Tìm kiếm (`/search`)**: Thanh tìm kiếm lớn, hiển thị số lượng kết quả theo từ khóa, trạng thái rỗng và cảnh báo từ khóa ngắn dưới 2 ký tự.
+   - **Thẻ món ăn (`RecipeCard`)**: Hiển thị badge độ khó (`Easy`, `Medium`, `Hard`, `Expert`), thời gian chuẩn bị/nấu, số khẩu phần và thông tin tác giả.
+   - **Nút Đăng nhập Google (`GoogleSignInButton`)** trên `/auth/login`: Tích hợp nút Google OAuth trực quan, chuyển đổi mượt mà giữa đăng nhập truyền thống và Google SSO.
 
 ---
 
@@ -226,9 +247,10 @@ dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 - 🔐 [Hợp đồng API Xác thực (Auth Contract)](docs/AUTH_CONTRACT.md)
 - 🗂️ [Hợp đồng API Danh mục (Category Contract)](docs/CATEGORY_CONTRACT.md)
 - 🍲 [Hợp đồng Danh sách Công thức (Recipe List Contract)](docs/RECIPE_LIST_CONTRACT.md)
+- 🔍 [Hợp đồng Tìm kiếm & Khám phá (Search & Discovery Contract)](docs/SEARCH_AND_DISCOVERY_CONTRACT.md)
 - 🌐 [Hợp đồng Google OAuth (Google Auth Contract)](docs/GOOGLE_AUTH_CONTRACT.md)
 - 📑 **Báo cáo nghiệm thu cá nhân**:
   - [Báo cáo Tuần 1 & Tuần 2 — TV1 (Nguyễn Thanh Tâm)](docs/evidence/TV1/TUAN_2.md)
-  - [Báo cáo Tuần 1 — TV2 (Ngô Quốc Trường Vĩ)](docs/evidence/TV2/TUAN_1.md)
+  - [Báo cáo Tuần 1 & Tuần 2 — TV2 (Ngô Quốc Trường Vĩ)](docs/evidence/TV2/TUAN_2.md)
   - [Báo cáo Tuần 1 — TV3 (Huỳnh Quốc Trung)](docs/evidence/TV3/C1-HOAN-THIEN.md)
   - [Báo cáo Tuần 1 — TV4 (Nguyễn Hữu Trung Sơn)](docs/evidence/TV4/TRANG_THAI_THUC_HIEN.md)

@@ -17,6 +17,7 @@ public interface IIdentityService
     Task<AuthResponse> LoginAsync(LoginCommand command, CancellationToken ct);
     Task<UserDto> GetAsync(string id, CancellationToken ct);
     Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct);
+    Task<AuthResponse> LoginWithGoogleAsync(GoogleUserPayload payload, CancellationToken ct);
 }
 public sealed class AppException(int status, string code, string message) : Exception(message)
 {

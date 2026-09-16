@@ -1,5 +1,7 @@
 using CulinaryBlog.Domain.Common;
 using CulinaryBlog.Domain.Enums;
+using RecipeDifficulty = CulinaryBlog.Domain.Enums.RecipeDifficulty;
+using RecipeStatus = CulinaryBlog.Domain.Enums.RecipeStatus;
 
 namespace CulinaryBlog.Domain.Entities;
 
