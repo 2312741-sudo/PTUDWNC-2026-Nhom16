@@ -32,7 +32,7 @@ public sealed class JwtService(JwtSettings settings, TimeProvider clock)
         claims.AddRange(user.Roles.Select(role => new Claim("role", role)));
         var token = new JwtSecurityToken(settings.Issuer, settings.Audience, claims, now, expiresAtUtc,
             new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.SigningKey)), SecurityAlgorithms.HmacSha256));
-        
+
         return new AuthResponse(
             AccessToken: new JwtSecurityTokenHandler().WriteToken(token),
             RefreshToken: null,

@@ -242,10 +242,12 @@ dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 
 ## 📚 6. Danh Mục Tài Liệu Kỹ Thuật Tham Chiếu
 
+- 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](HUONG_DAN_TEST_APP.md)
+- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
 - 📋 [Kế hoạch phân chia công việc 6 tuần](PHAN_CHIA_CONG_VIEC_6_TUAN.md)
 - 📖 [Kế hoạch tổng thể & Giải quyết xung đột SRS](KE_HOACH_DU_AN.md)
 - 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm chính thức (SRS v1.1.1)](docs/root/SRS_Culinary_Blog_v1.1.1.md)
-- 📑 [Báo cáo Mâu thuẫn Nội tại SRS (C01–C09)](docs/root/SRS_Contradictions_Report.md)
+- 📑 [Báo cáo Mâu thuẫn Nội tại SRS chi tiết](docs/root/SRS_Contradictions_Report.md)
 - 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm (Bản gốc v1.0.0)](docs/root/SRS_Culinary_Blog_v1.0.0.md)
 - 🔐 [Hợp đồng API Xác thực (Auth Contract)](docs/AUTH_CONTRACT.md)
 - 🗂️ [Hợp đồng API Danh mục (Category Contract)](docs/CATEGORY_CONTRACT.md)
