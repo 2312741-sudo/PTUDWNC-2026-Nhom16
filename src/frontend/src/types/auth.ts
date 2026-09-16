@@ -30,3 +30,15 @@ export interface UpdateProfileRequest {
   avatarUrl?: string | null;
   bio?: string | null;
 }
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  userName: string;
+  email: string;
+  password: string;
+}

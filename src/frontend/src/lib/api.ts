@@ -180,3 +180,56 @@ export async function logout(token: string): Promise<{ success: boolean; error?:
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
 }
+
+export async function login(
+  data: import('@/types/auth').LoginRequest
+): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        success: false,
+        error: result.detail || result.title || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.',
+      };
+    }
+
+    return { success: true, data: result.data ?? result };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
+
+export async function register(
+  data: import('@/types/auth').RegisterRequest
+): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string; validationErrors?: Record<string, string[]> }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        success: false,
+        error: result.detail || result.title || 'Đăng ký tài khoản thất bại.',
+        validationErrors: result.errors,
+      };
+    }
+
+    return { success: true, data: result.data ?? result };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
