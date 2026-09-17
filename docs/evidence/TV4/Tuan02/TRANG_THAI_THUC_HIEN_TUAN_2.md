@@ -8,6 +8,7 @@
 
 > File này ghi lại trạng thái thực hiện các task tuần 2 (D1, D2, D3, D4 nền, D6 tiếp), các điểm cần bàn luận và lý do.
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_2_TV4.md`.
+> **Điều kiện gỡ block + hướng dẫn làm tiếp chi tiết**: xem `docs/HANDOFF_TV4_TUAN2_BLOCKED.md` (tài liệu tự túc khi TV4 vắng mặt).
 
 ---
 
