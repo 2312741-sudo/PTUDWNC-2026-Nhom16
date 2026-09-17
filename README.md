@@ -166,9 +166,13 @@ Passed!  - Failed: 0, Passed: 50, Skipped: 0, Total: 50, Duration: 2 s
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - [Node.js 20+ LTS](https://nodejs.org/)
 - [Docker & Docker Compose](https://www.docker.com/)
-- Hệ quản trị PostgreSQL 16 (có thể dùng qua Docker)
+- Hệ quản trị PostgreSQL 16 (**khuyến nghị dùng qua Docker** để đồng bộ password với cả team)
 
-### 4.2. Khởi động hạ tầng Docker
+### 4.2. Khởi động hạ tầng Docker (chuẩn chung cho cả team)
+> 🎯 **Đây là cách chính thức để tất cả thành viên có môi trường giống nhau.**
+> Docker Compose khởi tạo PostgreSQL với user `postgres` / password `admin123` (mặc định dev).
+> Tránh cài PostgreSQL native để không lệch password, trừ khi cần override (xem §4.6).
+
 ```bash
 # Khởi động toàn bộ 6 dịch vụ phụ trợ
 docker compose -f docker-compose.dev.yml up -d
@@ -182,8 +186,8 @@ docker compose -f docker-compose.dev.yml ps
 # 1. Khôi phục dependencies theo locked-mode
 dotnet restore CulinaryBlog.sln --locked-mode
 
-# 2. Thiết lập biến môi trường kết nối
-export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=culinary;Password=culinary_dev_secret"
+# 2. Thiết lập biến môi trường kết nối (password admin123 khớp container compose)
+export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
 export Jwt__SigningKey="super_secret_jwt_signing_key_for_culinary_blog_min_64_bytes_long_string_12345"
 export ASPNETCORE_ENVIRONMENT=Development
 
@@ -212,12 +216,25 @@ npm run dev
 
 ### 4.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
-# Thiết lập chuỗi kết nối database test chuyên biệt
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=culinary;Password=culinary_dev_secret"
+# Thiết lập chuỗi kết nối database test chuyên biệt (password admin123 khớp container compose)
+export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
 
 # Chạy toàn bộ 54 tests trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 ```
+
+### 4.6. Dành cho thành viên dùng PostgreSQL native
+Nếu máy đã có sẵn PostgreSQL cài trực tiếp (password khác `admin123`), **không sửa file cấu hình đã commit** — chỉ cần override bằng biến môi trường cục bộ:
+
+```bash
+# API: trỏ về DB native của bạn
+export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+
+# Test: trỏ về DB test của bạn (tương tự nếu chạy test tích hợp)
+export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+```
+
+> ⚠️ Mật khẩu cá nhân **không được commit**; chỉ tồn tại ở máy local (hoặc trong `.env` đã gitignore). Giá trị mặc định trong config là dev-only cho container Docker.
 
 ---
 
