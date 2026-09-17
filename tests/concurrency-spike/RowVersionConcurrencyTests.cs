@@ -2,6 +2,7 @@ using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace ConcurrencySpike;
 
 /// <summary>
