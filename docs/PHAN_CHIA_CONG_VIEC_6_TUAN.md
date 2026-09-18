@@ -1,11 +1,13 @@
 # PHÂN CHIA CÔNG VIỆC CULINARY BLOG — 4 NGƯỜI, 6 TUẦN
 
-Cập nhật: 09/09/2026.
+Cập nhật: 16/09/2026.
 Danh sách thành viên:
+
 - **TV1 (Nhóm trưởng)**: 2312741 — Nguyễn Thanh Tâm
 - **TV2**: 2312796 — Ngô Quốc Trường Vĩ
 - **TV3**: 2312786 — Huỳnh Quốc Trung
 - **TV4**: 2312739 — Nguyễn Hữu Trung Sơn
+
 Người review & nghiệm thu toàn bộ: **Nguyễn Thanh Tâm (Nhóm trưởng)**.
 Tuần 1 tính từ ngày nhóm bắt đầu; chưa có ngày bắt đầu cụ thể nên không tự gán lịch ngày tháng.
 

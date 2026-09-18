@@ -13,7 +13,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var conn = configuration.GetConnectionString("Default")
-                   ?? "Host=localhost;Port=5432;Database=culinaryblog;Username=postgres;Password=postgres";
+                   ?? "Host=localhost;Port=5432;Database=culinaryblog;Username=postgres;Password=admin123";
 
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<AuditableEntityInterceptor>();

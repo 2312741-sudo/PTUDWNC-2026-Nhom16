@@ -68,6 +68,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
+builder.Services.AddScoped<IFileStorageService, MinioStorageService>();
 builder.Services.AddHealthChecks()
     .AddCheck<LivenessHealthCheck>("liveness", tags: ["live"])
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready", "all"])

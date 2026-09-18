@@ -30,7 +30,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres",
+            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=admin123",
             ["Jwt:SigningKey"] = new string('t', 64)
         }));
     }
