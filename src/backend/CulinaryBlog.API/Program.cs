@@ -16,8 +16,11 @@ using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
-
+using CulinaryBlog.Application.Common.Interfaces;
+using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Infrastructure.Persistence.Interceptors;
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Fatal)
@@ -30,11 +33,12 @@ builder.Services.AddSingleton(sp =>
 });
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddDbContext<AuthDbContext>(options =>
+builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
 {
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
         pg => pg.CommandTimeout(30));
+    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -53,6 +57,9 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
+builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+builder.Services.AddScoped<AuditableEntityInterceptor>();
 builder.Services.AddSingleton<WelcomeEmailQueue>();
 builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
 builder.Services.AddHostedService<WelcomeEmailWorker>();
