@@ -1,3 +1,4 @@
+using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 
 namespace CulinaryBlog.Application.Common.Interfaces;
@@ -13,6 +14,8 @@ public interface IApplicationDbContext
     IQueryable<RecipeIngredient> RecipeIngredients { get; }
     IQueryable<RecipeStep> RecipeSteps { get; }
     IQueryable<RecipeImage> RecipeImages { get; }
+    IQueryable<Category> Categories { get; }
+    IQueryable<RefreshToken> RefreshTokens { get; }
 
     void Add<TEntity>(TEntity entity) where TEntity : class;
     void Remove<TEntity>(TEntity entity) where TEntity : class;

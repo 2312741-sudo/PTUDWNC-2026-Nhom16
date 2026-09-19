@@ -1,5 +1,5 @@
 using CulinaryBlog.Domain.Entities;
-using CulinaryBlog.Infrastructure.Identity;
+using CulinaryBlog.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,7 +22,7 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 
         b.HasIndex(t => t.TokenHash).IsUnique().HasDatabaseName("IDX_RefreshToken_Hash");
 
-        b.HasOne<RecipeAuthorUser>()
+        b.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);           // SRS 7.8

@@ -2,7 +2,10 @@ using CulinaryBlog.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
+using CulinaryBlog.Application.Common.Interfaces;
+using CulinaryBlog.Domain.Common;
+using CulinaryBlog.Domain.Entities;
+using System.Linq.Expressions;
 namespace CulinaryBlog.Infrastructure;
 
 public sealed class ApplicationUser : IdentityUser
@@ -15,9 +18,26 @@ public sealed class ApplicationUser : IdentityUser
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
-public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
+    : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
 {
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
+    public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    // Hiện thực tường minh IApplicationDbContext — Application chỉ thấy IQueryable (D18)
+    IQueryable<Recipe> IApplicationDbContext.Recipes => Recipes;
+    IQueryable<RecipeIngredient> IApplicationDbContext.RecipeIngredients => RecipeIngredients;
+    IQueryable<RecipeStep> IApplicationDbContext.RecipeSteps => RecipeSteps;
+    IQueryable<RecipeImage> IApplicationDbContext.RecipeImages => RecipeImages;
+    IQueryable<Category> IApplicationDbContext.Categories => Categories;
+    IQueryable<RefreshToken> IApplicationDbContext.RefreshTokens => RefreshTokens;
+
+    void IApplicationDbContext.Add<TEntity>(TEntity entity) => Add(entity);
+    void IApplicationDbContext.Remove<TEntity>(TEntity entity) => Remove(entity);
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -51,5 +71,19 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
             b.HasIndex(x => x.Slug).IsUnique();
             b.HasIndex(x => x.Name);
         });
+        // Nạp cấu hình Recipe aggregate (RecipeConfiguration, RecipeStepConfiguration...)
+        builder.ApplyConfigurationsFromAssembly(typeof(AuthDbContext).Assembly);
+
+        // Soft delete đồng nhất cho mọi BaseEntity (D08 / C01)
+        foreach (var entityType in builder.Model.GetEntityTypes())
+        {
+            if (!typeof(BaseEntity).IsAssignableFrom(entityType.ClrType)) continue;
+
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var body = Expression.Equal(
+                Expression.Property(parameter, nameof(BaseEntity.IsDeleted)),
+                Expression.Constant(false));
+            builder.Entity(entityType.ClrType).HasQueryFilter(Expression.Lambda(body, parameter));
+        }
     }
 }
