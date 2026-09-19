@@ -1,5 +1,5 @@
 using CulinaryBlog.Domain.Entities;
-using CulinaryBlog.Domain; 
+using CulinaryBlog.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

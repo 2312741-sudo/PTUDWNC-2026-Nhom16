@@ -22,7 +22,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
 {
     public DbSet<Category> Categories => Set<Category>();
-        public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
@@ -71,7 +71,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             b.HasIndex(x => x.Slug).IsUnique();
             b.HasIndex(x => x.Name);
         });
-                // Nạp cấu hình Recipe aggregate (RecipeConfiguration, RecipeStepConfiguration...)
+        // Nạp cấu hình Recipe aggregate (RecipeConfiguration, RecipeStepConfiguration...)
         builder.ApplyConfigurationsFromAssembly(typeof(AuthDbContext).Assembly);
 
         // Soft delete đồng nhất cho mọi BaseEntity (D08 / C01)
