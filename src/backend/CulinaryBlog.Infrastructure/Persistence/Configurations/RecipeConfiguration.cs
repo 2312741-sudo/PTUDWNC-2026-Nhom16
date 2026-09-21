@@ -1,5 +1,5 @@
 using CulinaryBlog.Domain.Entities;
-using CulinaryBlog.Infrastructure.Identity;
+using CulinaryBlog.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using CulinaryBlog.Domain.Enums;
@@ -55,8 +55,9 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
         b.HasOne<Category>()
             .WithMany()
             .HasForeignKey(r => r.CategoryId)
-            .OnDelete(DeleteBehavior.Restrict);          // chặn xóa category còn recipe (FR-CAT-005 → 409)
-        b.HasOne<RecipeAuthorUser>()
+            .OnDelete(DeleteBehavior.Restrict);          // chặn xóa category còn recipe (C07 → 409)
+
+        b.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(r => r.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);
