@@ -35,6 +35,7 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
 
         recipe.AddImage("recipes/x/first.jpg", null);
         recipe.AddImage("recipes/x/second.jpg", null);
+        recipe.AddImage("recipes/x/third.jpg", null);
         ctx.Recipes.Add(recipe);
         await ctx.SaveChangesAsync();
 
@@ -42,7 +43,7 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
         var seeded = await setup.Recipes
             .Include(r => r.Images)
             .SingleAsync(r => r.Id == recipe.Id);
-        Assert.Equal(2, seeded.Images.Count);
+        Assert.Equal(3, seeded.Images.Count);
         Assert.Equal(1, seeded.Images.Count(i => i.IsPrimary));
         return recipe.Id;
     }
@@ -58,10 +59,10 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
         var recipeA = await writerA.Recipes.Include(r => r.Images).SingleAsync(r => r.Id == recipeId);
         var recipeB = await writerB.Recipes.Include(r => r.Images).SingleAsync(r => r.Id == recipeId);
 
-        var imageA = recipeA.Images.First(i => i.IsPrimary);
-        var imageA2 = recipeA.Images.First(i => !i.IsPrimary);
+        var imageA2 = recipeA.Images.First(i => i.OriginalUrl.EndsWith("second.jpg"));
+        var imageB3 = recipeB.Images.First(i => i.OriginalUrl.EndsWith("third.jpg"));
 
-        // A giữ primary cũ, B chuyển primary sang ảnh kia. Cả hai chạy "đồng thời".
+        // A chuyển primary sang ảnh 2, B chuyển primary sang ảnh 3. Cả hai chạy đồng thời.
         var taskA = Task.Run(() =>
         {
             recipeA.SetPrimaryImage(imageA2.Id);
@@ -69,7 +70,7 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
         });
         var taskB = Task.Run(() =>
         {
-            recipeB.SetPrimaryImage(imageA.Id);
+            recipeB.SetPrimaryImage(imageB3.Id);
             return writerB.SaveChangesAsync();
         });
 
@@ -80,10 +81,10 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
         // Ít nhất 1 writer bị từ chối => không ai ghi đè im lặng thành 2 primary.
         Assert.True(failures >= 1, "Unique partial index phải chặn ít nhất 1 writer tạo primary thứ 2.");
 
-        // Trạng thái cuối: đúng 1 primary, 2 ảnh nguyên vẹn.
+        // Trạng thái cuối: đúng 1 primary, 3 ảnh nguyên vẹn.
         await using var verify = fixture.NewContext();
         var current = await verify.Recipes.Include(r => r.Images).SingleAsync(r => r.Id == recipeId);
-        Assert.Equal(2, current.Images.Count);
+        Assert.Equal(3, current.Images.Count);
         Assert.Equal(1, current.Images.Count(i => i.IsPrimary));
     }
 }

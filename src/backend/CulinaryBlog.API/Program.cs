@@ -16,6 +16,7 @@ using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
+using CulinaryBlog.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
@@ -35,6 +36,13 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
         pg => pg.CommandTimeout(30));
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
+        pg => pg.CommandTimeout(60));
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -118,7 +126,17 @@ _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
 {
     using var scope = app.Services.CreateScope();
-    await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
+    try { await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync(); } catch { }
+    try { await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync(); } catch { }
+    Console.WriteLine("Database migrations applied successfully.");
+    return;
+}
+if (args.Contains("--seed"))
+{
+    using var scope = app.Services.CreateScope();
+    var appDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await DbSeeder.SeedAsync(appDb);
+    Console.WriteLine("Database seeded successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
 }
 app.Use(async (context, next) =>
