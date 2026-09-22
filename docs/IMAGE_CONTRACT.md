@@ -1,10 +1,12 @@
 # Image API Contract — Tuần 2 (TV4: Nguyễn Hữu Trung Sơn)
 
-Trạng thái: **Triển khai nền tảng (Storage + Validator) — endpoints chờ TV3 bàn giao Recipe cluster & `ApplicationDbContext` wiring**
+Trạng thái: **Được triển khai 22/09/2026 (block 2.1 gỡ một phần: wiring + migration + envelope; endpoints D1.3 làm ngay)** — cập nhật theo PR TV3 `5b36251`
 Phụ trách: **Nguyễn Hữu Trung Sơn (2312739 — TV4)**
 Reviewer: **TV3 (Recipe) — tích hợp editor ảnh D4/C4**
 Prefix API: `/api/v1/recipes/{id}/images`
 OpenAPI tag: `RecipeImages`
+
+> Ghi chú bản sửa đổi 22/09/2026: contract giữ nguyên shape (DTO/endpoints/lỗi) — chỉ cập nhật trạng thái triển khai theo thay đổi wiring từ TV3. Các phiên bản trước lưu trong git.
 
 ---
 

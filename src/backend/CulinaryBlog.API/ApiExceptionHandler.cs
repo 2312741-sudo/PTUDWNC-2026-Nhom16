@@ -2,6 +2,7 @@ using CulinaryBlog.Application;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger<ApiExceptionHandler> logger) : IExceptionHandler
 {
@@ -14,6 +15,9 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger
             { Status = 400, Title = "Dữ liệu không hợp lệ.", Extensions = { ["code"] = "validation.failed" } };
         else if (exception is AppException app)
             details = new() { Status = app.Status, Title = app.Message, Detail = app.Message, Extensions = { ["code"] = app.Code } };
+        else if (exception is DbUpdateConcurrencyException or DbUpdateException)
+            // RowVersion (D19) hoặc partial unique index ux_recipe_images_one_primary — set-primary race (IMAGE_CONTRACT §4: 422)
+            details = new() { Status = 422, Title = "Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.", Extensions = { ["code"] = "recipe.version_conflict" } };
         else if (exception is BadHttpRequestException)
             details = new() { Status = 400, Title = "JSON hoặc yêu cầu không hợp lệ.", Extensions = { ["code"] = "request.invalid" } };
         else

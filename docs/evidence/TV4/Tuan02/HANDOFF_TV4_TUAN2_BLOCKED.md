@@ -3,7 +3,24 @@
 > **Tác giả**: Nguyễn Hữu Trung Sơn (2312739 — TV4)
 > **Mục đích**: danh sách các task của TV4 **đang bị block**, điều kiện để **gỡ block**, và **hướng dẫn để người khác tiếp tục** nếu TV4 không có mặt để trao đổi. Tài liệu tự túc: đọc xong là biết *ai cần bàn giao gì, code hiện đang ra sao, và công việc kế tiếp chính xác là gì*.
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026) · **Nhánh**: `2312739_NHTSon_D1-D2-D3-D4` · **Reviewer**: Nguyễn Thanh Tâm
-> **Cập nhật lần cuối**: 17/09/2026
+> **Cập nhật lần cuối**: 22/09/2026
+
+---
+
+## 0. Bản sửa đổi 22/09/2026 (kiểm chứng sau khi TV3 merge PR #10)
+
+> TV3 merge `5b36251` (PR #10, "Go block 2.1") nhưng **chỉ gỡ ĐIỀU KIỆN 1, 2, 4** của block 2.1:
+> wiring DI (`IApplicationDbContext`/`IUnitOfWork` từ `AuthDbContext`), migration `20260919061954_AddRecipeAggregate`
+> (Recipes/RecipeImages/RecipeIngredients/RecipeSteps/RefreshTokens), envelope + RFC7807.
+> **ĐIỀU KIỆN 3 (endpoints CRUD recipe: tạo recipe / thêm ingredient / thêm step) vẫn CHƯA có** trong `Program.cs`
+> (chỉ có auth + categories). Các bản cũ 17/09/2026 vẫn còn trong git history (commit `8e14c68`).
+
+| Block | Trạng thái sau kiểm chứng |
+|---|---|
+| **2.1** Recipe cluster | 🔶 **Gỡ một phần**: D1.3 image endpoints làm được ngay (đã đủ wiring + migration + envelope); cần seed recipe để test end-to-end (thiếu condition 3). |
+| **2.2** C5 refresh token | ❌ Chưa gỡ — chỉ có schema/entity `RefreshToken` (bản tối thiểu), `JwtService` vẫn trả `RefreshToken: null`. |
+| **2.3** D27 bucket policy | ❌ Chưa gỡ — chờ quyết định nhóm + CR. |
+| **2.4** D23 queue resize | ❌ Chưa gỡ — chưa có `Hangfire`/`ImageSharp` trong csproj. |
 
 ---
 
@@ -26,7 +43,7 @@
 | **D1.2** | Validator 4 MIME + ≤5MiB + magic bytes | ✅ Xong + 16 unit test | — |
 | **D1.5** | Domain primary invariant + race spike test | ✅ Xong (9 domain + 1 spike) | — |
 | **D1.6** | `docs/IMAGE_CONTRACT.md` (bàn giao TV3) | ✅ Xong | — |
-| **D1.3** | API upload/PATCH primary/DELETE image | 🔴 Block | TV3 C1/C2 (Recipe cluster + wiring `ApplicationDbContext`) |
+| **D1.3** | API upload/PATCH primary/DELETE image | 🟢 Đang triển khai (block 2.1 gỡ wiring/migration/envelope phần, 22/09) | Cần seed recipe để test end-to-end (thiếu condition 3 recipe CRUD) |
 | **D1.4/D27** | Bucket policy private + xử lý orphan | 🔴 Block | Quyết định nhóm D27 |
 | **D2** | Resize 300×300/800×600 + job nền | 🔴 Block | Quyết định nhóm D23 (queue) + package ảnh |
 | **D3.1/D3.2** | Publish/unpublish CQRS + 422 + ownership | 🔴 Block | TV3 C1/C2 (recipe endpoints để có recipe thật) |
@@ -44,18 +61,20 @@
 
 ### 2.1. 🅰️ Từ TV3 — Recipe cluster khả dụng trong API (`D1.3`, `D3.1`, `D3.2`, `D4`)
 
-**Đây là block lớn nhất.** Hiện `Program.cs` **chỉ đăng ký `AuthDbContext`** (Identity + Category). Recipe/RecipeImage nằm ở `ApplicationDbContext` nhưng **chưa được nối vào DI host**. Chi tiết mục 6.2.
+> **Bản sửa đổi 22/09/2026**: TV3 đã merge PR #10 (`5b36251`). **D1.3 đã được TV4 triển khai cùng ngày** (commit chưa push, trên nhánh `2312739_NHTSon_D1-D2-D3-D4`): domain `UpdateImageMetadata`, `RecipeImages.cs` (Application), `RecipeImageRepository` (Infrastructure), 3 endpoints image trong `Program.cs`, map race → 422 trong `ApiExceptionHandler`. Build Release 0 warning, 88/88 test pass. Trạng thái từng điều kiện DoR:
 
-**Điều kiện gỡ (Definition of Ready) — TV3 cần đảm bảo:**
+| Điều kiện gỡ | Trạng thái (22/09) |
+|---|---|
+| 1. DI recipe trong host (`IApplicationDbContext`/`IUnitOfWork`) | ✅ Đạt — `AuthDbContext` implement `IApplicationDbContext`; đăng ký ở `Program.cs:60-61`. |
+| 2. Migration áp dụng lên DB dev (bảng recipes/recipe_images/...) | ✅ Đạt (code) — migration `20260919061954_AddRecipeAggregate`; cần `dotnet run --migrate`. |
+| 3. Endpoints CRUD recipe (tạo recipe / ingredient / step) | ❌ **Chưa có** — `Program.cs` vẫn không có group `/api/v1/recipes`. |
+| 4. Envelope `{data}` + RFC7807 + `ApiExceptionHandler` | ✅ Đạt (pattern categories có sẵn). |
 
-1. `Program.cs` gọi được dịch vụ recipe — tối thiểu **một trong hai**:
-   - `builder.Services.AddInfrastructure(builder.Configuration)` — **đáng chú ý**: hiện `AddInfrastructure` đọc `GetConnectionString("Default")`, nhưng Program.cs dùng key `ConnectionStrings:Database`. **Bắt buộc đồng bộ key** (sửa 1 trong 2 chỗ) trước khi gọi, nếu không context build sai chuỗi kết nối.
-   - Hoặc TV3 tự đăng ký `ApplicationDbContext` + `IApplicationDbContext` tương đương.
-2. Migration recipe đã áp dụng lên DB dev (`culinaryblog`) — bảng `recipes`, `recipe_ingredients`, `recipe_steps`, `recipe_images` tồn tại. (Migration `20260914061426_InitialCreate` ở `Infrastructure/Persistence/Migrations`.)
-3. Có endpoints CRUD recipe tối thiểu: tạo recipe, thêm ingredient, thêm step (đủ để seed một recipe "đầy đủ" để test publish 422/200).
-4. Response bọc `{ "data": ... }` (C08) + lỗi RFC 7807, map `AppException` → ProblemDetails (đã có `ApiExceptionHandler`).
+**Hệ quả thực tế cho TV4:**
+- **D1.3 image endpoints triển khai được ngay** vì đã có `Recipe`/`RecipeImage` qua `IApplicationDbContext` + `IFileStorageService`.
+- Test end-to-end cần **seed recipe** (tự seed fixture với `--seed`, hoặc bàn giao thêm từ TV3 condition 3).
 
-**Sau khi gỡ, TV4 làm tiếp (không cần TV3):**
+**Sau khi gỡ đủ (kể cả condition 3), TV4 làm tiếp (không cần TV3):**
 - `POST /recipes/{id}/images` (multipart) → 201 `RecipeImageDto`.
 - `PATCH /recipes/{id}/images/{imageId}` → 200 (isPrimary/altText/orderIndex, D17).
 - `DELETE /recipes/{id}/images/{imageId}` → 204 + xoá object MinIO.
@@ -210,9 +229,9 @@ public sealed record RecipeImageDto(
 | `src/backend/CulinaryBlog.Infrastructure/MinioStorageService.cs` | impl `IFileStorageService` | ✅ ĐÃ XONG |
 | `src/backend/CulinaryBlog.Application/ImageUpload.cs` | `ImageFormats` + `ImageUploadValidator` | ✅ ĐÃ XONG |
 | `src/backend/CulinaryBlog.Application/Storage.cs` | `IFileStorageService` + `StoredFile` | contract cố định |
-| `src/backend/CulinaryBlog.API/Program.cs` | host; **chỉ `AuthDbContext`** | ⚠️ nơi cần thêm recipe DI (block 2.1) |
-| `src/backend/CulinaryBlog.Infrastructure/DependencyInjection.cs` | `AddInfrastructure` | ⚠️ `GetConnectionString("Default")` — key chưa khớp với Program.cs `Database` |
-| `src/backend/CulinaryBlog.Application/Common/Interfaces/IApplicationDbContext.cs` | `IQueryable<Recipe/RecipeImages>...` + Add/Remove/SaveChanges | dùng làm cổng dữ liệu |
+| `src/backend/CulinaryBlog.API/Program.cs` | host | ✅ 22/09: có `IApplicationDbContext`/`IUnitOfWork` từ `AuthDbContext` (đã thêm recipe DI); chưa có recipe CRUD endpoints (condition 3) |
+| `src/backend/CulinaryBlog.Infrastructure/DependencyInjection.cs` | `AddInfrastructure` | ➖ Đã bị xoá ở `5b36251` (TV3 gộp vào `AuthDbContext`) |
+| `src/backend/CulinaryBlog.Application/Common/Interfaces/IApplicationDbContext.cs` | `IQueryable<Recipe/RecipeImages>...` + Add/Remove/SaveChanges | ✅ đã wiring |
 | `src/backend/CulinaryBlog.Domain/Entities/Recipe.cs` | `AddImage/SetPrimaryImage/RemoveImage` (aggregate) | bất biến primary trong domain |
 | `src/backend/CulinaryBlog.Domain/Entities/RecipeImage.cs` | entity ảnh | ctor internal, qua aggregate |
 | `src/backend/CulinaryBlog.Infrastructure/Persistence/Configurations/RecipeImageConfiguration.cs` | partial unique index + RowVersion | đã bảo vệ tầng DB |
@@ -220,12 +239,13 @@ public sealed record RecipeImageDto(
 | `tests/concurrency-spike/RecipeImagePrimaryConcurrencyTests.cs` | spike race primary | mẫu để làm test tương tự |
 | `docs/IMAGE_CONTRACT.md` | contract cho TV3 | bàn giao sẵn |
 
-### 6.1. Kiểm tra nhanh hiện trạng wiring
+### 6.1. Kiểm tra nhanh hiện trạng wiring (sau 22/09)
 
 ```powershell
-# Xem Program.cs hiện có gọi AddInfrastructure chưa:
-Select-String -Path src/backend/CulinaryBlog.API/Program.cs -Pattern "AddInfrastructure|AddDbContext|AuthDbContext|ApplicationDbContext"
-# Kỳ vọng trước gỡ block: chỉ thấy AddDbContext<AuthDbContext>; KHÔNG thấy AddInfrastructure.
+# Sau TV3 merge, kỳ vọng tìm thấy:
+Select-String -Path src/backend/CulinaryBlog.API/Program.cs -Pattern "IApplicationDbContext|IUnitOfWork|AuthDbContext|ApplicationDbContext"
+# Kết quả thực tế 22/09: AddScoped<IApplicationDbContext>(sp => GetRequiredService<AuthDbContext>())
+#                          AddScoped<IUnitOfWork, EfUnitOfWork>()  — condition 1 đạt; condition 3 (recipe CRUD) chưa.
 ```
 
 ---
@@ -259,4 +279,5 @@ Select-String -Path src/backend/CulinaryBlog.API/Program.cs -Pattern "AddInfrast
 | Ngày | Ai | Nội dung bàn giao/thay đổi |
 |---|---|---|
 | 17/09/2026 | TV4 | Sơn soạn tài liệu này; D1.1/D1.2/D1.5/D1.6 xong (commit `a763cbf`) |
-| | | *(Thêm dòng khi có bàn giao mới)* |
+| 22/09/2026 | TV3 (merge PR #10) | Gỡ **một phần** block 2.1: wiring `IApplicationDbContext`/`IUnitOfWork` + migration `20260919061954_AddRecipeAggregate` + envelope/RFC7807 (commit `5b36251`). Condition 3 (recipe CRUD endpoints) **vẫn chưa** — cập nhật mục 0/2.1/6. |
+| 22/09/2026 | TV4 | Kiểm chứng lại trạng thái block; cập nhật tài liệu này. *(Thêm dòng khi có bàn giao mới)* |

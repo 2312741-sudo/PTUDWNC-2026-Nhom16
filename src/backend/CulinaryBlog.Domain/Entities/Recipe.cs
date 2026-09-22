@@ -166,6 +166,15 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         foreach (var img in _images) img.SetPrimary(img.Id == target.Id);
     }
 
+    /// <summary>Cập nhật metadata ảnh (altText, orderIndex) qua aggregate — D17. isPrimary đi qua SetPrimaryImage.</summary>
+    public void UpdateImageMetadata(Guid imageId, string? altText, int? orderIndex)
+    {
+        var target = _images.SingleOrDefault(i => i.Id == imageId)
+                     ?? throw new DomainException("IMAGE_NOT_FOUND", "Ảnh không thuộc công thức này.");
+        if (altText is not null) target.SetAltText(altText);
+        if (orderIndex is not null) target.SetOrderIndex(orderIndex.Value);
+    }
+
     public void RemoveImage(Guid imageId)
     {
         var img = _images.SingleOrDefault(i => i.Id == imageId)

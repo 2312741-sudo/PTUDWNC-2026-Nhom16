@@ -196,7 +196,7 @@ Lỗi còn lại: [chờ triển khai]
 - [x] Validator upload: 4 MIME hợp lệ, ≤5MiB, magic bytes (bỏ `file.empty`/`file.too_large` đã test). — path `recipes/{recipeId}/{uuid}.{ext}`, ảnh đầu tiên primary [domain tests xong; API chờ TV3].
 - [x] Domain tests: primary đúng 1, remove-promote, auto primary.
 - [x] Race test 2 writer set primary → đúng 1 primary (spike).
-- [ ] DELETE image xoá object MinIO, không orphan.
+- [x] API D1.3 (22/09, sau PR TV3 gỡ wiring): `POST /recipes/{id}/images` (multipart, 201), `PATCH /recipes/{id}/images/{imageId}` (primary/altText/orderIndex, 200), `DELETE ...` (204 + xoá object MinIO) — khớp `docs/IMAGE_CONTRACT.md`, 88/88 test pass, 0 warning build Release. Còn test E2E cần seed recipe (thiếu TV3 condition 3).
 - [ ] Resize original/300×300/800×600 + URLs DB + original fallback + job retry.
 - [ ] Publish: thiếu ingredient/step → 422 `RECIPE_PUBLISH_INCOMPLETE`; đủ → Published; non-owner → 403.
 - [ ] Unpublish: ẩn public ngay, không cache response cũ.

@@ -57,6 +57,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 builder.Services.AddScoped<AuditableEntityInterceptor>();
@@ -208,12 +209,51 @@ categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationT
     .RequireAuthorization("AdminPolicy").WithName("DeleteCategory")
     .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
 
+var recipes = app.MapGroup("/api/v1/recipes").WithTags("RecipeImages");
+
+recipes.MapPost("/{id:guid}/images", async (Guid id, [Microsoft.AspNetCore.Mvc.FromForm] IFormFile file, [Microsoft.AspNetCore.Mvc.FromForm] string? altText, ISender sender, HttpRequest request, CancellationToken ct) =>
+{
+    using var buffer = new MemoryStream();
+    await file.CopyToAsync(buffer, ct);
+    buffer.Position = 0;
+    var dto = await sender.Send(new UploadRecipeImageCommand(
+        id,
+        file.FileName,
+        file.ContentType ?? "application/octet-stream",
+        altText,
+        buffer.Length,
+        buffer), ct);
+    return Results.Created($"/api/v1/recipes/{id}/images/{dto.Id}", new { data = dto });
+})
+    .RequireAuthorization().WithName("UploadRecipeImage")
+    .DisableAntiforgery()
+    .Produces<object>(201).ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapPatch("/{id:guid}/images/{imageId:guid}", async (Guid id, Guid imageId, RecipeImagePatch patch, ISender sender, CancellationToken ct) =>
+{
+    var dto = await sender.Send(new UpdateRecipeImageCommand(id, imageId, patch.IsPrimary, patch.AltText, patch.OrderIndex), ct);
+    return Results.Ok(new { data = dto });
+})
+    .RequireAuthorization().WithName("UpdateRecipeImage")
+    .Produces<object>(200).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapDelete("/{id:guid}/images/{imageId:guid}", async (Guid id, Guid imageId, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteRecipeImageCommand(id, imageId), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization().WithName("DeleteRecipeImage")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
 app.Run();
 
 public partial class Program;
+
+public sealed record RecipeImagePatch(bool? IsPrimary = null, string? AltText = null, int? OrderIndex = null);
+
 public sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 {
     public string? UserId => accessor.HttpContext?.User.FindFirstValue("sub");
