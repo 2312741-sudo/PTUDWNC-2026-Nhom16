@@ -47,7 +47,7 @@ public sealed class SpikeDbFixture : IAsyncLifetime
             return builder.ConnectionString;
         }
 
-        return "Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=postgres";
+        return "Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=admin123";
     }
 
     public ApplicationDbContext NewContext()

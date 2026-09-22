@@ -21,7 +21,10 @@ export default function GoogleSignInButton({ onSuccess, onError }: GoogleSignInB
       const res = await loginWithGoogle(mockGoogleIdToken);
       if (res.success) {
         if (typeof window !== 'undefined' && res.data?.accessToken) {
-          localStorage.setItem('token', res.data.accessToken);
+          localStorage.setItem('accessToken', res.data.accessToken);
+          if (res.data.refreshToken) {
+            localStorage.setItem('refreshToken', res.data.refreshToken);
+          }
           localStorage.setItem('user', JSON.stringify(res.data.user));
         }
         onSuccess?.(res.data);

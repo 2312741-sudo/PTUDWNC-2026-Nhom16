@@ -6,6 +6,7 @@
   <PrivateAssets>all</PrivateAssets>
 </PackageReference>
 <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+<PackageReference Include="Minio" Version="7.0.0" />
 <ProjectReference Include="../CulinaryBlog.Application/CulinaryBlog.Application.csproj" />
 <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
 <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />

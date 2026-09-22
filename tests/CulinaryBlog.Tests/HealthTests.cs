@@ -18,15 +18,7 @@ public sealed class HealthTests : IClassFixture<ApiFactory>
     {
         this.factory = factory;
         client = factory.CreateClient();
-        try
-        {
-            using var scope = factory.Services.CreateScope();
-            scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.Migrate();
-        }
-        catch
-        {
-            // Health checks test degraded states (e.g. 503 ServiceUnavailable) when DB/Redis are unreachable.
-        }
+        factory.EnsureMigrated();
     }
 
     [Fact]

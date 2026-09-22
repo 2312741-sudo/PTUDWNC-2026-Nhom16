@@ -14,20 +14,47 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace CulinaryBlog.Tests;
 
 public sealed record ApiResponse<T>(T Data);
 
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
+    private static readonly object MigrationLock = new();
+    private static bool migrated;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres",
+            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=admin123",
             ["Jwt:SigningKey"] = new string('t', 64)
         }));
+    }
+
+    public void EnsureMigrated()
+    {
+        if (migrated) return;
+        lock (MigrationLock)
+        {
+            if (migrated) return;
+            try
+            {
+                using var scope = Services.CreateScope();
+                scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.Migrate();
+            }
+            catch
+            {
+                // Ignored if already created or degraded state
+            }
+            finally
+            {
+                migrated = true;
+            }
+        }
     }
 }
 public sealed class AuthTests : IClassFixture<ApiFactory>
@@ -38,8 +65,7 @@ public sealed class AuthTests : IClassFixture<ApiFactory>
     {
         this.factory = factory;
         client = factory.CreateClient();
-        using var scope = factory.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.Migrate();
+        factory.EnsureMigrated();
     }
     private static RegisterCommand NewUser() => new($"tv1-{Guid.NewGuid():N}@example.test", "Demo-Password9!", "Nguyễn Thanh Tâm");
 

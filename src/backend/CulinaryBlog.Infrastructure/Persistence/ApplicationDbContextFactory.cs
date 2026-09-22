@@ -12,7 +12,7 @@ public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Ap
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var conn = Environment.GetEnvironmentVariable("CONNECTIONSTRINGS__DEFAULT")
-                   ?? "Host=localhost;Port=5432;Database=culinaryblog;Username=postgres;Password=postgres";
+                   ?? "Host=localhost;Port=5432;Database=culinaryblog;Username=postgres;Password=admin123";
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(conn, npgsql => npgsql.MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly.FullName))

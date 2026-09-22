@@ -20,15 +20,44 @@ Dự án được phân chia theo chiều dọc nghiệp vụ (mỗi thành viê
 
 ---
 
-## 📊 2. Đánh Giá Tiến Độ Hoàn Thành Của Nhóm
+## 📅 2. Phân Công Công Việc Hàng Tuần (Lịch Trình 6 Tuần)
 
-### 2.1. Đánh giá tổng quan theo các Cổng Hoàn Thành (Milestones)
+Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tuần theo [PHAN_CHIA_CONG_VIEC_6_TUAN.md](PHAN_CHIA_CONG_VIEC_6_TUAN.md), định nghĩa rõ ràng công việc của từng thành viên theo từng tuần, gắn liền với các Cổng Hoàn Thành (Milestones G0–G7) và ma trận 24 nhóm kỹ năng:
+
+### 2.1. Bảng Tổng Hợp Phân Công Công Việc 6 Tuần
+
+| Tuần | TV1 — Nguyễn Thanh Tâm (Leader) | TV2 — Ngô Quốc Trường Vĩ | TV3 — Huỳnh Quốc Trung | TV4 — Nguyễn Hữu Trung Sơn | Cổng hoàn thành (Milestone) |
+|:---:|---|---|---|---|---|
+| **1** | • Identity/Roles, Migration DB<br>• JWT Service & ICurrentUser<br>• Register/Login Minimal API<br>• Problem Details, Serilog, CI<br>• Lab Kiến trúc & Ban hành Auth Contract | • Category Model/Migration/Seed<br>• Admin CRUD Category cơ bản<br>• Public UI Shell Next.js<br>• List DTO/Pagination (pageSize=12)<br>• Chốt Google Auth Contract | • ERD/Recipe/Nutrition owned<br>• Config, Migrations Recipe<br>• Draft CRUD tối thiểu<br>• Concurrency spike & UoW<br>• Thống nhất RowVersion/DTO | • Docker Compose full-stack<br>• PostgreSQL, Redis, MinIO, MailHog<br>• Nginx proxy, Health Probes<br>• Storage interface contracts<br>• Logout endpoint thu hồi token | **G0 (Giữa tuần)**: Dev stack chạy thông suốt.<br>**G1 (Cuối tuần)**: Đăng ký → Đăng nhập → Category → Draft Recipe. |
+| **2** | • Lockout 5 lần / 15 phút, Rate Limit<br>• Update Profile API (`PATCH /me`)<br>• Dashboard UI Profile RHF/Zod<br>• Welcome Email Worker (Channel/Retry)<br>• Khắc phục race condition CI | • UI Quản lý & Detail Category<br>• Google Login Code+PKCE/Auth.js<br>• List/Filter/Sort/Pagination recipes<br>• FTS tiếng Việt unaccent ban đầu<br>• Tối ưu Category Cache 60m | • Ingredients & Steps CRUD động<br>• Thứ tự OrderIndex & TimerMinutes<br>• Wizard soạn thảo đa bước<br>• Refresh Token Hash & Rotation<br>• Tests chống sửa chéo dữ liệu | • Upload/delete ảnh JPEG/PNG/WebP<br>• Worker resize ảnh (300×300, 800×600)<br>• UI Upload progress & Preview<br>• Chuyển trạng thái Publish/Unpublish<br>• Kiểm tra điều kiện publish (C02) | **G2 (Cuối tuần)**: Draft đủ nguyên liệu/bước/ảnh; Publish được; bảo vệ toàn vẹn owner. |
+| **3** | • Serilog log correlation/tracing<br>• Bảo mật Redaction sâu<br>• Tích hợp Google OAuth/Refresh<br>• LAB cá nhân FTS & Redis<br>• Rà soát các seam tích hợp | • Search SSR hoàn chỉnh<br>• Redis Cache-aside & OutputCache<br>• Cache Invalidation sau mutation<br>• LAB cá nhân Identity & Jobs<br>• Tinh chỉnh query GIN Index | • Hoàn thiện Editor/Detail/Dashboard<br>• Optimistic concurrency rollback<br>• Nutrition calculation & JSON-LD<br>• LAB cá nhân Google OAuth & MinIO<br>• Tích hợp bộ ảnh và tìm kiếm | • Quản lý vòng đời Archive/Delete<br>• Tự động sinh Sitemap XML, robots.txt<br>• Giám sát OpenTelemetry HTTP/DB<br>• LAB cá nhân Identity & FTS<br>• Queue persistent jobs | **G3 (Cuối tuần)**: Đủ 34 FR bản tích hợp; giao dịch xuyên suốt vòng đời công thức; lab cá nhân chạy thật. |
+| **4** | • Security Negative Tests<br>• E2E flows: Register & Login<br>• Nâng cao Code Coverage (≥ 80%)<br>• Hoàn thiện 24/24 kỹ năng K01–K24<br>• Duy trì CI Green tuyệt đối | • k6 load testing & EXPLAIN query<br>• Cache-hit metrics & tối ưu N+1<br>• Responsive & WCAG2.1 AA a11y<br>• Search E2E flows Playwright<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | • Concurrency & Architecture tests<br>• Transaction rollback tests<br>• Recipe E2E flow Playwright<br>• Code Coverage tầng Application ≥ 80%<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | • Resilience, retry & race tests<br>• Shared cache & multi-worker<br>• Publish E2E flows Playwright<br>• Kịch bản phục hồi lỗi dependency<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | **G4 (Cuối tuần)**: Mỗi người đạt 24/24 nhóm kỹ năng có minh chứng; line coverage ≥ 80%; không còn lỗi bảo mật. |
+| **5** | • Tự deploy & restore DB độc lập<br>• Đo lường tải & bảo mật Auth<br>• Review kiểm thử TV4 (Trung Sơn)<br>• Cập nhật tài liệu kiến trúc & ADR<br>• Chuẩn bị môi trường staging | • Tự deploy & restore DB độc lập<br>• Kiểm tra SEO/CWV/JS bundle size<br>• Rà soát Public metadata & Canonical<br>• Review kiểm thử TV1 (Thanh Tâm)<br>• Tinh chỉnh cấu hình caching | • Tự deploy & restore DB độc lập<br>• Điều phối migration sạch trên staging<br>• Rà soát tính nhất quán dữ liệu<br>• Review kiểm thử TV2 (Trường Vĩ)<br>• Hoàn thiện tài liệu Schema | • Tự deploy & restore DB độc lập<br>• Thiết lập HTTPS, CORS & Volumes<br>• Runbook hướng dẫn vận hành<br>• Review kiểm thử TV3 (Quốc Trung)<br>• Hoàn thiện kịch bản sao lưu | **G5 (Cuối tuần)**: Staging độc lập khởi động từ checkout sạch; restore dữ liệu thành công; 5 E2E flows pass. |
+| **6** | • Regression testing toàn hệ thống<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Tài khoản & Hồ sơ<br>• Nghiệm thu & Bàn giao đồ án | • Regression testing tính năng Search<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Danh mục & Khám phá<br>• Nghiệm thu & Bàn giao đồ án | • Regression testing Soạn thảo món<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Soạn thảo & Concurrency<br>• Nghiệm thu & Bàn giao đồ án | • Regression testing Media & Vận hành<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Xuất bản & Deploy/Ops<br>• Nghiệm thu & Bàn giao đồ án | **G6 / G7 (Cuối kỳ)**: Bàn giao toàn diện hệ thống, release v1.0, minh chứng 4 thành viên và demo hoàn tất. |
+
+### 2.2. Chi Tiết Trách Nhiệm Phân Theo Từng Thành Viên
+
+- 🛡️ **TV1 — Nguyễn Thanh Tâm (Nhóm trưởng / 2312741)**:
+  - *Chuyên trách*: Phân hệ Xác thực (Identity, JWT), Tài khoản & Hồ sơ cá nhân (Profile, Dashboard), Cơ chế bảo mật (Account Lockout, Rate Limiting, Redaction), Xử lý lỗi RFC 7807 & CI/CD Pipeline.
+  - *Nhiệm vụ Nhóm trưởng*: Ban hành hợp đồng kỹ thuật (Auth Contract), rà soát và giải quyết 9 mâu thuẫn hệ thống SRS v1.1.1, hướng dẫn kiểm thử app, review và phê duyệt toàn bộ Pull Requests của các thành viên.
+- 📂 **TV2 — Ngô Quốc Trường Vĩ (Thành viên / 2312796)**:
+  - *Chuyên trách*: Phân hệ Danh mục Ẩm thực (Category CRUD, Slug tiếng Việt, Hard delete C07, Cache 60m C03), Tìm kiếm Full-Text Search tiếng Việt không dấu (PostgreSQL tsvector & GIN Index), Tích hợp đăng nhập bên thứ ba Google OAuth 2.0 (PKCE Flow).
+- 📝 **TV3 — Huỳnh Quốc Trung (Thành viên / 2312786)**:
+  - *Chuyên trách*: Phân hệ Soạn thảo Công thức (Recipe Aggregate, Nutrition Value Object, Soft delete C01, điều kiện publish C02), Quản lý Nguyên liệu & Các bước thực hiện (`OrderIndex`, `TimerMinutes`), Kiểm soát tương tranh lạc quan (Optimistic Concurrency với `RowVersion`), Refresh Token Rotation.
+- 🚀 **TV4 — Nguyễn Hữu Trung Sơn (Thành viên / 2312739)**:
+  - *Chuyên trách*: Hạ tầng Container hóa (Docker Compose, Nginx Reverse Proxy, Health Probes), Phân hệ Lưu trữ ảnh MinIO S3 & Tự động Resize đa kích thước (300×300, 800×600), Quản lý vòng đời Xuất bản công thức (Publish / Unpublish / Archive), Tự động sinh Sitemap XML & Giám sát hệ thống.
+
+---
+
+## 📊 3. Đánh Giá Tiến Độ Hoàn Thành Của Nhóm
+
+### 3.1. Đánh giá tổng quan theo các Cổng Hoàn Thành (Milestones)
 
 - ✅ **Cổng G0 (Giữa Tuần 1 - Hạ tầng Dev & Skeletons)**: **ĐẠT 100%**. Đã khởi dựng thành công trọn bộ stack container hóa (PostgreSQL 16, Redis 7, MinIO, MailHog, Seq, Nginx) và khung mã nguồn Clean Architecture + Next.js App Router.
 - ✅ **Cổng G1 (Cuối Tuần 1 - Tích hợp Đăng ký, Đăng nhập, Danh mục & Schema Recipe)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PR của 4 thành viên vào nhánh chính `main`.
 - 🔄 **Cổng G2 (Tuần 2 - Hồ sơ người dùng, Khám phá & FTS, Soạn thảo công thức đa bước, Upload ảnh & Xuất bản)**: **ĐẠT TIẾN ĐỘ 75%**. TV1 và TV2 đã hoàn thành xuất sắc 100% khối lượng Tuần 2; các thành viên TV3, TV4 đang hoàn tất các phần việc tiếp theo.
 
-### 2.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 16/09/2026)
+### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 16/09/2026)
 
 | Thành viên | Tiến độ Tuần 1 | Tiến độ Tuần 2 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
 |---|:---:|:---:|:---:|---|
@@ -39,9 +68,9 @@ Dự án được phân chia theo chiều dọc nghiệp vụ (mỗi thành viê
 
 ---
 
-## 🚀 3. Những Gì Nhóm Đã Hoàn Thành Thực Tế
+## 🚀 4. Những Gì Nhóm Đã Hoàn Thành Thực Tế
 
-### 3.1. Backend API & Kiến trúc hệ thống (.NET 10 Minimal APIs)
+### 4.1. Backend API & Kiến trúc hệ thống (.NET 10 Minimal APIs)
 
 Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô hình **CQRS** (MediatR), tuân thủ nghiêm ngặt nguyên tắc phân tầng và tiêu chuẩn RESTful:
 
@@ -103,7 +132,7 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
 
 ---
 
-### 3.5. Đồng bộ Chuẩn hóa Toàn Diện theo SRS v1.1.1 (Giải quyết 9 Mâu thuẫn C01–C09)
+### 4.2. Đồng bộ Chuẩn hóa Toàn Diện theo SRS v1.1.1 (Giải quyết 9 Mâu thuẫn C01–C09)
 
 Dự án đã giải quyết triệt để 9 mâu thuẫn nội tại được phát hiện trong tài liệu gốc theo **SRS v1.1.1** (tham chiếu [Báo cáo Mâu thuẫn](docs/root/SRS_Contradictions_Report.md)):
 
@@ -121,17 +150,18 @@ Dự án đã giải quyết triệt để 9 mâu thuẫn nội tại được p
 | **§8.1** | Auth API format không khớp FR chi tiết | Bổ sung `fullName`, `userName`, `emailConfirmed`, `createdAt`, `expiresAt`. | DTOs, Handlers, Database mapping, Frontend types |
 
 
-### 3.2. Giao diện Người dùng (Frontend Next.js 15 App Router & Tailwind CSS)
+### 4.3. Giao diện Người dùng (Frontend Next.js 15 App Router & Tailwind CSS)
 
 1. **Khung ứng dụng & Trang công khai**:
    - Sử dụng **Next.js 15 App Router**, React 19, TypeScript và **Tailwind CSS**.
    - **Header & Navigation**: Điều hướng responsive thông minh, hỗ trợ thanh tìm kiếm nhanh, menu mobile drawer, liên kết phân hệ quản trị và xác thực.
    - **Trang chủ (`/`) & Danh mục (`/categories`)**: Trình bày danh sách phân loại món ăn bắt mắt, card hiển thị hình ảnh, tên và số lượng công thức.
+   - **Trang Đăng nhập (`/auth/login`) & Đăng ký (`/auth/register`)**: Biểu mẫu xác thực hiện đại, chuyển đổi ẩn/hiện mật khẩu, tự động lưu token và đăng nhập.
 
 2. **Trang Quản trị Danh mục (`/dashboard/categories`)**:
    - Dành riêng cho Admin quản lý, tạo mới, chỉnh sửa và xóa danh mục trực quan.
 
-3. **Trang Quản lý Hồ sơ Cá nhân (`/dashboard/profile`)** *(Mới hoàn thành ở Tuần 2 bởi TV1)*:
+3. **Trang Quản lý Hồ sơ Cá nhân (`/dashboard/profile`)** *(Hoàn thành ở Tuần 2 bởi TV1)*:
    - Biểu mẫu trực quan tích hợp **React Hook Form** và **Zod Validation**.
    - Kiểm tra dữ liệu tức thì (Real-time Inline Validation): cảnh báo nếu để trống tên, nhập quá 100 ký tự, chứa mã script độc hại, hoặc link ảnh avatar không hợp lệ.
    - Khóa cố định các trường bảo mật: hiển thị `Email` và `Vai trò (Roles)` dưới dạng badge bảo vệ kèm thông báo hướng dẫn người dùng.
@@ -146,7 +176,7 @@ Dự án đã giải quyết triệt để 9 mâu thuẫn nội tại được p
 
 ---
 
-### 3.3. Môi trường Container hóa Đầy Đủ (Docker Dev Stack)
+### 4.4. Môi trường Container hóa Đầy Đủ (Docker Dev Stack)
 
 Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [`docker-compose.dev.yml`](docker-compose.dev.yml):
 
@@ -161,7 +191,7 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 
 ---
 
-### 3.4. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
+### 4.5. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
 
 Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (54 / 54 tests pass)**:
 
@@ -181,15 +211,20 @@ Passed!  - Failed: 0, Passed: 50, Skipped: 0, Total: 50, Duration: 2 s
 
 ---
 
-## 💻 4. Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
+## 💻 5. Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
 
-### 4.1. Yêu cầu môi trường
+### 5.1. Yêu cầu môi trường
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - [Node.js 20+ LTS](https://nodejs.org/)
 - [Docker & Docker Compose](https://www.docker.com/)
-- Hệ quản trị PostgreSQL 16 (có thể dùng qua Docker)
+- Hệ quản trị PostgreSQL 16 (**khuyến nghị dùng qua Docker** để đồng bộ password với cả team)
 
-### 4.2. Khởi động hạ tầng Docker
+### 4.2. Khởi động hạ tầng Docker (chuẩn chung cho cả team)
+> 🎯 **Đây là cách chính thức để tất cả thành viên có môi trường giống nhau.**
+> Docker Compose khởi tạo PostgreSQL với user `postgres` / password `admin123` (mặc định dev).
+> Tránh cài PostgreSQL native để không lệch password, trừ khi cần override (xem §4.6).
+
+### 5.2. Khởi động hạ tầng Docker
 ```bash
 # Khởi động toàn bộ 6 dịch vụ phụ trợ
 docker compose -f docker-compose.dev.yml up -d
@@ -198,13 +233,13 @@ docker compose -f docker-compose.dev.yml up -d
 docker compose -f docker-compose.dev.yml ps
 ```
 
-### 4.3. Khởi động Backend API (.NET 10)
+### 5.3. Khởi động Backend API (.NET 10)
 ```bash
 # 1. Khôi phục dependencies theo locked-mode
 dotnet restore CulinaryBlog.sln --locked-mode
 
-# 2. Thiết lập biến môi trường kết nối
-export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=culinary;Password=culinary_dev_secret"
+# 2. Thiết lập biến môi trường kết nối (password admin123 khớp container compose)
+export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
 export Jwt__SigningKey="super_secret_jwt_signing_key_for_culinary_blog_min_64_bytes_long_string_12345"
 export ASPNETCORE_ENVIRONMENT=Development
 
@@ -216,7 +251,7 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 ```
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
 
-### 4.4. Khởi động Frontend (Next.js 15)
+### 5.4. Khởi động Frontend (Next.js 15)
 ```bash
 cd src/frontend
 
@@ -228,21 +263,36 @@ npm run dev
 ```
 > 🌐 Mở trình duyệt truy cập:
 > - Trang chủ ứng dụng: **http://localhost:3000**
+> - Trang Đăng nhập (Task A4): **http://localhost:3000/auth/login**
+> - Trang Đăng ký (Task A4): **http://localhost:3000/auth/register**
 > - Trang Quản lý Hồ sơ (Task A3): **http://localhost:3000/dashboard/profile**
 > - Trang Quản trị Danh mục (Task B1): **http://localhost:3000/dashboard/categories**
 
-### 4.5. Chạy bộ kiểm thử tự động (Automated Tests)
+### 5.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
-# Thiết lập chuỗi kết nối database test chuyên biệt
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=culinary;Password=culinary_dev_secret"
+# Thiết lập chuỗi kết nối database test chuyên biệt (password admin123 khớp container compose)
+export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
 
 # Chạy toàn bộ 54 tests trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 ```
 
+### 4.6. Dành cho thành viên dùng PostgreSQL native
+Nếu máy đã có sẵn PostgreSQL cài trực tiếp (password khác `admin123`), **không sửa file cấu hình đã commit** — chỉ cần override bằng biến môi trường cục bộ:
+
+```bash
+# API: trỏ về DB native của bạn
+export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+
+# Test: trỏ về DB test của bạn (tương tự nếu chạy test tích hợp)
+export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+```
+
+> ⚠️ Mật khẩu cá nhân **không được commit**; chỉ tồn tại ở máy local (hoặc trong `.env` đã gitignore). Giá trị mặc định trong config là dev-only cho container Docker.
+
 ---
 
-## 🧭 5. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 3)
+## 🧭 6. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 3)
 
 1. **TV2 (Trường Vĩ)**:
    - Tích hợp hoàn chỉnh luồng Đăng nhập Google OAuth (Code Flow + PKCE với Auth.js v5).
@@ -261,7 +311,7 @@ dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 
 ---
 
-## 📚 6. Danh Mục Tài Liệu Kỹ Thuật Tham Chiếu
+## 📚 7. Danh Mục Tài Liệu Kỹ Thuật Tham Chiếu
 
 - 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](HUONG_DAN_TEST_APP.md)
 - ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
@@ -276,6 +326,7 @@ dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 - 🔍 [Hợp đồng Tìm kiếm & Khám phá (Search & Discovery Contract)](docs/SEARCH_AND_DISCOVERY_CONTRACT.md)
 - 🌐 [Hợp đồng Google OAuth (Google Auth Contract)](docs/GOOGLE_AUTH_CONTRACT.md)
 - 📑 **Báo cáo nghiệm thu cá nhân**:
+  - [Báo cáo Tổng hợp Lab 01 - 02 — TV1 (Nguyễn Thanh Tâm)](docs/evidence/TV1/BAO_CAO_LAB_01_02.md)
   - [Báo cáo Tuần 1 & Tuần 2 — TV1 (Nguyễn Thanh Tâm)](docs/evidence/TV1/TUAN_2.md)
   - [Báo cáo Tuần 1 & Tuần 2 — TV2 (Ngô Quốc Trường Vĩ)](docs/evidence/TV2/TUAN_2.md)
   - [Báo cáo Tuần 1 — TV3 (Huỳnh Quốc Trung)](docs/evidence/TV3/C1-HOAN-THIEN.md)
