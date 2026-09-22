@@ -2,10 +2,10 @@
 
 > **Dự án**: Culinary Blog — Blog Ẩm thực và Nấu ăn
 > **Học phần**: Phát Triển Ứng Dụng Web Nâng Cao (PTUDWNC) — Nhóm 16
-> **Người merge**: Ngô Quốc Trường Vĩ (TV2 — 2312796)
+> **Người merge**: Nguyễn Hữu Trung Sơn (TV4 — 2312739)
 > **Ngày**: 23/09/2026
 > **Nhánh**: `2312796-ngo-quoc-truong-vi-feat/TV2-week2-discovery-search-google` → merge `main`
-> **Reviewer phê duyệt**: Nguyễn Thanh Tâm (Nhóm trưởng — TV1)
+> **Reviewer phê duyệt**: None (chưa phê duyệt)
 
 ---
 
