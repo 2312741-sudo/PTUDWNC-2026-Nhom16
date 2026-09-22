@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getCategoryBySlug } from '@/lib/api';
-import { ChefHat, ArrowLeft, Utensils, Clock, Flame } from 'lucide-react';
+import { getCategoryBySlug, getRecipes } from '@/lib/api';
+import RecipeCard from '@/components/RecipeCard';
+import { ChefHat, ArrowLeft, Utensils } from 'lucide-react';
 
 export const revalidate = 600; // ISR 10 mins as per SRS
 
@@ -16,6 +17,9 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
   if (!category) {
     notFound();
   }
+
+  const recipesResult = await getRecipes({ categoryId: category.id, pageSize: 12 });
+  const recipes = recipesResult.data;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
@@ -47,7 +51,7 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
           </p>
 
           <div className="pt-2 text-sm font-medium text-orange-100">
-            {category.recipesCount} công thức đã xuất bản
+            {recipes.length > 0 ? `${recipesResult.meta.total} công thức đã xuất bản` : `${category.recipesCount} công thức đã xuất bản`}
           </div>
         </div>
       </div>
@@ -59,20 +63,35 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
             Các món ăn trong danh mục
           </h2>
           <span className="text-sm text-gray-500">
-            Hiển thị công thức mới nhất
+            {recipes.length > 0 ? `Hiển thị ${recipes.length} món ăn` : 'Hiển thị công thức mới nhất'}
           </span>
         </div>
 
-        {/* Recipes Grid Placeholder (will be connected with TV3 recipes in Week 2) */}
-        <div className="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-8">
-          <Utensils className="w-10 h-10 text-orange-400 mx-auto mb-3" />
-          <p className="text-gray-600 font-semibold">
-            Chưa có công thức nào được xuất bản trong danh mục này.
-          </p>
-          <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-            Các công thức sẽ được cập nhật tự động khi tác giả (Author) hoặc quản trị viên (Admin) xuất bản món ăn.
-          </p>
-        </div>
+        {recipes.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {recipes.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </div>
+        ) : (
+          <div className="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-8">
+            <Utensils className="w-10 h-10 text-orange-400 mx-auto mb-3" />
+            <p className="text-gray-600 font-semibold">
+              Chưa có công thức nào được xuất bản trong danh mục này.
+            </p>
+            <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+              Các công thức sẽ được cập nhật tự động khi tác giả (Author) hoặc quản trị viên (Admin) xuất bản món ăn.
+            </p>
+            <div className="mt-4">
+              <Link
+                href="/recipes"
+                className="inline-block px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 transition-colors"
+              >
+                Khám phá tất cả món ăn
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

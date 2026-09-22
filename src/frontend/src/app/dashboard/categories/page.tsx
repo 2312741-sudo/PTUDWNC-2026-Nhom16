@@ -50,7 +50,7 @@ export default function AdminCategoriesDashboard() {
     setSuccessMsg(null);
 
     // Mock Admin token or empty (backend will validate AdminPolicy in integration)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || localStorage.getItem('token') || '' : '';
 
     const payload: CreateCategoryRequest = {
       name: name.trim(),
@@ -82,7 +82,7 @@ export default function AdminCategoriesDashboard() {
     setError(null);
     setSuccessMsg(null);
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || localStorage.getItem('token') || '' : '';
     const res = await deleteCategory(cat.id, token);
 
     if (!res.success) {

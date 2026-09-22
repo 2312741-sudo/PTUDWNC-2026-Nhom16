@@ -20,7 +20,7 @@ export default function ProfileDashboardPage() {
   // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || localStorage.getItem('token') || '' : '';
 
   const loadProfile = async () => {
     setLoading(true);

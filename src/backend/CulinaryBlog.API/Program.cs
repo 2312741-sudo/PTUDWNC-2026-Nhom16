@@ -61,6 +61,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddSingleton<WelcomeEmailQueue>();
 builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
 builder.Services.AddHostedService<WelcomeEmailWorker>();
@@ -184,6 +186,10 @@ auth.MapPost("/logout", async (LogoutCommand? command, ISender sender, Cancellat
 })
     .RequireAuthorization().WithName("Logout").Produces(204).ProducesProblem(401);
 
+auth.MapPost("/google", async (GoogleLoginCommand command, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(command, ct) }))
+    .WithName("GoogleLogin").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502);
+
 var categories = app.MapGroup("/api/v1/categories").WithTags("Categories");
 categories.MapGet("", async (ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetCategoriesQuery(), ct) }))
@@ -218,6 +224,15 @@ categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationT
 })
     .RequireAuthorization("AdminPolicy").WithName("DeleteCategory")
     .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
+
+var recipes = app.MapGroup("/api/v1/recipes").WithTags("Recipes");
+recipes.MapGet("", async ([AsParameters] GetRecipesQuery query, ISender sender, CancellationToken ct) =>
+    Results.Ok(await sender.Send(query, ct)))
+    .WithName("GetRecipes").Produces<PagedResult<RecipeSummaryDto>>(200).ProducesValidationProblem();
+
+recipes.MapGet("/search", async ([AsParameters] SearchRecipesQuery query, ISender sender, CancellationToken ct) =>
+    Results.Ok(await sender.Send(query, ct)))
+    .WithName("SearchRecipes").Produces<PagedResult<RecipeSummaryDto>>(200).ProducesValidationProblem();
 
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });

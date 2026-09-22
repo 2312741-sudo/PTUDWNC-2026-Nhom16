@@ -181,6 +181,93 @@ export async function logout(token: string): Promise<{ success: boolean; error?:
   }
 }
 
+// ----------------------------------------------------------------------
+// Recipe Discovery & Search Endpoints (TV2 - Tuần 2)
+// ----------------------------------------------------------------------
+
+export async function getRecipes(
+  filters: import('@/types/recipe').RecipeFilters = {}
+): Promise<import('@/types/recipe').PagedRecipesResult> {
+  const params = new URLSearchParams();
+  if (filters.page) params.set('page', filters.page.toString());
+  if (filters.pageSize) params.set('pageSize', filters.pageSize.toString());
+  if (filters.sortBy) params.set('sortBy', filters.sortBy);
+  if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
+  if (filters.categoryId) params.set('categoryId', filters.categoryId);
+  if (filters.difficulty) params.set('difficulty', filters.difficulty);
+  if (filters.maxCookTime !== undefined) params.set('maxCookTime', filters.maxCookTime.toString());
+  if (filters.minServings !== undefined) params.set('minServings', filters.minServings.toString());
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/recipes?${params.toString()}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Không thể tải danh sách công thức.');
+    const json = await res.json();
+    return json.data && json.meta ? json : (json.data ?? json);
+  } catch (error) {
+    console.error('Error in getRecipes:', error);
+    return {
+      data: [],
+      meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+    };
+  }
+}
+
+export async function searchRecipes(
+  q: string,
+  filters: import('@/types/recipe').RecipeFilters = {}
+): Promise<import('@/types/recipe').PagedRecipesResult> {
+  const params = new URLSearchParams();
+  params.set('q', q);
+  if (filters.page) params.set('page', filters.page.toString());
+  if (filters.pageSize) params.set('pageSize', filters.pageSize.toString());
+  if (filters.sortBy) params.set('sortBy', filters.sortBy);
+  if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
+  if (filters.categoryId) params.set('categoryId', filters.categoryId);
+  if (filters.difficulty) params.set('difficulty', filters.difficulty);
+  if (filters.maxCookTime !== undefined) params.set('maxCookTime', filters.maxCookTime.toString());
+  if (filters.minServings !== undefined) params.set('minServings', filters.minServings.toString());
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/recipes/search?${params.toString()}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Không thể tìm kiếm công thức.');
+    const json = await res.json();
+    return json.data && json.meta ? json : (json.data ?? json);
+  } catch (error) {
+    console.error('Error in searchRecipes:', error);
+    return {
+      data: [],
+      meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+    };
+  }
+}
+
+export async function loginWithGoogle(
+  idToken: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/google`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      return { success: false, error: result.title || result.detail || 'Đăng nhập Google thất bại.' };
+    }
+
+    return { success: true, data: result.data ?? result };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
+
 export async function login(
   data: import('@/types/auth').LoginRequest
 ): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string }> {

@@ -18,6 +18,7 @@ public sealed class ApplicationUser : IdentityUser
 public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Recipe> Recipes => Set<Recipe>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -50,6 +51,41 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
 
             b.HasIndex(x => x.Slug).IsUnique();
             b.HasIndex(x => x.Name);
+        });
+
+        builder.Entity<Recipe>(b =>
+        {
+            b.ToTable("Recipes");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            b.Property(x => x.Slug).HasMaxLength(220).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(2000).IsRequired();
+            b.Property(x => x.Instructions).IsRequired();
+            b.Property(x => x.PrepTimeMinutes).IsRequired();
+            b.Property(x => x.CookTimeMinutes).IsRequired();
+            b.Property(x => x.Servings).IsRequired();
+            b.Property(x => x.Difficulty).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            b.Property(x => x.AuthorId).IsRequired();
+            b.Property(x => x.PrimaryImageUrl).HasMaxLength(500);
+            b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            b.Property(x => x.CreatedAt).IsRequired();
+            b.Property(x => x.UpdatedAt).IsRequired();
+
+            b.HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasQueryFilter(x => !x.IsDeleted);
+
+            b.HasIndex(x => x.Slug).IsUnique();
+            b.HasIndex(x => x.CategoryId);
+            b.HasIndex(x => x.AuthorId);
+            b.HasIndex(x => x.Status);
+            b.HasIndex(x => x.Difficulty);
+            b.HasIndex(x => x.PublishedAt);
+            b.HasIndex(x => x.CreatedAt);
         });
     }
 }
