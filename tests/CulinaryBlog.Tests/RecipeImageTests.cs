@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Application;
+using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
