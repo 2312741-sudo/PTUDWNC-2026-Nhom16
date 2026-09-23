@@ -76,6 +76,9 @@ public interface IIdentityService
     Task<AuthResponse> LoginAsync(LoginCommand command, CancellationToken ct);
     Task<UserDto> GetAsync(string id, CancellationToken ct);
     Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct);
+    Task<AuthResponse> LoginWithGoogleAsync(GoogleUserPayload payload, CancellationToken ct);
+    Task<AuthResponse> RefreshTokenAsync(string refreshToken, string? ipAddress, CancellationToken ct);
+    Task LogoutAsync(string? userId, string? refreshToken, CancellationToken ct);
 }
 
 public sealed class AppException(int status, string code, string message) : Exception(message)
@@ -102,6 +105,22 @@ public sealed class GetMeHandler(IIdentityService identity, ICurrentUser user) :
 public sealed class UpdateProfileHandler(IIdentityService identity, ICurrentUser user) : IRequestHandler<UpdateProfileCommand, UserDto>
 {
     public Task<UserDto> Handle(UpdateProfileCommand request, CancellationToken ct) => identity.UpdateAsync(user.UserId ?? throw new AppException(401, "auth.unauthorized", "Vui lòng đăng nhập."), request, ct);
+}
+
+public sealed record RefreshTokenCommand(string RefreshToken) : IRequest<AuthResponse>;
+
+public sealed class RefreshTokenHandler(IIdentityService identity) : IRequestHandler<RefreshTokenCommand, AuthResponse>
+{
+    public Task<AuthResponse> Handle(RefreshTokenCommand request, CancellationToken ct)
+        => identity.RefreshTokenAsync(request.RefreshToken, null, ct);
+}
+
+public sealed class RefreshTokenValidator : AbstractValidator<RefreshTokenCommand>
+{
+    public RefreshTokenValidator()
+    {
+        RuleFor(x => x.RefreshToken).NotEmpty().WithMessage("Refresh token không được để trống.");
+    }
 }
 
 public sealed class RegisterValidator : AbstractValidator<RegisterCommand>
@@ -151,12 +170,11 @@ public sealed class UpdateProfileValidator : AbstractValidator<UpdateProfileComm
 }
 
 public sealed record LogoutCommand(string? RefreshToken = null) : IRequest;
-public sealed class LogoutHandler : IRequestHandler<LogoutCommand>
+public sealed class LogoutHandler(IIdentityService identity, ICurrentUser currentUser) : IRequestHandler<LogoutCommand>
 {
     public Task Handle(LogoutCommand request, CancellationToken ct)
     {
-        // Tuần 1: access-token-only. Revoke refresh token thật gắn khi C5 (rotation) merge — tuần 2.
-        return Task.CompletedTask;
+        return identity.LogoutAsync(currentUser.UserId, request.RefreshToken, ct);
     }
 }
 

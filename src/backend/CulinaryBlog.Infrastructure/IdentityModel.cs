@@ -1,11 +1,13 @@
+using System.Linq.Expressions;
+using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain;
+using CulinaryBlog.Domain.Common;
+using CulinaryBlog.Domain.Entities;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using CulinaryBlog.Application.Common.Interfaces;
-using CulinaryBlog.Domain.Common;
-using CulinaryBlog.Domain.Entities;
-using System.Linq.Expressions;
+
 namespace CulinaryBlog.Infrastructure;
 
 public sealed class ApplicationUser : IdentityUser
@@ -18,6 +20,7 @@ public sealed class ApplicationUser : IdentityUser
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
+
 public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
 {
@@ -26,7 +29,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
-    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<CulinaryBlog.Domain.Entities.RefreshToken> RefreshTokens => Set<CulinaryBlog.Domain.Entities.RefreshToken>();
 
     // Hiện thực tường minh IApplicationDbContext — Application chỉ thấy IQueryable (D18)
     IQueryable<Recipe> IApplicationDbContext.Recipes => Recipes;
@@ -34,7 +37,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     IQueryable<RecipeStep> IApplicationDbContext.RecipeSteps => RecipeSteps;
     IQueryable<RecipeImage> IApplicationDbContext.RecipeImages => RecipeImages;
     IQueryable<Category> IApplicationDbContext.Categories => Categories;
-    IQueryable<RefreshToken> IApplicationDbContext.RefreshTokens => RefreshTokens;
+    IQueryable<CulinaryBlog.Domain.Entities.RefreshToken> IApplicationDbContext.RefreshTokens => RefreshTokens;
 
     void IApplicationDbContext.Add<TEntity>(TEntity entity) => Add(entity);
     void IApplicationDbContext.Remove<TEntity>(TEntity entity) => Remove(entity);
@@ -47,6 +50,18 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             b.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
             b.Property(x => x.AvatarUrl).HasMaxLength(500);
             b.HasIndex(x => x.NormalizedEmail).IsUnique();
+        });
+        builder.Entity<CulinaryBlog.Domain.Entities.RefreshToken>(b =>
+        {
+            b.ToTable("RefreshTokens");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).IsRequired();
+            b.Property(x => x.TokenHash).HasMaxLength(64).IsRequired();
+            b.Property(x => x.ExpiresAt).IsRequired();
+            b.Property(x => x.ReplacedByTokenHash).HasMaxLength(64);
+            b.Property(x => x.CreatedByIp).HasMaxLength(45);
+            b.HasIndex(x => x.TokenHash).IsUnique().HasDatabaseName("IDX_RefreshToken_Hash");
+            b.HasIndex(x => x.UserId);
         });
         builder.Entity<IdentityRole>().HasData(
             new IdentityRole { Id = "role-author", Name = CulinaryBlog.Domain.Roles.Author, NormalizedName = "AUTHOR", ConcurrencyStamp = "role-author-v1" },
@@ -71,6 +86,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             b.HasIndex(x => x.Slug).IsUnique();
             b.HasIndex(x => x.Name);
         });
+
         // Nạp cấu hình Recipe aggregate (RecipeConfiguration, RecipeStepConfiguration...)
         builder.ApplyConfigurationsFromAssembly(typeof(AuthDbContext).Assembly);
 

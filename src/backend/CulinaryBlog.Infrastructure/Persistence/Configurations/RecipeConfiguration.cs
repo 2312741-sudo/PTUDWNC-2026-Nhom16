@@ -3,6 +3,7 @@ using CulinaryBlog.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using CulinaryBlog.Domain.Enums;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 namespace CulinaryBlog.Infrastructure.Persistence.Configurations;
 
 public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>

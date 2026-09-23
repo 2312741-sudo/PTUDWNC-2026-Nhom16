@@ -3,22 +3,23 @@ using System.Text;
 using System.Threading.RateLimiting;
 using CulinaryBlog.API;
 using CulinaryBlog.Application;
+using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Infrastructure.Persistence.Interceptors;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
-using CulinaryBlog.Application.Common.Interfaces;
-using CulinaryBlog.Infrastructure.Persistence;
-using CulinaryBlog.Infrastructure.Persistence.Interceptors;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
@@ -32,7 +33,10 @@ builder.Services.AddSingleton(sp =>
     return settings;
 });
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
+    o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<AuditableEntityInterceptor>();
 builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
 {
     options.UseNpgsql(
@@ -57,11 +61,13 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<RecipeRepository>();
+builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
+builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
-builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
-builder.Services.AddScoped<AuditableEntityInterceptor>();
 builder.Services.AddSingleton<WelcomeEmailQueue>();
 builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
 builder.Services.AddHostedService<WelcomeEmailWorker>();
@@ -98,25 +104,19 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         ValidateIssuerSigningKey = true,
         RequireSignedTokens = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
-        ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
-        ClockSkew = TimeSpan.Zero,
-        NameClaimType = "sub",
-        RoleClaimType = "role"
+        ClockSkew = TimeSpan.Zero
     };
 });
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AuthorPolicy", p => p.RequireRole(Roles.Author, Roles.Admin))
-    .AddPolicy("AdminPolicy", p => p.RequireRole(Roles.Admin));
-builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
+builder.Services.AddAuthorization(options =>
 {
-    context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
-    context.ProblemDetails.Extensions.TryAdd("code", $"http.{context.ProblemDetails.Status}");
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole(CulinaryBlog.Domain.Roles.Admin));
+    options.AddPolicy("AuthorPolicy", policy => policy.RequireRole(CulinaryBlog.Domain.Roles.Author, CulinaryBlog.Domain.Roles.Admin));
 });
+builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
-builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
-    o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, context, ct) =>
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
 {
+    document.Info = new() { Title = "CulinaryBlog API", Version = "v1" };
     document.Components ??= new();
     document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
     document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme { Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT" };
@@ -127,7 +127,16 @@ _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
 {
     using var scope = app.Services.CreateScope();
-    await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
+    try { await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync(); } catch { }
+    Console.WriteLine("Database migrations applied successfully.");
+    return;
+}
+if (args.Contains("--seed"))
+{
+    using var scope = app.Services.CreateScope();
+    var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    await DbSeeder.SeedAsync(authDb);
+    Console.WriteLine("Database seeded successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
 }
 app.Use(async (context, next) =>
@@ -149,18 +158,21 @@ app.UseStatusCodePages();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing")) { app.MapOpenApi(); app.MapScalarApiReference(); }
-var auth = app.MapGroup("/api/v1/auth").WithTags("Authentication");
+app.MapOpenApi();
+app.MapScalarApiReference();
+
+var auth = app.MapGroup("/api/v1/auth").WithTags("Auth");
 auth.MapPost("/register", async (RegisterCommand command, ISender sender, CancellationToken ct) =>
-{
-    var res = await sender.Send(command, ct);
-    return Results.Created("/api/v1/auth/me", new { data = res });
-})
-    .WithName("Register").Produces<object>(201).ProducesValidationProblem().ProducesProblem(409).RequireRateLimiting("auth");
+    Results.Created("/api/v1/auth/me", new { data = await sender.Send(command, ct) }))
+    .WithName("Register").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(409).RequireRateLimiting("auth");
 
 auth.MapPost("/login", async (LoginCommand command, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(command, ct) }))
-    .WithName("Login").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
+    .WithName("Login").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(423).RequireRateLimiting("auth");
+
+auth.MapPost("/refresh", async (RefreshTokenCommand command, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(command, ct) }))
+    .WithName("RefreshToken").Produces<object>().ProducesValidationProblem().ProducesProblem(401).RequireRateLimiting("auth");
 
 auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(new { data = await sender.Send(new GetMeQuery(), ct) }))
     .RequireAuthorization().WithName("GetMe").Produces<object>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
@@ -174,6 +186,10 @@ auth.MapPost("/logout", async (LogoutCommand? command, ISender sender, Cancellat
     return Results.NoContent();
 })
     .RequireAuthorization().WithName("Logout").Produces(204).ProducesProblem(401);
+
+auth.MapPost("/google", async (GoogleLoginCommand command, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(command, ct) }))
+    .WithName("GoogleLogin").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502);
 
 var categories = app.MapGroup("/api/v1/categories").WithTags("Categories");
 categories.MapGet("", async (ISender sender, CancellationToken ct) =>
@@ -211,6 +227,13 @@ categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationT
     .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
 
 var recipes = app.MapGroup("/api/v1/recipes").WithTags("Recipes");
+recipes.MapGet("", async ([AsParameters] GetRecipesQuery query, ISender sender, CancellationToken ct) =>
+    Results.Ok(await sender.Send(query, ct)))
+    .WithName("GetRecipes").Produces<PagedResult<RecipeSummaryDto>>(200).ProducesValidationProblem();
+
+recipes.MapGet("/search", async ([AsParameters] SearchRecipesQuery query, ISender sender, CancellationToken ct) =>
+    Results.Ok(await sender.Send(query, ct)))
+    .WithName("SearchRecipes").Produces<PagedResult<RecipeSummaryDto>>(200).ProducesValidationProblem();
 
 recipes.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetRecipeBySlugQuery(slug), ct) }))

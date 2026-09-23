@@ -1,5 +1,7 @@
 using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
+using RefreshToken = CulinaryBlog.Domain.Entities.RefreshToken;
 
 namespace CulinaryBlog.Application.Common.Interfaces;
 

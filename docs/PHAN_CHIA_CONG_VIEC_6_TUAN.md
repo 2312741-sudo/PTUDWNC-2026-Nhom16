@@ -167,7 +167,7 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 | Thành viên | MSSV | Phần công việc | Kỹ năng xác nhận | Deploy/restore staging | Demo cuối kỳ | Trạng thái hiện tại |
 |---|---|---|---|---|---|---|
 | TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 14/24 (K01, K02, K04, K05, K08, K10, K14, K15, K16, K17, K20, K21, K23, K24) | Đạt kiểm thử CI/Dev | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1 & 2 (A1-A5, A7) |
-| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 9/24 (K01, K02, K03, K04, K06, K07, K08, K09, K16) | Chờ Staging | Hoàn thành Tuần 1 | 🔄 Hoàn thành Tuần 1, Đang làm Tuần 2 |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 14/24 (K01, K02, K03, K04, K05, K06, K07, K08, K09, K11, K16, K17, K18, K21) | Chờ Staging | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1 & 2 (B1-B4, B6, B7) |
 | TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 7/24 (K01, K02, K03, K05, K06, K07, K21) | Chờ Staging | Hoàn thành Tuần 1 | 🔄 Hoàn thành Tuần 1, Đang làm Tuần 2 |
 | TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 8/24 (K01, K05, K11, K12, K13, K20, K23, K24) | Chờ Staging | Hoàn thành Tuần 1 | 🔄 Hoàn thành Tuần 1, Đang làm Tuần 2 |
 

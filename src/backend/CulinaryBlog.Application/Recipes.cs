@@ -4,6 +4,7 @@ using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 
 namespace CulinaryBlog.Application;
 
