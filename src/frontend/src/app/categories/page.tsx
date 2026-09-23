@@ -10,8 +10,8 @@ export default async function CategoriesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center max-w-2xl mx-auto mb-16">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 mb-4 shadow-sm">
-          <ChefHat className="w-6 h-6" />
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 mb-4 shadow-sm ring-1 ring-emerald-600/20">
+          <ChefHat className="w-7 h-7" />
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
           Danh mục ẩm thực

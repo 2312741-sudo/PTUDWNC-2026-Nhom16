@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: culinary-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    healthCheckPath: /health/live
+    envVars:
+      - key: ConnectionStrings__Database
+        fromDatabase:
+          name: culinary-db
+          property: connectionString
+      - key: AllowedHosts
+        value: "*"
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Jwt__SigningKey
+        value: "production-secret-signing-key-culinary-blog-advanced-web-development-nhom16-2026-very-secure-key-at-least-64-bytes"
+      - key: Jwt__Issuer
+        value: culinary-blog
+      - key: Jwt__Audience
+        value: culinary-blog-client
+
+databases:
+  - name: culinary-db
+    plan: free
+    databaseName: culinary_blog
+    user: culinary_user
+    region: singapore
+    postgresMajorVersion: "16"

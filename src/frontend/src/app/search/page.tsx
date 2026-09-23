@@ -32,8 +32,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       {/* Search Header */}
       <div className="max-w-3xl mx-auto text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold">
-          <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-semibold border border-emerald-200/50">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
           <span>Tìm kiếm thông minh không dấu</span>
         </div>
 
@@ -48,11 +48,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             name="q"
             defaultValue={q}
             placeholder="Nhập tên món ăn, nguyên liệu (VD: pho, bo, cuon, salad)..."
-            className="w-full pl-12 pr-28 py-3.5 text-sm bg-white border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
+            className="w-full pl-12 pr-28 py-3.5 text-sm bg-white border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
           />
           <button
             type="submit"
-            className="absolute right-2 px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-orange-200 transition-all"
+            className="absolute right-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-emerald-200/60 transition-all"
           >
             Tìm kiếm
           </button>
@@ -72,7 +72,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
             <h2 className="text-lg font-bold text-gray-900">
-              Kết quả cho từ khóa: <span className="text-orange-600 font-extrabold">&quot;{q}&quot;</span>
+              Kết quả cho từ khóa: <span className="text-emerald-700 font-extrabold">&quot;{q}&quot;</span>
             </h2>
             <span className="text-xs font-semibold text-gray-500">
               Tìm thấy {result.meta.total} món ăn
@@ -88,7 +88,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </p>
               <Link
                 href="/recipes"
-                className="inline-block mt-3 px-5 py-2 rounded-xl bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 transition-colors"
+                className="inline-block mt-3 px-5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
               >
                 Duyệt tất cả công thức
               </Link>

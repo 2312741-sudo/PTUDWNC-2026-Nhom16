@@ -10,16 +10,16 @@ export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link
       href={`/categories/${category.slug}`}
-      className="group relative flex flex-col justify-between bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+      className="group relative flex flex-col justify-between bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-orange-100 transition-colors pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50/70 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-emerald-100/80 transition-colors pointer-events-none" />
 
       <div>
-        <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm">
+        <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm ring-1 ring-emerald-600/20">
           <ChefHat className="w-6 h-6" />
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors mb-2">
+        <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-700 transition-colors mb-2">
           {category.name}
         </h3>
 
@@ -29,11 +29,11 @@ export default function CategoryCard({ category }: CategoryCardProps) {
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-2">
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-50 text-orange-700">
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
           {category.recipesCount} công thức
         </span>
 
-        <span className="text-xs font-medium text-orange-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+        <span className="text-xs font-medium text-emerald-700 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
           Xem ngay <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </div>

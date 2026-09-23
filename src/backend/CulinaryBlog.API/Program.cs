@@ -22,6 +22,12 @@ using Serilog.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var envPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(envPort))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{envPort}");
+}
+
 builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Fatal)
@@ -37,10 +43,16 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
     o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuditableEntityInterceptor>();
+
+var rawConnectionString = builder.Configuration.GetConnectionString("Database")
+    ?? builder.Configuration["DATABASE_URL"]
+    ?? throw new InvalidOperationException("Configure ConnectionStrings:Database or DATABASE_URL.");
+var connectionString = Program.NormalizePostgreSqlConnectionString(rawConnectionString);
+
 builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
 {
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
+        connectionString,
         pg => pg.CommandTimeout(30));
     options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
@@ -155,13 +167,28 @@ if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("T
     try
     {
         var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-        await authDb.Database.MigrateAsync();
-        await DbSeeder.SeedAsync(authDb);
-        Log.Information("Database verified and seeded successfully on startup.");
+        try
+        {
+            await authDb.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Auto-migration on startup skipped: {Message}", ex.Message);
+        }
+
+        try
+        {
+            await DbSeeder.SeedAsync(authDb);
+            Log.Information("Database verified and seeded successfully on startup.");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database seeding on startup skipped: {Message}", ex.Message);
+        }
     }
     catch (Exception ex)
     {
-        Log.Warning(ex, "Auto-migration or seeding on startup skipped: {Message}", ex.Message);
+        Log.Warning(ex, "Database initialization on startup error: {Message}", ex.Message);
     }
 }
 
@@ -401,7 +428,58 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
 app.Run();
 
-public partial class Program;
+public partial class Program
+{
+    public static string NormalizePostgreSqlConnectionString(string connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return connectionString;
+        }
+
+        if (connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+            connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            var uri = new Uri(connectionString);
+            var userInfo = uri.UserInfo.Split(':', 2);
+            var username = Uri.UnescapeDataString(userInfo[0]);
+            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty;
+            var host = uri.Host;
+            var port = uri.Port > 0 ? uri.Port : 5432;
+            var database = uri.AbsolutePath.TrimStart('/');
+
+            var npgsqlBuilder = new Npgsql.NpgsqlConnectionStringBuilder
+            {
+                Host = host,
+                Port = port,
+                Database = database,
+                Username = username,
+                Password = password,
+                SslMode = Npgsql.SslMode.Prefer
+            };
+
+            if (!string.IsNullOrEmpty(uri.Query))
+            {
+                var queryPairs = uri.Query.TrimStart('?').Split('&');
+                foreach (var pair in queryPairs)
+                {
+                    var kvp = pair.Split('=', 2);
+                    if (kvp.Length == 2 && kvp[0].Equals("sslmode", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (Enum.TryParse<Npgsql.SslMode>(kvp[1], true, out var ssl))
+                        {
+                            npgsqlBuilder.SslMode = ssl;
+                        }
+                    }
+                }
+            }
+
+            return npgsqlBuilder.ConnectionString;
+        }
+
+        return connectionString;
+    }
+}
 
 public sealed record RecipeImagePatch(bool? IsPrimary = null, string? AltText = null, int? OrderIndex = null);
 
