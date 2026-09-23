@@ -1,7 +1,7 @@
 # TRẠNG THÁI THỰC HIỆN TUẦN 2 — TV4 · Nguyễn Hữu Trung Sơn (2312739)
 
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026)
-> **Nhánh Git**: `2312739_NHTSon_D1-D2-D3-D4` (tv4/week2)
+> **Nhánh Git**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3, chứa merge main `a651c8a`); tuần 2 cũ: `2312739_NHTSon_D1-D2-D3-D4` (giữ nguyên, HEAD `6d689bd`)
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
 > **Cập nhật lần cuối**: 23/09/2026
@@ -9,6 +9,14 @@
 > File này ghi lại trạng thái thực hiện các task tuần 2 (D1, D2, D3, D4 nền, D6 tiếp), các điểm cần bàn luận và lý do.
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_2_TV4.md`.
 > **Điều kiện gỡ block + hướng dẫn làm tiếp chi tiết**: xem `docs/HANDOFF_TV4_TUAN2_BLOCKED.md` (tài liệu tự túc khi TV4 vắng mặt).
+
+> **Bản sửa đổi 23/09/2026 (T2) — kiểm chứng TỔNG THỂ sau khi merge main `a651c8a` + toàn bộ test lại**:
+> Cập nhật từ kết quả test thật: build Release **0 warning/0 error**, `dotnet format` sạch,
+> CulinaryBlog.Tests **120/120 pass** (gồm 26 test Auth+Week3 liên quan C5 — trước đây 16 fail giờ pass), spike **5/5 pass** (Postgres local `culinary_test`).
+> **Phát hiện mới quan trọng — C5 refresh ĐÃ có trên main** (không còn block 2.2): `/auth/refresh` + `RefreshTokenAsync`
+> (rotation + family reuse revocation `compromised-reuse-detected`) + `LogoutAsync` (revoke theo hash + revoke mọi token active của family) đều nằm trong
+> `IdentityService.cs`, `POST /auth/refresh`, `POST /auth/logout` khai báo trong `Program.cs`. 23 test Auth + 7 test Week3 pass → **D3.3 logout revoke refresh family đã hoàn thành** (gián tiếp qua main, không phải TV4 tự làm).
+> CI GitHub branch tuần 3 (sau merge fix migration `a651c8a`) = **success** (run `818522b`).
 
 > **Bản sửa đổi 23/09/2026 — gỡ HOÀN TOÀN block 2.1 sau merge C2/C3 của TV3 (`2086ee8`)**:
 > recipe CRUD endpoints (condition 3) đã có (TV3 C2/C3): `POST/PUT /recipes`, `GET /{slug}`, ingredient/step CRUD + reorder.
@@ -34,6 +42,9 @@
 | D1.5 | Domain RecipeImage tests: ảnh đầu tiên auto primary, đúng 1 primary, remove-promote | `tests/CulinaryBlog.Tests/RecipeImageDomainTests.cs` | Đã làm — 9 test pass |
 | D1.5 | Race test 2 writer set primary → không tạo 2 primary (RowVersion + unique partial index) | `tests/concurrency-spike/RecipeImagePrimaryConcurrencyTests.cs` | Đã làm — chạy trên `culinary_spike` DB |
 | D1.6 | `docs/IMAGE_CONTRACT.md` bàn giao TV3 (DTO, endpoints, lỗi, D27) | `docs/IMAGE_CONTRACT.md` | Đã làm — chờ TV3 review |
+| D1.3 | API upload/metadata/primary/delete recipe image (FR-RCP-008, D17) | `Program.cs` (`POST/PATCH/DELETE /recipes/{id}/images`); `RecipeImages.cs` (Application) | Đã làm (22/09) — validate+test tổng thể 23/09: E2E chạy được qua seed `POST /recipes`; 120/120 + spike 5/5 pass |
+| D3.1/D3.2 | Publish/Unpublish recipe (FR-RCP-005/006, 422 nếu thiếu ingredient/step, C02, D07) | `Recipes.cs` (region D3.1/D3.2); `PATCH /recipes/{id}/publish|unpublish`; domain `Recipe.Publish()/Unpublish()` | Đã làm (electron merge qua PR #14 + main `a651c8a`) — xác minh 23/09: 13 test `RecipeLifecycleTests` pass |
+| D3.3 | Logout revoke refresh family | `IdentityService.LogoutAsync` (revoke theo hash + revoke family), `POST /auth/logout` | Đã làm — C5 refresh ĐÃ nằm trên main: `RefreshTokenAsync` rotation + family reuse revocation, 7 test Week3 + 16 test Auth pass |
 
 ---
 
@@ -41,12 +52,10 @@
 
 | Task | Nội dung | Lý do chưa xong | Cần gì để xong |
 |---|---|---|---|
-| D1.1c | Test MinIO down → lỗi rõ ràng + log redacted | Cần chạy integration với MinIO local đang lên | Chạy test + ghi log evidence |
-| D1.3 | API upload/metadata/primary/delete (FR-RCP-008, D17) | ✅ **Code xong (22/09) + E2E giờ chạy được (23/09)** — block 2.1 gỡ hoàn toàn, seed qua `POST /recipes`. Còn: chạy E2E trên MinIO, verify D1.1c, ghi evidence | Chạy E2E với stack Compose + MinIO local |
-| D2 | Resize original/300×300/800×600 + job nền | Chưa bắt đầu | Chốt queue (Hangfire/BackgroundService) theo nhóm |
-| D3 | Publish/unpublish CQRS + 422 + ownership | Fixtures ingredient/step **đã đủ** qua C2/C3; chưa có `Publish/Unpublish` command (TV3 C2 chưa mang theo) | TV3 thêm 2 command publish, hoặc TV4 tự làm theo FR-RCP-005/006 |
-| D3 | Logout revoke refresh family | Chưa bắt đầu | TV3 C5 refresh token merge |
-| D4 (nền) | Uploader UI + status button + sitemap/robots nền | Chưa bắt đầu | Chốt D27 ảnh hiển thị (presigned/proxy) |
+| D1.1c | Test MinIO down → lỗi rõ ràng + log redacted | Cần chạy integration với MinIO local (Compose) đang lên | Chạy test + ghi log evidence (cần Docker local hoặc bổ sung service MinIO vào `backend.yml`) |
+| D2 | Resize original/300×300/800×600 + job nền | Chưa bắt đầu — `RestAPI` không có ImageSharp/Hangfire/BackgroundService | Chốt queue (Hangfire/BackgroundService) theo nhóm (D23) |
+| D4 (nền) | Uploader UI + status button + sitemap/robots nền | Chưa bắt đầu — FE chưa có trang dashboard/recipes/uploader | Chốt D27 ảnh hiển thị (presigned/proxy), ghép API D1.3 + D3.1/D3.2 |
+| D5 | OTEL (trace HTTP→DB, filter 404/SDK4xx, payload omit) | Chưa bắt đầu — chỉ có Serilog/Seq + /health | Cài OpenTelemetry exporter; chạy nhất quán 4 tiêu chí tuần 3 |
 | D6 (tiếp) | Lab `practice/TV4/L4` + sổ evidence K | Chưa bắt đầu | G1 đã đóng; tạo nhánh lab |
 
 ---
@@ -56,9 +65,10 @@
 | Task | Nội dung | Block bởi | Thời điểm dự kiến gỡ |
 |---|---|---|---|
 | ~~D1.3 image endpoints~~ | ~~Upload/primary/delete API — gỡ hoàn toàn 23/09 (merge C2/C3, seed qua API)~~ | ✅ **Đã gỡ** (block 2.1 4/4) | Đã gỡ — chạy E2E trên MinIO |
-| D3 publish | Fixture recipe + ingredient + step **đã đủ** (C2/C3); còn chờ `Publish/Unpublish` command | TV3 — C2 bổ sung publish command | Ngay khi TV3 thêm 2 command, hoặc TV4 tự làm |
-| D3 logout revoke | Cần refresh token family | TV3 — C5 | Cuối tuần 2 |
-| D1/D4 ảnh display | Bucket private/public chưa chốt | Quyết định D27 + CR nếu cần | Đầu tuần 2 |
+| ~~D3 publish/unpublish~~ | ~~Chờ `Publish/Unpublish` command~~ | ✅ **Đã gỡ** — TV4 đã tự làm theo FR-RCP-005/006, merge qua main (`a651c8a`), 13 test pass | Đã gỡ (23/09) |
+| ~~D3 logout revoke~~ | ~~Cần refresh token family~~ | ✅ **Đã gỡ** — C5 refresh token đã có sẵn trên main (`RefreshTokenAsync` + `LogoutAsync`), 7 test Week3 + 16 test Auth pass | Đã gỡ (23/09) |
+| D1/D4 ảnh display | Bucket private/public chưa chốt | Quyết định D27 + CR nếu cần | Đầu tuần 3 |
+| D1.1c / E2E MinIO | Test MinIO down + integration trên Compose | Thiếu Docker local / service MinIO trong CI | Sau khi bổ sung stack local |
 
 ---
 
@@ -88,5 +98,5 @@
 
 | Cổng | Tiêu chí | Trạng thái |
 |---|---|---|
-| **G2 giữa tuần** | Upload ảnh hợp lệ → `StoredFile` URLs; set primary đúng 1; DELETE xoá object không orphan | 🟢 **Code đạt** (MinioStorageService + validator + domain/race + D1.3 endpoints, 88/88 test, build 0 warning). **23/09**: block 2.1 gỡ hoàn toàn → seed qua API, E2E trên MinIO chạy được. Còn: chạy/ghi evidence E2E thật trên Compose + D1.1c. |
-| **G3 cuối tuần** | Draft → thêm ingredient/step + ảnh → publish thành công; unpublish ẩn public; Draft/Archived không lộ; 4 MIME ≤5MiB; resize 3 kích thước; CI pass | Chưa đạt — thiếu `Publish/Unpublish` command (TV3 C2), D2 resize (D23) |
+| **G2 giữa tuần** | Upload ảnh hợp lệ → `StoredFile` URLs; set primary đúng 1; DELETE xoá object không orphan | 🟢 **Đạt** (MinioStorageService + validator + domain/race + D1.3 endpoints; 120/120 + spike 5/5 pass, build 0 warning, CI xanh). Còn: chạy/ghi evidence E2E thật trên Compose + D1.1c. |
+| **G3 cuối tuần** | Draft → thêm ingredient/step + ảnh → publish thành công; unpublish ẩn public; Draft/Archived không lộ; 4 MIME ≤5MiB; resize 3 kích thước; CI pass | 🟡 **Phần bé đạt** — publish/unpublish + 422 + không lộ Draft (D3.1/D3.2, 13 test) + logout revoke (C5) đã xong. **Thiếu**: D2 resize (D23 chưa chốt), E2E thật trên MinIO, D1.1c. |
