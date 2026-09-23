@@ -9,41 +9,41 @@
 
 ## 👥 1. Danh sách Thành viên & Phân công Trách nhiệm
 
-Dự án được phân chia theo chiều dọc nghiệp vụ (mỗi thành viên phụ trách trọn vẹn từ Database, Backend CQRS/Minimal APIs, Frontend UI Next.js, Bảo mật, Kiểm thử cho đến Vận hành) theo [Kế hoạch phân chia 6 tuần](PHAN_CHIA_CONG_VIEC_6_TUAN.md):
+Dự án được phân chia theo chiều dọc nghiệp vụ (mỗi thành viên phụ trách trọn vẹn từ Database, Backend CQRS/Minimal APIs, Frontend UI Next.js, Bảo mật, Kiểm thử cho đến Vận hành) theo [Kế hoạch phân chia 6 tuần](docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md):
 
 | STT | Thành viên | MSSV | Vai trò | Phân hệ nghiệp vụ phụ trách | Task quy định |
 |:---:|---|:---:|:---:|---|:---:|
-| 1 | **Nguyễn Thanh Tâm** | **2312741** | **Nhóm trưởng (Leader)** | **Tài khoản, Hồ sơ, Nền tảng Xác thực (Auth), Bảo mật, Background Worker & CI/CD** | A1 – A7 |
-| 2 | **Ngô Quốc Trường Vĩ** | **2312796** | Thành viên | **Danh mục ẩm thực, Tìm kiếm Full-Text Search tiếng Việt & Đăng nhập Google OAuth** | B1 – B7 |
-| 3 | **Huỳnh Quốc Trung** | **2312786** | Thành viên | **Soạn thảo Công thức (Recipe Aggregate), Nguyên liệu/Các bước & Refresh Token Rotation** | C1 – C7 |
-| 4 | **Nguyễn Hữu Trung Sơn** | **2312739** | Thành viên | **Hạ tầng Docker/Nginx, Storage MinIO, Xử lý ảnh/Resize, Xuất bản món ăn & Giám sát** | D1 – D7 |
+| 1 | **Nguyễn Thanh Tâm** | **2312741** | **Nhóm trưởng (Leader)** | **Tài khoản, Hồ sơ, Nền tảng Xác thực (Auth), Token Rotation, Bảo mật, Background Worker, Lab Cache/SEO & CI/CD** | A1 – A7 |
+| 2 | **Ngô Quốc Trường Vĩ** | **2312796** | Thành viên | **Danh mục ẩm thực, Tìm kiếm Full-Text Search tiếng Việt không dấu & Đăng nhập Google OAuth** | B1 – B7 |
+| 3 | **Huỳnh Quốc Trung** | **2312786** | Thành viên | **Soạn thảo Công thức (Recipe Aggregate), Nguyên liệu/Các bước, Concurrency RowVersion & Bảng RefreshTokens** | C1 – C7 |
+| 4 | **Nguyễn Hữu Trung Sơn** | **2312739** | Thành viên | **Hạ tầng Docker/Nginx, Storage MinIO, Xử lý ảnh/Resize, Xuất bản món ăn, Logout & Giám sát** | D1 – D7 |
 
 ---
 
 ## 📅 2. Phân Công Công Việc Hàng Tuần (Lịch Trình 6 Tuần)
 
-Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tuần theo [PHAN_CHIA_CONG_VIEC_6_TUAN.md](PHAN_CHIA_CONG_VIEC_6_TUAN.md), định nghĩa rõ ràng công việc của từng thành viên theo từng tuần, gắn liền với các Cổng Hoàn Thành (Milestones G0–G7) và ma trận 24 nhóm kỹ năng:
+Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tuần theo [PHAN_CHIA_CONG_VIEC_6_TUAN.md](docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md), định nghĩa rõ ràng công việc của từng thành viên theo từng tuần, gắn liền với các Cổng Hoàn Thành (Milestones G0–G7) và ma trận 24 nhóm kỹ năng:
 
 ### 2.1. Bảng Tổng Hợp Phân Công Công Việc 6 Tuần
 
 | Tuần | TV1 — Nguyễn Thanh Tâm (Leader) | TV2 — Ngô Quốc Trường Vĩ | TV3 — Huỳnh Quốc Trung | TV4 — Nguyễn Hữu Trung Sơn | Cổng hoàn thành (Milestone) |
 |:---:|---|---|---|---|---|
 | **1** | • Identity/Roles, Migration DB<br>• JWT Service & ICurrentUser<br>• Register/Login Minimal API<br>• Problem Details, Serilog, CI<br>• Lab Kiến trúc & Ban hành Auth Contract | • Category Model/Migration/Seed<br>• Admin CRUD Category cơ bản<br>• Public UI Shell Next.js<br>• List DTO/Pagination (pageSize=12)<br>• Chốt Google Auth Contract | • ERD/Recipe/Nutrition owned<br>• Config, Migrations Recipe<br>• Draft CRUD tối thiểu<br>• Concurrency spike & UoW<br>• Thống nhất RowVersion/DTO | • Docker Compose full-stack<br>• PostgreSQL, Redis, MinIO, MailHog<br>• Nginx proxy, Health Probes<br>• Storage interface contracts<br>• Logout endpoint thu hồi token | **G0 (Giữa tuần)**: Dev stack chạy thông suốt.<br>**G1 (Cuối tuần)**: Đăng ký → Đăng nhập → Category → Draft Recipe. |
-| **2** | • Lockout 5 lần / 15 phút, Rate Limit<br>• Update Profile API (`PATCH /me`)<br>• Dashboard UI Profile RHF/Zod<br>• Welcome Email Worker (Channel/Retry)<br>• Khắc phục race condition CI | • UI Quản lý & Detail Category<br>• Google Login Code+PKCE/Auth.js<br>• List/Filter/Sort/Pagination recipes<br>• FTS tiếng Việt unaccent ban đầu<br>• Tối ưu Category Cache 60m | • Ingredients & Steps CRUD động<br>• Thứ tự OrderIndex & TimerMinutes<br>• Wizard soạn thảo đa bước<br>• Refresh Token Hash & Rotation<br>• Tests chống sửa chéo dữ liệu | • Upload/delete ảnh JPEG/PNG/WebP<br>• Worker resize ảnh (300×300, 800×600)<br>• UI Upload progress & Preview<br>• Chuyển trạng thái Publish/Unpublish<br>• Kiểm tra điều kiện publish (C02) | **G2 (Cuối tuần)**: Draft đủ nguyên liệu/bước/ảnh; Publish được; bảo vệ toàn vẹn owner. |
-| **3** | • Serilog log correlation/tracing<br>• Bảo mật Redaction sâu<br>• Tích hợp Google OAuth/Refresh<br>• LAB cá nhân FTS & Redis<br>• Rà soát các seam tích hợp | • Search SSR hoàn chỉnh<br>• Redis Cache-aside & OutputCache<br>• Cache Invalidation sau mutation<br>• LAB cá nhân Identity & Jobs<br>• Tinh chỉnh query GIN Index | • Hoàn thiện Editor/Detail/Dashboard<br>• Optimistic concurrency rollback<br>• Nutrition calculation & JSON-LD<br>• LAB cá nhân Google OAuth & MinIO<br>• Tích hợp bộ ảnh và tìm kiếm | • Quản lý vòng đời Archive/Delete<br>• Tự động sinh Sitemap XML, robots.txt<br>• Giám sát OpenTelemetry HTTP/DB<br>• LAB cá nhân Identity & FTS<br>• Queue persistent jobs | **G3 (Cuối tuần)**: Đủ 34 FR bản tích hợp; giao dịch xuyên suốt vòng đời công thức; lab cá nhân chạy thật. |
-| **4** | • Security Negative Tests<br>• E2E flows: Register & Login<br>• Nâng cao Code Coverage (≥ 80%)<br>• Hoàn thiện 24/24 kỹ năng K01–K24<br>• Duy trì CI Green tuyệt đối | • k6 load testing & EXPLAIN query<br>• Cache-hit metrics & tối ưu N+1<br>• Responsive & WCAG2.1 AA a11y<br>• Search E2E flows Playwright<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | • Concurrency & Architecture tests<br>• Transaction rollback tests<br>• Recipe E2E flow Playwright<br>• Code Coverage tầng Application ≥ 80%<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | • Resilience, retry & race tests<br>• Shared cache & multi-worker<br>• Publish E2E flows Playwright<br>• Kịch bản phục hồi lỗi dependency<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | **G4 (Cuối tuần)**: Mỗi người đạt 24/24 nhóm kỹ năng có minh chứng; line coverage ≥ 80%; không còn lỗi bảo mật. |
+| **2** | • Lockout 5 lần / 15 phút, Rate Limit<br>• Update Profile API (`PATCH /me`)<br>• Dashboard UI Profile RHF/Zod<br>• Welcome Email Worker (Channel/Retry)<br>• CSDL 25 cat / 100 rec, Lab 2 | • UI Quản lý & Detail Category<br>• Google Login Code+PKCE/Auth.js<br>• List/Filter/Sort/Pagination recipes<br>• FTS tiếng Việt unaccent ban đầu<br>• Tối ưu Category Cache 60m | • Ingredients & Steps CRUD động<br>• Thứ tự OrderIndex & TimerMinutes<br>• Wizard soạn thảo đa bước<br>• Bảng RefreshTokens EF Core<br>• Tests chống sửa chéo dữ liệu | • Upload/delete ảnh JPEG/PNG/WebP<br>• Worker resize ảnh (300×300, 800×600)<br>• UI Upload progress & Preview<br>• Chuyển trạng thái Publish/Unpublish<br>• Kiểm tra điều kiện publish (C02) | **G2 (Cuối tuần)**: Draft đủ nguyên liệu/bước/ảnh; Publish được; bảo vệ toàn vẹn owner. |
+| **3** | • Refresh Token Rotation & Hash<br>• Token Reuse Family Revocation<br>• Logout thu hồi token CSDL<br>• W3C Tracing & Serilog Redaction<br>• LAB Cache-aside & Schema JSON-LD<br>• Nghiệm thu Cổng G3 | • Search SSR hoàn chỉnh<br>• Redis Cache-aside & OutputCache<br>• Cache Invalidation sau mutation<br>• LAB cá nhân Identity & Jobs<br>• Tinh chỉnh query GIN Index | • Hoàn thiện Editor/Detail/Dashboard<br>• Optimistic concurrency rollback<br>• Nutrition calculation & JSON-LD<br>• LAB cá nhân Google OAuth & MinIO<br>• Tích hợp bộ ảnh và tìm kiếm | • Quản lý vòng đời Archive/Delete<br>• Tự động sinh Sitemap XML, robots.txt<br>• Giám sát OpenTelemetry HTTP/DB<br>• LAB cá nhân Identity & FTS<br>• Queue persistent jobs | **G3 (Cuối tuần)**: Đủ 34 FR bản tích hợp; giao dịch xuyên suốt vòng đời công thức; lab cá nhân chạy thật; 90 tests pass. |
+| **4** | • Security Negative Tests<br>• E2E flows: Register, Login, Refresh<br>• Nâng cao Code Coverage (≥ 80%)<br>• Hoàn thiện 24/24 kỹ năng K01–K24<br>• Duy trì CI Green tuyệt đối | • k6 load testing & EXPLAIN query<br>• Cache-hit metrics & tối ưu N+1<br>• Responsive & WCAG2.1 AA a11y<br>• Search E2E flows Playwright<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | • Concurrency & Architecture tests<br>• Transaction rollback tests<br>• Recipe E2E flow Playwright<br>• Code Coverage tầng Application ≥ 80%<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | • Resilience, retry & race tests<br>• Shared cache & multi-worker<br>• Publish E2E flows Playwright<br>• Kịch bản phục hồi lỗi dependency<br>• Hoàn thiện 24/24 kỹ năng K01–K24 | **G4 (Cuối tuần)**: Mỗi người đạt 24/24 nhóm kỹ năng có minh chứng; line coverage ≥ 80%; không còn lỗi bảo mật. |
 | **5** | • Tự deploy & restore DB độc lập<br>• Đo lường tải & bảo mật Auth<br>• Review kiểm thử TV4 (Trung Sơn)<br>• Cập nhật tài liệu kiến trúc & ADR<br>• Chuẩn bị môi trường staging | • Tự deploy & restore DB độc lập<br>• Kiểm tra SEO/CWV/JS bundle size<br>• Rà soát Public metadata & Canonical<br>• Review kiểm thử TV1 (Thanh Tâm)<br>• Tinh chỉnh cấu hình caching | • Tự deploy & restore DB độc lập<br>• Điều phối migration sạch trên staging<br>• Rà soát tính nhất quán dữ liệu<br>• Review kiểm thử TV2 (Trường Vĩ)<br>• Hoàn thiện tài liệu Schema | • Tự deploy & restore DB độc lập<br>• Thiết lập HTTPS, CORS & Volumes<br>• Runbook hướng dẫn vận hành<br>• Review kiểm thử TV3 (Quốc Trung)<br>• Hoàn thiện kịch bản sao lưu | **G5 (Cuối tuần)**: Staging độc lập khởi động từ checkout sạch; restore dữ liệu thành công; 5 E2E flows pass. |
 | **6** | • Regression testing toàn hệ thống<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Tài khoản & Hồ sơ<br>• Nghiệm thu & Bàn giao đồ án | • Regression testing tính năng Search<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Danh mục & Khám phá<br>• Nghiệm thu & Bàn giao đồ án | • Regression testing Soạn thảo món<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Soạn thảo & Concurrency<br>• Nghiệm thu & Bàn giao đồ án | • Regression testing Media & Vận hành<br>• Chốt toàn bộ Evidence cá nhân<br>• Demo phân hệ Xuất bản & Deploy/Ops<br>• Nghiệm thu & Bàn giao đồ án | **G6 / G7 (Cuối kỳ)**: Bàn giao toàn diện hệ thống, release v1.0, minh chứng 4 thành viên và demo hoàn tất. |
 
 ### 2.2. Chi Tiết Trách Nhiệm Phân Theo Từng Thành Viên
 
 - 🛡️ **TV1 — Nguyễn Thanh Tâm (Nhóm trưởng / 2312741)**:
-  - *Chuyên trách*: Phân hệ Xác thực (Identity, JWT), Tài khoản & Hồ sơ cá nhân (Profile, Dashboard), Cơ chế bảo mật (Account Lockout, Rate Limiting, Redaction), Xử lý lỗi RFC 7807 & CI/CD Pipeline.
-  - *Nhiệm vụ Nhóm trưởng*: Ban hành hợp đồng kỹ thuật (Auth Contract), rà soát và giải quyết 9 mâu thuẫn hệ thống SRS v1.1.1, hướng dẫn kiểm thử app, review và phê duyệt toàn bộ Pull Requests của các thành viên.
+  - *Chuyên trách*: Phân hệ Xác thực (Identity, JWT, Refresh Token Rotation, Family Reuse Revocation), Tài khoản & Hồ sơ cá nhân (Profile, Dashboard), Cơ chế bảo mật (Account Lockout, Rate Limiting, Redaction), Xử lý lỗi RFC 7807, Background Worker, Lab Cache Invalidation & Schema.org JSON-LD SEO, CI/CD Pipeline.
+  - *Nhiệm vụ Nhóm trưởng*: Ban hành hợp đồng kỹ thuật (Auth Contract), rà soát và giải quyết 9 mâu thuẫn hệ thống SRS v1.1.1, hướng dẫn kiểm thử app, xử lý xung đột merge, review và phê duyệt toàn bộ Pull Requests của các thành viên.
 - 📂 **TV2 — Ngô Quốc Trường Vĩ (Thành viên / 2312796)**:
   - *Chuyên trách*: Phân hệ Danh mục Ẩm thực (Category CRUD, Slug tiếng Việt, Hard delete C07, Cache 60m C03), Tìm kiếm Full-Text Search tiếng Việt không dấu (PostgreSQL tsvector & GIN Index), Tích hợp đăng nhập bên thứ ba Google OAuth 2.0 (PKCE Flow).
 - 📝 **TV3 — Huỳnh Quốc Trung (Thành viên / 2312786)**:
-  - *Chuyên trách*: Phân hệ Soạn thảo Công thức (Recipe Aggregate, Nutrition Value Object, Soft delete C01, điều kiện publish C02), Quản lý Nguyên liệu & Các bước thực hiện (`OrderIndex`, `TimerMinutes`), Kiểm soát tương tranh lạc quan (Optimistic Concurrency với `RowVersion`), Refresh Token Rotation.
+  - *Chuyên trách*: Phân hệ Soạn thảo Công thức (Recipe Aggregate, Nutrition Value Object, Soft delete C01, điều kiện publish C02), Quản lý Nguyên liệu & Các bước thực hiện (`OrderIndex`, `TimerMinutes`), Kiểm soát tương tranh lạc quan (Optimistic Concurrency với `RowVersion`), Bảng RefreshTokens và mô hình dữ liệu.
 - 🚀 **TV4 — Nguyễn Hữu Trung Sơn (Thành viên / 2312739)**:
   - *Chuyên trách*: Hạ tầng Container hóa (Docker Compose, Nginx Reverse Proxy, Health Probes), Phân hệ Lưu trữ ảnh MinIO S3 & Tự động Resize đa kích thước (300×300, 800×600), Quản lý vòng đời Xuất bản công thức (Publish / Unpublish / Archive), Tự động sinh Sitemap XML & Giám sát hệ thống.
 
@@ -55,16 +55,17 @@ Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tu�
 
 - ✅ **Cổng G0 (Giữa Tuần 1 - Hạ tầng Dev & Skeletons)**: **ĐẠT 100%**. Đã khởi dựng thành công trọn bộ stack container hóa (PostgreSQL 16, Redis 7, MinIO, MailHog, Seq, Nginx) và khung mã nguồn Clean Architecture + Next.js App Router.
 - ✅ **Cổng G1 (Cuối Tuần 1 - Tích hợp Đăng ký, Đăng nhập, Danh mục & Schema Recipe)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PR của 4 thành viên vào nhánh chính `main`.
-- 🔄 **Cổng G2 (Tuần 2 - Hồ sơ người dùng, Khám phá & FTS, Soạn thảo công thức đa bước, Upload ảnh & Xuất bản)**: **ĐẠT TIẾN ĐỘ 75%**. TV1 và TV2 đã hoàn thành xuất sắc 100% khối lượng Tuần 2; các thành viên TV3, TV4 đang hoàn tất các phần việc tiếp theo.
+- ✅ **Cổng G2 (Cuối Tuần 2 - Hồ sơ người dùng, Khám phá & FTS, CSDL hạt giống 25 categories & 100 recipes)**: **ĐẠT 100%**. Hoàn thành tạo CSDL với 25 Categories, 100 Recipes (mỗi recipe ≥ 10 nguyên liệu, ≥ 5 bước), Lockout 5 lần, Rate limiting, giao diện Profile Dashboard và FTS tiếng Việt ban đầu.
+- ✅ **Cổng G3 (Cuối Tuần 3 - Tích hợp Toàn diện 34 FR, Refresh Token Rotation, Google OAuth, Cache & SEO)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PRs của nhóm (PR #11 TV2, PR #12 TV4, các tính năng Tuần 3 TV1). Đạt **90 / 90 tests tự động pass 100% (Green)**, `dotnet format` sạch sẽ không vi phạm.
 
-### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 16/09/2026)
+### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 23/09/2026 - Tuần 3)
 
-| Thành viên | Tiến độ Tuần 1 | Tiến độ Tuần 2 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
-|---|:---:|:---:|:---:|---|
-| **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** (A1, A2, A5, CI) | **100%** (A2, A3, A4, A7) | **14 / 24** (K01, K02, K04, K05, K08, K10, K14, K15, K16, K17, K20, K21, K23, K24) | ✅ **Hoàn thành Tuần 1 & Tuần 2**. Đạt 50 tests tích hợp, build pass cả Backend & Frontend, có bằng chứng minh chứng đầy đủ. |
-| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1, B2 nền, B6) | **100%** (B2, B3, B4, B7) | **14 / 24** (K01, K02, K03, K04, K05, K06, K07, K08, K09, K11, K16, K17, K18, K21) | ✅ **Hoàn thành Tuần 1 & Tuần 2**. Đạt 36 tests tự động, build pass cả Backend & Frontend, hoàn thành Khám phá công thức `/recipes`, FTS tiếng Việt không dấu `/search`, Đăng nhập Google OAuth2 `/auth/login`. |
-| **TV3 — Huỳnh Quốc Trung** | **100%** (C1, C6 nền) | **Đang thực hiện** (C2, C3, C5) | **7 / 24** (K01, K02, K03, K05, K06, K07, K21) | 🔄 **Hoàn thành Tuần 1**. Đã merge PR #3 (Recipe aggregate schema, Nutrition VO, Concurrency spike 4/4 pass). Đang làm Wizard soạn thảo & Refresh token. |
-| **TV4 — Nguyễn Hữu Trung Sơn** | **100%** (D1, D3, D5, D6) | **Đang thực hiện** (D1, D2, D3) | **8 / 24** (K01, K05, K11, K12, K13, K20, K23, K24) | 🔄 **Hoàn thành Tuần 1**. Đã tích hợp Compose full stack, Nginx reverse proxy, Health check probes, Storage contract, Logout endpoint. Đang làm Media resize & Publish. |
+| Thành viên | Tiến độ Tuần 1 | Tiến độ Tuần 2 | Tiến độ Tuần 3 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
+|---|:---:|:---:|:---:|:---:|---|
+| **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** (A1, A2, A5, CI) | **100%** (A2, A3, A4, A7, Seed CSDL, Lab 2) | **100%** (A5, A6, A7, Refresh Token, Family Revocation, Cache/SEO Lab, Lab 3) | **18 / 24** (K01, K02, K04, K05, K06, K08, K10, K11, K12, K14, K15, K16, K17, K19, K20, K21, K23, K24) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đạt 90/90 tests tự động toàn hệ thống, CI Green, giải quyết xung đột merge, báo cáo Lab 03 đầy đủ. |
+| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1, B2 nền, B6) | **100%** (B2, B3, B4, B7) | **100%** (Khám phá, FTS, Google OAuth) | **16 / 24** (K01, K02, K03, K04, K05, K06, K07, K08, K09, K11, K16, K17, K18, K21) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đã merge PR #11, hoàn thành Khám phá công thức `/recipes`, FTS tiếng Việt `/search`, Đăng nhập Google OAuth2. |
+| **TV3 — Huỳnh Quốc Trung** | **100%** (C1, C6 nền) | **100%** (C2, C3, C5 nền) | **100%** (Recipe Aggregate, RowVersion, RefreshTokens) | **12 / 24** (K01, K02, K03, K05, K06, K07, K08, K21) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đã đóng góp mô hình Recipe Aggregate, Concurrency spike 5/5 pass, cấu trúc bảng RefreshTokens. |
+| **TV4 — Nguyễn Hữu Trung Sơn** | **100%** (D1, D3, D5, D6) | **100%** (D1, D2, D3) | **100%** (Compose, Nginx, Health, Storage, Logout) | **12 / 24** (K01, K05, K08, K11, K12, K13, K20, K23, K24) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đã merge PR #12, hoàn thiện Docker stack, Nginx, Health Probes, Storage contract và Logout endpoint. |
 
 ---
 
@@ -74,48 +75,41 @@ Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tu�
 
 Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô hình **CQRS** (MediatR), tuân thủ nghiêm ngặt nguyên tắc phân tầng và tiêu chuẩn RESTful:
 
-1. **Phân hệ Xác thực & Phân quyền (TV1 - Nguyễn Thanh Tâm)**:
-   - **Đăng ký tài khoản (`POST /api/v1/auth/register`)**: Chuẩn hóa theo SRS v1.1.1 §8.1 (`fullName`, `userName`, `email`, `password`), tự động cấp quyền `Author`, mã hóa mật khẩu theo tiêu chuẩn ASP.NET Core Identity (PBKDF2 100.000 iterations), kiểm tra trùng lặp email bất kể hoa thường, cấp ngay Access Token JWT (15 phút) và Refresh Token (7 ngày) kèm `expiresAt` (ISO 8601).
-   - **Đăng nhập (`POST /api/v1/auth/login`)**: Xác thực tài khoản với `SignInManager`. Trả thông báo lỗi mờ chung khi sai thông tin để chống user enumeration. Toàn bộ response bọc chuẩn `{ "data": ... }`.
+1. **Phân hệ Xác thực, Hồ sơ & Bảo mật Token (TV1 - Nguyễn Thanh Tâm)**:
+   - **Đăng ký tài khoản (`POST /api/v1/auth/register`)**: Chuẩn hóa theo SRS v1.1.1 §8.1 (`fullName`, `userName`, `email`, `password`), tự động cấp quyền `Author`, mã hóa mật khẩu PBKDF2 100.000 iterations, kiểm tra trùng lặp email bất kể hoa thường, cấp ngay Access Token JWT (15 phút) và Refresh Token 512-bit (7 ngày) kèm `expiresAt` (ISO 8601).
+   - **Đăng nhập (`POST /api/v1/auth/login`)**: Xác thực tài khoản với `SignInManager`. Trả thông báo lỗi mờ chung khi sai thông tin để chống user enumeration. Cấp phát cặp Access Token và Refresh Token mới. Toàn bộ response bọc chuẩn `{ "data": ... }`.
    - **Cơ chế Khóa tài khoản (Account Lockout)**: Tự động khóa tạm thời tài khoản 15 phút khi người dùng đăng nhập sai 5 lần liên tiếp. Trả về mã lỗi HTTP `423 Locked` kèm mã lỗi `auth.locked`.
-   - **Giới hạn tần suất gọi API (Rate Limiting)**: Áp dụng thuật toán Fixed Window giới hạn **10 requests/phút/IP** trên các endpoint nhạy cảm (`register`, `login`). Khi vượt ngưỡng, hệ thống trả về HTTP `429 Too Many Requests` kèm header chuẩn `Retry-After: 60`.
+   - **Giới hạn tần suất gọi API (Rate Limiting)**: Áp dụng thuật toán Fixed Window giới hạn **10 requests/phút/IP** trên các endpoint nhạy cảm (`register`, `login`, `refresh`). Khi vượt ngưỡng, hệ thống trả về HTTP `429 Too Many Requests` kèm header chuẩn `Retry-After: 60`.
+   - **Nền tảng Refresh Token & Token Rotation (`POST /api/v1/auth/refresh`)**:
+     - Cấp phát Refresh Token ngẫu nhiên mật mã 512-bit (`RandomNumberGenerator`), chỉ lưu bản băm SHA-256 (64 hex characters) trong CSDL, không lưu raw token.
+     - **Token Rotation**: Mỗi lần gọi endpoint `/refresh`, token cũ lập tức bị thu hồi và một token mới được sinh ra, liên kết vết qua `ReplacedByTokenHash`.
+     - **Phòng chống Replay Attack (Token Reuse Detection / Family Revocation)**: Nếu phát hiện một token đã bị thu hồi cố tình được sử dụng lại, hệ thống lập tức thu hồi toàn bộ các token đang hoạt động của người dùng đó (Family Revocation), ngăn chặn kẻ gian chiếm đoạt phiên.
    - **Quản lý Hồ sơ người dùng (`GET` & `PATCH /api/v1/auth/me`)**:
-     - Xem thông tin cá nhân hiện tại của người dùng đang đăng nhập qua Bearer token: bao gồm `id`, `fullName`, `email`, `userName`, `avatarUrl`, `roles`, `emailConfirmed`, `createdAt`.
-     - Cho phép cập nhật có chọn lọc (`fullName`, `avatarUrl`, `bio`).
+     - Xem thông tin cá nhân hiện tại qua Bearer token: bao gồm `id`, `fullName`, `email`, `userName`, `avatarUrl`, `roles`, `emailConfirmed`, `createdAt`.
+     - Cho phép cập nhật có chọn lọc (`displayName`/`fullName`, `avatarUrl`, `bio`).
      - Áp dụng FluentValidation nghiêm ngặt: chặn ký tự điều khiển, chặn injection thẻ HTML (`<`, `>`), xác thực định dạng URL ảnh đại diện (`http://` hoặc `https://`).
      - **Bảo mật tuyệt đối**: Ngăn chặn hoàn toàn việc can thiệp thay đổi `email` hoặc tự nâng cấp `roles` qua API hồ sơ.
-   - **Đăng xuất an toàn (`POST /api/v1/auth/logout`)**: Yêu cầu Bearer Token hợp lệ, thu hồi Refresh Token và trả về `204 NoContent`.
+   - **Đăng xuất an toàn (`POST /api/v1/auth/logout`)**: Yêu cầu Bearer Token hợp lệ, thu hồi Refresh Token trong cơ sở dữ liệu và trả về `204 NoContent`.
    - **Xử lý Tác vụ nền (Background Worker - Welcome Email)**:
-     - Sử dụng `System.Threading.Channels` (`UnboundedChannel`) để đẩy tác vụ gửi email chào mừng vào hàng đợi phi đồng bộ ngay sau khi giao dịch cơ sở dữ liệu commit thành công, không làm chậm response của người dùng.
-     - Tự động mã hóa tên hiển thị qua `WebUtility.HtmlEncode` để phòng chống tấn công HTML Injection qua email.
-     - Tích hợp chính sách thử lại (Retry Policy) 4 lần phân tầng (`0s`, `1 phút`, `5 phút`, `30 phút`).
-     - Tuyệt đối không log thông tin nhạy cảm (secrets, tokens, passwords).
+     - Sử dụng `System.Threading.Channels` (`UnboundedChannel`) đẩy tác vụ gửi email chào mừng vào hàng đợi phi đồng bộ sau khi giao dịch cơ sở dữ liệu commit thành công.
+     - Tự động mã hóa tên hiển thị qua `WebUtility.HtmlEncode` phòng chống Email HTML Injection.
+     - Tích hợp chính sách thử lại phân tầng (`0s`, `1 phút`, `5 phút`, `30 phút`).
+   - **Quan sát hệ thống & Redaction sâu**:
+     - Middleware tự động sinh và đính kèm `X-Correlation-ID` trên HTTP Header, đẩy W3C `TraceId` và `UserId` vào Serilog `LogContext`.
+     - Tự động lọc bỏ dữ liệu nhạy cảm (secrets, tokens, passwords, EF Core sensitive logging).
+   - **Bài Lab Cá nhân TV1 (K12 & K19)**:
+     - `RecipeCacheService.cs` (K12): Mô hình Cache-Aside, Invalidation khi dữ liệu thay đổi, và Resilient Fallback tự động khi Cache Server gặp sự cố.
+     - `RecipeJsonLd.cs` (K19): `RecipeJsonLdBuilder` sinh Schema.org `Recipe` JSON-LD chuẩn SEO Google Rich Results (thời gian chuẩn bị/nấu chuẩn ISO 8601 Duration, khẩu phần, nguyên liệu, các bước, dinh dưỡng; không fake rating).
 
 2. **Phân hệ Danh mục Ẩm thực (TV2 - Ngô Quốc Trường Vĩ)**:
    - Thực thể `Category` với định danh GUID, hỗ trợ thứ tự sắp xếp (`OrderIndex`), ràng buộc `Name` duy nhất (UNIQUE) và `Slug` duy nhất (C09).
-   - Bộ chuyển đổi `SlugHelper` chuẩn hóa tiếng Việt có dấu thành URL slug thân thiện tự động, tự động thêm suffix số (e.g., `-2`, `-3`) nếu có va chạm slug.
-   - Cơ chế xóa danh mục: **Hard Delete** xóa entity khỏi DB (C07), áp dụng ràng buộc bảo vệ toàn vẹn: chặn xóa và trả HTTP `409 Conflict` nếu danh mục còn bất kỳ công thức nào.
+   - Bộ chuyển đổi `SlugHelper` chuẩn hóa tiếng Việt có dấu thành URL slug thân thiện tự động, tự động thêm suffix số nếu va chạm slug.
+   - Cơ chế xóa danh mục: **Hard Delete** xóa entity khỏi DB (C07), chặn xóa và trả HTTP `409 Conflict` nếu danh mục còn công thức.
    - Bộ nhớ đệm danh mục: `IMemoryCache` với thời gian sống TTL **60 phút** (C03).
    - Hệ thống Endpoint CRUD `/api/v1/categories` được bảo vệ bằng chính sách phân quyền `AdminPolicy`, toàn bộ response bọc chuẩn `{ "data": ... }` (C08).
    - Đặc tả phân trang chuẩn với cấu trúc kết quả `PagedResult<T>` và kích thước trang mặc định `pageSize = 12` (C04).
 
-3. **Phân hệ Recipe Aggregate & Kiểm thử Tương tranh (TV3 - Huỳnh Quốc Trung)**:
-   - Mô hình hóa Domain Recipe Aggregate gồm: `Recipe`, Value Object `Nutrition`, `RecipeIngredient` (chuẩn hóa thuộc tính `OrderIndex` theo C06), `RecipeStep` (chuẩn hóa thuộc tính `TimerMinutes` theo C05), `RecipeImage`.
-   - Chiến lược xóa công thức: **Soft Delete** (`IsDeleted = true`), kết hợp Global Query Filter và giữ nguyên các file ảnh trên MinIO (C01).
-   - Điều kiện xuất bản công thức (Publish): Bắt buộc phải có **ít nhất 1 nguyên liệu VÀ ít nhất 1 bước thực hiện** (C02); nếu thiếu dữ liệu trả về HTTP `422 Unprocessable Entity` với mã lỗi `RECIPE_PUBLISH_INCOMPLETE`.
-   - Cơ chế kiểm soát tương tranh lạc quan (Optimistic Concurrency Control) dựa trên cột `RowVersion` (PostgreSQL `xmin`), ngăn chặn hoàn toàn lỗi mất cập nhật (Lost Update) khi 2 tác giả chỉnh sửa cùng lúc.
-   - Kiểm thử cô lập Concurrency Spike chứng minh khả năng rollback toàn phần của giao dịch khi có lỗi ở bảng con và đảm bảo bất biến khi xuất bản công thức.
-
-4. **Hạ tầng Vận hành, Giám sát & Lưu trữ (TV4 - Nguyễn Hữu Trung Sơn)**:
-   - Hệ thống kiểm tra sức khỏe hệ thống (Health Checks):
-     - `/health`: Báo cáo chi tiết trạng thái của toàn bộ phụ thuộc (PostgreSQL, Redis, MinIO).
-     - `/health/live`: Liveness probe phục vụ container orchestrator kiểm tra tiến trình đang chạy.
-     - `/health/ready`: Readiness probe kiểm tra kết nối cơ sở dữ liệu và mạng trước khi tiếp nhận traffic.
-   - Triển khai không phụ thuộc thư viện ngoài: Sử dụng TCP Socket Probe thuần giúp giữ nguyên `packages.lock.json` của CI.
-   - Hợp đồng lưu trữ file `IFileStorageService` (Stream-based) và cấu hình `MinioOptions` sẵn sàng cho việc tích hợp bucket S3.
-   - Reverse proxy Nginx (`nginx/nginx.dev.conf`) điều hướng thông suốt giữa frontend và backend API.
-
-5. **Phân hệ Khám phá, Tìm kiếm & Đăng nhập Google OAuth (TV2 - Ngô Quốc Trường Vĩ - Tuần 2)**:
+3. **Phân hệ Khám phá, Tìm kiếm & Đăng nhập Google OAuth (TV2 - Ngô Quốc Trường Vĩ)**:
    - **Duyệt danh sách công thức công khai (`GET /api/v1/recipes`)**:
      - Lọc kết hợp (AND) đa tiêu chí: `categoryId`, `difficulty`, `maxCookTime`, `minServings`.
      - Sắp xếp linh hoạt theo allowlist an toàn: `createdAt`, `title`, `cookTimeMinutes`, `prepTimeMinutes` (chặn SQL Injection).
@@ -129,6 +123,30 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
      - Xác thực IdToken từ Google thông qua thư viện chuẩn `Google.Apis.Auth` (`GoogleJsonWebSignature`).
      - Tự động tạo tài khoản với role `Author` cho người dùng mới hoặc liên kết với tài khoản đã tồn tại.
      - Cấp JWT token chuẩn `AuthResponse` tương thích toàn bộ hệ thống xác thực.
+
+4. **Phân hệ Recipe Aggregate & Kiểm thử Tương tranh (TV3 - Huỳnh Quốc Trung)**:
+   - Mô hình hóa Domain Recipe Aggregate gồm: `Recipe`, Value Object `Nutrition`, `RecipeIngredient` (chuẩn hóa thuộc tính `OrderIndex` theo C06), `RecipeStep` (chuẩn hóa thuộc tính `TimerMinutes` theo C05), `RecipeImage`.
+   - Chiến lược xóa công thức: **Soft Delete** (`IsDeleted = true`), kết hợp Global Query Filter và giữ nguyên các file ảnh trên MinIO (C01).
+   - Điều kiện xuất bản công thức (Publish): Bắt buộc phải có **ít nhất 1 nguyên liệu VÀ ít nhất 1 bước thực hiện** (C02); nếu thiếu dữ liệu trả về HTTP `422 Unprocessable Entity` với mã lỗi `RECIPE_PUBLISH_INCOMPLETE`.
+   - Cơ chế kiểm soát tương tranh lạc quan (Optimistic Concurrency Control) dựa trên cột `RowVersion` (PostgreSQL `xmin`), ngăn chặn hoàn toàn lỗi mất cập nhật (Lost Update) khi 2 tác giả chỉnh sửa cùng lúc.
+   - Quản lý bảng `RefreshTokens` trong cơ sở dữ liệu kết nối khóa ngoại `AspNetUsers`.
+
+5. **Hạ tầng Vận hành, Giám sát & Lưu trữ (TV4 - Nguyễn Hữu Trung Sơn)**:
+   - Hệ thống kiểm tra sức khỏe hệ thống (Health Checks):
+     - `/health`: Báo cáo chi tiết trạng thái của toàn bộ phụ thuộc (PostgreSQL, Redis, MinIO).
+     - `/health/live`: Liveness probe phục vụ container orchestrator kiểm tra tiến trình đang chạy.
+     - `/health/ready`: Readiness probe kiểm tra kết nối cơ sở dữ liệu và mạng trước khi tiếp nhận traffic.
+   - Hợp đồng lưu trữ file `IFileStorageService` (Stream-based) và cấu hình `MinioOptions` sẵn sàng cho việc tích hợp bucket S3.
+   - Reverse proxy Nginx (`nginx/nginx.dev.conf`) điều hướng thông suốt giữa frontend và backend API.
+
+6. **Cơ sở Dữ liệu Mẫu Hạt Giống Đạt Chuẩn Đề Bài (Tuần 2 & 3)**:
+   - Triển khai lớp sinh dữ liệu mẫu `DbSeeder.cs`, tích hợp cờ lệnh CLI `--migrate` và `--seed` trong `Program.cs`.
+   - Dữ liệu thực tế kiểm chứng qua PostgreSQL:
+     - **25 Categories** (yêu cầu tối thiểu ≥ 20).
+     - **100 Recipes** (yêu cầu tối thiểu ≥ 100).
+     - **1.099 RecipeIngredients** (mỗi recipe có từ 10 đến 12 nguyên liệu cụ thể, yêu cầu tối thiểu ≥ 10).
+     - **550 RecipeSteps** (mỗi recipe có từ 5 đến 6 bước chi tiết kèm thời gian `TimerMinutes`, yêu cầu tối thiểu ≥ 5).
+     - 5 tài khoản tác giả và bảng dinh dưỡng 6 chỉ số đầy đủ.
 
 ---
 
@@ -149,6 +167,7 @@ Dự án đã giải quyết triệt để 9 mâu thuẫn nội tại được p
 | **C09** | Category uniqueness: Name UNIQUE vs Slug suffix | **`Name` UNIQUE trong DB**; Slug suffix nếu va chạm. | PostgreSQL Index UNIQUE Name & Slug generator |
 | **§8.1** | Auth API format không khớp FR chi tiết | Bổ sung `fullName`, `userName`, `emailConfirmed`, `createdAt`, `expiresAt`. | DTOs, Handlers, Database mapping, Frontend types |
 
+---
 
 ### 4.3. Giao diện Người dùng (Frontend Next.js 15 App Router & Tailwind CSS)
 
@@ -156,23 +175,22 @@ Dự án đã giải quyết triệt để 9 mâu thuẫn nội tại được p
    - Sử dụng **Next.js 15 App Router**, React 19, TypeScript và **Tailwind CSS**.
    - **Header & Navigation**: Điều hướng responsive thông minh, hỗ trợ thanh tìm kiếm nhanh, menu mobile drawer, liên kết phân hệ quản trị và xác thực.
    - **Trang chủ (`/`) & Danh mục (`/categories`)**: Trình bày danh sách phân loại món ăn bắt mắt, card hiển thị hình ảnh, tên và số lượng công thức.
-   - **Trang Đăng nhập (`/auth/login`) & Đăng ký (`/auth/register`)**: Biểu mẫu xác thực hiện đại, chuyển đổi ẩn/hiện mật khẩu, tự động lưu token và đăng nhập.
+   - **Trang Đăng nhập (`/auth/login`) & Đăng ký (`/auth/register`)**: Biểu mẫu xác thực hiện đại, chuyển đổi ẩn/hiện mật khẩu, tích hợp nút Đăng nhập Google (`GoogleSignInButton`), tự động lưu token và chuyển hướng.
 
 2. **Trang Quản trị Danh mục (`/dashboard/categories`)**:
    - Dành riêng cho Admin quản lý, tạo mới, chỉnh sửa và xóa danh mục trực quan.
 
-3. **Trang Quản lý Hồ sơ Cá nhân (`/dashboard/profile`)** *(Hoàn thành ở Tuần 2 bởi TV1)*:
+3. **Trang Quản lý Hồ sơ Cá nhân (`/dashboard/profile`)**:
    - Biểu mẫu trực quan tích hợp **React Hook Form** và **Zod Validation**.
    - Kiểm tra dữ liệu tức thì (Real-time Inline Validation): cảnh báo nếu để trống tên, nhập quá 100 ký tự, chứa mã script độc hại, hoặc link ảnh avatar không hợp lệ.
    - Khóa cố định các trường bảo mật: hiển thị `Email` và `Vai trò (Roles)` dưới dạng badge bảo vệ kèm thông báo hướng dẫn người dùng.
    - Xem trước trực tiếp ảnh đại diện (Avatar Preview), hỗ trợ ảnh fallback khi URL lỗi.
    - Phản hồi trạng thái lưu mượt mà qua thông báo trạng thái (Toast Alert).
 
-4. **Trang Khám phá Công thức & Tìm kiếm (`/recipes`, `/search`)** *(Mới hoàn thành ở Tuần 2 bởi TV2)*:
+4. **Trang Khám phá Công thức & Tìm kiếm (`/recipes`, `/search`)**:
    - **Trang Khám phá (`/recipes`)**: Thanh bên bộ lọc đa tiêu chí (danh mục, độ khó, thời gian nấu, khẩu phần), sắp xếp thời gian/tên, thanh điều hướng phân trang mượt mà chuẩn giao ước D11.
    - **Trang Tìm kiếm (`/search`)**: Thanh tìm kiếm lớn, hiển thị số lượng kết quả theo từ khóa, trạng thái rỗng và cảnh báo từ khóa ngắn dưới 2 ký tự.
    - **Thẻ món ăn (`RecipeCard`)**: Hiển thị badge độ khó (`Easy`, `Medium`, `Hard`, `Expert`), thời gian chuẩn bị/nấu, số khẩu phần và thông tin tác giả.
-   - **Nút Đăng nhập Google (`GoogleSignInButton`)** trên `/auth/login`: Tích hợp nút Google OAuth trực quan, chuyển đổi mượt mà giữa đăng nhập truyền thống và Google SSO.
 
 ---
 
@@ -193,21 +211,26 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 
 ### 4.5. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
 
-Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (54 / 54 tests pass)**:
+Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (90 / 90 tests pass)**:
 
 ```text
 Test run for ConcurrencySpike.dll (net10.0)
-Passed!  - Failed: 0, Passed:  4, Skipped: 0, Total:  4, Duration: 274 ms
+Passed!  - Failed: 0, Passed:  5, Skipped: 0, Total:  5, Duration: 535 ms
 
 Test run for CulinaryBlog.Tests.dll (net10.0)
-Passed!  - Failed: 0, Passed: 50, Skipped: 0, Total: 50, Duration: 2 s
+Passed!  - Failed: 0, Passed: 85, Skipped: 0, Total: 85, Duration: 2 s
+
+Total: 90/90 tests passed (100% Green).
 ```
 
 - **Kiểm định Kiến trúc (18 Architecture Tests)**: Bảo vệ ranh giới Clean Architecture, kiểm thử toàn bộ trường hợp biên của validator (XSS, ký tự điều khiển, độ dài chuỗi, URL scheme).
-- **Kiểm thử Tích hợp Auth & Security (18 Auth Tests)**: Kiểm tra luồng đăng ký/đăng nhập, ngăn chặn đăng ký email trùng, chặn client tự cấp role Admin, kiểm tra khóa tài khoản HTTP 423, cập nhật hồ sơ HTTP 200/400/401, và đăng xuất HTTP 204.
+- **Kiểm thử Xác thực & Bảo mật (18 Auth Tests)**: Kiểm tra luồng đăng ký/đăng nhập, ngăn chặn đăng ký email trùng, chặn client tự cấp role Admin, kiểm tra khóa tài khoản HTTP 423, cập nhật hồ sơ HTTP 200/400/401, và đăng xuất HTTP 204.
+- **Kiểm thử Khám phá, Tìm kiếm & Google Auth (6 Discovery & Search Tests)**: Kiểm tra lọc công thức AND, phân trang clamping, validator, FTS không dấu ("pho" -> "Phở Bò Gia Truyền") và Google OAuth Login.
+- **Kiểm thử Tuần 3: Refresh Token Rotation, Family Revocation, Cache & JSON-LD (7 Tests)**: Kiểm tra cấp phát token 512-bit, Token Rotation, Token Reuse Detection thu hồi toàn bộ token của phiên, Logout thu hồi token, Schema.org Recipe JSON-LD generator và Fallback Resilience khi Cache server down.
 - **Kiểm thử Phân hệ Danh mục (12 Category Tests)**: Kiểm tra trọn vẹn nghiệp vụ Domain, thuật toán sinh slug tiếng Việt, CRUD CQRS Handlers, và phân trang.
 - **Kiểm thử Hạ tầng & Giám sát (2 Health Tests)**: Xác minh hoạt động của liveness và readiness probes.
-- **Kiểm thử Concurrency Spike (4 Tests)**: Đảm bảo kiểm soát xung đột dữ liệu đồng thời và tính toàn vẹn của transaction.
+- **Kiểm thử Concurrency Spike (5 Tests)**: Đảm bảo kiểm soát xung đột dữ liệu đồng thời và tính toàn vẹn của transaction khi 2 writer cùng ghi hoặc cập nhật ảnh primary.
+- **Định dạng mã nguồn**: `dotnet format CulinaryBlog.sln --verify-no-changes` đạt 100% không phát sinh lỗi.
 
 ---
 
@@ -218,11 +241,6 @@ Passed!  - Failed: 0, Passed: 50, Skipped: 0, Total: 50, Duration: 2 s
 - [Node.js 20+ LTS](https://nodejs.org/)
 - [Docker & Docker Compose](https://www.docker.com/)
 - Hệ quản trị PostgreSQL 16 (**khuyến nghị dùng qua Docker** để đồng bộ password với cả team)
-
-### 4.2. Khởi động hạ tầng Docker (chuẩn chung cho cả team)
-> 🎯 **Đây là cách chính thức để tất cả thành viên có môi trường giống nhau.**
-> Docker Compose khởi tạo PostgreSQL với user `postgres` / password `admin123` (mặc định dev).
-> Tránh cài PostgreSQL native để không lệch password, trừ khi cần override (xem §4.6).
 
 ### 5.2. Khởi động hạ tầng Docker
 ```bash
@@ -246,7 +264,10 @@ export ASPNETCORE_ENVIRONMENT=Development
 # 3. Áp dụng migration cơ sở dữ liệu
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
 
-# 4. Chạy Backend API server
+# 4. (Tùy chọn) Nạp dữ liệu mẫu 25 categories & 100 recipes
+dotnet run --project src/backend/CulinaryBlog.API -- --seed
+
+# 5. Chạy Backend API server
 dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
 ```
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
@@ -263,71 +284,88 @@ npm run dev
 ```
 > 🌐 Mở trình duyệt truy cập:
 > - Trang chủ ứng dụng: **http://localhost:3000**
-> - Trang Đăng nhập (Task A4): **http://localhost:3000/auth/login**
-> - Trang Đăng ký (Task A4): **http://localhost:3000/auth/register**
-> - Trang Quản lý Hồ sơ (Task A3): **http://localhost:3000/dashboard/profile**
-> - Trang Quản trị Danh mục (Task B1): **http://localhost:3000/dashboard/categories**
+> - Trang Khám phá công thức: **http://localhost:3000/recipes**
+> - Trang Tìm kiếm món ăn: **http://localhost:3000/search**
+> - Trang Đăng nhập: **http://localhost:3000/auth/login**
+> - Trang Đăng ký: **http://localhost:3000/auth/register**
+> - Trang Quản lý Hồ sơ: **http://localhost:3000/dashboard/profile**
+> - Trang Quản trị Danh mục: **http://localhost:3000/dashboard/categories**
 
 ### 5.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
 # Thiết lập chuỗi kết nối database test chuyên biệt (password admin123 khớp container compose)
 export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
 
-# Chạy toàn bộ 54 tests trong solution
+# Chạy toàn bộ 90 tests trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 ```
 
-### 4.6. Dành cho thành viên dùng PostgreSQL native
+### 5.6. Dành cho thành viên dùng PostgreSQL native
 Nếu máy đã có sẵn PostgreSQL cài trực tiếp (password khác `admin123`), **không sửa file cấu hình đã commit** — chỉ cần override bằng biến môi trường cục bộ:
 
 ```bash
 # API: trỏ về DB native của bạn
 export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
 
-# Test: trỏ về DB test của bạn (tương tự nếu chạy test tích hợp)
+# Test: trỏ về DB test của bạn
 export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
 ```
 
-> ⚠️ Mật khẩu cá nhân **không được commit**; chỉ tồn tại ở máy local (hoặc trong `.env` đã gitignore). Giá trị mặc định trong config là dev-only cho container Docker.
-
 ---
 
-## 🧭 6. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 3)
+## 🧭 6. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 4)
 
-1. **TV2 (Trường Vĩ)**:
-   - Tích hợp hoàn chỉnh luồng Đăng nhập Google OAuth (Code Flow + PKCE với Auth.js v5).
-   - Thiết lập Full-Text Search (FTS) tiếng Việt không dấu với PostgreSQL `tsvector`, từ điển unaccent và chỉ mục GIN index.
-2. **TV3 (Quốc Trung)**:
-   - Chuyển giao mô hình Recipe Aggregate vào `AuthDbContext` chính của backend API.
-   - Xây dựng giao diện Wizard soạn thảo công thức (Next.js RHF) với các bước và nguyên liệu động.
-   - Triển khai cơ chế Refresh Token Rotation và Family Revocation.
-3. **TV4 (Trung Sơn)**:
-   - Triển khai cụ thể dịch vụ `MinIOStorageService` xử lý upload ảnh trực tiếp lên S3 bucket.
-   - Tích hợp tính năng tự động resize ảnh công thức thành các kích thước chuẩn (300×300 và 800×600).
-   - Hoàn thiện nghiệp vụ Chuyển trạng thái xuất bản (Publish / Unpublish / Archive Recipe).
-4. **TV1 (Thanh Tâm - Leader)**:
-   - Điều phối tích hợp toàn diện Cổng G2.
-   - Bổ sung Log correlation với Serilog & Tracing, hỗ trợ các thành viên giải quyết xung đột mã nguồn.
+1. **TV1 (Thanh Tâm - Leader)**:
+   - Viết Negative Tests chuyên sâu cho toàn bộ luồng Auth, Rate Limiting, Brute-force và Token Replay Attack.
+   - Xây dựng các ca kiểm thử E2E flows (Playwright/xUnit) cho toàn bộ chu trình: Đăng ký → Đăng nhập → Refresh Token → Đăng xuất.
+   - Nâng cao Code Coverage toàn hệ thống (mục tiêu ≥ 80% line coverage).
+2. **TV2 (Trường Vĩ)**:
+   - Thực hiện k6 Load Testing đo lường thời gian phản hồi p50, p95, p99 cho các endpoint Tìm kiếm FTS và Khám phá công thức.
+   - Phân tích EXPLAIN QUERY PLAN trên PostgreSQL, đánh giá hiệu quả của GIN index và Cache-hit ratio.
+   - Kiểm thử khả năng truy cập (a11y) WCAG 2.1 AA và độ tương thích giao diện trên các mốc kích thước màn hình (320px, 768px, 1200px).
+3. **TV3 (Quốc Trung)**:
+   - Hoàn thiện giao diện Wizard tạo và chỉnh sửa công thức đa bước trên frontend.
+   - Viết các bài test kiểm thử tích hợp giao dịch phân tán, kiểm tra rollback transaction khi xảy ra lỗi ở child entities (nguyên liệu, bước làm).
+4. **TV4 (Trung Sơn)**:
+   - Hoàn tất kiểm thử tải upload ảnh, xử lý kịch bản file-size attack và MIME spoofing attack.
+   - Kiểm tra khả năng tự động khôi phục dữ liệu (Backup & Restore) trên môi trường multi-container.
 
 ---
 
 ## 📚 7. Danh Mục Tài Liệu Kỹ Thuật Tham Chiếu
 
-- 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](HUONG_DAN_TEST_APP.md)
-- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
-- 📋 [Kế hoạch phân chia công việc 6 tuần](PHAN_CHIA_CONG_VIEC_6_TUAN.md)
-- 📖 [Kế hoạch tổng thể & Giải quyết xung đột SRS](KE_HOACH_DU_AN.md)
+- 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](docs/HUONG_DAN_TEST_APP.md)
+- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
+- 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)
+- 📋 [Kế hoạch phân chia công việc 6 tuần](docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md)
+- 📖 [Kế hoạch tổng thể & Giải quyết xung đột SRS](docs/KE_HOACH_DU_AN.md)
 - 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm chính thức (SRS v1.1.1)](docs/root/SRS_Culinary_Blog_v1.1.1.md)
 - 📑 [Báo cáo Mâu thuẫn Nội tại SRS chi tiết](docs/root/SRS_Contradictions_Report.md)
 - 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm (Bản gốc v1.0.0)](docs/root/SRS_Culinary_Blog_v1.0.0.md)
+- 📐 [Thiết kế Cơ sở Dữ liệu & ERD (Entity Relationship Diagram)](docs/ERD.md)
 - 🔐 [Hợp đồng API Xác thực (Auth Contract)](docs/AUTH_CONTRACT.md)
 - 🗂️ [Hợp đồng API Danh mục (Category Contract)](docs/CATEGORY_CONTRACT.md)
 - 🍲 [Hợp đồng Danh sách Công thức (Recipe List Contract)](docs/RECIPE_LIST_CONTRACT.md)
 - 🔍 [Hợp đồng Tìm kiếm & Khám phá (Search & Discovery Contract)](docs/SEARCH_AND_DISCOVERY_CONTRACT.md)
 - 🌐 [Hợp đồng Google OAuth (Google Auth Contract)](docs/GOOGLE_AUTH_CONTRACT.md)
-- 📑 **Báo cáo nghiệm thu cá nhân**:
-  - [Báo cáo Tổng hợp Lab 01 - 02 — TV1 (Nguyễn Thanh Tâm)](docs/evidence/TV1/BAO_CAO_LAB_01_02.md)
-  - [Báo cáo Tuần 1 & Tuần 2 — TV1 (Nguyễn Thanh Tâm)](docs/evidence/TV1/TUAN_2.md)
-  - [Báo cáo Tuần 1 & Tuần 2 — TV2 (Ngô Quốc Trường Vĩ)](docs/evidence/TV2/TUAN_2.md)
-  - [Báo cáo Tuần 1 — TV3 (Huỳnh Quốc Trung)](docs/evidence/TV3/C1-HOAN-THIEN.md)
-  - [Báo cáo Tuần 1 — TV4 (Nguyễn Hữu Trung Sơn)](docs/evidence/TV4/TRANG_THAI_THUC_HIEN.md)
+- 🖼️ [Hợp đồng API Tải lên & Xử lý Ảnh (Image Contract)](docs/IMAGE_CONTRACT.md)
+- 🤝 [Biên bản Chuyển giao Kỹ thuật (Handoff TV4)](docs/HANDOFF_TV4_TUAN2_BLOCKED.md)
+- 📑 **Báo cáo nghiệm thu cá nhân & Báo cáo Lab môn học**:
+  - **TV1 (Nguyễn Thanh Tâm — Leader)**:
+    - [Báo cáo Tổng hợp Lab 01 - 02 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_01_02.md)
+    - [Báo cáo Lab 02 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_02.md) | [Báo cáo Lab 02 (Word)](docs/evidence/TV1/Lab02_2312741_NguyenThanhTam.docx)
+    - [Báo cáo Lab 03 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_03.md) | [Báo cáo Lab 03 (Word)](docs/evidence/TV1/Lab03_2312741_NguyenThanhTam.docx)
+    - [Báo cáo Nghiệm thu Tuần 1](docs/evidence/TV1/TUAN_1.md)
+    - [Báo cáo Nghiệm thu Tuần 2](docs/evidence/TV1/TUAN_2.md)
+    - [Báo cáo Nghiệm thu Tuần 3](docs/evidence/TV1/TUAN_3.md)
+  - **TV2 (Ngô Quốc Trường Vĩ)**:
+    - [Báo cáo Nghiệm thu Tuần 1](docs/evidence/TV2/TUAN_1.md)
+    - [Báo cáo Nghiệm thu Tuần 2](docs/evidence/TV2/TUAN_2.md)
+    - [Báo cáo Spike Danh mục & Auth](docs/evidence/TV2/LAB_DANH_MUC_AUTH_SPIKE.md)
+  - **TV3 (Huỳnh Quốc Trung)**:
+    - [Báo cáo Hoàn thiện Task C1 Tuần 1](docs/evidence/TV3/C1-HOAN-THIEN.md)
+    - [Kế hoạch Thực hiện Chi tiết](docs/evidence/TV3/KE_HOACH_TV3.md)
+  - **TV4 (Nguyễn Hữu Trung Sơn)**:
+    - [Báo cáo Nghiệm thu Tuần 1](docs/evidence/TV4/Tuan01/TRANG_THAI_THUC_HIEN_TUAN_1.md)
+    - [Báo cáo Nghiệm thu Tuần 2](docs/evidence/TV4/Tuan02/TRANG_THAI_THUC_HIEN_TUAN_2.md)
+
