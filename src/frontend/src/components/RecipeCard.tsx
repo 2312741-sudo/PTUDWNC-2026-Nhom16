@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { RecipeSummary } from '@/types/recipe';
 import { Clock, Users, ChefHat } from 'lucide-react';
