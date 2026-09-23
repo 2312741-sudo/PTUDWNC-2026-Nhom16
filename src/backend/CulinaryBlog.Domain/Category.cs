@@ -10,7 +10,7 @@ public class Category
     public int OrderIndex { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
-    public DateTimeOffset UpdatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
 
     // Navigation property / counter (linked with Recipe in later phases)
     public int RecipesCount { get; set; }

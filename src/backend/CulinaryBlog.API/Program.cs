@@ -79,6 +79,15 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("auth", http => RateLimitPartition.GetFixedWindowLimiter(
         http.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
@@ -139,6 +148,23 @@ if (args.Contains("--seed"))
     Console.WriteLine("Database seeded successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
 }
+
+if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("Testing"))
+{
+    using var scope = app.Services.CreateScope();
+    try
+    {
+        var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        await authDb.Database.MigrateAsync();
+        await DbSeeder.SeedAsync(authDb);
+        Log.Information("Database verified and seeded successfully on startup.");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Auto-migration or seeding on startup skipped: {Message}", ex.Message);
+    }
+}
+
 app.Use(async (context, next) =>
 {
     // Generate server correlation IDs; do not trust arbitrary client strings in logs.
@@ -155,6 +181,7 @@ app.UseSerilogRequestLogging(options =>
 });
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

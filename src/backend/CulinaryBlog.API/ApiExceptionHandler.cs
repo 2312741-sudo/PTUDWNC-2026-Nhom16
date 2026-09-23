@@ -25,8 +25,7 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger
             details = new() { Status = 400, Title = "JSON hoặc yêu cầu không hợp lệ.", Extensions = { ["code"] = "request.invalid" } };
         else
         {
-            // Exception messages can contain credentials, SQL parameters or request bodies.
-            logger.LogError("Request failed with {ExceptionType}", exception.GetType().Name);
+            logger.LogError(exception, "Request failed with {ExceptionType}: {Message}", exception.GetType().Name, exception.Message);
             details = new() { Status = 500, Title = "Có lỗi hệ thống. Vui lòng thử lại.", Extensions = { ["code"] = "server.error" } };
         }
         context.Response.StatusCode = details.Status!.Value;
