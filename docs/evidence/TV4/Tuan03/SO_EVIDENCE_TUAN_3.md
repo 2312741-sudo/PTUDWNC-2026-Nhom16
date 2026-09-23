@@ -122,7 +122,10 @@ Lỗi còn lại: [chờ triển khai]
 
 ## 4. Checklist cá nhân tuần 3 (chốt G5)
 
-- [x] Fix duplicate migration `RefreshTokens` (main `a651c8a`, merge vào branch tuần 3) → local 120/120 + 5/5 pass; [ ] chờ CI xanh GitHub.
+- [x] Fix duplicate migration `RefreshTokens` (main `a651c8a`) → local 120/120 + 5/5 pass + CI GitHub branch success (run `818522b`).
+- [x] Merge main mới 23/09 (deploy Render, 100 ảnh thật, UI Emerald) + fix connection string lazy đọc trong lambda `AddDbContext` (`4830e57`) → 120/120 + 5/5 pass.
+- [x] D3.3 logout revoke refresh family — xác minh C5 refresh đã có trên main, 7 test Week3 + 16 test Auth pass.
+- [ ] PR `4830e57` lên main (fix CI main 6 commit mới).
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).
 - [ ] Archive `PATCH /recipes/{id}/archive` + ẩn public ngay + ownership test.
 - [ ] DELETE soft theo ADR D08 + không lộ search/cache + không mất ảnh cần restore.
