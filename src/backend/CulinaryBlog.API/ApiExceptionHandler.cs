@@ -14,6 +14,11 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger
             { Status = 400, Title = "Dữ liệu không hợp lệ.", Extensions = { ["code"] = "validation.failed" } };
         else if (exception is AppException app)
             details = new() { Status = app.Status, Title = app.Message, Detail = app.Message, Extensions = { ["code"] = app.Code } };
+        else if (exception is Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+            details = new() { Status = 422, Title = "Dữ liệu đã được người khác thay đổi. Vui lòng tải lại.", Extensions = { ["code"] = "recipe.concurrency_conflict" } };
+        else if (exception is CulinaryBlog.Domain.Common.DomainException domain)
+            // C02: publish thiếu nguyên liệu/bước trả 422, các vi phạm nghiệp vụ khác trả 400.
+            details = new() { Status = domain.Code == "RECIPE_PUBLISH_INCOMPLETE" ? 422 : 400, Title = domain.Message, Detail = domain.Message, Extensions = { ["code"] = domain.Code } };
         else if (exception is BadHttpRequestException)
             details = new() { Status = 400, Title = "JSON hoặc yêu cầu không hợp lệ.", Extensions = { ["code"] = "request.invalid" } };
         else
