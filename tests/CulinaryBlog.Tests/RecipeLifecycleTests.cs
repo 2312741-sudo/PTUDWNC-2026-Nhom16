@@ -6,7 +6,7 @@ using Xunit;
 
 namespace CulinaryBlog.Tests;
 
-public sealed class FakeRecipeRepository : IRecipeRepository
+public sealed class FakeOwnedRecipeRepository : IRecipeRepository
 {
     public readonly List<Recipe> Store = [];
 
@@ -59,7 +59,7 @@ public sealed class RecipeLifecycleHandlerTests
     public async Task Publish_recipe_with_ingredient_and_step_succeeds()
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
@@ -76,7 +76,7 @@ public sealed class RecipeLifecycleHandlerTests
     {
         var recipe = NewDraftRecipe();
         recipe.AddStep("Trộn bột", "Trộn bột với nước.", null, null);   // có step, thiếu ingredient
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
@@ -90,7 +90,7 @@ public sealed class RecipeLifecycleHandlerTests
     {
         var recipe = NewDraftRecipe();
         recipe.AddIngredient("Bột bánh xèo", 200, "g", null);   // có ingredient, thiếu step
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
@@ -103,7 +103,7 @@ public sealed class RecipeLifecycleHandlerTests
     public async Task Publish_is_idempotent_when_already_published()
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
@@ -120,7 +120,7 @@ public sealed class RecipeLifecycleHandlerTests
     public async Task Publish_non_owner_throws_403()
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-9"));
 
@@ -134,7 +134,7 @@ public sealed class RecipeLifecycleHandlerTests
     public async Task Publish_admin_can_override_ownership()
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-9", isAdmin: true));
 
@@ -146,7 +146,7 @@ public sealed class RecipeLifecycleHandlerTests
     [Fact]
     public async Task Publish_recipe_not_found_throws_404()
     {
-        var repo = new FakeRecipeRepository();   // empty
+        var repo = new FakeOwnedRecipeRepository();   // empty
         var handler = new PublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
@@ -171,7 +171,7 @@ public sealed class RecipeLifecycleHandlerTests
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
         recipe.Publish();
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new UnpublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
@@ -185,7 +185,7 @@ public sealed class RecipeLifecycleHandlerTests
     public async Task Unpublish_is_idempotent_when_already_draft()
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new UnpublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
@@ -199,7 +199,7 @@ public sealed class RecipeLifecycleHandlerTests
     {
         var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
         recipe.Publish();
-        var repo = new FakeRecipeRepository();
+        var repo = new FakeOwnedRecipeRepository();
         repo.Store.Add(recipe);
         var handler = new UnpublishRecipeHandler(repo, new FakeCurrentUser("author-9"));
 
@@ -212,7 +212,7 @@ public sealed class RecipeLifecycleHandlerTests
     [Fact]
     public async Task Unpublish_recipe_not_found_throws_404()
     {
-        var repo = new FakeRecipeRepository();   // empty
+        var repo = new FakeOwnedRecipeRepository();   // empty
         var handler = new UnpublishRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
