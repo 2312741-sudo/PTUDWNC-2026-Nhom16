@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/backend/">
+    <Project Path="src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj" />
     <Project Path="src/backend/CulinaryBlog.Application/CulinaryBlog.Application.csproj" />
     <Project Path="src/backend/CulinaryBlog.Domain/CulinaryBlog.Domain.csproj" />
     <Project Path="src/backend/CulinaryBlog.Infrastructure/CulinaryBlog.Infrastructure.csproj" />

@@ -1,8 +1,9 @@
+using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
-using CulinaryBlog.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 
 namespace CulinaryBlog.Infrastructure.Persistence;
 
@@ -12,7 +13,7 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 /// </summary>
 public static class DbSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext db, CancellationToken ct = default)
+    public static async Task SeedAsync(AuthDbContext db, CancellationToken ct = default)
     {
         await db.Database.MigrateAsync(ct);
 
@@ -27,7 +28,7 @@ public static class DbSeeder
         }
 
         // 2. Authors (5 tác giả ẩm thực)
-        var authors = new List<RecipeAuthorUser>();
+        var authors = new List<ApplicationUser>();
         var authorInfo = new[]
         {
             ("tam.nguyen@culinary.local", "Nguyễn Thanh Tâm"),
@@ -86,7 +87,7 @@ public static class DbSeeder
             var cat = await db.Categories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Slug == slug, ct);
             if (cat == null)
             {
-                cat = Category.Create(name, slug, desc, $"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop", orderIndex: order++);
+                cat = new Category(name, slug, desc, $"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop", orderIndex: order++);
                 db.Categories.Add(cat);
             }
             catList.Add(cat);
@@ -286,10 +287,10 @@ public static class DbSeeder
         await db.SaveChangesAsync(ct);
     }
 
-    private static RecipeAuthorUser NewUser(string email, string displayName)
+    private static ApplicationUser NewUser(string email, string displayName)
     {
         var id = Guid.NewGuid().ToString();
-        return new RecipeAuthorUser
+        return new ApplicationUser
         {
             Id = id,
             UserName = email,

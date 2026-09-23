@@ -3,22 +3,25 @@ using System.Text;
 using System.Threading.RateLimiting;
 using CulinaryBlog.API;
 using CulinaryBlog.Application;
+using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Infrastructure.Persistence.Interceptors;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
-using CulinaryBlog.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Fatal)
@@ -30,19 +33,16 @@ builder.Services.AddSingleton(sp =>
     return settings;
 });
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
+    o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddDbContext<AuthDbContext>(options =>
+builder.Services.AddScoped<AuditableEntityInterceptor>();
+builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
 {
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
         pg => pg.CommandTimeout(30));
-    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-});
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Configure ConnectionStrings:Database."),
-        pg => pg.CommandTimeout(60));
+    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -61,8 +61,12 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+builder.Services.AddScoped<RecipeRepository>();
+builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
+builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
+builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 builder.Services.AddSingleton<WelcomeEmailQueue>();
 builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
 builder.Services.AddHostedService<WelcomeEmailWorker>();
@@ -99,25 +103,19 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         ValidateIssuerSigningKey = true,
         RequireSignedTokens = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
-        ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
-        ClockSkew = TimeSpan.Zero,
-        NameClaimType = "sub",
-        RoleClaimType = "role"
+        ClockSkew = TimeSpan.Zero
     };
 });
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AuthorPolicy", p => p.RequireRole(Roles.Author, Roles.Admin))
-    .AddPolicy("AdminPolicy", p => p.RequireRole(Roles.Admin));
-builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
+builder.Services.AddAuthorization(options =>
 {
-    context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
-    context.ProblemDetails.Extensions.TryAdd("code", $"http.{context.ProblemDetails.Status}");
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole(CulinaryBlog.Domain.Roles.Admin));
+    options.AddPolicy("AuthorPolicy", policy => policy.RequireRole(CulinaryBlog.Domain.Roles.Author, CulinaryBlog.Domain.Roles.Admin));
 });
+builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
-builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
-    o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, context, ct) =>
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
 {
+    document.Info = new() { Title = "CulinaryBlog API", Version = "v1" };
     document.Components ??= new();
     document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
     document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme { Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT" };
@@ -128,7 +126,6 @@ _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
 {
     using var scope = app.Services.CreateScope();
-    try { await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync(); } catch { }
     try { await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync(); } catch { }
     Console.WriteLine("Database migrations applied successfully.");
     return;
@@ -136,8 +133,8 @@ if (args.Contains("--migrate"))
 if (args.Contains("--seed"))
 {
     using var scope = app.Services.CreateScope();
-    var appDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DbSeeder.SeedAsync(appDb);
+    var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    await DbSeeder.SeedAsync(authDb);
     Console.WriteLine("Database seeded successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
 }
@@ -160,18 +157,17 @@ app.UseStatusCodePages();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing")) { app.MapOpenApi(); app.MapScalarApiReference(); }
-var auth = app.MapGroup("/api/v1/auth").WithTags("Authentication");
+app.MapOpenApi();
+app.MapScalarApiReference();
+
+var auth = app.MapGroup("/api/v1/auth").WithTags("Auth");
 auth.MapPost("/register", async (RegisterCommand command, ISender sender, CancellationToken ct) =>
-{
-    var res = await sender.Send(command, ct);
-    return Results.Created("/api/v1/auth/me", new { data = res });
-})
-    .WithName("Register").Produces<object>(201).ProducesValidationProblem().ProducesProblem(409).RequireRateLimiting("auth");
+    Results.Created("/api/v1/auth/me", new { data = await sender.Send(command, ct) }))
+    .WithName("Register").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(409).RequireRateLimiting("auth");
 
 auth.MapPost("/login", async (LoginCommand command, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(command, ct) }))
-    .WithName("Login").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
+    .WithName("Login").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(423).RequireRateLimiting("auth");
 
 auth.MapPost("/refresh", async (RefreshTokenCommand command, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(command, ct) }))
@@ -237,6 +233,94 @@ recipes.MapGet("", async ([AsParameters] GetRecipesQuery query, ISender sender, 
 recipes.MapGet("/search", async ([AsParameters] SearchRecipesQuery query, ISender sender, CancellationToken ct) =>
     Results.Ok(await sender.Send(query, ct)))
     .WithName("SearchRecipes").Produces<PagedResult<RecipeSummaryDto>>(200).ProducesValidationProblem();
+
+recipes.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new GetRecipeBySlugQuery(slug), ct) }))
+    .WithName("GetRecipeBySlug").Produces<object>(200).ProducesProblem(404);
+
+recipes.MapPost("", async (CreateRecipeCommand command, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(command, ct);
+    return Results.Created($"/api/v1/recipes/{created.Slug}", new { data = created });
+})
+    .RequireAuthorization("AuthorPolicy").WithName("CreateRecipe")
+    .Produces<object>(201).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
+
+recipes.MapPut("/{id:guid}", async (Guid id, UpdateRecipeBody body, ISender sender, CancellationToken ct) =>
+    Results.Ok(new
+    {
+        data = await sender.Send(new UpdateRecipeCommand(
+            id, body.Title, body.Description, body.Instructions,
+            body.PrepTimeMinutes, body.CookTimeMinutes, body.Servings,
+            body.Difficulty, body.CategoryId, body.Nutrition, body.RowVersion), ct)
+    }))
+    .RequireAuthorization("AuthorPolicy").WithName("UpdateRecipe")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapPost("/{id:guid}/ingredients", async (Guid id, IngredientBody b, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(new AddIngredientCommand(id, b.Name, b.Quantity, b.Unit, b.Notes), ct);
+    return Results.Created($"/api/v1/recipes/{id}/ingredients/{created.Id}", new { data = created });
+})
+    .RequireAuthorization("AuthorPolicy").WithName("AddIngredient")
+    .Produces<object>(201).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPut("/{id:guid}/ingredients/{ingredientId:guid}",
+    async (Guid id, Guid ingredientId, IngredientBody b, ISender sender, CancellationToken ct) =>
+    Results.Ok(new
+    {
+        data = await sender.Send(new UpdateIngredientCommand(id, ingredientId, b.Name, b.Quantity, b.Unit, b.Notes), ct)
+    }))
+    .RequireAuthorization("AuthorPolicy").WithName("UpdateIngredient")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapDelete("/{id:guid}/ingredients/{ingredientId:guid}",
+    async (Guid id, Guid ingredientId, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteIngredientCommand(id, ingredientId), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteIngredient")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPost("/{id:guid}/steps", async (Guid id, StepBody b, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(new AddStepCommand(id, b.Title, b.Description, b.TimerMinutes, b.ImageUrl), ct);
+    return Results.Created($"/api/v1/recipes/{id}/steps/{created.Id}", new { data = created });
+})
+    .RequireAuthorization("AuthorPolicy").WithName("AddStep")
+    .Produces<object>(201).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPut("/{id:guid}/steps/{stepId:guid}",
+    async (Guid id, Guid stepId, StepBody b, ISender sender, CancellationToken ct) =>
+    Results.Ok(new
+    {
+        data = await sender.Send(new UpdateStepCommand(id, stepId, b.Title, b.Description, b.TimerMinutes, b.ImageUrl), ct)
+    }))
+    .RequireAuthorization("AuthorPolicy").WithName("UpdateStep")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapDelete("/{id:guid}/steps/{stepId:guid}",
+    async (Guid id, Guid stepId, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteStepCommand(id, stepId), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteStep")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPatch("/{id:guid}/steps/reorder",
+    async (Guid id, ReorderStepsBody b, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new ReorderStepsCommand(id, b.OrderedStepIds), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("ReorderSteps")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });

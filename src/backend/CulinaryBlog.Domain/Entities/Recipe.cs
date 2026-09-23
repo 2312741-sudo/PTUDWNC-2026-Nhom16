@@ -178,6 +178,57 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
             _images.OrderBy(i => i.OrderIndex).First().SetPrimary(true);
     }
 
+    public void UpdateIngredient(Guid ingredientId, string name, decimal? quantity, string? unit, string? notes)
+    {
+        var ing = _ingredients.SingleOrDefault(i => i.Id == ingredientId)
+                  ?? throw new DomainException("INGREDIENT_NOT_FOUND", "Nguyên liệu không thuộc công thức này.");
+        ing.Update(name, quantity, unit, notes);
+    }
+
+    public void UpdateStep(Guid stepId, string title, string description, int? timerMinutes, string? imageUrl)
+    {
+        var step = _steps.SingleOrDefault(s => s.Id == stepId)
+                   ?? throw new DomainException("STEP_NOT_FOUND", "Bước không thuộc công thức này.");
+        step.Update(title, description, timerMinutes, imageUrl);
+    }
+
+    /// <summary>Đổi thứ tự nguyên liệu. orderedIds phải chứa đúng và đủ id của mọi nguyên liệu.</summary>
+    public void ReorderIngredients(IReadOnlyList<Guid> orderedIds)
+    {
+        if (orderedIds.Count != _ingredients.Count || orderedIds.Distinct().Count() != orderedIds.Count)
+            throw new DomainException("INGREDIENT_ORDER_INVALID",
+                "Danh sách thứ tự phải chứa đúng và đủ id của mọi nguyên liệu.");
+
+        for (var i = 0; i < orderedIds.Count; i++)
+        {
+            var ing = _ingredients.SingleOrDefault(x => x.Id == orderedIds[i])
+                      ?? throw new DomainException("INGREDIENT_NOT_FOUND", "Nguyên liệu không thuộc công thức này.");
+            ing.SetOrder(i);
+        }
+    }
+
+    /// <summary>
+    /// Đổi thứ tự các bước, gán lại StepNumber liên tục 1..N (D16).
+    /// Gán số âm ở bước trung gian để không va chạm unique (RecipeId, StepNumber) khi hoán đổi.
+    /// Handler phải bọc trong transaction.
+    /// </summary>
+    public void ReorderSteps(IReadOnlyList<Guid> orderedIds)
+    {
+        if (orderedIds.Count != _steps.Count || orderedIds.Distinct().Count() != orderedIds.Count)
+            throw new DomainException("STEP_ORDER_INVALID",
+                "Danh sách thứ tự phải chứa đúng và đủ id của mọi bước.");
+
+        for (var i = 0; i < orderedIds.Count; i++)
+        {
+            var s = _steps.SingleOrDefault(x => x.Id == orderedIds[i])
+                    ?? throw new DomainException("STEP_NOT_FOUND", "Bước không thuộc công thức này.");
+            s.SetNumber(-(i + 1));
+        }
+
+        foreach (var s in _steps)
+            s.SetNumber(-s.StepNumber);
+    }
+
     // ----- Vòng đời trạng thái -----
     public void Publish()
     {
