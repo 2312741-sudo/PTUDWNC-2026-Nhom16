@@ -300,6 +300,17 @@ recipes.MapPatch("/{id:guid}/steps/reorder",
     .Produces<object>(200).ProducesValidationProblem()
     .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
+// D3.1/D3.2 (TV4): publish/unpublish — điều kiện >=1 ingredient VÀ >=1 step (C02). Thiếu -> 422 RECIPE_PUBLISH_INCOMPLETE.
+recipes.MapPatch("/{id:guid}/publish", async (Guid id, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new PublishRecipeCommand(id), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("PublishRecipe")
+    .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapPatch("/{id:guid}/unpublish", async (Guid id, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new UnpublishRecipeCommand(id), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("UnpublishRecipe")
+    .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
 // D1.3 (TV4): quản lý hình ảnh recipe — upload, chỉnh metadata, xóa (IMAGE_CONTRACT).
 recipes.MapPost("/{id:guid}/images", async (Guid id, [Microsoft.AspNetCore.Mvc.FromForm] IFormFile file, [Microsoft.AspNetCore.Mvc.FromForm] string? altText, ISender sender, HttpRequest request, CancellationToken ct) =>
 {

@@ -4,11 +4,16 @@
 > **Nhánh Git**: `2312739_NHTSon_D1-D2-D3-D4` (tv4/week2)
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 22/09/2026
+> **Cập nhật lần cuối**: 23/09/2026
 
 > File này ghi lại trạng thái thực hiện các task tuần 2 (D1, D2, D3, D4 nền, D6 tiếp), các điểm cần bàn luận và lý do.
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_2_TV4.md`.
 > **Điều kiện gỡ block + hướng dẫn làm tiếp chi tiết**: xem `docs/HANDOFF_TV4_TUAN2_BLOCKED.md` (tài liệu tự túc khi TV4 vắng mặt).
+
+> **Bản sửa đổi 23/09/2026 — gỡ HOÀN TOÀN block 2.1 sau merge C2/C3 của TV3 (`2086ee8`)**:
+> recipe CRUD endpoints (condition 3) đã có (TV3 C2/C3): `POST/PUT /recipes`, `GET /{slug}`, ingredient/step CRUD + reorder.
+> → **Seed recipe qua API được**, D1.3 image endpoints test E2E được, fixtures ingredient/step cho D3 publish đã đủ.
+> Còn block: C5 refresh (2.2), D27 (2.3), D23 (2.4); D3 publish cần TV3 bổ sung `Publish/Unpublish` command.
 
 > **Bản sửa đổi 22/09/2026 — kiểm chứng block sau TV3 merge PR #10 (`5b36251`)**:
 > block 2.1 được gỡ **một phần** — wiring DI + migration + envelope/RFC7807 đã có (`IApplicationDbContext`/`IUnitOfWork` từ `AuthDbContext`,
@@ -37,9 +42,9 @@
 | Task | Nội dung | Lý do chưa xong | Cần gì để xong |
 |---|---|---|---|
 | D1.1c | Test MinIO down → lỗi rõ ràng + log redacted | Cần chạy integration với MinIO local đang lên | Chạy test + ghi log evidence |
-| D1.3 | API upload/metadata/primary/delete (FR-RCP-008, D17) | Recipe cluster được nối vào API host từ 22/09 (TV3 merge PR #10): `ApplicationDbContext` → gộp vào `AuthDbContext`, đã register `IApplicationDbContext`/`IUnitOfWork`. Còn thiếu condition 3 (recipe CRUD endpoints) để tạo recipe qua API | **Triển khai được ngay** D1.3 image endpoints (upload/PATCH/DELETE); test E2E cần seed recipe hoặc chờ TV3 bàn giao recipe CRUD |
+| D1.3 | API upload/metadata/primary/delete (FR-RCP-008, D17) | ✅ **Code xong (22/09) + E2E giờ chạy được (23/09)** — block 2.1 gỡ hoàn toàn, seed qua `POST /recipes`. Còn: chạy E2E trên MinIO, verify D1.1c, ghi evidence | Chạy E2E với stack Compose + MinIO local |
 | D2 | Resize original/300×300/800×600 + job nền | Chưa bắt đầu | Chốt queue (Hangfire/BackgroundService) theo nhóm |
-| D3 | Publish/unpublish CQRS + 422 + ownership | Chưa bắt đầu | Recipe entity + ingredient/step fixture từ TV3 |
+| D3 | Publish/unpublish CQRS + 422 + ownership | Fixtures ingredient/step **đã đủ** qua C2/C3; chưa có `Publish/Unpublish` command (TV3 C2 chưa mang theo) | TV3 thêm 2 command publish, hoặc TV4 tự làm theo FR-RCP-005/006 |
 | D3 | Logout revoke refresh family | Chưa bắt đầu | TV3 C5 refresh token merge |
 | D4 (nền) | Uploader UI + status button + sitemap/robots nền | Chưa bắt đầu | Chốt D27 ảnh hiển thị (presigned/proxy) |
 | D6 (tiếp) | Lab `practice/TV4/L4` + sổ evidence K | Chưa bắt đầu | G1 đã đóng; tạo nhánh lab |
@@ -50,8 +55,8 @@
 
 | Task | Nội dung | Block bởi | Thời điểm dự kiến gỡ |
 |---|---|---|---|
-| D1.3 image endpoints | Upload/primary/delete API — **đã gỡ wiring/migration từ 22/09**; test E2E cần recipe | TV3 — condition 3 recipe CRUD endpoints (để seed recipe) | Giữa tuần 2 — làm ngay phần code |
-| D3 publish | Cần fixture Recipe có ingredient + step | TV3 — merge entity Recipe (C1/C2) | Giữa tuần 2 |
+| ~~D1.3 image endpoints~~ | ~~Upload/primary/delete API — gỡ hoàn toàn 23/09 (merge C2/C3, seed qua API)~~ | ✅ **Đã gỡ** (block 2.1 4/4) | Đã gỡ — chạy E2E trên MinIO |
+| D3 publish | Fixture recipe + ingredient + step **đã đủ** (C2/C3); còn chờ `Publish/Unpublish` command | TV3 — C2 bổ sung publish command | Ngay khi TV3 thêm 2 command, hoặc TV4 tự làm |
 | D3 logout revoke | Cần refresh token family | TV3 — C5 | Cuối tuần 2 |
 | D1/D4 ảnh display | Bucket private/public chưa chốt | Quyết định D27 + CR nếu cần | Đầu tuần 2 |
 
@@ -83,5 +88,5 @@
 
 | Cổng | Tiêu chí | Trạng thái |
 |---|---|---|
-| **G2 giữa tuần** | Upload ảnh hợp lệ → `StoredFile` URLs; set primary đúng 1; DELETE xoá object không orphan | Đạt code: MinioStorageService + validator + domain/race tests đã có; **22/09** triển khai xong D1.3 (POST/PATCH/DELETE image + 422 race) — 88/88 test pass, build 0 warning. E2E trên MinIO cần seed recipe (chờ TV3 condition 3) |
-| **G3 cuối tuần** | Draft → thêm ingredient/step + ảnh → publish thành công; unpublish ẩn public; Draft/Archived không lộ; 4 MIME ≤5MiB; resize 3 kích thước; CI pass | Chưa đạt |
+| **G2 giữa tuần** | Upload ảnh hợp lệ → `StoredFile` URLs; set primary đúng 1; DELETE xoá object không orphan | 🟢 **Code đạt** (MinioStorageService + validator + domain/race + D1.3 endpoints, 88/88 test, build 0 warning). **23/09**: block 2.1 gỡ hoàn toàn → seed qua API, E2E trên MinIO chạy được. Còn: chạy/ghi evidence E2E thật trên Compose + D1.1c. |
+| **G3 cuối tuần** | Draft → thêm ingredient/step + ảnh → publish thành công; unpublish ẩn public; Draft/Archived không lộ; 4 MIME ≤5MiB; resize 3 kích thước; CI pass | Chưa đạt — thiếu `Publish/Unpublish` command (TV3 C2), D2 resize (D23) |
