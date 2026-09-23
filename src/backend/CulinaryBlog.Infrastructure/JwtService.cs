@@ -20,7 +20,7 @@ public sealed class JwtSettings
 
 public sealed class JwtService(JwtSettings settings, TimeProvider clock)
 {
-    public AuthResponse Issue(UserDto user)
+    public AuthResponse Issue(UserDto user, string? refreshToken = null)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var expiresAtUtc = now.AddMinutes(15);
@@ -35,7 +35,7 @@ public sealed class JwtService(JwtSettings settings, TimeProvider clock)
 
         return new AuthResponse(
             AccessToken: new JwtSecurityTokenHandler().WriteToken(token),
-            RefreshToken: null,
+            RefreshToken: refreshToken,
             TokenType: "Bearer",
             ExpiresIn: 900,
             ExpiresAt: new DateTimeOffset(expiresAtUtc),

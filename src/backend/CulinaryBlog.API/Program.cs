@@ -173,6 +173,10 @@ auth.MapPost("/login", async (LoginCommand command, ISender sender, Cancellation
     Results.Ok(new { data = await sender.Send(command, ct) }))
     .WithName("Login").Produces<object>().ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).RequireRateLimiting("auth");
 
+auth.MapPost("/refresh", async (RefreshTokenCommand command, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(command, ct) }))
+    .WithName("RefreshToken").Produces<object>().ProducesValidationProblem().ProducesProblem(401).RequireRateLimiting("auth");
+
 auth.MapGet("/me", async (ISender sender, CancellationToken ct) => Results.Ok(new { data = await sender.Send(new GetMeQuery(), ct) }))
     .RequireAuthorization().WithName("GetMe").Produces<object>().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 

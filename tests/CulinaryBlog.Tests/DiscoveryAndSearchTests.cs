@@ -199,6 +199,12 @@ public sealed class FakeIdentityServiceForGoogle : IIdentityService
 
     public Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct) =>
         throw new NotImplementedException();
+
+    public Task<AuthResponse> RefreshTokenAsync(string refreshToken, string? ipAddress, CancellationToken ct) =>
+        throw new NotImplementedException();
+
+    public Task LogoutAsync(string? userId, string? refreshToken, CancellationToken ct) =>
+        Task.CompletedTask;
 }
 
 public sealed class DiscoveryAndSearchTests

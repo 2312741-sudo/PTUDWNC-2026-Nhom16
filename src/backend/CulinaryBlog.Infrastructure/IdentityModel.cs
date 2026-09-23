@@ -19,6 +19,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
 {
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<CulinaryBlog.Domain.Entities.RefreshToken> RefreshTokens => Set<CulinaryBlog.Domain.Entities.RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -28,6 +29,18 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
             b.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
             b.Property(x => x.AvatarUrl).HasMaxLength(500);
             b.HasIndex(x => x.NormalizedEmail).IsUnique();
+        });
+        builder.Entity<CulinaryBlog.Domain.Entities.RefreshToken>(b =>
+        {
+            b.ToTable("RefreshTokens");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.UserId).IsRequired();
+            b.Property(x => x.TokenHash).HasMaxLength(64).IsRequired();
+            b.Property(x => x.ExpiresAt).IsRequired();
+            b.Property(x => x.ReplacedByTokenHash).HasMaxLength(64);
+            b.Property(x => x.CreatedByIp).HasMaxLength(45);
+            b.HasIndex(x => x.TokenHash).IsUnique().HasDatabaseName("IDX_RefreshToken_Hash");
+            b.HasIndex(x => x.UserId);
         });
         builder.Entity<IdentityRole>().HasData(
             new IdentityRole { Id = "role-author", Name = CulinaryBlog.Domain.Roles.Author, NormalizedName = "AUTHOR", ConcurrencyStamp = "role-author-v1" },

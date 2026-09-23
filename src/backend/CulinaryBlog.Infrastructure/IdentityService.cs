@@ -1,5 +1,8 @@
+using System.Security.Cryptography;
+using System.Text;
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
+using CulinaryBlog.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -8,6 +11,20 @@ namespace CulinaryBlog.Infrastructure;
 
 public sealed class IdentityService(UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signIn, AuthDbContext db, JwtService jwt, IWelcomeEmailQueue welcome) : IIdentityService
 {
+    private static (string rawToken, string tokenHash) GenerateRefreshToken()
+    {
+        var bytes = new byte[64];
+        RandomNumberGenerator.Fill(bytes);
+        var rawToken = Convert.ToHexString(bytes).ToLowerInvariant();
+        var tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken))).ToLowerInvariant();
+        return (rawToken, tokenHash);
+    }
+
+    private static string HashToken(string rawToken)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken))).ToLowerInvariant();
+    }
+
     public async Task<AuthResponse> RegisterAsync(RegisterCommand command, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -20,6 +37,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
             DisplayName = new DisplayName(resolvedName).Value,
             CreatedAt = DateTimeOffset.UtcNow
         };
+        string rawRefreshToken;
         try
         {
             var result = await users.CreateAsync(user, command.Password);
@@ -31,6 +49,13 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
             }
             var roleResult = await users.AddToRoleAsync(user, Roles.Author);
             if (!roleResult.Succeeded) throw new InvalidOperationException("Unable to assign Author role.");
+
+            string tokenHash;
+            (rawRefreshToken, tokenHash) = GenerateRefreshToken();
+            var refreshToken = RefreshToken.Issue(user.Id, tokenHash, DateTime.UtcNow.AddDays(7), DateTime.UtcNow, null);
+            db.RefreshTokens.Add(refreshToken);
+            await db.SaveChangesAsync(ct);
+
             await transaction.CommitAsync(ct);
             await welcome.EnqueueAsync(new WelcomeEmail(user.Email!, user.DisplayName), ct);
         }
@@ -38,7 +63,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         {
             throw new AppException(409, "auth.email_exists", "Email đã được sử dụng.");
         }
-        return jwt.Issue(await ToDto(user));
+        return jwt.Issue(await ToDto(user), rawRefreshToken);
     }
 
     public async Task<AuthResponse> LoginAsync(LoginCommand command, CancellationToken ct)
@@ -51,7 +76,89 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         if (!check.Succeeded)
             throw new AppException(401, "auth.invalid_credentials", "Email hoặc mật khẩu không đúng.");
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
-        return jwt.Issue(await ToDto(user));
+
+        var (rawRefreshToken, tokenHash) = GenerateRefreshToken();
+        var refreshToken = RefreshToken.Issue(user.Id, tokenHash, DateTime.UtcNow.AddDays(7), DateTime.UtcNow, null);
+        db.RefreshTokens.Add(refreshToken);
+        await db.SaveChangesAsync(ct);
+
+        return jwt.Issue(await ToDto(user), rawRefreshToken);
+    }
+
+    public async Task<AuthResponse> RefreshTokenAsync(string rawRefreshToken, string? ipAddress, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(rawRefreshToken))
+            throw new AppException(401, "auth.invalid_refresh_token", "Refresh token không hợp lệ.");
+
+        var tokenHash = HashToken(rawRefreshToken.Trim());
+        var token = await db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+
+        if (token is null)
+            throw new AppException(401, "auth.invalid_refresh_token", "Refresh token không tồn tại.");
+
+        if (token.RevokedAt is not null)
+        {
+            // Token Reuse Detection: Nếu token đã bị thu hồi và được thay thế bằng token khác mà vẫn cố gửi lên
+            if (!string.IsNullOrEmpty(token.ReplacedByTokenHash))
+            {
+                // Thu hồi toàn bộ token của user này (Family revocation)
+                var activeTokens = await db.RefreshTokens
+                    .Where(t => t.UserId == token.UserId && t.RevokedAt == null)
+                    .ToListAsync(ct);
+                foreach (var t in activeTokens)
+                {
+                    t.Revoke(DateTime.UtcNow, "compromised-reuse-detected");
+                }
+                await db.SaveChangesAsync(ct);
+            }
+            throw new AppException(401, "auth.token_reuse_detected", "Phiên đăng nhập không hợp lệ hoặc đã bị thu hồi.");
+        }
+
+        if (DateTime.UtcNow >= token.ExpiresAt)
+            throw new AppException(401, "auth.token_expired", "Refresh token đã hết hạn.");
+
+        var user = await users.FindByIdAsync(token.UserId);
+        if (user is null || !user.IsActive)
+            throw new AppException(401, "auth.user_inactive", "Tài khoản không tồn tại hoặc đã bị khóa.");
+
+        // Token Rotation: Thu hồi token cũ và sinh token mới
+        var (newRawToken, newTokenHash) = GenerateRefreshToken();
+        token.Revoke(DateTime.UtcNow, newTokenHash);
+
+        var newRefreshToken = RefreshToken.Issue(token.UserId, newTokenHash, DateTime.UtcNow.AddDays(7), DateTime.UtcNow, ipAddress);
+        db.RefreshTokens.Add(newRefreshToken);
+        await db.SaveChangesAsync(ct);
+
+        return jwt.Issue(await ToDto(user), newRawToken);
+    }
+
+    public async Task LogoutAsync(string? userId, string? rawRefreshToken, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (!string.IsNullOrWhiteSpace(rawRefreshToken))
+        {
+            var tokenHash = HashToken(rawRefreshToken.Trim());
+            var token = await db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+            if (token is not null && token.RevokedAt is null)
+            {
+                token.Revoke(DateTime.UtcNow);
+                await db.SaveChangesAsync(ct);
+                return;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            var activeTokens = await db.RefreshTokens
+                .Where(t => t.UserId == userId && t.RevokedAt == null)
+                .ToListAsync(ct);
+            foreach (var t in activeTokens)
+            {
+                t.Revoke(DateTime.UtcNow);
+            }
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     public async Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct)
@@ -73,6 +180,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
         return await ToDto(user);
     }
+
     public async Task<AuthResponse> LoginWithGoogleAsync(GoogleUserPayload payload, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
@@ -113,7 +221,12 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
             }
         }
 
-        return jwt.Issue(await ToDto(user));
+        var (rawRefreshToken, tokenHash) = GenerateRefreshToken();
+        var refreshToken = RefreshToken.Issue(user.Id, tokenHash, DateTime.UtcNow.AddDays(7), DateTime.UtcNow, null);
+        db.RefreshTokens.Add(refreshToken);
+        await db.SaveChangesAsync(ct);
+
+        return jwt.Issue(await ToDto(user), rawRefreshToken);
     }
 
     private async Task<UserDto> ToDto(ApplicationUser user) => new(
