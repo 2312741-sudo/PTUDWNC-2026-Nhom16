@@ -132,24 +132,34 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
               Danh mục
             </h4>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
               <Link
                 href={buildUrl({ categoryId: undefined, page: 1 })}
-                className={`block px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                   !filters.categoryId ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                Tất cả danh mục
+                <span>Tất cả danh mục</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  !filters.categoryId ? 'bg-orange-200 text-orange-800' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {categories.reduce((acc, c) => acc + (c.recipesCount || 0), 0)}
+                </span>
               </Link>
               {categories.map((cat) => (
                 <Link
                   key={cat.id}
                   href={buildUrl({ categoryId: cat.id, page: 1 })}
-                  className={`block px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                     filters.categoryId === cat.id ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
-                  {cat.name}
+                  <span className="truncate pr-2">{cat.name}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${
+                    filters.categoryId === cat.id ? 'bg-orange-200 text-orange-800' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {cat.recipesCount}
+                  </span>
                 </Link>
               ))}
             </div>
