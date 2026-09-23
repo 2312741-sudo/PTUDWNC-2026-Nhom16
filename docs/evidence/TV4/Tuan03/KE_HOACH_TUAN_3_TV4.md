@@ -3,7 +3,7 @@
 - **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026, giải quyết C01–C09)
 - **Phần nghiệp vụ**: Xuất bản, hình ảnh, SEO và vận hành — tasks D3–D7 (theo `docs/KE_HOACH_DU_AN.md` mục 8 và `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md`).
 - **Mã task tuần 3** (theo 6-tuần, dòng 3 TV4): D3 (archive/delete theo ADR D08), D4 (hoàn thiện uploader UI + status + SEO sitemap/robots/OG/JSON-LD), D5 (OTEL/metrics/health), D6 (lab L4 Identity/Google/refresh/forms/FTS). Cộng phần bàn giao thiếu tuần 2: D2 resize, D1.1c test MinIO down, E2E D1.3, D3.3 logout revoke chờ TV3 C5.
-- **Nhánh Git đề xuất**: tuần 3 khởi động từ main đã cập nhật (PR #14 đã vào main) → `2312739_NHTSon_D3-D4-D5-D6`; lab: `practice/TV4/L4`.
+- **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3) — đã tạo 23/09, đã merge `origin/main` `a651c8a` (fix migration trùng) → HEAD `75a8bf5`; lab: `practice/TV4/L4`.
 - **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng).
 - **Cổng**: G4 giữa tuần (publish/unpublish/archive end-to-end + ảnh hiển thị được qua presigned theo D27; sitemap Published-only) → G5 cuối tuần (đủ FR media/status/jobs/health; queue persistent; sitemap/OG/JSON-LD; OTEL trace HTTP→DB; CI xanh).
 
@@ -15,7 +15,7 @@
 ## 0. Bối cảnh bước vào tuần 3 (ghi nhận thực tế 23/09)
 
 - **PR #14 (D1.3 image API + D3.1/D3.2 publish/unpublish)** đã được merge nhầm vào main (commit `3eb6de3` + `c512943`) trước khi hoàn tất nghiệm thu trên nhánh TV4. **Quyết định nhóm**: giữ nguyên trên main, đưa việc rà soát/khắc phục vào kế hoạch tuần 3. Việc này đồng nghĩa D1.3/D3.1/D3.2 đã "chính thức" mặt bằng main và TV4 cần tập trung phía sau.
-- **CI main đang đỏ (pre-existing từ tuần 2, không do D3 gây ra)**: 16 test Auth/Week3 fail vì `relation "RefreshTokens" does not exist`. Nguyên nhân kỹ thuật: **2 migration tạo trùng bảng** — `20260919061954_AddRecipeAggregate` đã `CreateTable("RefreshTokens")`, sau đó `20260923104044_AddRefreshTokens` `CreateTable("RefreshTokens")` lần nữa → `Migrate()` fail "already exists" → Npgsql rollback → DB thiếu `RefreshTokens`. Main `29b171c` cũng fail y hệt (run #failure trước khi nhánh TV4 merge). → **ưu tiên #1 tuần 3: sửa duplicate migration + CI xanh**, vì nó chặn mọi thành viên.
+- **CI main đỏ (pre-existing từ tuần 2) — ĐÃ ĐƯỢC FIX 23/09 T2**: main `a651c8a` ("loai bo migration trung lap") xoá 2 migration trùng (`AddRefreshTokens` 20260923104044 + `AddRecipeDiscoveryAndSearch` 20260916102353); bảng `RefreshTokens` giờ chỉ do `20260919061954_AddRecipeAggregate` tạo (kèm index `IDX_RefreshToken_Hash`). Commit cùng bật CORS + auto migrate/seed khi deploy. **TV4 đã merge vào nhánh tuần 3** (`e026dc9` + `75a8bf5`) và verify: build 0 warning, format sạch, **CulinaryBlog.Tests 120/120** (16 test Auth/Week3 trước đây fail giờ pass), **spike 5/5** → N0 coi như xong, chỉ chờ CI GitHub xanh.
 - Block còn lại từ tuần 2: C5 refresh của TV3 (ảnh hưởng D3.3 logout revoke), D27 bucket policy (ảnh hiển thị frontend), D23 queue resize (chưa chốt Hangfire/BackgroundService).
 
 ---
@@ -46,15 +46,15 @@
 
 ## 3. Phân rã công việc tuần 3
 
-### N0 — Mở đầu: fix CI main + rà soát PR #14 đã merge (ưu tiên cao)
+### N0 — Mở đầu: fix CI main + rà soát PR #14 đã merge (ưu tiên cao) ⭐ ĐÃ XONG (23/09 T2)
 
-**Skills**: K01, K23, K24 · **ADR**: D25 (lockfile) · **Block**: không — làm ngay
+**Skills**: K01, K23, K24 · **ADR**: D25 (lockfile)
 
 | # | Việc làm | Kết quả mong đợi |
 |---|---|---|
-| 1 | Sửa duplicate migration `RefreshTokens`: bỏ `CreateTable` trùng trong `AddRefreshTokens` (giữ thêm index `IDX_RefreshToken_Hash`/`IX_RefreshTokens_UserId` vào migration `AddRecipeAggregate` đã tạo bảng), hoặc tạo migration merge sạch | `Migrate()` chạy được trên DB mới; `dotnet test CulinaryBlog.sln` xanh (120 + 5 spike), CI main xanh |
-| 2 | Rà soát diff PR #14 so với main trước merge (tính năng + test + docs) | Không xung đột logic; không lộ secret; test vẫn pass |
-| 3 | Xóa/Cập nhật note CI fail cũ trong tài liệu tuần 2 sau khi xanh | Docs không chứa trạng thái hết hạn gây nhầm lẫn |
+| 1 | ✅ **Fix duplicate migration `RefreshTokens`** — main `a651c8a` đã xoá `AddRefreshTokens` + `AddRecipeDiscoveryAndSearch`; TV4 merge vào nhánh tuần 3 (`e026dc9` + `75a8bf5`) | `Migrate()` chạy được trên DB mới; build 0 warning; format sạch; CulinaryBlog.Tests **120/120** + spike **5/5** local — **đạt** |
+| 2 | ⏳ Push branch tuần 3 → **chờ CI GitHub xanh** + rà soát diff PR #14 so với main | CI xanh trên GitHub; không xung đột logic; không lộ secret; test vẫn pass |
+| 3 | Cập nhật docs trạng thái đã fix | TRANG_THAI/KE_HOACH/SO_EVIDENCE tuần 3 đã cập nhật 23/09 T2 |
 
 ### N1 — D3: Archive/delete + invalidation + D3.3 logout revoke (theo FR-RCP-006/007, D08)
 
@@ -128,7 +128,7 @@
 | Cả nhóm | E2E D1.3/D3 + D2 resize + D5 metrics chạy thật | Cuối tuần 3 |
 
 ### Thứ tự ưu tiên:
-1. Fix CI main (N0) — chặn tất cả.
+1. ✅ Fix CI main (N0) — **đã xong** 23/09 T2 (main `a651c8a` + merge); còn chờ CI GitHub xanh.
 2. Chốt D27 + D23 (ảnh hiển thị + resize).
 3. Archive/delete + invalidation (D3) → uploader UI ghép TV3 C4.
 4. Sitemap/JSON-LD/OTEL (D4/D5) → cuối tuần chốt G5.
@@ -164,7 +164,7 @@
 
 ## 6. Checklist cổng tuần 3
 
-- [ ] CI main xanh: `dotnet test CulinaryBlog.sln` pass (120 + 5 spike); fix duplicate migration `RefreshTokens`.
+- [x] Fix duplicate migration `RefreshTokens` (main `a651c8a`) — **đã xong**; local 120/120 + 5/5 pass; [ ] chờ CI GitHub xanh.
 - [ ] Archive: Archived ẩn public ngay, giữ dữ liệu, owner/Admin; DELETE soft theo D08; không lộ search/cache.
 - [ ] Uploader UI: progress + rollback + gallery + primary; ảnh hiển thị qua presigned/proxy (D27).
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
@@ -190,7 +190,7 @@
 
 ## 8. Việc làm ngay khi được confirm
 
-1. Fix duplicate migration `RefreshTokens` + push + CI xanh → báo nhóm.
+1. ✅ Fix duplicate migration `RefreshTokens` — **đã xong** (main `a651c8a`, merge `e026dc9`+`75a8bf5`); push branch tuần 3 + xác nhận CI xanh.
 2. Xác nhận với nhóm: giữ PR #14 trên main? D27 bucket? D23 queue?
 3. Archive/delete CQRS + invalidation + test.
 4. E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted.

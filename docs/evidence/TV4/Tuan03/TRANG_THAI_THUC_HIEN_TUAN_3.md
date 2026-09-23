@@ -4,9 +4,15 @@
 > **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3), khởi động từ main đã cập nhật
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 23/09/2026 (thời điểm lập kế hoạch — tất cả bắt đầu ở trạng thái **Chưa làm**)
+> **Cập nhật lần cuối**: 23/09/2026 (T2 — sau khi merge fix migration từ main + test lại)
 
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_3_TV4.md`; nền tảng trạng thái tuần 2 xem `docs/evidence/TV4/Tuan02/`.
+
+> **Bản sửa đổi 23/09 T2 — merge `origin/main` `a651c8a` vào nhánh tuần 3 + test lại**:
+> main đã được sửa lỗi migration trùng lặp (`a651c8a` "loai bo migration trung lap"): xoá `AddRecipeDiscoveryAndSearch` (20260916102353)
+> và `AddRefreshTokens` (20260923104044) — bảng `RefreshTokens` giờ chỉ do `20260919061954_AddRecipeAggregate` tạo, kèm CORS + auto migrate/seed khi deploy.
+> → Merge vào `2312739_NHTSon_D3-D4-D5-D6` (commit `e026dc9` + `75a8bf5`): **N0 trong kế hoạch tuần 3 đã được gỡ**. Kiểm chứng local:
+> build Release **0 warning/0 error**, `dotnet format` sạch, CulinaryBlog.Tests **120/120 pass** (gồm 16 test Auth/Week3 — trước đây fail), spike **5/5 pass** (chạy với TEST_DATABASE local). Cần push + CI xanh xác nhận.
 
 ---
 
@@ -17,15 +23,15 @@
 | 1 | **Block 2.1 gỡ hoàn toàn** (merge C2/C3 TV3 `2086ee8`) — recipe CRUD + ingredient/step có trong API | ✅ Đã xong tuần 2 |
 | 2 | **D3.1/D3.2 publish/unpublish CQRS** + 2 endpoint + 13 test (`0659d45`, amend `183c055`) | ✅ Đã xong tuần 2 |
 | 3 | **PR #14 bị merge nhầm vào main** (`3eb6de3` + `c512943`) — D1.3 + D3.1/D3.2 + docs đã nằm trên main | ⚠️ Giữ nguyên theo quyết định nhóm; đưa việc rà soát/khắc phục vào tuần 3 |
-| 4 | **CI main đỏ (pre-existing từ tuần 2)** — 16 test Auth/Week3 fail do duplicate migration `RefreshTokens` (2 migration cùng `CreateTable`) → DB CI thiếu `RefreshTokens` | 🔴 Fix ưu tiên #1 tuần 3 (N0) |
-| 5 | Local branch TV4 hiện tại = `6d689bd` (bằng main); 120/120 test CulinaryBlog.Tests + 5/5 spike chạy đạt local | ✅ Cần tách nhánh tuần 3 từ main đã sửa CI |
+| 4 | **CI main đỏ (pre-existing từ tuần 2)** — 16 test Auth/Week3 fail do duplicate migration `RefreshTokens` | ✅ **Đã gỡ 23/09 T2** — main `a651c8a` xoá migration trùng; local 120/120 + 5/5 pass; chờ CI xanh |
+| 5 | Local branch TV4 hiện tại = `75a8bf5` (đã merge main fix migration) | ✅ 120/120 + 5/5 pass local |
 | 6 | D2 resize / D1.1c MinIO-down / E2E D1.3 thật / D3.3 logout revoke (chờ TV3 C5) | 📋 Kế thừa vào tuần 3 |
 
 ---
 
 ## 1. Đã hoàn thành (đầu tuần 3)
 
-> Tất cả task bắt đầu ở trạng thái **Chưa làm** ở tuần 3 này; các mục sau đã hoàn thành trong tuần 2 và là nền tảng.
+> Tất cả task bắt đầu ở trạng thái **Chưa làm** ở tuần 3 này; các mục sau đã hoàn thành trong tuần 2 và là nền tảng. **(+) = mới cập nhật 23/09 T2.**
 
 | Task | Nội dung | Nơi triển khai | Trạng thái |
 |---|---|---|---|
@@ -35,16 +41,19 @@
 | D1.6 | `docs/IMAGE_CONTRACT.md` bàn giao TV3 | `docs/IMAGE_CONTRACT.md` | Đã làm tuần 2 |
 | D1.3 | API upload/PATCH primary/DELETE image (FR-RCP-008, D17) | `src/backend/CulinaryBlog.API/Program.cs` + `src/backend/CulinaryBlog.Application/RecipeImages.cs` | Đã làm tuần 2 — **trong main** (qua PR #14); còn E2E thật trên MinIO |
 | D3.1/D3.2 | `PATCH /recipes/{id}/publish` & `/unpublish` (FR-RCP-005/006, C02, 422 `RECIPE_PUBLISH_INCOMPLETE`, ownership 403, idempotent) | `src/backend/CulinaryBlog.Application/Recipes.cs` (region D3.1/D3.2) + `Program.cs` + `tests/CulinaryBlog.Tests/RecipeLifecycleTests.cs` | Đã làm tuần 2 — **trong main** (qua PR #14); 13 test pass |
-| 125 tests | Build Release 0 warning + 101→120 test (sau merge) + 5 spike | `tests/CulinaryBlog.Tests` | Đã làm tuần 2 — local chạy đạt (120 + 5) |
+| 120 tests | Build Release 0 warning + 120 CulinaryBlog.Tests | `tests/CulinaryBlog.Tests` | (+)**Đã xác nhận lại 120/120 + 5/5 spike pass local** (Postgres local, sau merge main fix migration) |
+| N0-1 (+) | **Fix duplicate migration `RefreshTokens`** | main `a651c8a` (xoá `AddRecipeDiscoveryAndSearch` + `AddRefreshTokens`); merge vào branch tuần 3 (`e026dc9` + `75a8bf5`) | ✅ **Xong** — build/format/test local pass; cần push + CI xanh |
+| N0-3 (+) | Chạy lại toàn bộ test sau merge | CulinaryBlog.Tests 120/120 + spike 5/5 (TEST_DATABASE local) | ✅ Xong local |
 
 ---
 
 ## 2. Đang làm / Chưa thực hiện (tuần 3)
 
+> N0 (fix migration + CI) đã được gỡ bởi main `a651c8a` (merge vào branch tuần 3). **Còn lại là xác nhận CI xanh trên GitHub + rà soát PR #14.**
+
 | Task | Nội dung | Lý do chưa xong | Cần gì để xong |
 |---|---|---|---|
-| N0-1 | Fix duplicate migration `RefreshTokens` + CI xanh | Main chưa sửa; 2 migration trùng `CreateTable` | Sửa migration, build + format + test, push, CI xanh |
-| N0-2 | Rà soát diff PR #14 so với main | PR đã merge nhầm, chưa review lại | Review nội dung + xác nhận nhóm |
+| N0-2 | Rà soát diff PR #14 so với main + chờ CI xanh | PR đã merge nhầm, CI local đã xanh | Push branch tuần 3 → CI GitHub xanh → review nhóm |
 | D3.1c | Archive `PATCH /recipes/{id}/archive` (FR-RCP-006) | Chưa có endpoint archive | ADR D08 + code + test |
 | D3.2c | DELETE recipe soft theo D08 (FR-RCP-007) | Chưa làm | ADR D08 + code + test |
 | D3.3 | Logout revoke refresh family (FR-AUTH-005) | Chưa bắt đầu | TV3 C5 refresh token merge |
@@ -63,7 +72,7 @@
 | D3.3 logout revoke | Cần refresh token family | TV3 — C5 | Sớm tuần 3 |
 | D1/D4 ảnh display | Bucket private/public chưa chốt | Quyết định D27 + CR | Đầu tuần 3 |
 | D2 resize | Queue chưa chốt | Quyết định D23 | Đầu tuần 3 |
-| N0-1 CI xanh | Migration trùng `RefreshTokens` — cần phối hợp TV3 (migration thuộc Recipe cluster) nếu sửa ở phía khác | TV3 nếu migration dùng chung | Ngày 1–2 tuần 3 |
+| ~~N0-1 CI xanh~~ | ~~Migration trùng `RefreshTokens`~~ | ✅ **Đã gỡ** — main `a651c8a` đã fix; local 120/120 + 5/5 | Đã gỡ 23/09 T2; chờ CI GitHub xác nhận |
 | PR #14 giữ/xoá | PR đã merge nhầm — cần thống nhất nhóm | Nhóm trưởng + nhóm | Đầu tuần 3 |
 
 ---

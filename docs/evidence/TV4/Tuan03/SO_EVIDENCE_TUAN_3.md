@@ -15,7 +15,7 @@
 | K03 | SP | Clean Architecture, interface, DI, value object | Presigned/proxy qua `IFileStorageService` extension + domain methods | D3, D4 | Chưa làm |
 | K04 | SP+LAB | CQRS/MediatR + logging/validation/caching behaviors | Archive/delete CQRS handlers + LAB behavior | D3 + D6 | Chưa làm |
 | K05 | SP | FluentValidation + sanitization | Validator transition trạng thái + sanitize UI input | D3, D4 | Chưa làm |
-| K06 | SP | EF Core Code First, migration/config/seed, LINQ/index | Fix migration `RefreshTokens` index + migration soft-delete | N0, D3 | Chưa làm |
+| K06 | SP | EF Core Code First, migration/config/seed, LINQ/index | Fix migration `RefreshTokens` index (N0) + migration soft-delete | N0, D3 | Đã làm (N0) |
 | K07 | SP+LAB | UoW/transaction/audit/soft delete/RowVersion | Race đổi trạng thái + soft delete | D3 | Chưa làm |
 | K10 | SP | RBAC/ownership/policy/rate limit/secrets | Ownership archive/delete + 403 non-owner | D3 | Chưa làm |
 | K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | Chưa làm |
@@ -28,8 +28,8 @@
 | K19 | SP | SEO metadata/OG/canonical/robots/JSON-LD | Sitemap/robots/OG/JSON-LD Published-only | D4 | Chưa làm |
 | K20 | SP | Serilog/Seq/correlation, OTEL, metrics, health | OTEL trace HTTP→DB + health thành phần | D5 | Chưa làm |
 | K22 | SP | k6/EXPLAIN/cache hit/CWV | EXPLAIN publish query + k6 + cache hit | D5 | Chưa làm |
-| K23 | SP | Docker/Compose/Nginx/volumes/backup-restore | CI xanh + stack vận hành + queue service | N0, D2 | Chưa làm |
-| K24 | SP | Git/PR/review/CI/static analysis/secret scan/docs | PR nhỏ từng task + review Tâm + note PR #14 | N0, Tất cả | Chưa làm |
+| K23 | SP | Docker/Compose/Nginx/volumes/backup-restore | CI xanh (N0) + stack vận hành + queue service | N0, D2 | Đã làm (N0) |
+| K24 | SP | Git/PR/review/CI/static analysis/secret scan/docs | PR nhỏ từng task + review Tâm + note PR #14 | N0, Tất cả | Đang làm |
 
 ---
 
@@ -53,18 +53,17 @@ Lỗi còn lại / ảnh hưởng: [ghi rõ nếu có]
 
 > Các mục được bổ sung khi có kết quả triển khai (kèm lệnh chạy + bằng chứng thật). Không điền trước nội dung chưa có.
 
-### TV4-K06 (N0 — fix duplicate migration `RefreshTokens` + CI xanh)
+### TV4-K06 (N0 — fix duplicate migration `RefreshTokens` + CI xanh) ✅
 
 ```text
 Evidence: TV4-K06 (kỹ thuật migration; FR-AUTH liên quan bảng RefreshTokens)
 Tuần 3 / TV4 / N0
-Đường dẫn: src/backend/CulinaryBlog.Infrastructure/Migrations/20260919061954_AddRecipeAggregate.cs,
-          20260923104044_AddRefreshTokens.cs
-Nhánh/PR: [chưa có]
-Test/lệnh: dotnet build CulinaryBlog.sln --no-restore --configuration Release; dotnet format; dotnet test CulinaryBlog.sln
-Kết quả: [chờ triển khai — mục tiêu: Migrate() trên DB mới không lỗi, 16 test Auth/Week3 pass trên CI]
+Đường dẫn: src/backend/CulinaryBlog.Infrastructure/Migrations/ (xoá 20260923104044_AddRefreshTokens.cs + 20260916102353_AddRecipeDiscoveryAndSearch.cs trên main)
+Nhánh/PR: main `a651c8a` (fix) → merge vào 2312739_NHTSon_D3-D4-D5-D6 (`e026dc9` + `75a8bf5`)
+Test/lệnh: dotnet build --no-restore Release (0 warning); dotnet format (sạch); dotnet test tests/CulinaryBlog.Tests → 120/120; spike → 5/5 (TEST_DATABASE local)
+Kết quả: Migrate() trên DB mới không còn lỗi "RefreshTokens already exists"; 16 test Auth/Week3 trước đây fail giờ pass
 Reviewer/ngày: Nguyễn Thanh Tâm / ___
-Lỗi còn lại: [ghi sau khi chạy]
+Lỗi còn lại: chờ CI GitHub xanh (push branch tuần 3)
 ```
 
 ### TV4-K02/K10 (D3 — Archive/delete + ownership)
@@ -123,7 +122,7 @@ Lỗi còn lại: [chờ triển khai]
 
 ## 4. Checklist cá nhân tuần 3 (chốt G5)
 
-- [ ] Fix duplicate migration `RefreshTokens` → `dotnet test CulinaryBlog.sln` pass (120 + 5 spike) → CI xanh.
+- [x] Fix duplicate migration `RefreshTokens` (main `a651c8a`, merge vào branch tuần 3) → local 120/120 + 5/5 pass; [ ] chờ CI xanh GitHub.
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).
 - [ ] Archive `PATCH /recipes/{id}/archive` + ẩn public ngay + ownership test.
 - [ ] DELETE soft theo ADR D08 + không lộ search/cache + không mất ảnh cần restore.
