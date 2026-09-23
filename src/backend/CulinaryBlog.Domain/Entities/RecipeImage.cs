@@ -35,6 +35,13 @@ public sealed class RecipeImage : BaseEntity
 
     internal void SetPrimary(bool isPrimary) => IsPrimary = isPrimary;
 
+    public void SetOriginalUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || url.Length > 500)
+            throw new DomainException("IMAGE_URL_INVALID", "URL ảnh phải từ 1 đến 500 ký tự.");
+        OriginalUrl = url.Trim();
+    }
+
     internal void SetAltText(string altText)
     {
         if (altText.Length > 200)

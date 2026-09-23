@@ -167,13 +167,28 @@ if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("T
     try
     {
         var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-        await authDb.Database.MigrateAsync();
-        await DbSeeder.SeedAsync(authDb);
-        Log.Information("Database verified and seeded successfully on startup.");
+        try
+        {
+            await authDb.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Auto-migration on startup skipped: {Message}", ex.Message);
+        }
+
+        try
+        {
+            await DbSeeder.SeedAsync(authDb);
+            Log.Information("Database verified and seeded successfully on startup.");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database seeding on startup skipped: {Message}", ex.Message);
+        }
     }
     catch (Exception ex)
     {
-        Log.Warning(ex, "Auto-migration or seeding on startup skipped: {Message}", ex.Message);
+        Log.Warning(ex, "Database initialization on startup error: {Message}", ex.Message);
     }
 }
 

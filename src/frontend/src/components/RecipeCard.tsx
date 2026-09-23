@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { RecipeSummary } from '@/types/recipe';
 import { Clock, Users, ChefHat } from 'lucide-react';
+import { getRecipeImage, CATEGORY_FALLBACK_IMAGES } from '@/lib/recipeImages';
 
 interface RecipeCardProps {
   recipe: RecipeSummary;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
+  const imageUrl = getRecipeImage(recipe);
+
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
       case 'easy':
@@ -26,10 +29,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1">
       {/* Image Container */}
       <div className="relative w-full h-48 bg-gradient-to-tr from-emerald-50 to-amber-50 flex items-center justify-center overflow-hidden">
-        {recipe.primaryImageUrl ? (
+        {imageUrl ? (
           <img
-            src={recipe.primaryImageUrl}
+            src={imageUrl}
             alt={recipe.title}
+            onError={(e) => {
+              const fallback = (recipe.categoryName && CATEGORY_FALLBACK_IMAGES[recipe.categoryName]) ||
+                'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop';
+              if ((e.target as HTMLImageElement).src !== fallback) {
+                (e.target as HTMLImageElement).src = fallback;
+              }
+            }}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (

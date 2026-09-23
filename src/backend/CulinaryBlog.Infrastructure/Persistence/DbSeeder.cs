@@ -15,9 +15,31 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(AuthDbContext db, CancellationToken ct = default)
     {
-        await db.Database.MigrateAsync(ct);
+        try { await db.Database.MigrateAsync(ct); } catch { /* Ignore migration errors if tables already exist */ }
 
-        // Kiểm tra nếu đã có đủ 100 recipes thì bỏ qua
+        // Cập nhật tất cả các ảnh placeholder cũ sang ảnh ẩm thực thực tế của từng món
+        var placeholderImages = await db.RecipeImages
+            .Where(img => img.OriginalUrl.Contains("photo-1546069901-ba9599a7e63c"))
+            .ToListAsync(ct);
+        if (placeholderImages.Count > 0)
+        {
+            var rIds = placeholderImages.Select(i => i.RecipeId).Distinct().ToList();
+            var slugLookup = await db.Recipes
+                .IgnoreQueryFilters()
+                .Where(r => rIds.Contains(r.Id))
+                .ToDictionaryAsync(r => r.Id, r => r.Slug, ct);
+
+            foreach (var img in placeholderImages)
+            {
+                if (slugLookup.TryGetValue(img.RecipeId, out var slug))
+                {
+                    img.SetOriginalUrl(GetDishImage(slug));
+                }
+            }
+            await db.SaveChangesAsync(ct);
+        }
+
+        // Kiểm tra nếu đã có đủ 100 recipes thì bỏ qua việc tạo mới
         if (await db.Recipes.IgnoreQueryFilters().CountAsync(ct) >= 100) return;
 
         // 1. Roles
@@ -272,8 +294,8 @@ public static class DbSeeder
                 recipe.AddStep("Hoàn thiện và thưởng thức", $"Trình bày món {def.Title} ra đĩa hoặc tô nóng, rắc hành ngò thái nhỏ và thưởng thức cùng cơm hoặc bún.", 5, "Ngon nhất khi thưởng thức ngay lúc còn nóng sốt.");
             }
 
-            // Ảnh đại diện
-            recipe.AddImage($"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop", $"Ảnh món {def.Title}");
+            // Ảnh đại diện chất lượng cao chuẩn từng món
+            recipe.AddImage(GetDishImage(def.Slug), $"Ảnh món {def.Title}");
 
             // 85% món được xuất bản (Published), 15% để Draft
             if (i % 7 != 0)
@@ -286,6 +308,111 @@ public static class DbSeeder
 
         await db.SaveChangesAsync(ct);
     }
+
+    public static string GetDishImage(string slug) => slug switch
+    {
+            "banh-bao-nhan-thit-trung-cut" => "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop",
+            "banh-beo-chen-mien-trung" => "https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&auto=format&fit=crop",
+            "banh-bot-loc-tom-thit" => "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=800&auto=format&fit=crop",
+            "banh-can-phan-thiet" => "https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&auto=format&fit=crop",
+            "banh-canh-cua-gio-heo" => "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop",
+            "banh-crepe-sau-rieng" => "https://images.unsplash.com/photo-1519869325930-281384150729?w=800&auto=format&fit=crop",
+            "banh-cuon-nong-ca-cuong" => "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop",
+            "banh-flan-caramel-beo-ngay" => "https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=800&auto=format&fit=crop",
+            "banh-gio-nong-ha-noi" => "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=800&auto=format&fit=crop",
+            "banh-khot-vung-tau" => "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop",
+            "banh-mi-chao-thap-cam" => "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&auto=format&fit=crop",
+            "banh-mi-thit-nuong-sot-tieu" => "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?w=800&auto=format&fit=crop",
+            "banh-mousse-chanh-leo" => "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop",
+            "banh-nam-hue" => "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop",
+            "banh-tiramisu-y" => "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&auto=format&fit=crop",
+            "banh-trang-nuong-da-lat" => "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&auto=format&fit=crop",
+            "banh-trang-tron-long-an" => "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop",
+            "banh-waffle-bi-gion-xop" => "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=800&auto=format&fit=crop",
+            "banh-xeo-tom-nhay-mien-tay" => "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop",
+            "bap-xao-tom-bo" => "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=800&auto=format&fit=crop",
+            "bo-kho-banh-mi-dam-da" => "https://images.unsplash.com/photo-1541832676-9b763b0239ab?w=800&auto=format&fit=crop",
+            "bo-luc-lac-khoai-tay-chien" => "https://images.unsplash.com/photo-1558030006-450675393462?w=800&auto=format&fit=crop",
+            "bo-ne-hoa-tuyet" => "https://images.unsplash.com/photo-1558030006-450675393462?w=800&auto=format&fit=crop",
+            "bong-bi-xao-thit-bo" => "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop",
+            "bun-bo-hue-co-do" => "https://images.unsplash.com/photo-1576577445504-6af96477db52?w=800&auto=format&fit=crop",
+            "bun-cha-ha-noi-truyen-thong" => "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=800&auto=format&fit=crop",
+            "bun-dau-mam-tom-thap-cam" => "https://images.unsplash.com/photo-1594998893017-36147cbcae05?w=800&auto=format&fit=crop",
+            "bun-rieu-cua-dong" => "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=800&auto=format&fit=crop",
+            "bun-thit-nuong-cha-gio" => "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=800&auto=format&fit=crop",
+            "ca-hoi-ap-chao-sot-bo-chanh" => "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&auto=format&fit=crop",
+            "ca-kho-to-mien-tay" => "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&auto=format&fit=crop",
+            "ca-tai-tuong-chien-xu" => "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&auto=format&fit=crop",
+            "ca-tim-nuong-mo-hanh" => "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop",
+            "cang-ghe-rang-muoi-keo-chi" => "https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&auto=format&fit=crop",
+            "canh-chua-ca-loc-dong" => "https://images.unsplash.com/photo-1547496502-affa22d38842?w=800&auto=format&fit=crop",
+            "canh-cua-rau-day-muop" => "https://images.unsplash.com/photo-1547496502-affa22d38842?w=800&auto=format&fit=crop",
+            "canh-kim-chi-thit-heo" => "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800&auto=format&fit=crop",
+            "canh-rong-bien-thit-bam" => "https://images.unsplash.com/photo-1607532941433-304659e8198a?w=800&auto=format&fit=crop",
+            "cao-lau-hoi-an" => "https://images.unsplash.com/photo-1552611052-33e04de081de?w=800&auto=format&fit=crop",
+            "cha-ca-la-vong" => "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop",
+            "cha-gio-hai-san-sot-mayonnaise" => "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop",
+            "chao-ca-loc-rau-dang" => "https://images.unsplash.com/photo-1547496502-affa22d38842?w=800&auto=format&fit=crop",
+            "chao-ga-hat-sen" => "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=800&auto=format&fit=crop",
+            "chao-suon-quay-nong" => "https://images.unsplash.com/photo-1541832676-9b763b0239ab?w=800&auto=format&fit=crop",
+            "chao-yen-mach-tom-thit" => "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?w=800&auto=format&fit=crop",
+            "che-ba-mau-nam-bo" => "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&auto=format&fit=crop",
+            "che-buoi-an-giang" => "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&auto=format&fit=crop",
+            "che-hat-sen-long-nhan" => "https://images.unsplash.com/photo-1579372786545-d24232daf58c?w=800&auto=format&fit=crop",
+            "che-khuc-bach-hanh-nhan" => "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800&auto=format&fit=crop",
+            "che-suong-sa-hat-luu" => "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop",
+            "che-thai-sau-rieng" => "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&auto=format&fit=crop",
+            "com-chien-duong-chau-hai-san" => "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&auto=format&fit=crop",
+            "com-rang-dua-bo" => "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&auto=format&fit=crop",
+            "com-tam-suon-bi-cha" => "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop",
+            "cut-lon-xao-me" => "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop",
+            "dau-hu-tu-xuyen" => "https://images.unsplash.com/photo-1546069901-d7034c441b0f?w=800&auto=format&fit=crop",
+            "ga-chien-nuoc-mam" => "https://images.unsplash.com/photo-1562967914-608f82629710?w=800&auto=format&fit=crop",
+            "ga-hap-la-chanh" => "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&auto=format&fit=crop",
+            "ga-lac-pho-mai-cay" => "https://images.unsplash.com/photo-1562967914-608f82629710?w=800&auto=format&fit=crop",
+            "ga-nuong-muoi-ot-tay-bac" => "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800&auto=format&fit=crop",
+            "goi-bo-bop-thau" => "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&auto=format&fit=crop",
+            "goi-cuon-tom-thit" => "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop",
+            "goi-ngo-sen-tom-thit" => "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop",
+            "hau-nuong-pho-mai" => "https://images.unsplash.com/photo-1558030006-450675393462?w=800&auto=format&fit=crop",
+            "hu-tieu-nam-vang" => "https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=800&auto=format&fit=crop",
+            "khoai-lang-lac-pho-mai" => "https://images.unsplash.com/photo-1576107232684-1279f3908594?w=800&auto=format&fit=crop",
+            "lau-ga-la-e-phu-yen" => "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=800&auto=format&fit=crop",
+            "lau-nam-chay-thanh-dam" => "https://images.unsplash.com/photo-1546069901-d7034c441b0f?w=800&auto=format&fit=crop",
+            "lau-thai-hai-san-chua-cay" => "https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&auto=format&fit=crop",
+            "mi-quang-tom-thit-da-nang" => "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=800&auto=format&fit=crop",
+            "mi-xao-bo-rau-cai" => "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&auto=format&fit=crop",
+            "muc-xao-sa-te-cay-nong" => "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=800&auto=format&fit=crop",
+            "nam-dui-ga-kho-tieu" => "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?w=800&auto=format&fit=crop",
+            "nem-ran-ha-noi-gion-rum" => "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=800&auto=format&fit=crop",
+            "ngheu-hap-sa-gung" => "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=800&auto=format&fit=crop",
+            "nom-hoa-chuoi-tai-heo" => "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop",
+            "nuoc-ep-can-tay-tao-xanh" => "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=800&auto=format&fit=crop",
+            "oc-huong-xao-bo-toi" => "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop",
+            "pancake-mat-ong-chuoi" => "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&auto=format&fit=crop",
+            "pho-bo-tai-nam-ha-noi" => "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800&auto=format&fit=crop",
+            "rau-cau-dua-trai-cay" => "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&auto=format&fit=crop",
+            "rau-muong-xao-toi" => "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=800&auto=format&fit=crop",
+            "sinh-to-bo-dak-lak" => "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=800&auto=format&fit=crop",
+            "sinh-to-mang-cau-bo" => "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=800&auto=format&fit=crop",
+            "so-huyet-xao-toi" => "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&auto=format&fit=crop",
+            "sua-chua-nep-cam-moc-chau" => "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&auto=format&fit=crop",
+            "suon-nuong-com-lam" => "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop",
+            "suon-xao-chua-ngot" => "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800&auto=format&fit=crop",
+            "thit-ba-chi-luoc-cham-mam-tom" => "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop",
+            "thit-kho-tau-trung-vit" => "https://images.unsplash.com/photo-1514944298352-f1e944747eb1?w=800&auto=format&fit=crop",
+            "tom-nuong-muoi-ot" => "https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&auto=format&fit=crop",
+            "tom-rim-nuoc-cot-dua" => "https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&auto=format&fit=crop",
+            "tra-dao-cam-sa" => "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&auto=format&fit=crop",
+            "tra-mang-cau-xiem" => "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=800&auto=format&fit=crop",
+            "tra-sua-tran-chau-duong-den" => "https://images.unsplash.com/photo-1558857563-b371033873b8?w=800&auto=format&fit=crop",
+            "tra-vai-hoa-hong" => "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&auto=format&fit=crop",
+            "vit-om-sau-ha-noi" => "https://images.unsplash.com/photo-1518492104633-130d0cc84637?w=800&auto=format&fit=crop",
+            "vit-quay-bac-kinh" => "https://images.unsplash.com/photo-1518492104633-130d0cc84637?w=800&auto=format&fit=crop",
+            "xoi-bap-mo-hanh" => "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&auto=format&fit=crop",
+            "xoi-xeo-ga-xe" => "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&auto=format&fit=crop",
+            _ => "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop"
+    };
 
     private static ApplicationUser NewUser(string email, string displayName)
     {
