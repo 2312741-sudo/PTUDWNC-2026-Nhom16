@@ -64,6 +64,7 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<RecipeRepository>();
 builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
+builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
@@ -322,12 +323,61 @@ recipes.MapPatch("/{id:guid}/steps/reorder",
     .Produces<object>(200).ProducesValidationProblem()
     .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
+// D3.1/D3.2 (TV4): publish/unpublish — điều kiện >=1 ingredient VÀ >=1 step (C02). Thiếu -> 422 RECIPE_PUBLISH_INCOMPLETE.
+recipes.MapPatch("/{id:guid}/publish", async (Guid id, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new PublishRecipeCommand(id), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("PublishRecipe")
+    .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapPatch("/{id:guid}/unpublish", async (Guid id, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new UnpublishRecipeCommand(id), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("UnpublishRecipe")
+    .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+// D1.3 (TV4): quản lý hình ảnh recipe — upload, chỉnh metadata, xóa (IMAGE_CONTRACT).
+recipes.MapPost("/{id:guid}/images", async (Guid id, [Microsoft.AspNetCore.Mvc.FromForm] IFormFile file, [Microsoft.AspNetCore.Mvc.FromForm] string? altText, ISender sender, HttpRequest request, CancellationToken ct) =>
+{
+    using var buffer = new MemoryStream();
+    await file.CopyToAsync(buffer, ct);
+    buffer.Position = 0;
+    var dto = await sender.Send(new UploadRecipeImageCommand(
+        id,
+        file.FileName,
+        file.ContentType ?? "application/octet-stream",
+        altText,
+        buffer.Length,
+        buffer), ct);
+    return Results.Created($"/api/v1/recipes/{id}/images/{dto.Id}", new { data = dto });
+})
+    .RequireAuthorization().WithName("UploadRecipeImage")
+    .DisableAntiforgery()
+    .Produces<object>(201).ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapPatch("/{id:guid}/images/{imageId:guid}", async (Guid id, Guid imageId, RecipeImagePatch patch, ISender sender, CancellationToken ct) =>
+{
+    var dto = await sender.Send(new UpdateRecipeImageCommand(id, imageId, patch.IsPrimary, patch.AltText, patch.OrderIndex), ct);
+    return Results.Ok(new { data = dto });
+})
+    .RequireAuthorization().WithName("UpdateRecipeImage")
+    .Produces<object>(200).ProducesValidationProblem().ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapDelete("/{id:guid}/images/{imageId:guid}", async (Guid id, Guid imageId, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteRecipeImageCommand(id, imageId), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization().WithName("DeleteRecipeImage")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
 app.Run();
 
 public partial class Program;
+
+public sealed record RecipeImagePatch(bool? IsPrimary = null, string? AltText = null, int? OrderIndex = null);
+
 public sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 {
     public string? UserId => accessor.HttpContext?.User.FindFirstValue("sub");

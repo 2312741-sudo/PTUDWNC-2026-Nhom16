@@ -528,3 +528,53 @@ public sealed class ReorderStepsHandler(
 }
 
 #endregion
+
+#region D3.1/D3.2 — Publish / Unpublish công thức (FR-RCP-005/006, C02, D07)
+
+// Publish yêu cầu >= 1 ingredient VÀ >= 1 step (C02). Recipe.Publish() ném
+// DomainException("RECIPE_PUBLISH_INCOMPLETE") khi thiếu -> ApiExceptionHandler map 422.
+public sealed record PublishRecipeCommand(Guid RecipeId) : IRequest<RecipeDto>;
+
+public sealed class PublishRecipeValidator : AbstractValidator<PublishRecipeCommand>
+{
+    public PublishRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
+}
+
+public sealed class PublishRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+    : IRequestHandler<PublishRecipeCommand, RecipeDto>
+{
+    public async Task<RecipeDto> Handle(PublishRecipeCommand cmd, CancellationToken ct)
+    {
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
+
+        // Idempotent: đã Published -> giữ Published, PublishedAt giữ nguyên (D07). Thiếu thành phần -> RECIPE_PUBLISH_INCOMPLETE (422).
+        recipe.Publish();
+
+        await repo.SaveChangesAsync(ct);
+        return recipe.ToDto();
+    }
+}
+
+public sealed record UnpublishRecipeCommand(Guid RecipeId) : IRequest<RecipeDto>;
+
+public sealed class UnpublishRecipeValidator : AbstractValidator<UnpublishRecipeCommand>
+{
+    public UnpublishRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
+}
+
+public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+    : IRequestHandler<UnpublishRecipeCommand, RecipeDto>
+{
+    public async Task<RecipeDto> Handle(UnpublishRecipeCommand cmd, CancellationToken ct)
+    {
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
+
+        // Published -> Draft ngay (D13: public ẩn, không giữ cache cũ). Idempotent nếu đã Draft.
+        recipe.Unpublish();
+
+        await repo.SaveChangesAsync(ct);
+        return recipe.ToDto();
+    }
+}
+
+#endregion

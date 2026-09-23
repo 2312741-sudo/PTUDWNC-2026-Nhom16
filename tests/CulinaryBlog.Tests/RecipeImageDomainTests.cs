@@ -109,4 +109,43 @@ public sealed class RecipeImageDomainTests
         Assert.Throws<DomainException>(() => recipe.AddImage(new string('x', 501), null));
         Assert.Throws<DomainException>(() => recipe.AddImage("recipes/r1/x.jpg", new string('a', 201)));
     }
+
+    [Fact]
+    public void UpdateImageMetadata_updates_alt_text_and_order_index()
+    {
+        var recipe = NewDraftRecipe();
+        var img = recipe.AddImage("recipes/r1/a.jpg", "Cũ");
+
+        recipe.UpdateImageMetadata(img.Id, "  Mới  ", 2);
+
+        Assert.Equal("Mới", img.AltText);
+        Assert.Equal(2, img.OrderIndex);
+        Assert.True(img.IsPrimary, "Ảnh đầu tiên vẫn là primary.");
+    }
+
+    [Fact]
+    public void UpdateImageMetadata_unknown_image_throws()
+    {
+        var recipe = NewDraftRecipe();
+        recipe.AddImage("recipes/r1/a.jpg", null);
+        Assert.Throws<DomainException>(() => recipe.UpdateImageMetadata(Guid.NewGuid(), "x", null));
+    }
+
+    [Fact]
+    public void UpdateImageMetadata_validates_alt_text_length()
+    {
+        var recipe = NewDraftRecipe();
+        var img = recipe.AddImage("recipes/r1/a.jpg", null);
+        var ex = Assert.Throws<DomainException>(() => recipe.UpdateImageMetadata(img.Id, new string('a', 201), null));
+        Assert.Equal("IMAGE_ALT_INVALID", ex.Code);
+    }
+
+    [Fact]
+    public void UpdateImageMetadata_validates_order_index_not_negative()
+    {
+        var recipe = NewDraftRecipe();
+        var img = recipe.AddImage("recipes/r1/a.jpg", null);
+        var ex = Assert.Throws<DomainException>(() => recipe.UpdateImageMetadata(img.Id, null, -1));
+        Assert.Equal("IMAGE_ORDER_INVALID", ex.Code);
+    }
 }
