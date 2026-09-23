@@ -55,13 +55,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-orange-50/50 via-white to-gray-50/50">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl border border-gray-100 shadow-xl shadow-orange-500/5">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-emerald-50/50 via-white to-gray-50/50">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl border border-gray-100 shadow-xl shadow-emerald-500/5">
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
-            <div className="w-12 h-12 rounded-2xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-200 group-hover:scale-105 transition-transform">
-              <UtensilsCrossed className="w-6 h-6" />
+            <div className="relative w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-emerald-600/20 shadow-lg shadow-emerald-900/10 group-hover:scale-105 transition-transform">
+              <img src="/logo.jpg" alt="Culinary Blog Logo" className="w-full h-full object-cover" />
             </div>
           </Link>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
@@ -96,7 +96,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all text-gray-900"
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-900"
               />
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Mật khẩu
               </label>
-              <a href="#" className="text-xs text-orange-600 hover:text-orange-700 font-medium">
+              <a href="#" className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">
                 Quên mật khẩu?
               </a>
             </div>
@@ -118,7 +118,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all text-gray-900"
+                className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-900"
               />
               <button
                 type="button"
@@ -133,7 +133,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 px-4 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm shadow-md shadow-orange-200 hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -168,7 +168,7 @@ export default function LoginPage() {
         {/* Footer Link */}
         <p className="text-center text-sm text-gray-500">
           Chưa có tài khoản?{' '}
-          <Link href="/auth/register" className="font-semibold text-orange-600 hover:text-orange-700">
+          <Link href="/auth/register" className="font-semibold text-emerald-600 hover:text-emerald-700">
             Đăng ký ngay
           </Link>
         </p>

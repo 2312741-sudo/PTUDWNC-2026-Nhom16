@@ -65,8 +65,8 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-100 pb-8">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold mb-3">
-            <BookOpen className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-semibold mb-3 border border-emerald-200/50">
+            <BookOpen className="w-3.5 h-3.5 text-emerald-700" />
             <span>Kho tàng ẩm thực</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
@@ -86,7 +86,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             <Link
               href={buildUrl({ sortBy: 'createdAt', sortOrder: 'desc', page: 1 })}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
-                filters.sortBy === 'createdAt' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                filters.sortBy === 'createdAt' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Mới nhất
@@ -94,7 +94,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             <Link
               href={buildUrl({ sortBy: 'cookTimeMinutes', sortOrder: 'asc', page: 1 })}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
-                filters.sortBy === 'cookTimeMinutes' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                filters.sortBy === 'cookTimeMinutes' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Nhanh nhất
@@ -102,7 +102,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             <Link
               href={buildUrl({ sortBy: 'title', sortOrder: 'asc', page: 1 })}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
-                filters.sortBy === 'title' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                filters.sortBy === 'title' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Tên A-Z
@@ -117,11 +117,11 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
         <aside className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <span className="font-bold text-sm text-gray-900 flex items-center gap-2">
-              <Filter className="w-4 h-4 text-orange-600" />
+              <Filter className="w-4 h-4 text-emerald-700" />
               Bộ lọc nâng cao
             </span>
             {(filters.categoryId || filters.difficulty || filters.maxCookTime || filters.minServings) && (
-              <Link href="/recipes" className="text-xs text-orange-600 hover:underline">
+              <Link href="/recipes" className="text-xs text-emerald-700 hover:underline">
                 Đặt lại
               </Link>
             )}
@@ -136,12 +136,12 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
               <Link
                 href={buildUrl({ categoryId: undefined, page: 1 })}
                 className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  !filters.categoryId ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'
+                  !filters.categoryId ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <span>Tất cả danh mục</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  !filters.categoryId ? 'bg-orange-200 text-orange-800' : 'bg-gray-100 text-gray-500'
+                  !filters.categoryId ? 'bg-emerald-200 text-emerald-900 font-bold' : 'bg-gray-100 text-gray-500'
                 }`}>
                   {categories.reduce((acc, c) => acc + (c.recipesCount || 0), 0)}
                 </span>
@@ -151,12 +151,12 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                   key={cat.id}
                   href={buildUrl({ categoryId: cat.id, page: 1 })}
                   className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                    filters.categoryId === cat.id ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'
+                    filters.categoryId === cat.id ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <span className="truncate pr-2">{cat.name}</span>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${
-                    filters.categoryId === cat.id ? 'bg-orange-200 text-orange-800' : 'bg-gray-100 text-gray-500'
+                    filters.categoryId === cat.id ? 'bg-emerald-200 text-emerald-900 font-bold' : 'bg-gray-100 text-gray-500'
                   }`}>
                     {cat.recipesCount}
                   </span>
@@ -177,7 +177,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                   href={buildUrl({ difficulty: filters.difficulty === d ? undefined : d, page: 1 })}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                     filters.difficulty === d
-                      ? 'bg-orange-600 border-orange-600 text-white shadow-sm'
+                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -199,7 +199,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                   href={buildUrl({ maxCookTime: filters.maxCookTime === mins ? undefined : mins, page: 1 })}
                   className={`px-3 py-2 rounded-xl text-center text-xs font-semibold border transition-all ${
                     filters.maxCookTime === mins
-                      ? 'bg-orange-600 border-orange-600 text-white'
+                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -214,14 +214,14 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
         <main className="lg:col-span-3 space-y-8">
           {recipes.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 p-8 space-y-3">
-              <BookOpen className="w-12 h-12 text-orange-300 mx-auto" />
+              <BookOpen className="w-12 h-12 text-emerald-300 mx-auto" />
               <h3 className="font-bold text-gray-800 text-lg">Không tìm thấy công thức nào</h3>
               <p className="text-gray-500 text-xs max-w-sm mx-auto leading-relaxed">
                 Hãy thử nới lỏng các bộ lọc hoặc chọn danh mục khác để khám phá thêm món ăn.
               </p>
               <Link
                 href="/recipes"
-                className="inline-block mt-3 px-5 py-2 rounded-xl bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 transition-colors"
+                className="inline-block mt-3 px-5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
               >
                 Xóa tất cả bộ lọc
               </Link>
@@ -256,7 +256,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                   </button>
                 )}
 
-                <span className="px-3 py-1.5 bg-orange-50 text-orange-700 text-xs font-bold rounded-lg">
+                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg">
                   {meta.page}
                 </span>
 

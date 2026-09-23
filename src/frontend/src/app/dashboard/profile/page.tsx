@@ -236,7 +236,7 @@ export default function ProfileDashboardPage() {
                       className={`w-full px-4 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
                         fieldErrors.displayName
                           ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
-                          : 'border-neutral-300 focus:ring-amber-200 focus:border-amber-500'
+                          : 'border-neutral-300 focus:ring-emerald-200 focus:border-emerald-500'
                       }`}
                     />
                   </div>
@@ -280,7 +280,7 @@ export default function ProfileDashboardPage() {
                       className={`w-full px-4 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
                         fieldErrors.avatarUrl
                           ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
-                          : 'border-neutral-300 focus:ring-amber-200 focus:border-amber-500'
+                          : 'border-neutral-300 focus:ring-emerald-200 focus:border-emerald-500'
                       }`}
                     />
                   </div>
@@ -306,7 +306,7 @@ export default function ProfileDashboardPage() {
                     className={`w-full px-4 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
                       fieldErrors.bio
                         ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
-                        : 'border-neutral-300 focus:ring-amber-200 focus:border-amber-500'
+                        : 'border-neutral-300 focus:ring-emerald-200 focus:border-emerald-500'
                     }`}
                   />
                   {fieldErrors.bio && (
@@ -332,7 +332,7 @@ export default function ProfileDashboardPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-sm font-semibold shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-semibold shadow-md shadow-emerald-200 transition flex items-center gap-2 disabled:opacity-50"
                   >
                     {saving ? (
                       <>

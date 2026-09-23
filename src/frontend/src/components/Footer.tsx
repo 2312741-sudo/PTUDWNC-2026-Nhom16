@@ -8,16 +8,20 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4 md:col-span-2">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center text-white">
-                <UtensilsCrossed className="w-4 h-4" />
+            <div className="flex items-center gap-3">
+              <div className="relative w-8 h-8 rounded-lg overflow-hidden shadow-sm ring-1 ring-emerald-500/30 shrink-0 bg-emerald-950">
+                <img
+                  src="/logo.jpg"
+                  alt="Culinary Blog Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <span className="text-xl font-bold text-white tracking-tight">
-                Culinary<span className="text-orange-500">Blog</span>
+              <span className="text-xl font-extrabold text-white tracking-tight">
+                Culinary<span className="text-emerald-400">Blog</span>
               </span>
             </div>
             <p className="text-sm text-gray-400 max-w-sm">
-              Nền tảng chia sẻ và khám phá công thức ẩm thực trực tuyến. Xây dựng bằng .NET 10 Clean Architecture và Next.js App Router.
+              Nền tảng chia sẻ và khám phá tinh hoa ẩm thực trực tuyến. Xây dựng bằng .NET 10 Clean Architecture và Next.js App Router.
             </p>
             <p className="text-xs text-gray-500">
               Đồ án môn Phát triển ứng dụng Web nâng cao — Nhóm 16.
