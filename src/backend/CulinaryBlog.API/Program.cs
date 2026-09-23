@@ -44,13 +44,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuditableEntityInterceptor>();
 
-var rawConnectionString = builder.Configuration.GetConnectionString("Database")
-    ?? builder.Configuration["DATABASE_URL"]
-    ?? throw new InvalidOperationException("Configure ConnectionStrings:Database or DATABASE_URL.");
-var connectionString = Program.NormalizePostgreSqlConnectionString(rawConnectionString);
-
 builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
 {
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var connectionString = Program.NormalizePostgreSqlConnectionString(
+        cfg.GetConnectionString("Database")
+        ?? cfg["DATABASE_URL"]
+        ?? throw new InvalidOperationException("Configure ConnectionStrings:Database or DATABASE_URL."));
     options.UseNpgsql(
         connectionString,
         pg => pg.CommandTimeout(30));
