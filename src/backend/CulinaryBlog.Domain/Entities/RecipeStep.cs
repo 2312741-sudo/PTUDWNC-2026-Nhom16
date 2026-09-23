@@ -38,4 +38,21 @@ public sealed class RecipeStep : BaseEntity
     }
 
     internal void SetNumber(int stepNumber) => StepNumber = stepNumber;
+
+    internal void Update(string title, string description, int? timerMinutes, string? imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Length > 200)
+            throw new DomainException("STEP_TITLE_INVALID", "Tiêu đề bước phải từ 1 đến 200 ký tự.");
+        if (string.IsNullOrWhiteSpace(description) || description.Length > 2000)
+            throw new DomainException("STEP_DESCRIPTION_INVALID", "Mô tả bước phải từ 1 đến 2000 ký tự.");
+        if (timerMinutes is < 0)
+            throw new DomainException("STEP_TIMER_INVALID", "Thời gian hẹn giờ không được âm.");
+        if (imageUrl is { Length: > 500 })
+            throw new DomainException("STEP_IMAGE_URL_INVALID", "URL ảnh bước tối đa 500 ký tự.");
+
+        Title = title.Trim();
+        Description = description.Trim();
+        TimerMinutes = timerMinutes;
+        ImageUrl = imageUrl?.Trim();
+    }
 }

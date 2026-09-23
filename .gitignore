@@ -16,3 +16,5 @@ env.ps1
 **/out/
 *.tsbuildinfo
 next-env.d.ts
+
+*.zip

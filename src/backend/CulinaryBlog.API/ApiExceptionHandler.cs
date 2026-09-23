@@ -16,8 +16,11 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger
         else if (exception is AppException app)
             details = new() { Status = app.Status, Title = app.Message, Detail = app.Message, Extensions = { ["code"] = app.Code } };
         else if (exception is DbUpdateConcurrencyException or DbUpdateException)
-            // RowVersion (D19) hoặc partial unique index ux_recipe_images_one_primary — set-primary race (IMAGE_CONTRACT §4: 422)
+            // RowVersion (D19), partial unique index ux_recipe_images_one_primary (IMAGE_CONTRACT §4) — tất cả trả 422.
             details = new() { Status = 422, Title = "Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.", Extensions = { ["code"] = "recipe.version_conflict" } };
+        else if (exception is CulinaryBlog.Domain.Common.DomainException domain)
+            // C02: publish thiếu nguyên liệu/bước trả 422, các vi phạm nghiệp vụ khác trả 400.
+            details = new() { Status = domain.Code == "RECIPE_PUBLISH_INCOMPLETE" ? 422 : 400, Title = domain.Message, Detail = domain.Message, Extensions = { ["code"] = domain.Code } };
         else if (exception is BadHttpRequestException)
             details = new() { Status = 400, Title = "JSON hoặc yêu cầu không hợp lệ.", Extensions = { ["code"] = "request.invalid" } };
         else

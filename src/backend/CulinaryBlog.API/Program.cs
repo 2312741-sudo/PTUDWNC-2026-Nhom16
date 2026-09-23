@@ -58,6 +58,7 @@ builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_00
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
+builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 builder.Services.AddScoped<AuditableEntityInterceptor>();
@@ -209,8 +210,97 @@ categories.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationT
     .RequireAuthorization("AdminPolicy").WithName("DeleteCategory")
     .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
 
-var recipes = app.MapGroup("/api/v1/recipes").WithTags("RecipeImages");
+var recipes = app.MapGroup("/api/v1/recipes").WithTags("Recipes");
 
+recipes.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new GetRecipeBySlugQuery(slug), ct) }))
+    .WithName("GetRecipeBySlug").Produces<object>(200).ProducesProblem(404);
+
+recipes.MapPost("", async (CreateRecipeCommand command, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(command, ct);
+    return Results.Created($"/api/v1/recipes/{created.Slug}", new { data = created });
+})
+    .RequireAuthorization("AuthorPolicy").WithName("CreateRecipe")
+    .Produces<object>(201).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(409);
+
+recipes.MapPut("/{id:guid}", async (Guid id, UpdateRecipeBody body, ISender sender, CancellationToken ct) =>
+    Results.Ok(new
+    {
+        data = await sender.Send(new UpdateRecipeCommand(
+            id, body.Title, body.Description, body.Instructions,
+            body.PrepTimeMinutes, body.CookTimeMinutes, body.Servings,
+            body.Difficulty, body.CategoryId, body.Nutrition, body.RowVersion), ct)
+    }))
+    .RequireAuthorization("AuthorPolicy").WithName("UpdateRecipe")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
+recipes.MapPost("/{id:guid}/ingredients", async (Guid id, IngredientBody b, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(new AddIngredientCommand(id, b.Name, b.Quantity, b.Unit, b.Notes), ct);
+    return Results.Created($"/api/v1/recipes/{id}/ingredients/{created.Id}", new { data = created });
+})
+    .RequireAuthorization("AuthorPolicy").WithName("AddIngredient")
+    .Produces<object>(201).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPut("/{id:guid}/ingredients/{ingredientId:guid}",
+    async (Guid id, Guid ingredientId, IngredientBody b, ISender sender, CancellationToken ct) =>
+    Results.Ok(new
+    {
+        data = await sender.Send(new UpdateIngredientCommand(id, ingredientId, b.Name, b.Quantity, b.Unit, b.Notes), ct)
+    }))
+    .RequireAuthorization("AuthorPolicy").WithName("UpdateIngredient")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapDelete("/{id:guid}/ingredients/{ingredientId:guid}",
+    async (Guid id, Guid ingredientId, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteIngredientCommand(id, ingredientId), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteIngredient")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPost("/{id:guid}/steps", async (Guid id, StepBody b, ISender sender, CancellationToken ct) =>
+{
+    var created = await sender.Send(new AddStepCommand(id, b.Title, b.Description, b.TimerMinutes, b.ImageUrl), ct);
+    return Results.Created($"/api/v1/recipes/{id}/steps/{created.Id}", new { data = created });
+})
+    .RequireAuthorization("AuthorPolicy").WithName("AddStep")
+    .Produces<object>(201).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPut("/{id:guid}/steps/{stepId:guid}",
+    async (Guid id, Guid stepId, StepBody b, ISender sender, CancellationToken ct) =>
+    Results.Ok(new
+    {
+        data = await sender.Send(new UpdateStepCommand(id, stepId, b.Title, b.Description, b.TimerMinutes, b.ImageUrl), ct)
+    }))
+    .RequireAuthorization("AuthorPolicy").WithName("UpdateStep")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapDelete("/{id:guid}/steps/{stepId:guid}",
+    async (Guid id, Guid stepId, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteStepCommand(id, stepId), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteStep")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapPatch("/{id:guid}/steps/reorder",
+    async (Guid id, ReorderStepsBody b, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new ReorderStepsCommand(id, b.OrderedStepIds), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("ReorderSteps")
+    .Produces<object>(200).ProducesValidationProblem()
+    .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+// D1.3 (TV4): quản lý hình ảnh recipe — upload, chỉnh metadata, xóa (IMAGE_CONTRACT).
 recipes.MapPost("/{id:guid}/images", async (Guid id, [Microsoft.AspNetCore.Mvc.FromForm] IFormFile file, [Microsoft.AspNetCore.Mvc.FromForm] string? altText, ISender sender, HttpRequest request, CancellationToken ct) =>
 {
     using var buffer = new MemoryStream();
