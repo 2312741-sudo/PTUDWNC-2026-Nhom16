@@ -16,7 +16,7 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: Jwt__SigningKey
-        generateValue: true
+        value: "production-secret-signing-key-culinary-blog-advanced-web-development-nhom16-2026-very-secure-key-at-least-64-bytes"
       - key: Jwt__Issuer
         value: culinary-blog
       - key: Jwt__Audience

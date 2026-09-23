@@ -5,19 +5,10 @@ WORKDIR /src
 # Copy Directory.Build.props
 COPY Directory.Build.props ./
 
-# Copy csproj files for layer caching
-COPY src/backend/CulinaryBlog.Domain/CulinaryBlog.Domain.csproj src/backend/CulinaryBlog.Domain/
-COPY src/backend/CulinaryBlog.Application/CulinaryBlog.Application.csproj src/backend/CulinaryBlog.Application/
-COPY src/backend/CulinaryBlog.Infrastructure/CulinaryBlog.Infrastructure.csproj src/backend/CulinaryBlog.Infrastructure/
-COPY src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj src/backend/CulinaryBlog.API/
-
-# Restore dependencies
-RUN dotnet restore src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj
-
-# Copy backend source files
+# Copy backend source files (including csproj, packages.lock.json, and code)
 COPY src/backend/ src/backend/
 
-# Publish
+# Publish directly
 RUN dotnet publish src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Runtime
