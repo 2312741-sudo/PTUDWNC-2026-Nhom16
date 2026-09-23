@@ -2,6 +2,8 @@ using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using FluentValidation;
 using MediatR;
+// main có thêm class CulinaryBlog.Domain.Recipe (discovery) nên phải chỉ định tường minh
+// entity DDD mà file này dùng (AddImage/Images/SetPrimaryImage...).
 using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 
 namespace CulinaryBlog.Application;

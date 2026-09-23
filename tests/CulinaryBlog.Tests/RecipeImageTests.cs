@@ -3,6 +3,7 @@ using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
 using Xunit;
+// main có thêm class CulinaryBlog.Domain.Recipe (discovery) — chỉ định tường minh entity DDD.
 using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 
 namespace CulinaryBlog.Tests;
