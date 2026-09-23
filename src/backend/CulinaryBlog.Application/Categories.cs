@@ -13,7 +13,7 @@ public sealed record CategoryDto(
     int OrderIndex,
     int RecipesCount,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset? UpdatedAt);
 
 public sealed record CreateCategoryCommand(
     string Name,

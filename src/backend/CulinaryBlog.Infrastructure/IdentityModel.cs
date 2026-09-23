@@ -78,7 +78,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             b.Property(x => x.OrderIndex).HasDefaultValue(0);
             b.Property(x => x.IsDeleted).HasDefaultValue(false);
             b.Property(x => x.CreatedAt).IsRequired();
-            b.Property(x => x.UpdatedAt).IsRequired();
+            b.Property(x => x.UpdatedAt).IsRequired(false);
             b.Ignore(x => x.RecipesCount);
 
             b.HasQueryFilter(x => !x.IsDeleted);
