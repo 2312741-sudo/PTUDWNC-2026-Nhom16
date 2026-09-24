@@ -19,7 +19,7 @@ jobs:
           --health-cmd "pg_isready -U culinary_test -d culinary_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
       minio:
-        image: minio/minio:latest
+        image: quay.io/minio/minio:latest
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
