@@ -271,6 +271,12 @@ public sealed class MinioE2ETests : IAsyncLifetime
         created.EnsureSuccessStatusCode();
         var recipe = (await created.Content.ReadFromJsonAsync<ApiResponse<RecipeDto>>())!.Data;
 
+        // C02: publish cần >=1 nguyên liệu + >=1 bước (RECIPE_PUBLISH_INCOMPLETE 422 nếu thiếu).
+        var ing = await client.PostAsJsonAsync($"/api/v1/recipes/{recipe.Id}/ingredients", new { name = "Cá kho", quantity = 1, unit = "con" });
+        ing.EnsureSuccessStatusCode();
+        var step = await client.PostAsJsonAsync($"/api/v1/recipes/{recipe.Id}/steps", new { title = "Kho", description = "Kho nhừ." });
+        step.EnsureSuccessStatusCode();
+
         // Publish
         var pub = await client.PatchAsync($"/api/v1/recipes/{recipe.Id}/publish", new StringContent("{}"));
         Assert.Equal(HttpStatusCode.OK, pub.StatusCode);
