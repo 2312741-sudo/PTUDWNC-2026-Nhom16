@@ -92,7 +92,12 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
             throw new AppException(401, "auth.invalid_refresh_token", "Refresh token không hợp lệ.");
 
         var tokenHash = HashToken(rawRefreshToken.Trim());
-        var token = await db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+        // Rotation phải nguyên tử: khóa hàng để hai request đồng thời không cùng cấp token mới (D05).
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+        var token = await db.RefreshTokens
+            .FromSqlRaw("""SELECT * FROM "RefreshTokens" WHERE "TokenHash" = {0} FOR UPDATE""", tokenHash)
+            .FirstOrDefaultAsync(ct);
 
         if (token is null)
             throw new AppException(401, "auth.invalid_refresh_token", "Refresh token không tồn tại.");
@@ -111,6 +116,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
                     t.Revoke(DateTime.UtcNow, "compromised-reuse-detected");
                 }
                 await db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
             }
             throw new AppException(401, "auth.token_reuse_detected", "Phiên đăng nhập không hợp lệ hoặc đã bị thu hồi.");
         }
@@ -129,6 +135,7 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         var newRefreshToken = RefreshToken.Issue(token.UserId, newTokenHash, DateTime.UtcNow.AddDays(7), DateTime.UtcNow, ipAddress);
         db.RefreshTokens.Add(newRefreshToken);
         await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return jwt.Issue(await ToDto(user), newRawToken);
     }
