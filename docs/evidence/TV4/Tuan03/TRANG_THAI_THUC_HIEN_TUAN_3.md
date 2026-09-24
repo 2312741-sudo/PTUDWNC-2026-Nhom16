@@ -4,7 +4,7 @@
 > **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3), khởi động từ main đã cập nhật
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 23/09/2026 (T2 — sau khi merge fix migration từ main + test lại)
+> **Cập nhật lần cuối**: 24/09/2026 (T4 — hoàn tất D3/D4/D5 + E2E D1.3 trên MinIO; 133/133 + 5/5 pass)
 
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_3_TV4.md`; nền tảng trạng thái tuần 2 xem `docs/evidence/TV4/Tuan02/`.
 
@@ -54,13 +54,13 @@
 | Task | Nội dung | Lý do chưa xong | Cần gì để xong |
 |---|---|---|---|
 | N0-2 | Rà soát diff PR #14 so với main + chờ CI xanh | PR đã merge nhầm, CI local đã xanh | Push branch tuần 3 → CI GitHub xanh → review nhóm |
-| D3.1c | Archive `PATCH /recipes/{id}/archive` (FR-RCP-006) | Chưa có endpoint archive | ADR D08 + code + test |
-| D3.2c | DELETE recipe soft theo D08 (FR-RCP-007) | Chưa làm | ADR D08 + code + test |
-| D3.3 | Logout revoke refresh family (FR-AUTH-005) | Chưa bắt đầu | TV3 C5 refresh token merge |
-| D3.4 | E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted | Chưa chạy integration thật | Stack Compose + MinIO local |
+| ~~D3.1c~~ | ~~Archive `PATCH /recipes/{id}/archive` (FR-RCP-006)~~ | ✅ **Xong 24/09** — `ArchiveRecipeCommand` + endpoint + test (RecipeLifecycleTests) | — |
+| ~~D3.2c~~ | ~~DELETE recipe soft theo D08 (FR-RCP-007)~~ | ✅ **Xong 24/09** — `DeleteRecipeCommand` + `Recipe.MarkDeleted()` + global filter + test | — |
+| D3.3 | Logout revoke refresh family (FR-AUTH-005) | ✅ **Xong** — C5 refresh đã có trên main | — |
+| ~~D3.4~~ | ~~E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted~~ | ✅ **Xong 24/09** — `MinioE2ETests` 3/3 pass trên MinIO local; CI đã thêm service MinIO | — |
 | D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | Chưa bắt đầu | Chốt D23 (Hangfire/BackgroundService) + ImageSharp |
-| D4 | Uploader UI/progress/primary + status buttons + sitemap/robots/OG/JSON-LD | Chưa bắt đầu | Chốt D27 (presigned/proxy) + ghép TV3 C4 |
-| D5 | OTEL/metrics/health/EXPLAIN/k6 | Chưa bắt đầu | — |
+| ~~D4~~ | ~~Uploader UI/progress/primary + sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09 (SEO)** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO; **uploader/status UI chờ D27 + TV3 C4** | Chốt D27 (presigned/proxy) + ghép TV3 C4 |
+| ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; còn EXPLAIN/k6 ghi sổ khi có k6 script | — |
 | D6 | Lab `practice/TV4/L4` (4 MIME + resize + Mailhog + Hangfire) + sổ K | Chưa bắt đầu | G1/G2 đã đóng; tạo nhánh lab |
 
 ---
@@ -69,8 +69,8 @@
 
 | Task | Nội dung | Block bởi | Thời điểm dự kiến gỡ |
 |---|---|---|---|
-| D3.3 logout revoke | Cần refresh token family | TV3 — C5 | Sớm tuần 3 |
-| D1/D4 ảnh display | Bucket private/public chưa chốt | Quyết định D27 + CR | Đầu tuần 3 |
+| D3.3 logout revoke | ✅ Xong — C5 refresh đã có trên main | — | Đã gỡ |
+| D1/D4 ảnh display | Uploader UI hiển thị ảnh upload qua API cần presigned/proxy | Quyết định D27 + CR | Đầu tuần 3 |
 | D2 resize | Queue chưa chốt | Quyết định D23 | Đầu tuần 3 |
 | ~~N0-1 CI xanh~~ | ~~Migration trùng `RefreshTokens`~~ | ✅ **Đã gỡ** — main `a651c8a` đã fix; local 120/120 + 5/5 | Đã gỡ 23/09 T2; chờ CI GitHub xác nhận |
 | PR #14 giữ/xoá | PR đã merge nhầm — cần thống nhất nhóm | Nhóm trưởng + nhóm | Đầu tuần 3 |
@@ -95,3 +95,34 @@
 3. **D3.1/D3.2 đã theo đúng ADR D07**: publish cần ≥1 ingredient VÀ ≥1 step; không bắt buộc ảnh.
 4. **Mọi build** phải: Release 0 warning → `dotnet format` sạch → `dotnet test` đủ → mới push (CI check 4 bước).
 5. **Không commit secret**: MinIO accessKey/secretKey, JWT keys chỉ trong `.env`/`MinioOptions`, CI dùng env test.
+
+---
+
+## 6. Kết quả kiểm chứng tuần 3 (24/09 T4)
+
+| Hạng mục | Kết quả | Lệnh/Môi trường |
+|---|---|---|
+| CulinaryBlog.Tests | **133/133 pass** (130 + 3 E2E MinIO) | `dotnet test tests/CulinaryBlog.Tests -c Release` + `TEST_DATABASE` local |
+| Concurrency spike | **5/5 pass** | `dotnet test tests/concurrency-spike -c Release` + `TEST_DATABASE` local |
+| Build API | 0 warning / 0 error | `dotnet build CulinaryBlog.sln -c Release` |
+| `dotnet format` | sạch (verify-no-changes exit 0) | `dotnet format CulinaryBlog.sln --verify-no-changes` |
+| Frontend build | **OK** (`next build` exit 0; 13 routes + robots.txt + sitemap.xml) | `npx next build` trong `src/frontend` |
+| E2E MinIO | upload/PATCH primary/DELETE (+ unpublish/archive) 3/3 pass lặp nhiều lần | MinIO local `127.0.0.1:9000`, bucket `culinary-blog` |
+| Fix thật phát hiện bởi E2E | **JWT policy 403 → chỉ cần `RoleClaimType="role"`** (`MapInboundClaims=false`) | `Program.cs` `TokenValidationParameters` — trước đây AuthorPolicy luôn 403 khi gọi API thật |
+
+### Chi tiết E2E MinIO (`tests/CulinaryBlog.Tests/MinioE2ETests.cs`)
+
+- **Flow**: đăng ký → tạo recipe (201) → upload ảnh JPEG (201) → đọc lại (chiều xiêm + slug) → PATCH primary → publish → unpublish → archive → delete → chưa còn trong public list.
+- **Điều kiện chạy**: MinIO reachable (TCP + health) nếu không → skip (CI cũng skip khi không có MinIO); postgres local `culinary_test`.
+- **Bài học E2E thật**: (1) token từ register (không phải login) mới mang role; (2) enum dạng int (không có `JsonStringEnumConverter`); (3) multipart phải set `ContentType` để `IFormFile.ContentType` đúng → validator magic bytes pass.
+- **CI**: `.github/workflows/backend.yml` đã thêm service MinIO + env `MINIO_*` + bước chờ `minio/health/live`.
+
+### Đã fix khi làm D4/D5 (đã trong working tree)
+
+| Nội dung | Nơi |
+|---|---|
+| `GetSitemapQuery`/`GetPublishedForSitemapAsync` — chỉ Published, không Draft/Archived/Deleted | `Recipes.cs`, `Discovery.cs`, `RecipeRepository.cs` |
+| Endpoint `GET /recipes/sitemap` Published-only | `Program.cs` |
+| `ArchiveRecipeCommand`/`DeleteRecipeCommand` + `Recipe.MarkDeleted()` (soft D08) | `Recipes.cs`, `Recipe.cs` |
+| OTEL trace + metrics (ASP.NET/HttpClient/EF) | `Program.cs` + `CulinaryBlog.API.csproj` + `packages.lock.json` |
+| robots.txt + sitemap.xml + SEO metadata trang công thức | `src/frontend/src/app/robots.ts`, `sitemap.ts`, `app/recipes/[slug]/` |

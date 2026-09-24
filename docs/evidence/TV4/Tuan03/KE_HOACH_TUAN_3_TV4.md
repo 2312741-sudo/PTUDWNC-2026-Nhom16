@@ -4,6 +4,7 @@
 - **Phần nghiệp vụ**: Xuất bản, hình ảnh, SEO và vận hành — tasks D3–D7 (theo `docs/KE_HOACH_DU_AN.md` mục 8 và `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md`).
 - **Mã task tuần 3** (theo 6-tuần, dòng 3 TV4): D3 (archive/delete theo ADR D08), D4 (hoàn thiện uploader UI + status + SEO sitemap/robots/OG/JSON-LD), D5 (OTEL/metrics/health), D6 (lab L4 Identity/Google/refresh/forms/FTS). Cộng phần bàn giao thiếu tuần 2: D2 resize, D1.1c test MinIO down, E2E D1.3. (D3.3 logout revoke refresh family — ✅ đã xong vì C5 refresh đã có trên main.)
 - **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3) — đã merge `origin/main` mới nhất (a651c8a + 6 commit deploy/Render/100 ảnh) → HEAD `4830e57`; lab: `practice/TV4/L4`.
+> **Cập nhật 24/09**: working tree đã thêm D3 archive/delete + D4 SEO + D5 OTEL + E2E MinIO + CI MinIO service. **133/133 + 5/5 pass local, frontend build OK** — chưa commit/push.
 - **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng).
 - **Cổng**: G4 giữa tuần (publish/unpublish/archive end-to-end + ảnh hiển thị được qua presigned theo D27; sitemap Published-only) → G5 cuối tuần (đủ FR media/status/jobs/health; queue persistent; sitemap/OG/JSON-LD; OTEL trace HTTP→DB; CI xanh).
 
@@ -173,14 +174,15 @@
 
 - [x] Fix duplicate migration `RefreshTokens` (main `a651c8a`) + **CI GitHub branch tuần 3 = success** (run `818522b`); local 120/120 + 5/5 pass.
 - [x] Logout revoke refresh family — C5 refresh ĐÃ có trên main; 204 idempotent (7 test Week3 + 16 test Auth pass).
+- [x] **Archive/DELETE (24/09)**: `PATCH /recipes/{id}/archive` (ẩn public ngay, owner/Admin, idempotent) + `DELETE /recipes/{id}` soft theo D08 (`MarkDeleted` + global filter, giữ ảnh restore); chỉnh núm 133/133 + 5/5.
+- [x] **E2E D1.3 MinIO (24/09)**: `MinioE2ETests` upload/PATCH primary/publish/unpublish/archive/delete 3/3 pass; MinIO down → skip an toàn; không lộ secret; CI đã thêm service MinIO.
+- [x] **Sitemap/robots/SEO (24/09)**: `GET /recipes/sitemap` Published-only + `sitemap.ts`/`robots.ts` + SEO metadata trang công thức; `next build` exit 0.
+- [x] **OTEL/metrics/health (24/09)**: trace ASP.NET/Http/EF + metrics + health db/redis/minio; còn EXPLAIN/k6 số liệu nối tiếp.
 - [ ] PR fix connection string lazy `4830e57` → main (CI main 6 commit mới có thể dính 28P01).
-- [ ] Archive: Archived ẩn public ngay, giữ dữ liệu, owner/Admin; DELETE soft theo D08; không lộ search/cache.
 - [ ] Uploader UI: progress + rollback + gallery + primary; ảnh hiển thị qua presigned/proxy (D27).
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
-- [ ] Sitemap XML Published-only + robots + canonical + JSON-LD; cron 02:00 UTC (D26).
 - [ ] Resize original/300×300/800×600 + queue persistent + retry + original fallback (nếu D23 chốt).
-- [ ] Logout revoke refresh family (khi TV3 C5 có); 204 idempotent.
-- [ ] OTEL trace HTTP→DB; health phản ánh đúng D22; EXPLAIN/k6 có số liệu.
+- [ ] Invalidation cache archive/unpublish/delete (phối hợp TV2/TV3).
 - [ ] Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.
 
 ---
