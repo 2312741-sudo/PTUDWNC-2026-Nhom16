@@ -578,3 +578,51 @@ public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser 
 }
 
 #endregion
+
+#region D3 — Archive / Delete công thức (FR-RCP-006/007, D08)
+
+public sealed record ArchiveRecipeCommand(Guid RecipeId) : IRequest<RecipeDto>;
+
+public sealed class ArchiveRecipeValidator : AbstractValidator<ArchiveRecipeCommand>
+{
+    public ArchiveRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
+}
+
+public sealed class ArchiveRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+    : IRequestHandler<ArchiveRecipeCommand, RecipeDto>
+{
+    public async Task<RecipeDto> Handle(ArchiveRecipeCommand cmd, CancellationToken ct)
+    {
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
+
+        // Published/Draft -> Archived, ẩn public ngay (D08). Idempotent nếu đã Archived.
+        recipe.Archive();
+
+        await repo.SaveChangesAsync(ct);
+        return recipe.ToDto();
+    }
+}
+
+public sealed record DeleteRecipeCommand(Guid RecipeId) : IRequest<Unit>;
+
+public sealed class DeleteRecipeValidator : AbstractValidator<DeleteRecipeCommand>
+{
+    public DeleteRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
+}
+
+public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+    : IRequestHandler<DeleteRecipeCommand, Unit>
+{
+    public async Task<Unit> Handle(DeleteRecipeCommand cmd, CancellationToken ct)
+    {
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
+
+        // Soft delete (D08): giữ dữ liệu + ảnh để restore; global query filter ẩn khỏi public/list/search ngay.
+        recipe.MarkDeleted();
+
+        await repo.SaveChangesAsync(ct);
+        return Unit.Value;
+    }
+}
+
+#endregion

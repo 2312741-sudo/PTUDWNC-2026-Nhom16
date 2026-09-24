@@ -18,8 +18,19 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U culinary_test -d culinary_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports: ['9000:9000']
+        command: server /data
     env:
       TEST_DATABASE: Host=localhost;Port=5432;Database=culinary_test;Username=culinary_test;Password=ci-ephemeral-only
+      MINIO_ENDPOINT: 127.0.0.1:9000
+      MINIO_ACCESS: minioadmin
+      MINIO_SECRET: minioadmin
+      MINIO_BUCKET: culinary-blog
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -28,6 +39,15 @@ jobs:
       - run: dotnet restore CulinaryBlog.sln --locked-mode
       - run: dotnet build CulinaryBlog.sln --no-restore --configuration Release
       - run: dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
+      - name: Wait for MinIO
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s -f http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
+              echo "MinIO is ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "MinIO did not become ready in time"; exit 1
       - run: dotnet test CulinaryBlog.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
       - uses: actions/upload-artifact@v4
         if: always()

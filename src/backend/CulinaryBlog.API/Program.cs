@@ -16,6 +16,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
@@ -30,7 +33,7 @@ if (!string.IsNullOrEmpty(envPort))
 
 builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Fatal)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error)
     .Enrich.FromLogContext().WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}"));
 builder.Services.AddSingleton(sp =>
 {
@@ -110,6 +113,21 @@ builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready", "all"])
     .AddCheck<RedisHealthCheck>("redis", tags: ["ready", "all"])
     .AddCheck<MinIOHealthCheck>("minio", tags: ["all"]);
+
+// OpenTelemetry (D5/TV4): trace HTTP -> ASP.NET -> EF Core -> DB; metrics request/DB (FR-OBS-001/003).
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("CulinaryBlog.API"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddEntityFrameworkCoreInstrumentation()
+        .AddOtlpExporter())
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddMeter("Microsoft.EntityFrameworkCore")
+        .AddOtlpExporter());
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<JwtSettings>((options, jwt) =>
 {
@@ -125,7 +143,9 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         ValidateIssuerSigningKey = true,
         RequireSignedTokens = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = "role",
+        NameClaimType = "sub"
     };
 });
 builder.Services.AddAuthorization(options =>
@@ -289,6 +309,11 @@ recipes.MapGet("/search", async ([AsParameters] SearchRecipesQuery query, ISende
     Results.Ok(await sender.Send(query, ct)))
     .WithName("SearchRecipes").Produces<PagedResult<RecipeSummaryDto>>(200).ProducesValidationProblem();
 
+// SEO (D26/TV4): nguồn cho sitemap.xml — CHỈ Published, không Draft/Archived/Deleted.
+recipes.MapGet("/sitemap", async (ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new GetSitemapQuery(), ct) }))
+    .WithName("GetSitemapRecipes").Produces<object>(200);
+
 recipes.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetRecipeBySlugQuery(slug), ct) }))
     .WithName("GetRecipeBySlug").Produces<object>(200).ProducesProblem(404);
@@ -387,6 +412,20 @@ recipes.MapPatch("/{id:guid}/unpublish", async (Guid id, ISender sender, Cancell
     Results.Ok(new { data = await sender.Send(new UnpublishRecipeCommand(id), ct) }))
     .RequireAuthorization("AuthorPolicy").WithName("UnpublishRecipe")
     .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+// D3 (TV4): archive/delete — archive ẩn public ngay giữ dữ liệu; delete soft (D08) giữ ảnh để restore.
+recipes.MapPatch("/{id:guid}/archive", async (Guid id, ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new ArchiveRecipeCommand(id), ct) }))
+    .RequireAuthorization("AuthorPolicy").WithName("ArchiveRecipe")
+    .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+recipes.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new DeleteRecipeCommand(id), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteRecipe")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
 // D1.3 (TV4): quản lý hình ảnh recipe — upload, chỉnh metadata, xóa (IMAGE_CONTRACT).
 recipes.MapPost("/{id:guid}/images", async (Guid id, [Microsoft.AspNetCore.Mvc.FromForm] IFormFile file, [Microsoft.AspNetCore.Mvc.FromForm] string? altText, ISender sender, HttpRequest request, CancellationToken ct) =>

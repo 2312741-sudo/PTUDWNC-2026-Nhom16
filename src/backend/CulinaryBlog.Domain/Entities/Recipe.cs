@@ -262,4 +262,14 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         if (Status == RecipeStatus.Archived) return;
         Status = RecipeStatus.Archived;
     }
+
+    /// <summary>
+    /// Soft delete (D08): đánh dấu IsDeleted — global query filter ẩn khỏi mọi truy vấn ngay,
+    /// dữ liệu (kể cả ảnh cần restore) được giữ. Không xoá vật lý.
+    /// </summary>
+    public void MarkDeleted()
+    {
+        IsDeleted = true;
+        Status = RecipeStatus.Archived;
+    }
 }

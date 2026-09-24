@@ -196,4 +196,16 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
                 : query.OrderByDescending(r => r.PublishedAt ?? r.CreatedAt)
         };
     }
+
+    public async Task<List<SitemapRecipeDto>> GetPublishedForSitemapAsync(CancellationToken ct)
+    {
+        return await db.Recipes
+            .AsNoTracking()
+            .Where(r => r.Status == RecipeStatus.Published && !r.IsDeleted)
+            .Select(r => new SitemapRecipeDto(
+                r.Id,
+                r.Slug,
+                r.PublishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(r.PublishedAt.Value, DateTimeKind.Utc)) : null))
+            .ToListAsync(ct);
+    }
 }

@@ -138,6 +138,15 @@ public sealed class FakeRecipeRepository : IRecipeDiscoveryRepository
         return Task.CompletedTask;
     }
 
+    public Task<List<SitemapRecipeDto>> GetPublishedForSitemapAsync(CancellationToken ct)
+    {
+        var items = Recipes
+            .Where(r => !r.IsDeleted && r.Status == RecipeStatusValues.Published)
+            .Select(r => new SitemapRecipeDto(r.Id, r.Slug, r.PublishedAt))
+            .ToList();
+        return Task.FromResult(items);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
 }
 
@@ -290,6 +299,32 @@ public sealed class DiscoveryAndSearchTests
         fakeAuth.EmailVerified = false;
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(new GoogleLoginCommand("valid-token"), CancellationToken.None));
         Assert.Equal(401, ex.Status);
+    }
+
+    [Fact]
+    public async Task GetSitemap_only_returns_published_recipes_excludes_draft_archived_deleted()
+    {
+        var repo = new FakeRecipeRepository();
+        var handler = new GetSitemapHandler(repo);
+
+        var catA = Guid.NewGuid();
+        repo.Recipes.Add(new Recipe("Phở Bò Hà Nội", "pho-bo-ha-noi", "Nước dùng thơm ngon", "", 20, 30, 4, RecipeDifficultyValues.Medium, catA, "author1", null, RecipeStatusValues.Published));
+        repo.Recipes.Add(new Recipe("Bún Chả Nem Rán", "bun-cha-nem-ran", "Thịt nướng thơm", "", 30, 45, 4, RecipeDifficultyValues.Medium, catA, "author1", null, RecipeStatusValues.Draft));
+        repo.Recipes.Add(new Recipe("Gỏi Cuốn Tôm Thịt", "goi-cuon-tom-thit", "Món cuốn tươi mát", "", 15, 10, 2, RecipeDifficultyValues.Easy, catA, "author1", null, RecipeStatusValues.Archived));
+        repo.Recipes.Add(new Recipe("Salad Bơ Trứng", "salad-bo-trung", "Món khai vị bổ dưỡng", "", 10, 15, 2, RecipeDifficultyValues.Easy, catA, "author2", null, RecipeStatusValues.Published));
+
+        var archived = new Recipe("Cá Kho Bí Mật Đã Xoá", "ca-kho-bi-mat", "Không được lộ", "", 10, 20, 2, RecipeDifficultyValues.Easy, catA, "author3", null, RecipeStatusValues.Published);
+        archived.MarkDeleted();
+        repo.Recipes.Add(archived);
+
+        var sitemap = await handler.Handle(new GetSitemapQuery(), CancellationToken.None);
+
+        Assert.Equal(2, sitemap.Count);
+        Assert.Contains(sitemap, r => r.Slug == "pho-bo-ha-noi");
+        Assert.Contains(sitemap, r => r.Slug == "salad-bo-trung");
+        Assert.DoesNotContain(sitemap, r => r.Slug == "bun-cha-nem-ran");
+        Assert.DoesNotContain(sitemap, r => r.Slug == "goi-cuon-tom-thit");
+        Assert.DoesNotContain(sitemap, r => r.Slug == "ca-kho-bi-mat");
     }
 
     [Fact]

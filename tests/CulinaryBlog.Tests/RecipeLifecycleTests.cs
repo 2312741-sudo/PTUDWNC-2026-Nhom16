@@ -228,4 +228,121 @@ public sealed class RecipeLifecycleHandlerTests
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(UnpublishRecipeCommand.RecipeId));
     }
+
+    // ----- Archive (D3, FR-RCP-006, D08) -----
+
+    [Fact]
+    public async Task Archive_changes_status_to_archived_and_keeps_data()
+    {
+        var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
+        recipe.Publish();
+        var repo = new FakeOwnedRecipeRepository();
+        repo.Store.Add(recipe);
+        var handler = new ArchiveRecipeHandler(repo, new FakeCurrentUser("author-1"));
+
+        var dto = await handler.Handle(new ArchiveRecipeCommand(recipe.Id), CancellationToken.None);
+
+        Assert.Equal(RecipeStatus.Archived, dto.Status);
+        Assert.Equal(RecipeStatus.Archived, recipe.Status);
+        Assert.Single(recipe.Ingredients);            // dữ liệu được giữ
+        Assert.False(recipe.IsDeleted);              // archive KHÔNG soft-delete
+    }
+
+    [Fact]
+    public async Task Archive_is_idempotent_when_already_archived()
+    {
+        var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
+        var repo = new FakeOwnedRecipeRepository();
+        repo.Store.Add(recipe);
+        var handler = new ArchiveRecipeHandler(repo, new FakeCurrentUser("author-1"));
+
+        await handler.Handle(new ArchiveRecipeCommand(recipe.Id), CancellationToken.None);
+        var second = await handler.Handle(new ArchiveRecipeCommand(recipe.Id), CancellationToken.None);
+
+        Assert.Equal(RecipeStatus.Archived, second.Status);
+        Assert.False(recipe.IsDeleted);
+    }
+
+    [Fact]
+    public async Task Archive_non_owner_throws_403()
+    {
+        var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
+        var repo = new FakeOwnedRecipeRepository();
+        repo.Store.Add(recipe);
+        var handler = new ArchiveRecipeHandler(repo, new FakeCurrentUser("author-9"));
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
+            new ArchiveRecipeCommand(recipe.Id), CancellationToken.None));
+        Assert.Equal(403, ex.Status);
+        Assert.Equal("recipe.forbidden", ex.Code);
+    }
+
+    [Fact]
+    public async Task Archive_recipe_not_found_throws_404()
+    {
+        var repo = new FakeOwnedRecipeRepository();
+        var handler = new ArchiveRecipeHandler(repo, new FakeCurrentUser("author-1"));
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
+            new ArchiveRecipeCommand(Guid.NewGuid()), CancellationToken.None));
+        Assert.Equal(404, ex.Status);
+    }
+
+    // ----- Delete (D3, FR-RCP-007, D08 soft delete) -----
+
+    [Fact]
+    public async Task Delete_soft_deletes_recipe()
+    {
+        var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
+        var repo = new FakeOwnedRecipeRepository();
+        repo.Store.Add(recipe);
+        var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-1"));
+
+        await handler.Handle(new DeleteRecipeCommand(recipe.Id), CancellationToken.None);
+
+        Assert.True(recipe.IsDeleted);
+        Assert.Equal(RecipeStatus.Archived, recipe.Status);
+    }
+
+    [Fact]
+    public async Task Delete_non_owner_throws_403()
+    {
+        var recipe = NewDraftRecipe(withIngredientsAndSteps: true);
+        var repo = new FakeOwnedRecipeRepository();
+        repo.Store.Add(recipe);
+        var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-9"));
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
+            new DeleteRecipeCommand(recipe.Id), CancellationToken.None));
+        Assert.Equal(403, ex.Status);
+    }
+
+    [Fact]
+    public async Task Delete_recipe_not_found_throws_404()
+    {
+        var repo = new FakeOwnedRecipeRepository();
+        var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-1"));
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
+            new DeleteRecipeCommand(Guid.NewGuid()), CancellationToken.None));
+        Assert.Equal(404, ex.Status);
+    }
+
+    [Fact]
+    public async Task Archive_validator_rejects_empty_recipe_id()
+    {
+        var validator = new ArchiveRecipeValidator();
+        var result = await validator.ValidateAsync(new ArchiveRecipeCommand(Guid.Empty));
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(ArchiveRecipeCommand.RecipeId));
+    }
+
+    [Fact]
+    public async Task Delete_validator_rejects_empty_recipe_id()
+    {
+        var validator = new DeleteRecipeValidator();
+        var result = await validator.ValidateAsync(new DeleteRecipeCommand(Guid.Empty));
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(DeleteRecipeCommand.RecipeId));
+    }
 }
