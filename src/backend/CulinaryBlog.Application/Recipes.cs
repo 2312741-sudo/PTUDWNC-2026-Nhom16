@@ -24,7 +24,7 @@ namespace CulinaryBlog.Application;
 public sealed record RecipeDto(
     Guid Id, string Title, string Slug, string Description, string Instructions,
     int PrepTimeMinutes, int CookTimeMinutes, int Servings,
-    RecipeDifficulty Difficulty, RecipeStatus Status, DateTime? PublishedAt,
+    string Difficulty, string Status, DateTime? PublishedAt,
     Guid CategoryId, string AuthorId, NutritionDto? Nutrition,
     string RowVersion,                      // base64 — client gửi lại khi update (D19)
     DateTime CreatedAt, DateTime? UpdatedAt);
@@ -32,7 +32,7 @@ public sealed record RecipeDto(
 public sealed record RecipeDetailDto(
     Guid Id, string Title, string Slug, string Description, string Instructions,
     int PrepTimeMinutes, int CookTimeMinutes, int Servings, int TotalTimeMinutes,
-    RecipeDifficulty Difficulty, RecipeStatus Status, DateTime? PublishedAt,
+    string Difficulty, string Status, DateTime? PublishedAt,
     Guid CategoryId, string AuthorId, NutritionDto? Nutrition,
     IReadOnlyList<RecipeIngredientDto> Ingredients,
     IReadOnlyList<RecipeStepDto> Steps,
@@ -76,14 +76,14 @@ internal static class RecipeMapper
     public static RecipeDto ToDto(this Recipe r) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
-        r.Difficulty, r.Status, r.PublishedAt, r.CategoryId, r.AuthorId,
+        r.Difficulty.ToString(), r.Status.ToString(), r.PublishedAt, r.CategoryId, r.AuthorId,
         r.Nutrition.ToDto(), Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt);
 
     public static RecipeDetailDto ToDetailDto(this Recipe r) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
         r.PrepTimeMinutes + r.CookTimeMinutes,
-        r.Difficulty, r.Status, r.PublishedAt, r.CategoryId, r.AuthorId,
+        r.Difficulty.ToString(), r.Status.ToString(), r.PublishedAt, r.CategoryId, r.AuthorId,
         r.Nutrition.ToDto(),
         r.Ingredients.OrderBy(i => i.OrderIndex).Select(i => i.ToDto()).ToList(),
         r.Steps.OrderBy(s => s.StepNumber).Select(s => s.ToDto()).ToList(),
