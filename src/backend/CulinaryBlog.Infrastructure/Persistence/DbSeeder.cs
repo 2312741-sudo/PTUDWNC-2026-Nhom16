@@ -1,8 +1,9 @@
+using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
-using CulinaryBlog.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 
 namespace CulinaryBlog.Infrastructure.Persistence;
 
@@ -12,11 +13,33 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 /// </summary>
 public static class DbSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext db, CancellationToken ct = default)
+    public static async Task SeedAsync(AuthDbContext db, CancellationToken ct = default)
     {
-        await db.Database.MigrateAsync(ct);
+        try { await db.Database.MigrateAsync(ct); } catch { /* Ignore migration errors if tables already exist */ }
 
-        // Kiểm tra nếu đã có đủ 100 recipes thì bỏ qua
+        // Cập nhật tất cả các ảnh món ăn sang đường dẫn ảnh thực tế local
+        var placeholderImages = await db.RecipeImages
+            .Where(img => img.OriginalUrl.Contains("photo-1546069901-ba9599a7e63c") || !img.OriginalUrl.StartsWith("/images/recipes/"))
+            .ToListAsync(ct);
+        if (placeholderImages.Count > 0)
+        {
+            var rIds = placeholderImages.Select(i => i.RecipeId).Distinct().ToList();
+            var slugLookup = await db.Recipes
+                .IgnoreQueryFilters()
+                .Where(r => rIds.Contains(r.Id))
+                .ToDictionaryAsync(r => r.Id, r => r.Slug, ct);
+
+            foreach (var img in placeholderImages)
+            {
+                if (slugLookup.TryGetValue(img.RecipeId, out var slug))
+                {
+                    img.SetOriginalUrl(GetDishImage(slug));
+                }
+            }
+            await db.SaveChangesAsync(ct);
+        }
+
+        // Kiểm tra nếu đã có đủ 100 recipes thì bỏ qua việc tạo mới
         if (await db.Recipes.IgnoreQueryFilters().CountAsync(ct) >= 100) return;
 
         // 1. Roles
@@ -27,7 +50,7 @@ public static class DbSeeder
         }
 
         // 2. Authors (5 tác giả ẩm thực)
-        var authors = new List<RecipeAuthorUser>();
+        var authors = new List<ApplicationUser>();
         var authorInfo = new[]
         {
             ("tam.nguyen@culinary.local", "Nguyễn Thanh Tâm"),
@@ -86,7 +109,7 @@ public static class DbSeeder
             var cat = await db.Categories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Slug == slug, ct);
             if (cat == null)
             {
-                cat = Category.Create(name, slug, desc, $"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop", orderIndex: order++);
+                cat = new Category(name, slug, desc, $"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop", orderIndex: order++);
                 db.Categories.Add(cat);
             }
             catList.Add(cat);
@@ -104,23 +127,23 @@ public static class DbSeeder
             ("Bánh Mì Thịt Nướng Sốt Tiêu", "banh-mi-thit-nuong-sot-tieu", 23, "Bánh mì vỏ giòn tan, nhân thịt nướng thơm lừng sốt tiêu đen đậm đà kèm đồ chua giòn ngọt."),
             ("Canh Chua Cá Lóc Đồng", "canh-chua-ca-loc-dong", 2, "Canh chua cá lóc nấu bông điên điển, bắp chuối, me chua dịu và ngò gai thơm ngát."),
             ("Thịt Kho Tàu Trứng Vịt", "thit-kho-tau-trung-vit", 4, "Món thịt kho rục nước dừa xiêm, miếng thịt trong veo mềm tan ăn cùng cơm nóng."),
-            ("Gà Nướng Muối Ớt Tây Bắc", "ga-nuong-muoi-ot-tay-bac", 5, "Thịt gà đồi nướng than hoa da giòn rụm, cay nồng ớt xiêm rừng và mắc khén đậm vị."),
+            ("Gà Nướng Muối Ớt Tây Bắc", "ga-nuong-muoi-ot-tay-bac", 21, "Thịt gà đồi nướng than hoa da giòn rụm, cay nồng ớt xiêm rừng và mắc khén đậm vị."),
             ("Cá Hồi Áp Chảo Sốt Bơ Chanh", "ca-hoi-ap-chao-sot-bo-chanh", 1, "Cá hồi phi lê áp chảo béo ngậy, sốt bơ chanh vàng óng chua nhẹ cùng măng tây giòn."),
             ("Bún Chả Hà Nội Truyền Thống", "bun-cha-ha-noi-truyen-thong", 11, "Chả viên và chả miếng nướng than hoa thơm lừng, chấm nước mắm đu đủ chua ngọt thanh tao."),
             ("Bò Kho Bánh Mì Đậm Đà", "bo-kho-banh-mi-dam-da", 20, "Bò kho gân mềm dẻo, nước sốt sánh mịn đậm đà hương hoa hồi, sả cây chấm bánh mì nóng giòn."),
             ("Chả Cá Lã Vọng", "cha-ca-la-vong", 19, "Chả cá lăng tẩm ướp nghệ tây chiên trên chảo nóng cùng thì là, hành hoa chấm mắm tôm."),
             ("Lẩu Thái Hải Sản Chua Cay", "lau-thai-hai-san-chua-cay", 6, "Nước lẩu Tom Yum chua cay tê tái ngập tràn tôm sú, mực tươi, nghêu và nấm kim châm."),
-            ("Lẩu Gà Lá É Phú Yên", "lau-ga-la-e-phu-yen", 6, "Thịt gà ta giòn ngọt nấu cùng măng chua và lá é tươi cay nồng ấm bụng ngày mưa."),
+            ("Lẩu Gà Lá É Phú Yên", "lau-ga-la-e-phu-yen", 21, "Thịt gà ta giòn ngọt nấu cùng măng chua và lá é tươi cay nồng ấm bụng ngày mưa."),
             ("Mực Xào Sa Tế Cay Nồng", "muc-xao-sa-te-cay-nong", 3, "Mực ống tươi giòn sần sật xào cùng sa tế tôm, hành tây và ớt chuông đậm đà bắt mắt."),
             ("Tôm Rim Nước Cốt Dừa", "tom-rim-nuoc-cot-dua", 4, "Tôm đất bóc vỏ rim cùng nước cốt dừa sánh mịn, vị béo ngọt mặn mà ăn cùng cơm trắng."),
             ("Cơm Chiên Dương Châu Hải Sản", "com-chien-duong-chau-hai-san", 1, "Hạt cơm tơi vàng óng chiên cùng tôm, lạp xưởng, đậu Hà Lan và trứng béo ngậy."),
-            ("Sườn Xào Chua Ngọt", "suon-xao-chua-ngot", 3, "Sườn heo non mềm thấm đẫm sốt chua ngọt cà chua, giấm bỗng và ớt chuông."),
+            ("Sườn Xào Chua Ngọt", "suon-xao-chua-ngot", 22, "Sườn heo non mềm thấm đẫm sốt chua ngọt cà chua, giấm bỗng và ớt chuông."),
             ("Bò Lúc Lắc Khoai Tây Chiên", "bo-luc-lac-khoai-tay-chien", 20, "Thịt thăn bò mềm ngọt xào lửa lớn cùng bơ tỏi, hành tây và khoai tây chiên giòn rụm."),
-            ("Nem Rán Hà Nội Giòn Rụm", "nem-ran-ha-noi-gion-rum", 7, "Nem rán truyền thống nhân thịt băm, mộc nhĩ, miến dong, vỏ giòn rụm chấm nước mắm tỏi ớt."),
+            ("Nem Rán Hà Nội Giòn Rụm", "nem-ran-ha-noi-gion-rum", 0, "Nem rán truyền thống nhân thịt băm, mộc nhĩ, miến dong, vỏ giòn rụm chấm nước mắm tỏi ớt."),
             ("Canh Cua Rau Đay Mướp", "canh-cua-rau-day-muop", 2, "Canh cua đồng gạch nổi váng vàng ươm nấu cùng rau đay mồng tơi và mướp hương thanh mát."),
             ("Thịt Ba Chỉ Luộc Chấm Mắm Tôm", "thit-ba-chi-luoc-cham-mam-tom", 22, "Thịt ba chỉ giòn bì luộc vừa chín tới, thái mỏng chấm mắm tôm chanh ớt sủi bọt."),
             ("Cá Kho Tộ Miền Tây", "ca-kho-to-mien-tay", 4, "Cá lóc hoặc cá basa kho tộ đất, nước màu đường thốt nốt sánh đặc, tiêu sọ cay nồng."),
-            ("Gà Hấp Lá Chanh", "ga-hap-la-chanh", 8, "Gà ta hấp cách thủy da vàng óng mượt mà, thơm lừng hương lá chanh thái chỉ chấm muối tiêu chanh."),
+            ("Gà Hấp Lá Chanh", "ga-hap-la-chanh", 21, "Gà ta hấp cách thủy da vàng óng mượt mà, thơm lừng hương lá chanh thái chỉ chấm muối tiêu chanh."),
             ("Vịt Om Sấu Hà Nội", "vit-om-sau-ha-noi", 2, "Thịt vịt mềm ngọt nấu cùng quả sấu xanh chua thanh, khoai sọ bùi béo và rau muống giòn."),
             ("Bún Đậu Mắm Tôm Thập Cẩm", "bun-dau-mam-tom-thap-cam", 11, "Mẹt bún lá, đậu mơ chiên phồng giòn rụm, chả cốm, nem rán và mắm tôm chuẩn vị Thanh Hóa."),
             ("Bánh Canh Cua Giò Heo", "banh-canh-cua-gio-heo", 11, "Sợi bánh canh bột lọc dai dẻo, thịt cua biển ngọt lịm và giò heo hầm mềm trong nước dùng sệt."),
@@ -134,8 +157,8 @@ public static class DbSeeder
             ("Bánh Bột Lọc Tôm Thịt", "banh-bot-loc-tom-thit", 14, "Vỏ bột lọc trong veo thấy rõ con tôm đỏ au và miếng thịt mỡ bên trong, chấm nước mắm ớt cay xé."),
             ("Gỏi Ngó Sen Tôm Thịt", "goi-ngo-sen-tom-thit", 9, "Ngó sen giòn sần sật trộn cùng tôm sú luộc, thịt ba rọi thái mỏng và nước mắm chua ngọt."),
             ("Nộm Hoa Chuối Tai Heo", "nom-hoa-chuoi-tai-heo", 9, "Hoa chuối thái mỏng ngâm trắng giòn, tai heo luộc thái sợi sần sật trộn rau răm và đậu phộng."),
-            ("Gỏi Bò Bóp Thấu", "goi-bo-bop-thau", 9, "Thịt bắp bò tái chanh chua ngọt trộn cùng chuối chát, khế chua, hành tây và mè rang thơm."),
-            ("Chả Giò Hải Sản Sốt Mayonnaise", "cha-gio-hai-san-sot-mayonnaise", 7, "Vỏ rế chiên vàng giòn rụm, nhân tôm mực ngọt lịm trộn sốt kem béo ngậy tan chảy."),
+            ("Gỏi Bò Bóp Thấu", "goi-bo-bop-thau", 0, "Thịt bắp bò tái chanh chua ngọt trộn cùng chuối chát, khế chua, hành tây và mè rang thơm."),
+            ("Chả Giò Hải Sản Sốt Mayonnaise", "cha-gio-hai-san-sot-mayonnaise", 0, "Vỏ rế chiên vàng giòn rụm, nhân tôm mực ngọt lịm trộn sốt kem béo ngậy tan chảy."),
             ("Lẩu Nấm Chay Thanh Đạm", "lau-nam-chay-thanh-dam", 13, "Nồi lẩu thanh mát từ nước dùng rau củ quả ngập tràn các loại nấm tươi linh chi, nấm đùi gà, nấm rơm."),
             ("Đậu Hũ Tứ Xuyên", "dau-hu-tu-xuyen", 1, "Đậu hũ non mềm mượt sốt thịt băm cay tê sa tế dầu ớt và tiêu Tứ Xuyên trứ danh."),
             ("Cà Tím Nướng Mỡ Hành", "ca-tim-nuong-mo-hanh", 5, "Cà tím nướng than hoa thơm nức mũi, xối mỡ hành béo ngậy và rưới nước mắm tỏi ớt chua cay."),
@@ -176,7 +199,7 @@ public static class DbSeeder
             ("Sò Huyết Xào Tỏi", "so-huyet-xao-toi", 19, "Sò huyết đầm ngọt thịt xào vừa chín tới cùng tóp mỡ béo ngậy và tỏi phi giòn tan."),
             ("Hàu Nướng Phô Mai", "hau-nuong-pho-mai", 5, "Hàu sữa tươi béo múp nướng trên than hoa phủ ngập sốt phô mai kéo sợi thơm phức."),
             ("Tôm Nướng Muối Ớt", "tom-nuong-muoi-ot", 5, "Tôm sú biển tẩm ướp muối hột ớt hiểm nướng vàng rực vỏ giòn thịt ngọt săn chắc."),
-            ("Cá Tai Tượng Chiên Xù", "ca-tai-tuong-chien-xu", 7, "Cá tai tượng chiên xù vảy dựng đứng giòn tan, cuốn bánh tráng rau rừng chấm mắm nêm đậm đà."),
+            ("Cá Tai Tượng Chiên Xù", "ca-tai-tuong-chien-xu", 10, "Cá tai tượng chiên xù vảy dựng đứng giòn tan, cuốn bánh tráng rau rừng chấm mắm nêm đậm đà."),
             ("Bò Né Hoa Tuyết", "bo-ne-hoa-tuyet", 20, "Thịt bò phi lê mềm ướp bơ thơm lừng ăn kèm trứng ốp la, pate béo ngậy và bánh mì nóng giòn."),
             ("Gà Chiên Nước Mắm", "ga-chien-nuoc-mam", 7, "Cánh gà chiên vàng ươm đảo đều sốt nước mắm tỏi ớt kẹo dẻo thơm mặn ngọt hài hòa."),
             ("Sườn Nướng Cơm Lam", "suon-nuong-com-lam", 5, "Sườn heo tẩm ướp mật ong rừng nướng than hoa ăn cùng ống cơm lam dẻo thơm mùi tre nứa."),
@@ -271,8 +294,8 @@ public static class DbSeeder
                 recipe.AddStep("Hoàn thiện và thưởng thức", $"Trình bày món {def.Title} ra đĩa hoặc tô nóng, rắc hành ngò thái nhỏ và thưởng thức cùng cơm hoặc bún.", 5, "Ngon nhất khi thưởng thức ngay lúc còn nóng sốt.");
             }
 
-            // Ảnh đại diện
-            recipe.AddImage($"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop", $"Ảnh món {def.Title}");
+            // Ảnh đại diện chất lượng cao chuẩn từng món
+            recipe.AddImage(GetDishImage(def.Slug), $"Ảnh món {def.Title}");
 
             // 85% món được xuất bản (Published), 15% để Draft
             if (i % 7 != 0)
@@ -286,10 +309,12 @@ public static class DbSeeder
         await db.SaveChangesAsync(ct);
     }
 
-    private static RecipeAuthorUser NewUser(string email, string displayName)
+    public static string GetDishImage(string slug) => $"/images/recipes/{slug}.jpg";
+
+    private static ApplicationUser NewUser(string email, string displayName)
     {
         var id = Guid.NewGuid().ToString();
-        return new RecipeAuthorUser
+        return new ApplicationUser
         {
             Id = id,
             UserName = email,

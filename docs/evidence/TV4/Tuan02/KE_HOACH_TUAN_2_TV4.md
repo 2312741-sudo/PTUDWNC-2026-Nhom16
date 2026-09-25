@@ -3,7 +3,7 @@
 - **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026, giải quyết C01–C09)
 - **Phần nghiệp vụ**: Xuất bản, hình ảnh, SEO và vận hành — tasks D1–D7 (theo `docs/KE_HOACH_DU_AN.md` mục 8 và `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md`).
 - **Mã task tuần 2**: D1 (upload/metadata/primary/delete), D2 (resize 300×300/800×600 + jobs), D3 (publish/unpublish CQRS + logout revoke refresh từ TV3 C5), D4 (nền image uploader/status UI + SEO/sitemap).
-- **Nhánh Git đề xuất**: tiếp tục `2312739_NHTSon_D1-D3-D5-D6`; lab: `practice/TV4/L4`.
+- **Nhánh Git đề xuất**: tiếp tục `2312739_NHTSon_D1-D2-D3-D4`; lab: `practice/TV4/L4`.
 - **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng).
 - **Cổng**: G2 giữa tuần (upload ảnh + set primary chạy) → G3 cuối tuần (Draft có ảnh/nguyên liệu/bước → publish/unpublish chạy end-to-end, không lộ Draft ra public).
 

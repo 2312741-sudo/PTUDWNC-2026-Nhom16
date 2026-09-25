@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   description:
     'Nền tảng chia sẻ công thức nấu ăn, mẹo nhà bếp và hương vị ẩm thực Việt Nam & Thế giới. Tìm kiếm công thức chuẩn vị, dinh dưỡng và chi tiết từng bước.',
   keywords: ['ẩm thực', 'công thức nấu ăn', 'nấu ăn', 'món ngon mỗi ngày', 'culinary blog'],
+  icons: {
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
+  },
 };
 
 export default function RootLayout({

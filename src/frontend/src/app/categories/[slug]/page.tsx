@@ -27,7 +27,7 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
       <div>
         <Link
           href="/categories"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-orange-600 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-emerald-700 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Quay lại tất cả danh mục
@@ -35,10 +35,10 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
       </div>
 
       {/* Category Banner */}
-      <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-3xl p-8 sm:p-12 text-white shadow-xl shadow-orange-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-amber-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl shadow-emerald-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-4 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-semibold">
-            <ChefHat className="w-3.5 h-3.5" />
+            <ChefHat className="w-3.5 h-3.5 text-amber-200" />
             <span>Danh mục ẩm thực</span>
           </div>
 
@@ -46,11 +46,11 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
             {category.name}
           </h1>
 
-          <p className="text-orange-50 text-base sm:text-lg leading-relaxed">
+          <p className="text-emerald-50 text-base sm:text-lg leading-relaxed">
             {category.description || 'Tổng hợp những món ăn thơm ngon, bổ dưỡng và dễ làm nhất.'}
           </p>
 
-          <div className="pt-2 text-sm font-medium text-orange-100">
+          <div className="pt-2 text-sm font-medium text-emerald-100">
             {recipes.length > 0 ? `${recipesResult.meta.total} công thức đã xuất bản` : `${category.recipesCount} công thức đã xuất bản`}
           </div>
         </div>
@@ -75,7 +75,7 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
           </div>
         ) : (
           <div className="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-8">
-            <Utensils className="w-10 h-10 text-orange-400 mx-auto mb-3" />
+            <Utensils className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
             <p className="text-gray-600 font-semibold">
               Chưa có công thức nào được xuất bản trong danh mục này.
             </p>
@@ -85,7 +85,7 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
             <div className="mt-4">
               <Link
                 href="/recipes"
-                className="inline-block px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 transition-colors"
+                className="inline-block px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
               >
                 Khám phá tất cả món ăn
               </Link>

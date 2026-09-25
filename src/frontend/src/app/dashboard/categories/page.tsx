@@ -126,7 +126,7 @@ export default function AdminCategoriesDashboard() {
               setSuccessMsg(null);
               setIsModalOpen(true);
             }}
-            className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-orange-200 flex items-center gap-2 transition-all"
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-emerald-200 flex items-center gap-2 transition-all"
           >
             <Plus className="w-4 h-4" />
             Thêm danh mục mới
@@ -178,7 +178,7 @@ export default function AdminCategoriesDashboard() {
                     <td className="py-4 px-6 text-gray-900 font-semibold">{cat.name}</td>
                     <td className="py-4 px-6 text-gray-500 font-mono text-xs">{cat.slug}</td>
                     <td className="py-4 px-6">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-700">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
                         {cat.recipesCount} món
                       </span>
                     </td>
@@ -224,7 +224,7 @@ export default function AdminCategoriesDashboard() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ví dụ: Món nướng BBQ, Món cuốn..."
-                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <span className="text-[11px] text-gray-400 mt-1 block">
                   Độ dài từ 2 đến 100 ký tự. Slug sẽ được tự động tạo.
@@ -240,7 +240,7 @@ export default function AdminCategoriesDashboard() {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   placeholder="Mô tả ngắn gọn về nhóm món ăn..."
-                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -254,7 +254,7 @@ export default function AdminCategoriesDashboard() {
                     min={0}
                     value={orderIndex}
                     onChange={(e) => setOrderIndex(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
@@ -267,7 +267,7 @@ export default function AdminCategoriesDashboard() {
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -283,7 +283,7 @@ export default function AdminCategoriesDashboard() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-xl shadow-md shadow-orange-200 transition-all disabled:opacity-50"
+                  className="px-6 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-200 transition-all disabled:opacity-50"
                 >
                   {submitting ? 'Đang lưu...' : 'Lưu danh mục'}
                 </button>

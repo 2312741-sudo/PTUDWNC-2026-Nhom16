@@ -1,12 +1,17 @@
+'use client';
+
 import Link from 'next/link';
 import { RecipeSummary } from '@/types/recipe';
 import { Clock, Users, ChefHat } from 'lucide-react';
+import { getRecipeImage, CATEGORY_FALLBACK_IMAGES } from '@/lib/recipeImages';
 
 interface RecipeCardProps {
   recipe: RecipeSummary;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
+  const imageUrl = getRecipeImage(recipe);
+
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
       case 'easy':
@@ -14,7 +19,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
       case 'medium':
         return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Trung bình</span>;
       case 'hard':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">Khó</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-200 text-amber-900">Khó</span>;
       case 'expert':
         return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Chuyên gia</span>;
       default:
@@ -23,23 +28,30 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1">
+    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1">
       {/* Image Container */}
-      <div className="relative w-full h-48 bg-gradient-to-tr from-amber-50 to-orange-100 flex items-center justify-center overflow-hidden">
-        {recipe.primaryImageUrl ? (
+      <div className="relative w-full h-48 bg-gradient-to-tr from-emerald-50 to-amber-50 flex items-center justify-center overflow-hidden">
+        {imageUrl ? (
           <img
-            src={recipe.primaryImageUrl}
+            src={imageUrl}
             alt={recipe.title}
+            onError={(e) => {
+              const fallback = (recipe.categoryName && CATEGORY_FALLBACK_IMAGES[recipe.categoryName]) ||
+                'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop';
+              if ((e.target as HTMLImageElement).src !== fallback) {
+                (e.target as HTMLImageElement).src = fallback;
+              }
+            }}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="text-orange-300 group-hover:scale-110 transition-transform">
+          <div className="text-emerald-300 group-hover:scale-110 transition-transform">
             <ChefHat className="w-16 h-16" />
           </div>
         )}
 
         <div className="absolute top-3 left-3">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur text-gray-800 shadow-sm">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur text-gray-800 shadow-sm border border-gray-100">
             {recipe.categoryName}
           </span>
         </div>
@@ -52,7 +64,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
       {/* Content */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
         <div>
-          <h3 className="font-bold text-gray-900 text-lg group-hover:text-orange-600 transition-colors line-clamp-1 mb-1">
+          <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors line-clamp-1 mb-1">
             {recipe.title}
           </h3>
           <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
@@ -63,8 +75,8 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         {/* Meta info */}
         <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1" title="Thời gian nấu">
-              <Clock className="w-3.5 h-3.5 text-orange-500" />
+            <span className="flex items-center gap-1 font-medium text-emerald-800" title="Thời gian nấu">
+              <Clock className="w-3.5 h-3.5 text-emerald-600" />
               {recipe.cookTimeMinutes} phút
             </span>
             <span className="flex items-center gap-1" title="Khẩu phần">

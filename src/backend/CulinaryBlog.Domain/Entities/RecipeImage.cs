@@ -34,6 +34,28 @@ public sealed class RecipeImage : BaseEntity
     }
 
     internal void SetPrimary(bool isPrimary) => IsPrimary = isPrimary;
+
+    public void SetOriginalUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || url.Length > 500)
+            throw new DomainException("IMAGE_URL_INVALID", "URL ảnh phải từ 1 đến 500 ký tự.");
+        OriginalUrl = url.Trim();
+    }
+
+    internal void SetAltText(string altText)
+    {
+        if (altText.Length > 200)
+            throw new DomainException("IMAGE_ALT_INVALID", "AltText tối đa 200 ký tự.");
+        AltText = string.IsNullOrWhiteSpace(altText) ? null : altText.Trim();
+    }
+
+    internal void SetOrderIndex(int orderIndex)
+    {
+        if (orderIndex < 0)
+            throw new DomainException("IMAGE_ORDER_INVALID", "OrderIndex không được âm.");
+        OrderIndex = orderIndex;
+    }
+
     internal void SetResizedUrls(string? mediumUrl, string? thumbnailUrl)
     {
         MediumUrl = mediumUrl;

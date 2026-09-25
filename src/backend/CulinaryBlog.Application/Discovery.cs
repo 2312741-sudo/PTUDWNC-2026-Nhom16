@@ -43,21 +43,19 @@ public sealed record SearchRecipesQuery(
     int? MaxCookTime = null,
     int? MinServings = null) : IRequest<PagedResult<RecipeSummaryDto>>;
 
-public interface IRecipeRepository
+public interface IRecipeDiscoveryRepository
 {
     Task<PagedResult<RecipeSummaryDto>> GetPublishedRecipesAsync(GetRecipesQuery query, CancellationToken ct);
     Task<PagedResult<RecipeSummaryDto>> SearchPublishedRecipesAsync(SearchRecipesQuery query, CancellationToken ct);
-    Task AddAsync(Recipe recipe, CancellationToken ct);
-    Task SaveChangesAsync(CancellationToken ct);
 }
 
-public sealed class GetRecipesHandler(IRecipeRepository repository) : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
+public sealed class GetRecipesHandler(IRecipeDiscoveryRepository repository) : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
     public Task<PagedResult<RecipeSummaryDto>> Handle(GetRecipesQuery request, CancellationToken ct) =>
         repository.GetPublishedRecipesAsync(request, ct);
 }
 
-public sealed class SearchRecipesHandler(IRecipeRepository repository) : IRequestHandler<SearchRecipesQuery, PagedResult<RecipeSummaryDto>>
+public sealed class SearchRecipesHandler(IRecipeDiscoveryRepository repository) : IRequestHandler<SearchRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
     public Task<PagedResult<RecipeSummaryDto>> Handle(SearchRecipesQuery request, CancellationToken ct) =>
         repository.SearchPublishedRecipesAsync(request, ct);

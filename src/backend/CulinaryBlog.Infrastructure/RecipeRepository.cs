@@ -1,16 +1,22 @@
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
+using CulinaryBlog.Domain.Entities;
+using CulinaryBlog.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 
 namespace CulinaryBlog.Infrastructure;
 
-public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
+/// <summary>
+/// Hiện thực IRecipeRepository (Authoring/CRUD TV3) và IRecipeDiscoveryRepository (Search/Discovery TV2) bằng EF Core.
+/// </summary>
+public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRecipeDiscoveryRepository
 {
     public async Task<PagedResult<RecipeSummaryDto>> GetPublishedRecipesAsync(GetRecipesQuery query, CancellationToken ct)
     {
         var baseQuery = db.Recipes
             .AsNoTracking()
-            .Where(r => r.Status == RecipeStatusValues.Published);
+            .Where(r => r.Status == RecipeStatus.Published && !r.IsDeleted);
 
         baseQuery = ApplyFilters(baseQuery, query.CategoryId, query.Difficulty, query.MaxCookTime, query.MinServings);
 
@@ -27,8 +33,9 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
             .Select(r => new
             {
                 Recipe = r,
-                CategoryName = r.Category != null ? r.Category.Name : "Khác",
-                AuthorDisplayName = db.Users.Where(u => u.Id == r.AuthorId).Select(u => u.DisplayName).FirstOrDefault() ?? "Đầu bếp"
+                CategoryName = db.Categories.Where(c => c.Id == r.CategoryId).Select(c => c.Name).FirstOrDefault() ?? "Khác",
+                AuthorDisplayName = db.Users.Where(u => u.Id == r.AuthorId).Select(u => u.DisplayName).FirstOrDefault() ?? "Đầu bếp",
+                PrimaryImageUrl = r.Images.Where(i => i.IsPrimary).Select(i => i.OriginalUrl).FirstOrDefault()
             })
             .ToListAsync(ct);
 
@@ -44,11 +51,11 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
             PrepTimeMinutes: x.Recipe.PrepTimeMinutes,
             CookTimeMinutes: x.Recipe.CookTimeMinutes,
             Servings: x.Recipe.Servings,
-            Difficulty: x.Recipe.Difficulty,
-            Status: x.Recipe.Status,
-            PrimaryImageUrl: x.Recipe.PrimaryImageUrl,
-            PublishedAt: x.Recipe.PublishedAt,
-            CreatedAt: x.Recipe.CreatedAt
+            Difficulty: x.Recipe.Difficulty.ToString(),
+            Status: x.Recipe.Status.ToString(),
+            PrimaryImageUrl: x.PrimaryImageUrl,
+            PublishedAt: x.Recipe.PublishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(x.Recipe.PublishedAt.Value, DateTimeKind.Utc)) : null,
+            CreatedAt: new DateTimeOffset(DateTime.SpecifyKind(x.Recipe.CreatedAt, DateTimeKind.Utc))
         )).ToList();
 
         return new PagedResult<RecipeSummaryDto>(items, PaginationMeta.Create(page, pageSize, total));
@@ -61,11 +68,10 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
 
         var baseQuery = db.Recipes
             .AsNoTracking()
-            .Where(r => r.Status == RecipeStatusValues.Published);
+            .Where(r => r.Status == RecipeStatus.Published && !r.IsDeleted);
 
         baseQuery = ApplyFilters(baseQuery, query.CategoryId, query.Difficulty, query.MaxCookTime, query.MinServings);
 
-        // Search in Title or Description using EF.Functions.ILike or unaccent search
         baseQuery = baseQuery.Where(r =>
             EF.Functions.ILike(r.Title, $"%{normalizedQuery}%") ||
             EF.Functions.ILike(r.Description, $"%{normalizedQuery}%") ||
@@ -84,8 +90,9 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
             .Select(r => new
             {
                 Recipe = r,
-                CategoryName = r.Category != null ? r.Category.Name : "Khác",
-                AuthorDisplayName = db.Users.Where(u => u.Id == r.AuthorId).Select(u => u.DisplayName).FirstOrDefault() ?? "Đầu bếp"
+                CategoryName = db.Categories.Where(c => c.Id == r.CategoryId).Select(c => c.Name).FirstOrDefault() ?? "Khác",
+                AuthorDisplayName = db.Users.Where(u => u.Id == r.AuthorId).Select(u => u.DisplayName).FirstOrDefault() ?? "Đầu bếp",
+                PrimaryImageUrl = r.Images.Where(i => i.IsPrimary).Select(i => i.OriginalUrl).FirstOrDefault()
             })
             .ToListAsync(ct);
 
@@ -101,21 +108,49 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
             PrepTimeMinutes: x.Recipe.PrepTimeMinutes,
             CookTimeMinutes: x.Recipe.CookTimeMinutes,
             Servings: x.Recipe.Servings,
-            Difficulty: x.Recipe.Difficulty,
-            Status: x.Recipe.Status,
-            PrimaryImageUrl: x.Recipe.PrimaryImageUrl,
-            PublishedAt: x.Recipe.PublishedAt,
-            CreatedAt: x.Recipe.CreatedAt
+            Difficulty: x.Recipe.Difficulty.ToString(),
+            Status: x.Recipe.Status.ToString(),
+            PrimaryImageUrl: x.PrimaryImageUrl,
+            PublishedAt: x.Recipe.PublishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(x.Recipe.PublishedAt.Value, DateTimeKind.Utc)) : null,
+            CreatedAt: new DateTimeOffset(DateTime.SpecifyKind(x.Recipe.CreatedAt, DateTimeKind.Utc))
         )).ToList();
 
         return new PagedResult<RecipeSummaryDto>(items, PaginationMeta.Create(page, pageSize, total));
     }
 
-    public async Task AddAsync(Recipe recipe, CancellationToken ct) =>
-        await db.Recipes.AddAsync(recipe, ct);
+    public Task<Recipe?> FindForWriteAsync(Guid id, CancellationToken ct) =>
+        db.Recipes
+            .Include(r => r.Ingredients)
+            .Include(r => r.Steps)
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
 
-    public Task SaveChangesAsync(CancellationToken ct) =>
-        db.SaveChangesAsync(ct);
+    public Task<Recipe?> FindBySlugAsync(string slug, CancellationToken ct) =>
+        db.Recipes
+            .AsNoTracking()
+            .Include(r => r.Ingredients)
+            .Include(r => r.Steps)
+            .Include(r => r.Images)
+            .FirstOrDefaultAsync(r => r.Slug == slug, ct);
+
+    public async Task<IReadOnlyList<string>> FindUsedSlugsAsync(
+        string baseSlug, Guid? excludeRecipeId, CancellationToken ct) =>
+        await db.Recipes
+            .IgnoreQueryFilters()
+            .Where(r => (r.Slug == baseSlug || r.Slug.StartsWith(baseSlug + "-"))
+                        && (excludeRecipeId == null || r.Id != excludeRecipeId))
+            .Select(r => r.Slug)
+            .ToListAsync(ct);
+
+    public Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken ct) =>
+        db.Categories.AnyAsync(c => c.Id == categoryId, ct);
+
+    public void Add(Recipe recipe) => db.Recipes.Add(recipe);
+
+    public void RemoveIngredient(RecipeIngredient ingredient) => db.RecipeIngredients.Remove(ingredient);
+
+    public void RemoveStep(RecipeStep step) => db.RecipeSteps.Remove(step);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 
     private static IQueryable<Recipe> ApplyFilters(
         IQueryable<Recipe> query,
@@ -129,10 +164,9 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository
             query = query.Where(r => r.CategoryId == categoryId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(difficulty))
+        if (!string.IsNullOrWhiteSpace(difficulty) && Enum.TryParse<RecipeDifficulty>(difficulty.Trim(), true, out var diffEnum))
         {
-            var diff = difficulty.Trim();
-            query = query.Where(r => r.Difficulty.ToLower() == diff.ToLower());
+            query = query.Where(r => r.Difficulty == diffEnum);
         }
 
         if (maxCookTime.HasValue)

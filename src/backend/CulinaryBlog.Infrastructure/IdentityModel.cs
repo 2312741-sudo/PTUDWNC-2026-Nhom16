@@ -1,4 +1,9 @@
+using System.Linq.Expressions;
+using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain;
+using CulinaryBlog.Domain.Common;
+using CulinaryBlog.Domain.Entities;
+using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +20,27 @@ public sealed class ApplicationUser : IdentityUser
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
-public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+
+public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
+    : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
 {
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
+    public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
     public DbSet<CulinaryBlog.Domain.Entities.RefreshToken> RefreshTokens => Set<CulinaryBlog.Domain.Entities.RefreshToken>();
+
+    // Hiện thực tường minh IApplicationDbContext — Application chỉ thấy IQueryable (D18)
+    IQueryable<Recipe> IApplicationDbContext.Recipes => Recipes;
+    IQueryable<RecipeIngredient> IApplicationDbContext.RecipeIngredients => RecipeIngredients;
+    IQueryable<RecipeStep> IApplicationDbContext.RecipeSteps => RecipeSteps;
+    IQueryable<RecipeImage> IApplicationDbContext.RecipeImages => RecipeImages;
+    IQueryable<Category> IApplicationDbContext.Categories => Categories;
+    IQueryable<CulinaryBlog.Domain.Entities.RefreshToken> IApplicationDbContext.RefreshTokens => RefreshTokens;
+
+    void IApplicationDbContext.Add<TEntity>(TEntity entity) => Add(entity);
+    void IApplicationDbContext.Remove<TEntity>(TEntity entity) => Remove(entity);
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -57,7 +78,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
             b.Property(x => x.OrderIndex).HasDefaultValue(0);
             b.Property(x => x.IsDeleted).HasDefaultValue(false);
             b.Property(x => x.CreatedAt).IsRequired();
-            b.Property(x => x.UpdatedAt).IsRequired();
+            b.Property(x => x.UpdatedAt).IsRequired(false);
             b.Ignore(x => x.RecipesCount);
 
             b.HasQueryFilter(x => !x.IsDeleted);
@@ -66,39 +87,19 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options) : Ide
             b.HasIndex(x => x.Name);
         });
 
-        builder.Entity<Recipe>(b =>
+        // Nạp cấu hình Recipe aggregate (RecipeConfiguration, RecipeStepConfiguration...)
+        builder.ApplyConfigurationsFromAssembly(typeof(AuthDbContext).Assembly);
+
+        // Soft delete đồng nhất cho mọi BaseEntity (D08 / C01)
+        foreach (var entityType in builder.Model.GetEntityTypes())
         {
-            b.ToTable("Recipes");
-            b.HasKey(x => x.Id);
-            b.Property(x => x.Title).HasMaxLength(200).IsRequired();
-            b.Property(x => x.Slug).HasMaxLength(220).IsRequired();
-            b.Property(x => x.Description).HasMaxLength(2000).IsRequired();
-            b.Property(x => x.Instructions).IsRequired();
-            b.Property(x => x.PrepTimeMinutes).IsRequired();
-            b.Property(x => x.CookTimeMinutes).IsRequired();
-            b.Property(x => x.Servings).IsRequired();
-            b.Property(x => x.Difficulty).HasMaxLength(50).IsRequired();
-            b.Property(x => x.Status).HasMaxLength(50).IsRequired();
-            b.Property(x => x.AuthorId).IsRequired();
-            b.Property(x => x.PrimaryImageUrl).HasMaxLength(500);
-            b.Property(x => x.IsDeleted).HasDefaultValue(false);
-            b.Property(x => x.CreatedAt).IsRequired();
-            b.Property(x => x.UpdatedAt).IsRequired();
+            if (!typeof(BaseEntity).IsAssignableFrom(entityType.ClrType)) continue;
 
-            b.HasOne(x => x.Category)
-                .WithMany()
-                .HasForeignKey(x => x.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            b.HasQueryFilter(x => !x.IsDeleted);
-
-            b.HasIndex(x => x.Slug).IsUnique();
-            b.HasIndex(x => x.CategoryId);
-            b.HasIndex(x => x.AuthorId);
-            b.HasIndex(x => x.Status);
-            b.HasIndex(x => x.Difficulty);
-            b.HasIndex(x => x.PublishedAt);
-            b.HasIndex(x => x.CreatedAt);
-        });
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var body = Expression.Equal(
+                Expression.Property(parameter, nameof(BaseEntity.IsDeleted)),
+                Expression.Constant(false));
+            builder.Entity(entityType.ClrType).HasQueryFilter(Expression.Lambda(body, parameter));
+        }
     }
 }

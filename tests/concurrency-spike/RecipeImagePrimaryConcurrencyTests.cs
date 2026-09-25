@@ -7,15 +7,19 @@ namespace ConcurrencySpike;
 
 /// <summary>
 /// Chứng minh tiêu chí nghiệm thu D24/TV4:
-///  - "đúng 1 primary cho mỗi recipe": two writers cùng PATCH set primary khác nhau
-///    (Race A : image#1, Race B : image#2) -> writer chậm hơn bị DbUpdateException do
-///    partial unique index ux_recipe_images_one_primary, KHÔNG xảy ra trạng thái 2 primary.
-///  - Kết hợp RowVersion (D19): mọi update ảnh đều qua aggregate + unique index phòng thủ
-///    lớp DB (defense in depth), không chỉ dựa vào logic ứng dụng.
+///  - "đúng 1 primary cho mỗi recipe": hai writer cùng đổi ảnh chính sang hai ảnh KHÁC NHAU
+///    (A → ảnh 2, B → ảnh 3). Cả hai đều phải tắt cờ primary của ảnh 1 nên đụng nhau ở RowVersion;
+///    writer chậm hơn bị DbUpdateException, KHÔNG xảy ra trạng thái 2 primary.
+///  - Kết hợp RowVersion (D19): mọi update ảnh đều qua aggregate + partial unique index
+///    ux_recipe_images_one_primary phòng thủ ở lớp DB (defense in depth).
+///
+/// Lưu ý: cần 3 ảnh. Nếu chỉ có 2 ảnh và writer B đặt primary cho ảnh VỐN ĐÃ là primary thì
+/// B không sinh lệnh ghi nào, không có xung đột thật, và kết quả test phụ thuộc thứ tự
+/// UPDATE mà EF sinh ra — khiến test lúc pass lúc fail.
 /// </summary>
 public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) : IClassFixture<SpikeDbFixture>
 {
-    private async Task<Guid> SeedRecipeWithTwoImagesAsync()
+    private async Task<Guid> SeedRecipeWithThreeImagesAsync()
     {
         await using var ctx = fixture.NewContext();
         var recipe = Recipe.CreateDraft(
@@ -51,7 +55,7 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
     [Fact]
     public async Task Concurrent_primary_setters_never_produce_two_primaries()
     {
-        var recipeId = await SeedRecipeWithTwoImagesAsync();
+        var recipeId = await SeedRecipeWithThreeImagesAsync();
 
         // Hai writer độc lập đọc cùng trạng thái.
         await using var writerA = fixture.NewContext();
@@ -59,18 +63,19 @@ public sealed class RecipeImagePrimaryConcurrencyTests(SpikeDbFixture fixture) :
         var recipeA = await writerA.Recipes.Include(r => r.Images).SingleAsync(r => r.Id == recipeId);
         var recipeB = await writerB.Recipes.Include(r => r.Images).SingleAsync(r => r.Id == recipeId);
 
-        var imageA2 = recipeA.Images.First(i => i.OriginalUrl.EndsWith("second.jpg"));
-        var imageB3 = recipeB.Images.First(i => i.OriginalUrl.EndsWith("third.jpg"));
+        var ordered = recipeA.Images.OrderBy(i => i.OrderIndex).ToList();
+        var secondId = ordered[1].Id;
+        var thirdId = ordered[2].Id;
 
-        // A chuyển primary sang ảnh 2, B chuyển primary sang ảnh 3. Cả hai chạy đồng thời.
+        // A chuyển primary sang ảnh 2, B chuyển sang ảnh 3. Cả hai chạy "đồng thời".
         var taskA = Task.Run(() =>
         {
-            recipeA.SetPrimaryImage(imageA2.Id);
+            recipeA.SetPrimaryImage(secondId);
             return writerA.SaveChangesAsync();
         });
         var taskB = Task.Run(() =>
         {
-            recipeB.SetPrimaryImage(imageB3.Id);
+            recipeB.SetPrimaryImage(thirdId);
             return writerB.SaveChangesAsync();
         });
 

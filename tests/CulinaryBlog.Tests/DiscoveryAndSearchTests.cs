@@ -6,7 +6,7 @@ using Xunit;
 
 namespace CulinaryBlog.Tests;
 
-public sealed class FakeRecipeRepository : IRecipeRepository
+public sealed class FakeRecipeRepository : IRecipeDiscoveryRepository
 {
     public readonly List<Recipe> Recipes = [];
     public readonly Dictionary<Guid, string> CategoryNames = [];
