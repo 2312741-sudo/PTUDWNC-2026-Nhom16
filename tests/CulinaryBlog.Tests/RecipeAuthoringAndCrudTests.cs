@@ -32,6 +32,7 @@ public sealed class FakeAuthoringRecipeRepository : IRecipeRepository
         Task.FromResult(Categories.Contains(categoryId));
 
     public void Add(Recipe recipe) => Recipes.Add(recipe);
+    public void Remove(Recipe recipe) => Recipes.Remove(recipe);
 
     public void RemoveIngredient(RecipeIngredient ingredient) { }
 

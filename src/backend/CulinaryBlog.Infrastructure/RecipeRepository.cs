@@ -146,6 +146,9 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
 
     public void Add(Recipe recipe) => db.Recipes.Add(recipe);
 
+    // Soft delete (ADR-0001): entity.SoftDelete() đã đặt IsDeleted; chỉ cần EF theo dõi để UPDATE.
+    public void Remove(Recipe recipe) => db.Recipes.Update(recipe);
+
     public void RemoveIngredient(RecipeIngredient ingredient) => db.RecipeIngredients.Remove(ingredient);
 
     public void RemoveStep(RecipeStep step) => db.RecipeSteps.Remove(step);

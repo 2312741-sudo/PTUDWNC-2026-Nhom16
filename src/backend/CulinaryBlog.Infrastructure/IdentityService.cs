@@ -95,9 +95,9 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         // Rotation phải nguyên tử: khóa hàng để hai request đồng thời không cùng cấp token mới (D05).
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
-        var token = await db.RefreshTokens
+        var token = (await db.RefreshTokens
             .FromSqlRaw("""SELECT * FROM "RefreshTokens" WHERE "TokenHash" = {0} FOR UPDATE""", tokenHash)
-            .FirstOrDefaultAsync(ct);
+            .ToListAsync(ct)).FirstOrDefault();
 
         if (token is null)
             throw new AppException(401, "auth.invalid_refresh_token", "Refresh token không tồn tại.");

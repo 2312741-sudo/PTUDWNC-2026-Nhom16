@@ -262,4 +262,11 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         if (Status == RecipeStatus.Archived) return;
         Status = RecipeStatus.Archived;
     }
+
+    /// <summary>Xoá mềm (ADR-0001): đặt IsDeleted, global query filter tự ẩn bản ghi.</summary>
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

@@ -22,6 +22,7 @@ public sealed class FakeOwnedRecipeRepository : IRecipeRepository
     public Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken ct) => Task.FromResult(true);
 
     public void Add(Recipe recipe) => Store.Add(recipe);
+    public void Remove(Recipe recipe) => Store.Remove(recipe);
 
     public void RemoveIngredient(RecipeIngredient ingredient) { }
 

@@ -118,6 +118,7 @@ public interface IRecipeRepository
     Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken ct);
 
     void Add(Recipe recipe);
+    void Remove(Recipe recipe);
     void RemoveIngredient(RecipeIngredient ingredient);
     void RemoveStep(RecipeStep step);
 
@@ -574,6 +575,33 @@ public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser 
 
         await repo.SaveChangesAsync(ct);
         return recipe.ToDto();
+    }
+}
+
+#endregion
+
+#region C2.4 — Xoá công thức (FR-RCP-007) — soft delete (ADR-0001)
+
+// Xoá mềm: set IsDeleted, global query filter tự ẩn khỏi mọi truy vấn.
+// Con (ingredient/step/image) để nguyên — ON DELETE CASCADE chỉ chạy khi hard delete;
+// với soft delete ta chỉ cần ẩn aggregate gốc là đủ (D-recipe không lộ qua filter).
+public sealed record DeleteRecipeCommand(Guid Id, string? RowVersion) : IRequest;
+
+public sealed class DeleteRecipeValidator : AbstractValidator<DeleteRecipeCommand>
+{
+    public DeleteRecipeValidator() => RuleFor(x => x.Id).NotEmpty();
+}
+
+public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+    : IRequestHandler<DeleteRecipeCommand>
+{
+    public async Task Handle(DeleteRecipeCommand cmd, CancellationToken ct)
+    {
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.Id, ct);
+        RecipeGuard.EnsureVersion(recipe, cmd.RowVersion);   // 422 nếu bản ghi đã đổi ở nơi khác
+
+        recipe.SoftDelete();                 // set IsDeleted; interceptor cập nhật RowVersion
+        await repo.SaveChangesAsync(ct);
     }
 }
 

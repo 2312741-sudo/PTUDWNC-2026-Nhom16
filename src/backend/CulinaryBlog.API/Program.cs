@@ -76,6 +76,7 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<RecipeRepository>();
 builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
+builder.Services.AddScoped<IMyRecipesRepository, MyRecipesRepository>();
 builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
@@ -143,6 +144,7 @@ builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document,
     document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme { Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT" };
     return Task.CompletedTask;
 }));
+builder.Services.AddControllers();
 var app = builder.Build();
 _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
@@ -314,6 +316,15 @@ recipes.MapPut("/{id:guid}", async (Guid id, UpdateRecipeBody body, ISender send
     .Produces<object>(200).ProducesValidationProblem()
     .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
 
+recipes.MapDelete("/{id:guid}", async (Guid id, HttpRequest request, ISender sender, CancellationToken ct) =>
+{
+    var rowVersion = request.Headers.IfMatch.Count > 0 ? request.Headers.IfMatch.ToString().Trim('"') : null;
+    await sender.Send(new DeleteRecipeCommand(id, rowVersion), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteRecipe")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
 recipes.MapPost("/{id:guid}/ingredients", async (Guid id, IngredientBody b, ISender sender, CancellationToken ct) =>
 {
     var created = await sender.Send(new AddIngredientCommand(id, b.Name, b.Quantity, b.Unit, b.Notes), ct);
@@ -426,6 +437,7 @@ recipes.MapDelete("/{id:guid}/images/{imageId:guid}", async (Guid id, Guid image
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
+app.MapControllers();
 app.Run();
 
 public partial class Program
