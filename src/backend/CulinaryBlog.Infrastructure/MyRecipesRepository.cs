@@ -97,7 +97,7 @@ public sealed class MyRecipesRepository(AuthDbContext db) : IMyRecipesRepository
         return new MyRecipeCountsDto(byStatus.Values.Sum(), byStatus);
     }
 
-private static DateTimeOffset ToUtc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+    private static DateTimeOffset ToUtc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
     private static DateTimeOffset? ToUtc(DateTime? value) => value.HasValue ? ToUtc(value.Value) : null;
 
     private static string EscapeLike(string input) =>
