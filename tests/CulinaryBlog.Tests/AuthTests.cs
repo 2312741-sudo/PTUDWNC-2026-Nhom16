@@ -28,7 +28,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.ConfigureHostConfiguration(config => config.AddInMemoryCollection(new Dictionary<string, string?>
+        var testDb = Environment.GetEnvironmentVariable("TEST_DATABASE");
+        if (!string.IsNullOrWhiteSpace(testDb))
+            builder.UseSetting("ConnectionStrings:Database", testDb);
+        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres",
             ["Jwt:SigningKey"] = new string('t', 64)
