@@ -20,17 +20,6 @@ namespace CulinaryBlog.Tests;
 
 public sealed record ApiResponse<T>(T Data);
 
-public sealed class DebugEnvTest
-{
-    [Fact]
-    public void Print_test_database_env_var()
-    {
-        var v = Environment.GetEnvironmentVariable("TEST_DATABASE");
-        Console.WriteLine($"[DEBUG] TEST_DATABASE seen by test process = '{v}'");
-        Assert.True(true);
-    }
-}
-
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
     private static readonly object MigrationLock = new();
