@@ -320,3 +320,27 @@ export async function register(
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
   }
 }
+
+// ----------------------------------------------------------------------
+// Recipe Detail (TV3 - Tuần 3)
+// ----------------------------------------------------------------------
+
+export async function getRecipeBySlug(
+  slug: string,
+  token?: string
+): Promise<import('@/types/recipe').RecipeDetail | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, {
+      ...(token
+        ? { cache: 'no-store' as const, headers: { Authorization: `Bearer ${token}` } }
+        : { next: { revalidate: 300 } }),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error('Không thể tải chi tiết công thức.');
+    const json = await res.json();
+    return json.data ?? json;
+  } catch (error) {
+    console.error('Error in getRecipeBySlug:', error);
+    return null;
+  }
+}

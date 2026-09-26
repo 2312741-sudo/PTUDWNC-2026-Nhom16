@@ -28,7 +28,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1">
+      <Link href={`/recipes/${recipe.slug}`} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1">
       {/* Image Container */}
       <div className="relative w-full h-48 bg-gradient-to-tr from-emerald-50 to-amber-50 flex items-center justify-center overflow-hidden">
         {imageUrl ? (
@@ -90,6 +90,6 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           </span>
         </div>
       </div>
-    </div>
+      </Link>
   );
 }

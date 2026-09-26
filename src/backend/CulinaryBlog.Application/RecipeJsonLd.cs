@@ -33,6 +33,7 @@ public sealed record RecipeStepJsonLd(
     [property: JsonPropertyName("text")] string Text
 );
 
+
 public sealed record RecipeNutritionJsonLd(
     [property: JsonPropertyName("@type")] string Type,
     [property: JsonPropertyName("calories")] string? Calories,
