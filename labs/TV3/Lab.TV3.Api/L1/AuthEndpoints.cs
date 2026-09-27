@@ -80,7 +80,10 @@ public static partial class AuthEndpoints
 
         var u = new LabUser
         {
-            Id = Guid.NewGuid(), Email = r.Email.Trim(), NormalizedEmail = Norm(r.Email), DisplayName = r.DisplayName.Trim(),
+            Id = Guid.NewGuid(),
+            Email = r.Email.Trim(),
+            NormalizedEmail = Norm(r.Email),
+            DisplayName = r.DisplayName.Trim(),
         };
         u.PasswordHash = hasher.HashPassword(u, r.Password); // Identity V3: PBKDF2-HMAC-SHA512, salt ngẫu nhiên
 
@@ -180,9 +183,13 @@ public static partial class AuthEndpoints
 
         var u = new LabUser
         {
-            Id = Guid.NewGuid(), Email = g.Email, NormalizedEmail = Norm(g.Email),
+            Id = Guid.NewGuid(),
+            Email = g.Email,
+            NormalizedEmail = Norm(g.Email),
             DisplayName = string.IsNullOrWhiteSpace(g.Name) ? g.Email : g.Name!,
-            GoogleSub = g.Subject, EmailConfirmed = true, PasswordHash = null,
+            GoogleSub = g.Subject,
+            EmailConfirmed = true,
+            PasswordHash = null,
         };
         await c.ExecuteAsync(InsertUser, u);
         return Results.Created("/lab/l1/me", new { data = new { action = "created", auth = await tokens.IssueAsync(u, ct) } });

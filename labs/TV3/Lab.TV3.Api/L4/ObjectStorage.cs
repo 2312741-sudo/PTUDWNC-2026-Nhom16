@@ -24,8 +24,12 @@ public sealed class ObjectStorage(IAmazonS3 s3, IConfiguration cfg)
         await EnsureBucketAsync(ct);
         await s3.PutObjectAsync(new PutObjectRequest
         {
-            BucketName = Bucket, Key = key, InputStream = body, ContentType = contentType,
-            AutoCloseStream = false, UseChunkEncoding = false, // MinIO không cần chunk signing
+            BucketName = Bucket,
+            Key = key,
+            InputStream = body,
+            ContentType = contentType,
+            AutoCloseStream = false,
+            UseChunkEncoding = false, // MinIO không cần chunk signing
         }, ct);
     }
 
