@@ -46,7 +46,7 @@ export interface RecipeDetail {
   prepTimeMinutes: number; cookTimeMinutes: number; servings: number;
   difficulty: Difficulty; categoryId: string; status?: string;
   nutrition: Nutrition | null; rowVersion: string;
-  ingredients: Ingredient[]; steps: Step[];
+  ingredients: Ingredient[]; steps: Step[]; images?: RecipeImage[];
 }
 
 export interface SavedRecipe { id: string; slug: string; rowVersion: string; status?: string }
@@ -141,3 +141,55 @@ export const deleteStep = (id: string, stepId: string) =>
   request<unknown>(`/recipes/${id}/steps/${stepId}`, json("DELETE"));
 export const reorderSteps = (id: string, orderedStepIds: string[]) =>
   request<unknown>(`/recipes/${id}/steps/reorder`, json("PATCH", { orderedStepIds }));
+
+// ================================================================ Ảnh (hợp đồng TV4 — docs/IMAGE_CONTRACT.md)
+export interface RecipeImage {
+  id: string;
+  originalUrl?: string | null; mediumUrl?: string | null; thumbnailUrl?: string | null; url?: string | null;
+  altText?: string | null; isPrimary: boolean; orderIndex: number;
+}
+
+export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+export const IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MiB (FR-FILE-001)
+
+const MEDIA = process.env.NEXT_PUBLIC_MEDIA_URL;
+/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) — ghép với NEXT_PUBLIC_MEDIA_URL để ra URL trình duyệt. */
+export function mediaUrl(key?: string | null): string | null {
+  if (!key) return null;
+  if (/^https?:\/\//i.test(key)) return key;
+  return MEDIA ? `${MEDIA.replace(/\/$/, "")}/${key.replace(/^\//, "")}` : null;
+}
+export const imageSrc = (i: RecipeImage) => mediaUrl(i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
+
+export async function uploadImage(id: string, file: File, altText: string | null): Promise<RecipeImage> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const fd = new FormData();
+  fd.append("file", file);
+  if (altText) fd.append("altText", altText);
+  // KHÔNG đặt Content-Type: trình duyệt tự thêm boundary multipart
+  const res = await fetch(`${API}/recipes/${id}/images`, {
+    method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd,
+  });
+  if (res.status === 401) throw new UnauthorizedError(401, "UNAUTHORIZED", "Phiên đăng nhập hết hạn");
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new ApiError(res.status, body?.code ?? body?.error?.code, errorMessage(body, res.status));
+  return (body?.data ?? body) as RecipeImage;
+}
+
+// PATCH gửi đủ 3 field (JSON strict) và giữ nguyên giá trị hiện tại để không vô tình xoá altText/orderIndex
+export const updateImage = (id: string, img: RecipeImage, patch: Partial<Pick<RecipeImage, "isPrimary" | "altText" | "orderIndex">>) =>
+  request<unknown>(`/recipes/${id}/images/${img.id}`, json("PATCH", {
+    isPrimary: patch.isPrimary ?? img.isPrimary,
+    altText: patch.altText ?? img.altText ?? null,
+    orderIndex: patch.orderIndex ?? img.orderIndex,
+  }));
+export const deleteImage = (id: string, imageId: string) =>
+  request<unknown>(`/recipes/${id}/images/${imageId}`, json("DELETE"));
+
+/** RowVersion lệch / ghi đồng thời: backend trả 409 hoặc 422 kèm mã concurrency. */
+export function isConflict(e: unknown): boolean {
+  if (!(e instanceof ApiError)) return false;
+  return e.status === 409
+    || (e.status === 422 && /concurren|conflict|version/i.test(e.code ?? ""))
+    || /thay đổi ở nơi khác/i.test(e.message);
+}
