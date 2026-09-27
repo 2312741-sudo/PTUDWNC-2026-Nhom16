@@ -120,7 +120,7 @@
 | # | Việc làm | Kết quả mong đợi | Trạng thái 28/09 |
 |---|---|---|---|
 | 1 | Nhánh `practice/TV4/L4`: upload/delete 4 MIME + resize 300×300/800×600 + Mailhog email + Hangfire delayed/restart | Commit lab + test | ✅ **Xong** — 39/39 check; thêm 2 phase chẩn đoán `db`/`purge` (không tính vào yêu cầu); log `Tuan03/logs/lab_l4_{run.log,db.txt}` |
-| 2 | Lab theo PHAN_CHIA tuần 3 TV4: Identity/Google/refresh/forms/FTS (phần TV4 cần học) | PR lab ngoài phần chính, có sổ K | ⬜ **Chưa làm** — để tuần 4; ưu tiên sau D6-Lab |
+| 2 | Lab theo PHAN_CHIA tuần 3 TV4: Identity/Google/refresh/forms/FTS (phần TV4 cần học) | PR lab ngoài phần chính, có sổ K | ⬜ **Chưa làm** — ⚠️ đối chiếu 28/09: `PHAN_CHIA` mục 3.4 + `KE_HOACH_DU_AN` mục 4.2 đều **xếp việc này vào tuần 3**, không phải tuần 4 → cần nhóm trưởng chốt (làm tối giản / ghi nhận dời tuần 4) thay vì tự ghi "để tuần 4" |
 | 3 | *(phát sinh 28/09)* CI 5 run đỏ vì image MinIO bị gỡ khỏi registry — gỡ + harden action + sửa dev compose | CI xanh + dev stack dựng được trên máy mới | ✅ **Xong** — `cd72b27` + `d78e25c`; CI xanh run `36344662570` |
 
 ---
@@ -190,8 +190,11 @@
 - [x] **OTEL/metrics/health (24/09)**: trace ASP.NET/Http/EF + metrics + health db/redis/minio; **27/09 hoàn tất EXPLAIN publish query + k6 smoke** (`logs/`) — N3 xong.
 - [ ] PR fix connection string lazy `4830e57` → main (CI main 6 commit mới có thể dính 28P01).
 - [x] **Proxy ảnh D27 (27/09)**: `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` (tách khỏi `IFileStorageService`); Published public + cache; Draft/Archived owner/Admin else `403 image.forbidden`; `404` invalid/unknown/soft-deleted; E2E `ImageProxyD27Tests` **6/6**; `IMAGE_CONTRACT.md §5` chốt PA-2.
-- [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`).
-- [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
+- [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`). → **28/09: PR #15 đã merge vào main (`b591e74`)**; rà main thấy `ImagesStep.tsx` **đã có** upload/delete/set-primary + optimistic rollback + đã dùng `NEXT_PUBLIC_MEDIA_URL`; **còn thiếu thanh progress upload**. Nhánh này **chưa có** FE editor (behind main 23) → merge `origin/main` trước khi sửa.
+- [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4. → **28/09: Publish đã có** (`ReviewStep.tsx` gọi `publishRecipe`); **Unpublish/Archive chưa có nút nào** dù API đã sẵn sàng → làm sau khi merge main.
+- [ ] **Sitemap theo lịch 02:00 UTC + distributed lock khi nhiều worker** (CR-7; `KE_HOACH_DU_AN` mục 8 dòng 339 + N2 item 4) — hiện chỉ có `GET /recipes/sitemap` on-demand + `sitemap.ts`/`robots.ts`.
+- [ ] **Trace thật vào Seq** (K20 — G5 tuần 3 yêu cầu "OTEL trace HTTP→DB"): bật service `seq` trong compose + gửi OTLP + chụp log làm bằng chứng.
+- [ ] **Bảng mapping K01** (FR ↔ ADR ↔ evidence key) — bảng kỹ năng vẫn ghi "Chưa làm"; reviewer cần để nghiệm thu.
 - [x] **Resize D2 (27/09, N4)**: `ResizeImageJob` (300×300/800×600, idempotent, original fallback, delete-vs-resize, retry 3) + `IObjectStorageWriter` (key phái sinh chủ động, tách khỏi `IFileStorageService`) + `IImageResizeQueue` (Hangfire / Inline ở `Testing`) + dashboard `/hangfire` chỉ Admin; E2E `ImageResizeD2Tests` **4/4** + 5 unit; **job Hangfire thật `Succeeded`**, proxy trả 300×200, ảnh hỏng → fallback original; suite **148/148 + 5/5**; `IMAGE_CONTRACT.md §7`; log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
 - [x] **Invalidation cache archive/unpublish/delete (27/09 — đóng bằng xác minh)**: không có cache recipe nào để invalidate (backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire) → handoff TV2/TV3 nếu nhóm thêm ISR/output-cache.
 - [ ] ~~Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.~~ → **xong 28/09 (N5)**: commit `3642428`, **4 phase · 39/39 check PASS**, sổ K `Tuan03/SOK_LAB_L4.md` + `practice/TV4/L4/README.md`, log `lab_l4_{run.log,db.txt}` không secret; CI pass sau mỗi task ✅; không commit secret ✅ (quét staged diff trước khi commit).
@@ -214,6 +217,10 @@
 | MinIO SDK `WithCallbackStream` + `async` lambda | Ảnh cắt cụt/stream hỏng khi đọc đồng thời | Copy **đồng bộ** trong `ReadAsync` + kiểm tra `buffer.Length == stat.Size` (đã sửa, test ổn định) |
 | D27 proxy qua API có thể tăng tải/đi qua app | Bandwidth/token khi phục vụ ảnh | Cache-Control hợp lý (Published cache); cân nhắc Nginx route thẳng MinIO sau khi chốt vị trí proxy với TV1 |
 | PR #14 đã merge nhầm gây xung đột docs/số liệu | Doc nhầm trạng thái | Rà soát diff, note rõ trong sổ evidence; đưa vào báo cáo nhóm |
+| **Nhánh lệch main 23 commit** (28/09) | D4 UI không sửa được (thiếu `dashboard/recipes/**` của PR #15); dễ mất thay đổi của TV1/TV2/TV3 | Merge `origin/main` trước khi làm D4; xử lý conflict `docker-compose.dev.yml` + `.github/workflows/backend.yml` |
+| **Hai image storage khác nhau trên main vs nhánh** (28/09) | Nhánh `rustfs/rustfs` (digest) vs main `coollabsio/minio:RELEASE.2025-10-15T17-29-55Z` (TV3 `84dddd4`) → conflict khi merge; CI main chưa có service storage nên E2E vẫn **skip âm thầm** | CR-6: nhóm trưởng chốt một image cho dev + CI rồi áp dụng cả hai nơi, ghim digest; production vẫn dùng storage có license |
+| **Fix `4830e57` chưa lên main** (28/09) | CI main có nguy cơ 28P01 với các commit deploy mới | PR lên main (nhóm trưởng duyệt) |
+| Sitemap chỉ on-demand, chưa có job lịch + distributed lock | Lệch yêu cầu đề (cron 02:00 UTC); nhiều worker có thể sinh trùng | CR-7: Hangfire recurring (đã có) hoặc ghi rõ giới hạn trong sổ |
 
 ---
 
@@ -230,5 +237,7 @@
 9. ✅ **Resize job (Hangfire — D23 chốt)** — xong 27/09 (N4).
 10. ✅ **Lab L4 (N5/D6)** — xong 28/09: commit `3642428`, 39/39 check, sổ K.
 11. ✅ **Gỡ sự cố CI + dev compose** (image storage bị gỡ khỏi registry) — xong 28/09: `cd72b27` + `d78e25c`.
-12. ⬜ **N5 mục 2** — lab Identity/Google/refresh/forms/FTS (tuần 4).
-13. ⬜ Uploader UI + status buttons (D4 — ghép TV3 C4).
+12. ⬜ **N5 mục 2** — lab Identity/Google/refresh/forms/FTS (**yêu cầu của tuần 3** theo `PHAN_CHIA` mục 3.4 — cần nhóm trưởng chốt làm tối giản hay ghi nhận dời tuần 4).
+13. ⬜ **Merge `origin/main`** vào nhánh (behind 23) → xử lý conflict compose/workflow (CR-6) → làm D4 UI.
+14. ⬜ **Uploader UI + status buttons** (D4 — sau khi merge main): thanh progress upload + nút Unpublish/Archive (Publish đã có trên main).
+15. ⬜ **Trace thật vào Seq** (K20) + **sitemap job 02:00 UTC/distributed lock** (CR-7) + **bảng mapping K01**.

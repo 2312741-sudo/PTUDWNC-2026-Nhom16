@@ -49,7 +49,10 @@
 | **D27** | Bucket policy + ảnh upload hiển thị (presigned/proxy) → uploader UI | Quyết định nhóm D27 + CR | ✅ **Xong 27/09** — chốt **PA-2 proxy có auth** + endpoint `GET /resources/images/{key}` + `IObjectStorageReader`; E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` cập nhật |
 | **D4-Uploader UI** | Uploader progress/rollback/gallery/primary + status buttons ghép TV3 C4 | D27 ✅ xong + TV3 C4 | D27 proxy đã sẵn sàng; còn TV4 review PR #15 + progress/rollback + status buttons ghép TV3 C4 |
 | **D3-Invalidation (N1 item 3, 27/09)** | Không tồn tại cache recipe nào để invalidate — backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire → tiêu chí thỏa mặc định. **Đã đóng bằng xác minh 27/09.** | TV2/TV3 (nếu họ thêm ISR/output-cache cho recipe list/detail/ảnh) | Nếu TV2/TV3 thêm cache → TV4 kết nối revalidate hook (hoặc wire `RecipeCacheService` + `InvalidatePrefixAsync` khi archive/unpublish/delete) |
-| **D6 Lab L4** | `practice/TV4/L4`: 4 MIME + resize + Mailhog + Hangfire + sổ K | Không ai block — độc lập | ✅ **Xong 28/09 (N5)** — commit `3642428`, 39/39 check; còn mục 2 `PHAN_CHIA` (Identity/Google/refresh/forms/FTS) để tuần 4 |
+| **D6 Lab L4** | `practice/TV4/L4`: 4 MIME + resize + Mailhog + Hangfire + sổ K | Không ai block — độc lập | ✅ **Xong 28/09 (N5)** — commit `3642428`, 39/39 check; ⚠️ còn mục 2 `PHAN_CHIA` (Identity/Google/refresh/forms/FTS) **là yêu cầu của tuần 3**, cần nhóm trưởng chốt làm tối giản hay dời tuần 4 |
+| **D4 UI (28/09)** | progress upload + nút Unpublish/Archive | **Phải merge `origin/main` trước** (behind 23) — wizard/`ImagesStep.tsx` của PR #15 nằm trên main; Publish đã có, Unpublish/Archive chưa | TV4 tự làm sau khi merge; xin nhóm trưởng duyệt PR |
+| **Ảnh storage (28/09)** | Nhánh `rustfs/rustfs` vs main `coollabsio/minio` | CR-6 — chọn 1 image cho dev + CI trước khi merge | Nhóm trưởng |
+| **Fix `4830e57`** | Lazy connection string chưa có trên main | PR lên main | Nhóm trưởng |
 | **N5 mục 2 (lab Identity/Google/forms/FTS)** | Phần TV4 cần học theo `PHAN_CHIA` tuần 3 | Ưu tiên sau D6-Lab | TV4 tự làm ở nhánh lab (không chặn G5 vì D6-Lab đã đủ bằng chứng) |
 | **PR #14** | Giữ nguyên trên main (D1.3 + D3.1/D3.2 đã merge nhầm) | Nhóm trưởng | Giữ nguyên theo quyết định nhóm 23/09; rà soát diff trong tuần |
 
@@ -123,6 +126,7 @@ dotnet restore CulinaryBlog.sln --locked-mode
 9. **Response upload có `mediumUrl`/`thumbnailUrl = null`** là chuẩn (job nền). FE (TV3) cần reload `GET /recipes/{slug}`; `imageSrc()` đã fallback `originalUrl`.
 10. **Đừng dùng image container với tag `latest`/image đã bị gỡ khỏi registry** (28/09) — MinIO đã xoá cả `quay.io/minio/minio` lẫn `minio/minio` trên Docker Hub, khiến **toàn bộ** CI và dev compose hỏng mà không có báo lỗi code nào. Dùng `rustfs/rustfs` (tag + digest) như hiện tại. **Production KHÔNG dùng RustFS** — cần object storage có license.
 11. **Sau khi sửa CI, kiểm tra `Skipped=0`** — test E2E skip âm thầm khi storage down làm CI "xanh giả" mà không kiểm thử gì.
+12. **Rà `origin/main` trước khi làm việc FE hoặc fix hạ tầng** (28/09): PR #15 (wizard ảnh) đã merge vào main trong lúc nhánh này đang làm N4/N5, và TV3 đã tự đổi image dev sang `coollabsio/minio` — nếu không rà main thì (a) không sửa được code vì file chưa có trong nhánh, (b) merge sau sẽ đụng image storage khác nhau.
 
 ---
 

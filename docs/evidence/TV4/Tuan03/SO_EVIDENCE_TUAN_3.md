@@ -13,7 +13,7 @@
 
 | K | Loại | Kỹ thuật con | Sẽ chứng minh ở | Tuần 3 | Trạng thái |
 |---|---|---|---|---|---|
-| K01 | SP | SRS/FR-NFR/ADR/API contract | ADR-TV4-001 (D08/D17/D21/D22/D23/D26/D27) + mapping FR | N0, D3, D4, D5 | Chưa làm |
+| K01 | SP | SRS/FR-NFR/ADR/API contract | ADR-TV4-001 (D08/D17/D21/D22/D23/D26/D27) + mapping FR | N0, D3, D4, D5 | ⬜ Chưa làm — đối chiếu 28/09: ADR đã có nhưng **chưa có bảng mapping FR ↔ ADR ↔ evidence key**; cần làm để reviewer nghiệm thu |
 | K02 | SP | .NET10 Minimal APIs, REST/version, Scalar/RFC7807 | Archive/delete endpoints + 422/403 | D3 | Đã làm (chờ review) |
 | K03 | SP | Clean Architecture, interface, DI, value object | Presigned/proxy qua `IFileStorageService` extension + domain methods | D3, D4 | ✅ Đã làm 27/09 (D27 — `IObjectStorageReader` tách khỏi `IFileStorageService`) |
 | K04 | SP+LAB | CQRS/MediatR + logging/validation/caching behaviors | Archive/delete CQRS handlers + LAB behavior | D3 + D6 | Đã làm (D3) |
@@ -25,14 +25,14 @@
 | K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | ✅ Đã làm — E2E 3/3 + **LAB 28/09: `media` 25/25 (magic bytes 4 MIME + file MIME giả + quá giới hạn + idempotent + dọn dẹp)** |
 | K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | ✅ **Xong cả SP lẫn LAB 28/09** — SP: `ResizeImageJob` chạy thật `Succeeded`, retry 3, dashboard Admin-only, E2E 4/4; LAB: `jobs` 8/8 gồm **tắt worker → job còn `Scheduled` trong DB → chạy khi restart** + retry quan sát được + recurring do scheduler kích hoạt |
 | K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | ✅ **Đã làm 28/09 (N5)** — `email` 3/3 (MailKit plain+HTML qua Mailhog, đối chiếu subject) + `xml` 3/3 (sitemap từ DB thật, 93 URL Published, parse `XDocument`) + resize 300×200/800×533 |
-| K16 | SP | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | Uploader UI hoàn thiện (D4) | D4 | Chưa làm (chờ D27) |
-| K17 | SP | TanStack Query, optimistic rollback, next/image | Uploader progress/gallery/primary optimistic | D4 | Chưa làm (chờ D27) |
-| K18 | SP | Responsive, WCAG2.1 AA, keyboard/loading/error | Upload/status checklist | D4 | Chưa làm |
+| K16 | SP | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | Uploader UI hoàn thiện (D4) | D4 | ⬜ Chưa làm — **đổi lý do 28/09**: không còn "chờ D27"; PR #15 đã merge vào main (`dashboard/recipes/_wizard/ImagesStep.tsx`) nhưng nhánh này chưa có → merge main rồi sửa; còn thiếu progress upload |
+| K17 | SP | TanStack Query, optimistic rollback, next/image | Uploader progress/gallery/primary optimistic | D4 | 🟡 Một phần có sẵn trên main (TV3): `run()` optimistic + rollback khi lỗi, `NEXT_PUBLIC_MEDIA_URL`; **thiếu progress upload**; evidence của TV4 chưa ghi |
+| K18 | SP | Responsive, WCAG2.1 AA, keyboard/loading/error | Upload/status checklist | D4 | ⬜ Chưa làm (cần checklist sau khi có nút status) |
 | K19 | SP | SEO metadata/OG/canonical/robots/JSON-LD | Sitemap/robots/OG/JSON-LD Published-only | D4 | Đã làm (SEO) |
 | K20 | SP | Serilog/Seq/correlation, OTEL, metrics, health | OTEL trace HTTP→DB + health thành phần | D5 | ✅ Đã làm (cấu hình + xác minh; trace thật qua Seq khi stack bật) |
 | K22 | SP | k6/EXPLAIN/cache hit/CWV | EXPLAIN publish query + k6 + cache hit | D5 | ✅ Đã làm 27/09 (EXPLAIN + k6 smoke ghi số liệu) |
 | K23 | SP | Docker/Compose/Nginx/volumes/backup-restore | CI xanh (N0) + stack vận hành + queue service | N0, D2 | ✅ **Đã làm + gia cố 28/09** — stack vận hành; **CI 5 run đỏ do image MinIO bị gỡ khỏi registry đã gỡ** (thay `rustfs/rustfs` tag+digest trong workflow lẫn dev compose, bỏ `minio-init`); CI xanh run `36344662570`; queue service (Hangfire + PostgreSQL) chạy thật ở cả SP lẫn LAB |
-| K24 | SP | Git/PR/review/CI/static analysis/secret scan/docs | PR nhỏ từng task + review Tâm + note PR #14 | N0, Tất cả | Đang làm |
+| K24 | SP | Git/PR/review/CI/static analysis/secret scan/docs | PR nhỏ từng task + review Tâm + note PR #14 | N0, Tất cả | 🟡 Đang làm — **28/09**: còn 3 việc chưa đóng: PR `4830e57` lên main (chưa có trên main), rà soát diff PR #14, và **PR cho nhánh lab** `practice/TV4/L4` (`PHAN_CHIA` yêu cầu "có PR lab ngoài phần chính" — hiện mới có branch đã push) |
 
 ---
 
@@ -203,8 +203,10 @@ Lỗi còn lại: SRS v1.1.1 + evidence Tuan01 vẫn ghi "MinIO" (để nguyên 
 - [x] **Proxy ảnh D27 PA-2** (27/09) — `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` + E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` chốt; suite 139/139 + 5/5.
 - [x] **Resize D2 (27/09, N4)** — Hangfire PA-1: `ResizeImageJob` 300×300/800×600, `IObjectStorageWriter` key chủ động, retry 3, dashboard `/hangfire` chỉ Admin, idempotent + original fallback + delete-vs-resize; E2E `ImageResizeD2Tests` 4/4; **chạy thật: Hangfire job `Succeeded`, proxy trả 300×200**; suite 148/148 + 5/5. Log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
 - [ ] ~~Resize original/300×300/800×600 + queue persistent + original fallback + restart/retry test~~ → **xong 27/09**; phần LAB delayed/restart + Mailhog **xong 28/09 (N5)**.
-- [ ] N5 mục 2: lab Identity/Google/refresh/forms/FTS theo `PHAN_CHIA` tuần 3.
-- [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) sau merge PR #15.
-- [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4.
+- [ ] N5 mục 2: lab Identity/Google/refresh/forms/FTS theo `PHAN_CHIA` tuần 3. → ⚠️ **yêu cầu của tuần 3** (`PHAN_CHIA` mục 3.4 + `KE_HOACH_DU_AN` mục 4.2), không phải tuần 4; cần nhóm trưởng chốt làm tối giản hay ghi nhận dời.
+- [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) sau merge PR #15. → **28/09**: PR #15 đã vào main; `ImagesStep.tsx` có upload/delete/primary + optimistic rollback + `NEXT_PUBLIC_MEDIA_URL`; **thiếu progress**; nhánh chưa merge main (behind 23).
+- [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4. → **28/09**: Publish có (`ReviewStep.tsx`); **Unpublish/Archive chưa có nút**.
+- [ ] **Sitemap job 02:00 UTC + distributed lock** (CR-7) — hiện chỉ on-demand.
+- [ ] **Trace thật vào Seq** (K20) + **bảng mapping K01** + **PR lab** (K24).
 - [ ] Lab `practice/TV4/L4` commit + sổ evidence K cập nhật. → **xong 28/09**: commit `3642428` + `SOK_LAB_L4.md` (mục trên).
 - [x] CI pass sau mỗi task; không commit secret/token/password. → **28/09**: CI xanh run `36344662570`; quét staged diff trước mỗi lần commit (0 credential mới).
