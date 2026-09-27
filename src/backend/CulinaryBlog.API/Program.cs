@@ -107,7 +107,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
-builder.Services.AddScoped<IFileStorageService, MinioStorageService>();
+builder.Services.AddScoped<MinioStorageService>();
+builder.Services.AddScoped<IFileStorageService>(sp => sp.GetRequiredService<MinioStorageService>());
+builder.Services.AddScoped<IObjectStorageReader>(sp => sp.GetRequiredService<MinioStorageService>());
 builder.Services.AddHealthChecks()
     .AddCheck<LivenessHealthCheck>("liveness", tags: ["live"])
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready", "all"])
@@ -461,6 +463,46 @@ recipes.MapDelete("/{id:guid}/images/{imageId:guid}", async (Guid id, Guid image
 })
     .RequireAuthorization().WithName("DeleteRecipeImage")
     .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
+
+// D27 (TV4, PA-2): proxy ảnh base media URL — GET /api/v1/resources/images/{key}.
+// key = recipes/{recipeId}/{uuid}.ext (IMAGE_CONTRACT §1). Published -> public + cache;
+// Draft/Archived -> chỉ owner/Admin (Bearer) else 403 image.forbidden; không tồn tại -> 404.
+// Không đụng IFileStorageService/StoredFile (giữ contract TV3 — HANDOFF 5.1); dùng IObjectStorageReader.
+var resourcesImages = app.MapGroup("/api/v1/resources/images").WithTags("Resources");
+resourcesImages.MapGet("/{**key}", async (string key, IObjectStorageReader storage, IApplicationDbContext db, ICurrentUser currentUser, HttpContext context, CancellationToken ct) =>
+{
+    var segments = key.Split('/', StringSplitOptions.RemoveEmptyEntries);
+    if (segments.Length < 3 || !segments[0].Equals("recipes", StringComparison.OrdinalIgnoreCase))
+        throw new AppException(404, "image.not_found", "Không tìm thấy ảnh.");
+    if (!Guid.TryParse(segments[1], out var recipeIdFromKey))
+        throw new AppException(404, "image.not_found", "Không tìm thấy ảnh.");
+
+    var recipe = await db.Recipes
+        .AsNoTracking()
+        .Where(r => r.Id == recipeIdFromKey && !r.IsDeleted)
+        .Select(r => new { r.Status, r.AuthorId })
+        .FirstOrDefaultAsync(ct);
+    if (recipe is null)
+        throw new AppException(404, "image.not_found", "Không tìm thấy ảnh.");
+
+    var isPublished = recipe.Status == CulinaryBlog.Domain.Enums.RecipeStatus.Published;
+    if (!isPublished)
+    {
+        var userId = currentUser.UserId;
+        var isAdmin = currentUser.IsInRole(CulinaryBlog.Domain.Roles.Admin);
+        var isOwner = userId is not null && string.Equals(userId, recipe.AuthorId, StringComparison.OrdinalIgnoreCase);
+        if (!isAdmin && !isOwner)
+            throw new AppException(403, "image.forbidden", "Ảnh này chỉ dành cho chủ sở hữu hoặc quản trị viên.");
+    }
+
+    var content = await storage.ReadAsync(key, ct);
+    if (content is null)
+        throw new AppException(404, "image.not_found", "Không tìm thấy ảnh.");
+
+    context.Response.Headers.CacheControl = isPublished ? "public, max-age=3600" : "no-store";
+    return Results.Stream(content.Stream, contentType: content.ContentType, fileDownloadName: null);
+})
+    .WithName("GetRecipeImage").Produces<object>(200).ProducesProblem(403).ProducesProblem(404);
 
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });

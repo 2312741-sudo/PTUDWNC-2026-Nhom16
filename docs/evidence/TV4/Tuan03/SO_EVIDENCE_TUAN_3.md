@@ -4,6 +4,7 @@
 > **Reviewer nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
 > **Trạng thái**: Tất cả bắt đầu ở **Chưa làm**; chỉ đóng khi có code/test/demo + reviewer Tâm xác nhận.
 > **Cập nhật 24/09**: D3 archive/delete, D4 SEO, D5 OTEL, E2E D1.3 MinIO đã hoàn thành — 133/133 + 5/5 pass local, frontend build OK; chờ reviewer xác nhận.
+> **Cập nhật 27/09**: D3 invalidation đóng bằng xác minh; **D27 proxy ảnh PA-2 xong** — E2E `ImageProxyD27Tests` 6/6; toàn suite **139/139 + 5/5**; `IMAGE_CONTRACT.md §5` chốt PA-2. Chờ reviewer xác nhận.
 
 ---
 
@@ -13,7 +14,7 @@
 |---|---|---|---|---|---|
 | K01 | SP | SRS/FR-NFR/ADR/API contract | ADR-TV4-001 (D08/D17/D21/D22/D23/D26/D27) + mapping FR | N0, D3, D4, D5 | Chưa làm |
 | K02 | SP | .NET10 Minimal APIs, REST/version, Scalar/RFC7807 | Archive/delete endpoints + 422/403 | D3 | Đã làm (chờ review) |
-| K03 | SP | Clean Architecture, interface, DI, value object | Presigned/proxy qua `IFileStorageService` extension + domain methods | D3, D4 | Chưa làm (chờ D27) |
+| K03 | SP | Clean Architecture, interface, DI, value object | Presigned/proxy qua `IFileStorageService` extension + domain methods | D3, D4 | ✅ Đã làm 27/09 (D27 — `IObjectStorageReader` tách khỏi `IFileStorageService`) |
 | K04 | SP+LAB | CQRS/MediatR + logging/validation/caching behaviors | Archive/delete CQRS handlers + LAB behavior | D3 + D6 | Đã làm (D3) |
 | K05 | SP | FluentValidation + sanitization | Validator transition trạng thái + sanitize UI input | D3, D4 | Đã làm (D3) |
 | K06 | SP | EF Core Code First, migration/config/seed, LINQ/index | Fix migration `RefreshTokens` index (N0) + migration soft-delete | N0, D3 | Đã làm (N0) |
@@ -94,7 +95,21 @@ Reviewer/ngày: Nguyễn Thanh Tâm / ___
 Lỗi còn lại: —
 ```
 
-### TV4-K16/K17/K19 (D4 — Uploader UI + status + SEO) 🔶 (SEO xong; uploader UI chờ D27 + TV3 C4)
+### TV4-K03 (D27 — Proxy ảnh PA-2: interface + DI + stream MinIO, E2E 6/6) ✅
+
+```text
+Evidence: TV4-K03 (FR-FILE-005/RCP-007; D27)
+Tuần 3 / TV4 / N2
+Đường dẫn: src/backend/CulinaryBlog.Infrastructure/MinioStorageService.cs (IObjectStorageReader + MediaContent + ReadAsync); Program.cs (DI AddScoped<MinioStorageService> + AddScoped<IObjectStorageReader>; endpoint GET /api/v1/resources/images/{**key}); tests/CulinaryBlog.Tests/ImageProxyD27Tests.cs; docs/IMAGE_CONTRACT.md §5
+Nhánh/PR: 2312739_NHTSon_D3-D4-D5-D6
+Test/lệnh: docker compose -f docker-compose.dev.yml up -d minio; dotnet test CulinaryBlog.Tests --filter ImageProxyD27Tests -c Release + TEST_DATABASE local (MinIO 127.0.0.1:9000) → 6/6 pass; toàn suite 139/139 + 5/5 spike; dotnet format sạch
+Kết quả: Published public + Cache-Control max-age=3600; Draft/Archived → anonymous 403 image.forbidden / owner 200 no-store; non-owner member 403; invalid/unknown/soft-deleted key → 404 image.not_found; không đụng IFileStorageService/StoredFile (HANDOFF 5.1); log không lộ secret
+Lỗi cố định trong lúc làm: DI ban đầu thiếu đăng ký concrete MinioStorageService → 500 "No service for type" → sửa + 6/6 pass
+Reviewer/ngày: Nguyễn Thanh Tâm / ___
+Lỗi còn lại: —
+```
+
+### TV4-K16/K17/K19 (D4 — Uploader UI + status + SEO) 🔶 (SEO + proxy D27 xong; còn UI hoàn thiện sau merge PR #15)
 
 ```text
 Evidence: TV4-K16/K17/K19 (FR-RCP-008; FR-SEO; D26/D27)
@@ -104,7 +119,7 @@ Nhánh/PR: 2312739_NHTSon_D3-D4-D5-D6
 Test/lệnh: npx next build (exit 0 — sitemap.xml + robots.txt có trong routes); dotnet test → sitemap test chỉ Published (draft/archived/deleted không có)
 Kết quả: sitemap XML Published-only; robots.txt đúng; **chưa xong uploader UI/status buttons** (block D27 + TV3 C4)
 Reviewer/ngày: Nguyễn Thanh Tâm / ___
-Lỗi còn lại: uploader UI progress/rollback/gallery/primary + ảnh hiển thị presigned/proxy — chờ D27; status buttons ghép TV3 C4
+Lỗi còn lại: uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) — sau merge PR #15; status buttons ghép TV3 C4
 ```
 
 ### TV4-K20/K22 (D5 — OTEL/metrics/health) 🔶 (OTEL traces+metrics xong; k6/EXPLAIN số liệu đang ghi nối)
@@ -137,8 +152,9 @@ Lỗi còn lại: chụp trace/metrix thật + k6/EXPLAIN số liệu
 - [ ] PR `4830e57` lên main (fix CI main 6 commit mới).
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).
 - [x] Invalidation cache archive/unpublish/delete — **đóng bằng xác minh 27/09**: không cache recipe (backend không OutputCache/Redis-dữ-liệu, FE `no-store`, `RecipeCacheService` orphan); handoff TV2/TV3 nếu nhóm thêm cache.
-- [ ] Resize original/300×300/800×600 + queue persistent (tuỳ D23) + original fallback + restart/retry test.
-- [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua presigned/proxy (D27).
+- [x] **Proxy ảnh D27 PA-2** (27/09) — `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` + E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` chốt; suite 139/139 + 5/5.
+- [ ] Resize original/300×300/800×600 + queue persistent (tuỳ D23 — ✅ chốt Hangfire PA-1) + original fallback + restart/retry test.
+- [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) sau merge PR #15.
 - [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4.
 - [ ] Lab `practice/TV4/L4` commit + sổ evidence K cập nhật.
 - [ ] CI pass sau mỗi task; không commit secret/token/password.

@@ -85,7 +85,7 @@
 |---|---|---|
 | 1 | Review PR #15 `ImagesStep.tsx` + bổ sung progress upload thật + rollback khi lỗi | Upload hiển thị tiến trình; lỗi hiển thị + rollback; gallery đúng 1 primary |
 | 2 | Status/action buttons: Publish/Unpublish/Archive từ dashboard edit (phối hợp TV3 C4) | Đổi trạng thái end-to-end, reload UI theo trạng thái |
-| 3 | Ảnh hiển thị qua proxy D27 (`GET /resources/images/{key}`) theo đề xuất PA-2 | `<img>` hiển thị được; Draft/Archived ảnh không lộ public; FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL` |
+| 3 | Ảnh hiển thị qua proxy D27 (`GET /resources/images/{key}`) theo đề xuất PA-2 | ✅ **Xong 27/09** — endpoint proxy + `IObjectStorageReader` + test E2E `ImageProxyD27Tests` 6/6 (Published public/cache; Draft/Archived owner/Admin else 403; 404 invalid/deleted); FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL` |
 | 4 | Sitemap XML **Published-only** + robots.txt + canonical + JSON-LD (dữ liệu có cấu trúc); cron 02:00 UTC (D26) | Sitemap không chứa Draft/Archived; Google-tested file hợp lệ |
 
 ### N3 — D5: OTEL/metrics/health (FR-OBS-001/003, D20/D21/D22)
@@ -185,7 +185,7 @@
 - [x] **Sitemap/robots/SEO (24/09)**: `GET /recipes/sitemap` Published-only + `sitemap.ts`/`robots.ts` + SEO metadata trang công thức; `next build` exit 0.
 - [x] **OTEL/metrics/health (24/09)**: trace ASP.NET/Http/EF + metrics + health db/redis/minio; còn EXPLAIN/k6 số liệu nối tiếp.
 - [ ] PR fix connection string lazy `4830e57` → main (CI main 6 commit mới có thể dính 28P01).
-- [ ] Proxy ảnh D27 (`GET /resources/images/{key}`): Published public, Draft/Archived owner/Admin; stream MinIO; cache-control; test 403/404.
+- [x] **Proxy ảnh D27 (27/09)**: `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` (tách khỏi `IFileStorageService`); Published public + cache; Draft/Archived owner/Admin else `403 image.forbidden`; `404` invalid/unknown/soft-deleted; E2E `ImageProxyD27Tests` **6/6**; `IMAGE_CONTRACT.md §5` chốt PA-2.
 - [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`).
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
 - [ ] Resize original/300×300/800×600 + queue persistent **Hangfire (D23 chốt PA-1)** + retry 3 + original fallback.
@@ -216,6 +216,6 @@
 4. ✅ Chốt D27 (PA-2 proxy) + D23 (PA-1 Hangfire) — **27/09** theo `DE_XUAT_GIAI_QUYET_D23_D27.md`; ghi ADR.
 5. ✅ Archive/delete CQRS — **xong 24/09**; invalidation — **đóng bằng xác minh 27/09** (không cache recipe; handoff TV2/TV3).
 6. E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted.
-7. **Proxy ảnh D27** (`/resources/images/{key}`) → uploader UI + status buttons (ghép TV3 C4; FE set `NEXT_PUBLIC_MEDIA_URL`).
+7. ✅ **Proxy ảnh D27** (`/resources/images/{key}`) — **xong 27/09**; còn: uploader UI + status buttons (ghép TV3 C4; FE set `NEXT_PUBLIC_MEDIA_URL`).
 8. Sitemap/robots/JSON-LD + OTEL/metrics/health.
 9. **Resize job (Hangfire — D23 chốt)** + lab L4 + sổ evidence K.

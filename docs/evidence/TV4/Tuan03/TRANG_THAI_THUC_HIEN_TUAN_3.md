@@ -65,9 +65,9 @@
 | D3.3 | Logout revoke refresh family (FR-AUTH-005) | ✅ **Xong** — C5 refresh đã có trên main | — |
 | ~~D3.4~~ | ~~E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted~~ | ✅ **Xong 24/09** — `MinioE2ETests` 3/3 pass trên MinIO local; CI đã thêm service MinIO | — |
 | ~~D3-invalid~~ | ~~Invalidation archive/unpublish/delete — clear cache (Redis/OutputCache/ISR)~~ | ✅ **Đóng 27/09 bằng xác minh (N1 item 3)**: không tồn tại cache recipe nào — backend không OutputCache/Redis-dữ-liệu (chỉ `RedisHealthCheck`); FE recipe/sitemap luôn `no-store`; `RecipeCacheService` (`Infrastructure`) orphan/chưa wire → "Archived/Draft không phục vụ bởi cache cũ" thỏa mặc định. Ghi handoff TV2/TV3 nếu nhóm sau này thêm ISR/output-cache cho recipe | — |
-| D1.7/D27 | **Proxy ảnh** `GET /resources/images/{key}` (Published public; Draft/Archived owner/Admin; stream MinIO) | Mới chốt 27/09 | Implement theo `DE_XUAT_GIAI_QUYET_D23_D27.md` (PA-2) + test 403/404 + cập nhật `IMAGE_CONTRACT.md` |
+| ~~D1.7/D27~~ | ~~Proxy ảnh `GET /resources/images/{key}` (Published public; Draft/Archived owner/Admin; stream MinIO)~~ | ✅ **Xong 27/09** — endpoint `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` (tách khỏi `IFileStorageService`); Published public cache, Draft/Archived owner/Admin else `403 image.forbidden`; `404` key/recipe/soft-deleted; `IMAGE_CONTRACT.md §5` đã chốt PA-2 (chi tiết `DE_XUAT_GIAI_QUYET_D23_D27.md` Phần B) | **Test E2E `ImageProxyD27Tests` 6/6 pass** |
 | D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | **Đã chốt hướng 27/09 — Hangfire (PA-1)**; chưa thêm package | Implement resize job Hangfire + ImageSharp; regenerate `packages.lock.json`; test restart/retry |
-| D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); TV4 review + bổ sung progress/rollback; nối URL proxy D27; status ghép TV3 C4 | Sau khi PR #15 merge + proxy D27 xong → set `NEXT_PUBLIC_MEDIA_URL` |
+| D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); **D27 proxy đã xong** (endpoint sẵn sàng); còn: TV4 review + bổ sung progress/rollback, status ghép TV3 C4, FE set `NEXT_PUBLIC_MEDIA_URL` | Sau khi PR #15 merge → set `NEXT_PUBLIC_MEDIA_URL`; status buttons nối API đã có |
 | ~~D4-SEO~~ | ~~Sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO | — |
 | ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; còn EXPLAIN/k6 ghi sổ khi có k6 script | — |
 | D6 | Lab `practice/TV4/L4` (4 MIME + resize + Mailhog + Hangfire) + sổ K | Chưa bắt đầu | G1/G2 đã đóng; tạo nhánh lab |
@@ -79,7 +79,7 @@
 | Task | Nội dung | Block bởi | Thời điểm dự kiến gỡ |
 |---|---|---|---|
 | D3.3 logout revoke | ✅ Xong — C5 refresh đã có trên main | — | Đã gỡ |
-| D1/D4 ảnh display | Uploader UI hiển thị ảnh upload qua API cần base media URL/proxy | ~~D27~~ → ✅ **Chốt 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`) | Đã gỡ 27/09; implement proxy |
+| D1/D4 ảnh display | Uploader UI hiển thị ảnh upload qua API cần base media URL/proxy | ~~D27~~ → ✅ **Chốt + implement 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`; `IMAGE_CONTRACT.md §5`) | **Đã gỡ 27/09; proxy xong** — còn UI review (PR #15) |
 | D2 resize | Queue chưa chốt | ~~D23~~ → ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`) | Đã gỡ 27/09; implement D2 |
 | ~~N0-1 CI xanh~~ | ~~Migration trùng `RefreshTokens`~~ | ✅ **Đã gỡ** — main `a651c8a` đã fix; local 120/120 + 5/5 | Đã gỡ 23/09 T2; chờ CI GitHub xác nhận |
 | PR #14 giữ/xoá | PR đã merge nhầm — cần thống nhất nhóm | Nhóm trưởng + nhóm | Đầu tuần 3 |
@@ -125,6 +125,16 @@
 - **Kết quả**: không có cache recipe nào để invalidate → tiêu chí "Draft/Archived không được phục vụ bởi cache cũ" **thỏa mặc định**.
 - Bằng chứng: `Program.cs` không có `AddOutputCache`/`IDistributedCache`; chỉ `RedisHealthCheck` + docker redis (không cache dữ liệu); `RecipeCacheService` (in-memory) **orphan** — chưa đăng ký DI, không nơi nào gọi; FE `src/frontend/src/lib/api.ts` recipe list/search/detail/sitemap đều `cache: 'no-store'` (category ISR 3600/600s không chứa nội dung recipe).
 - Hành động: ghi `HANDOFF_TV4_TUAN3.md` — nếu TV2/TV3 thêm ISR/output-cache cho recipe thì cần revalidate hook; bay giờ không wire cache để tránh rủi ro vô ích.
+
+### Implement D27 — Proxy ảnh PA-2 (27/09)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Endpoint | `GET /api/v1/resources/images/{**key}` (`Program.cs`) — parse `recipes/{recipeId}/{uuid}.ext`; Published public (`Cache-Control: public, max-age=3600`); Draft/Archived → owner/Admin else `403 image.forbidden` (`no-store`); invalid/unknown/soft-deleted → `404 image.not_found` |
+| Storage | `MinioStorageService` thêm `IObjectStorageReader.ReadAsync` (stat → get → stream buffer; missing → null); **không đụng `IFileStorageService`/`StoredFile`** (HANDOFF 5.1) |
+| Test | `tests/CulinaryBlog.Tests/ImageProxyD27Tests.cs` — **6/6 pass** E2E MinIO (Published public+cache; Draft 403→owner 200; non-owner 403; Archived 403→owner 200; Unpublished 403; invalid/unknown/deleted 404) |
+| Contract | `docs/IMAGE_CONTRACT.md §5`: chốt PA-2 + rule quyền + cách stream |
+| Toàn suite | **139/139 + 5/5 spike pass** |
 
 ### Chi tiết E2E MinIO (`tests/CulinaryBlog.Tests/MinioE2ETests.cs`)
 

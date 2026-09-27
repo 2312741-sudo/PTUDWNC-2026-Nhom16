@@ -109,14 +109,23 @@ Mọi phản hồi lỗi dùng `Content-Type: application/problem+json` và head
 
 ---
 
-## 5. Bucket policy (D27 — chờ xác nhận nhóm)
+## 5. Phục vụ ảnh (D27 — ✅ chốt 27/09: PA-2 proxy có auth)
 
 - Mặc định bucket **private**. Draft/Archived không được phục vụ public.
-- Cách phục vụ ảnh public (3 phương án, chờ CR/ADR chốt):
-  1. **Presigned URL** (vd MinIO `PresignedGetObjectArgs`) có TTL — phù hợp private bucket.
-  2. **Proxy có auth** trong API (`GET /resources/images/{key}`) — kiểm tra quyền xem object.
-  3. Public bucket cho ảnh **đã publish** — trái với SRS 2.4.1 `public-read`, cần CR trước khi áp dụng.
-- `IMAGE_CONTRACT.md` cập nhật lại khi nhóm chốt D27.
+
+### Quyết định chốt: PA-2 — base media URL qua proxy có auth
+
+- **Endpoint**: `GET /api/v1/resources/images/{key}` với `key` = đường dẫn object (vd `recipes/{recipeId}/{uuid}.jpg`).
+- **Quy tắc truy cập**:
+  | Trạng thái recipe | Khách chưa đăng nhập | Owner / Admin (Bearer) |
+  |---|---|---|
+  | **Published** | ✅ `200` + `Cache-Control: public, max-age=3600` | ✅ `200` |
+  | **Draft / Archived / soft-deleted-unpublished** | ❌ `403 image.forbidden` | ✅ `200` + `Cache-Control: no-store` |
+  | Recipe không tồn tại / key sai định dạng / recipe đã soft-delete | ❌ `404 image.not_found` | ❌ `404 image.not_found` |
+- **Stream**: đọc object MinIO (stat → get) → trả về với `Content-Type` đúng (từ object stat, fallback theo extension `.jpg/.png/.webp/.avif`); không đổi bucket policy.
+- **Triển khai**: `MinioStorageService` thêm `IObjectStorageReader.ReadAsync` (TÁCH khỏi `IFileStorageService`/`StoredFile` — giữ nguyên contract bàn giao TV3). Endpoint đặt tại `Program.cs` (`GET /api/v1/resources/images/{**key}`).
+- **FE**: đặt `NEXT_PUBLIC_MEDIA_URL=https://<host>/api/v1/resources/images` → `mediaUrl(key)` của TV3 = `${NEXT_PUBLIC_MEDIA_URL}/${key}` hoạt động nguyên vẹn, không cần sửa code.
+- **Kiểm thử** (E2E `ImageProxyD27Tests`, 6/6): Published public + cache-header; Draft/Archived → anonymous 403 / owner 200; non-owner member 403; invalid/unknown/deleted key → 404.
 
 ---
 

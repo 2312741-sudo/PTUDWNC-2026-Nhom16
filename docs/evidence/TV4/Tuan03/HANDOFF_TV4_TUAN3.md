@@ -42,9 +42,9 @@
 | Task | Nội dung | Block bởi | Điều kiện gỡ |
 |---|---|---|---|
 | **PR `4830e57`** | Fix connection string lazy (CI main 6 commit deploy/100 ảnh/UI có thể dính 28P01) | Reviewer nhóm | TV4/trưởng nhóm tạo PR → main; CI main xanh |
-| **D2/D23** | Resize original/300×300/800×600 + queue persistent (Hangfire/BackgroundService) | Quyết định nhóm D23 | Chốt queue → thêm package (nhớ regenerate `packages.lock.json`; CI `--locked-mode`) |
-| **D27** | Bucket policy + ảnh upload hiển thị (presigned/proxy) → uploader UI | Quyết định nhóm D27 + CR | Chốt private+presigned (khuyến nghị) hay public-read theo SRS 2.4.1 |
-| **D4-Uploader UI** | Uploader progress/rollback/gallery/primary + status buttons ghép TV3 C4 | D27 + TV3 C4 | Sau D27: dùng `IFileStorageService` sinh presigned hoặc proxy có auth; status buttons nối API đã có |
+| **D2/D23** | Resize original/300×300/800×600 + queue persistent (Hangfire/BackgroundService) | Quyết định nhóm D23 | ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); TV4 đang thực hiện D2 |
+| **D27** | Bucket policy + ảnh upload hiển thị (presigned/proxy) → uploader UI | Quyết định nhóm D27 + CR | ✅ **Xong 27/09** — chốt **PA-2 proxy có auth** + endpoint `GET /resources/images/{key}` + `IObjectStorageReader`; E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` cập nhật |
+| **D4-Uploader UI** | Uploader progress/rollback/gallery/primary + status buttons ghép TV3 C4 | D27 ✅ xong + TV3 C4 | D27 proxy đã sẵn sàng; còn TV4 review PR #15 + progress/rollback + status buttons ghép TV3 C4 |
 | **D3-Invalidation (N1 item 3, 27/09)** | Không tồn tại cache recipe nào để invalidate — backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire → tiêu chí thỏa mặc định. **Đã đóng bằng xác minh 27/09.** | TV2/TV3 (nếu họ thêm ISR/output-cache cho recipe list/detail/ảnh) | Nếu TV2/TV3 thêm cache → TV4 kết nối revalidate hook (hoặc wire `RecipeCacheService` + `InvalidatePrefixAsync` khi archive/unpublish/delete) |
 | **D6 Lab L4** | `practice/TV4/L4`: 4 MIME + resize + Mailhog + Hangfire + sổ K | Không ai block — độc lập | TV4 tự làm song song, nhánh riêng |
 | **PR #14** | Giữ nguyên trên main (D1.3 + D3.1/D3.2 đã merge nhầm) | Nhóm trưởng | Giữ nguyên theo quyết định nhóm 23/09; rà soát diff trong tuần |
