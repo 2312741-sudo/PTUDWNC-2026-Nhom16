@@ -102,6 +102,20 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     dispatch({ type: "error", message: messageOf(e) });
   }
 
+  // Xoá cache ISR phía server + Router Cache phía trình duyệt -> trang công khai thấy thay đổi ngay
+  function refreshPublic(...slugs: (string | null | undefined)[]) {
+    const list = [...new Set(slugs.filter((x): x is string => !!x))];
+    if (list.length === 0) return;
+    const token = localStorage.getItem("accessToken");
+    fetch("/api/revalidate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ slugs: list }),
+    })
+      .catch(() => { /* revalidate lỗi không chặn wizard; ISR vẫn tự làm mới sau 5 phút */ })
+      .finally(() => router.refresh());
+  }
+
   async function reload(slug = s.slug) {
     if (!slug) return;
     dispatch({ type: "detail", detail: await getRecipeDetail(slug) });
@@ -122,7 +136,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     const snapshot = s.detail;
     dispatch({ type: "saving" });
     if (optimistic && snapshot) dispatch({ type: "optimistic", detail: optimistic(snapshot) });
-    try { await fn(); await reload(); return true; }
+    try { await fn(); await reload(); refreshPublic(s.slug); return true; }
     catch (e) {
       if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return false; }
       if (optimistic) {
@@ -142,6 +156,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
         ? await updateRecipe(s.recipeId, s.info, s.rowVersion!)
         : await createRecipe(s.info);
       await reload(saved.slug);
+      refreshPublic(saved.slug, s.slug); // đổi tiêu đề có thể đổi slug -> làm mới cả slug cũ
       // Đổi URL sang trang edit: F5 hay bấm lại không tạo thêm bản nháp trùng
       const url = `/dashboard/recipes/${saved.id}/edit?slug=${encodeURIComponent(saved.slug)}`;
       if (window.location.pathname + window.location.search !== url) window.history.replaceState(null, "", url);

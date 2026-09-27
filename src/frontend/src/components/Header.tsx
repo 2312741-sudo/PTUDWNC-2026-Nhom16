@@ -49,7 +49,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
+          <div className="hidden md:flex flex-1 max-w-sm mx-4 min-w-0">
             <form
               action="/search"
               method="GET"
@@ -68,7 +68,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-700">
+          <nav className="hidden lg:flex items-center gap-4 whitespace-nowrap text-sm font-medium text-gray-700">
             <Link href="/" className="hover:text-emerald-600 transition-colors">
               Trang chủ
             </Link>
@@ -104,7 +104,7 @@ export default function Header() {
           </nav>
 
           {/* Auth Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 whitespace-nowrap ml-3">
             {loggedIn ? (
               <>
                 <Link
