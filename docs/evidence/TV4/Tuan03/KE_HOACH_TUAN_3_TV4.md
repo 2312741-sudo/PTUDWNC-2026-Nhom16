@@ -115,10 +115,19 @@
 
 **Skills**: K04, K12, K13, K14, K15, K17, K19
 
-| # | Việc làm | Kết quả mong đợi |
-|---|---|---|
-| 1 | Nhánh `practice/TV4/L4`: upload/delete 4 MIME + resize 300×300/800×600 + Mailhog email + Hangfire delayed/restart | Commit lab + test |
-| 2 | Lab theo PHAN_CHIA tuần 3 TV4: Identity/Google/refresh/forms/FTS (phần TV4 cần học) | PR lab ngoài phần chính, có sổ K |
+> **Kết quả 27/09 (tối)**: mục 1 **xong** — lab L4 chạy thật `4 phase / 39 check PASS`, xem `SOK_LAB_L4.md`.
+> Mục 2 (Identity/Google/refresh/forms/FTS) **chưa làm** — nằm ngoài phạm vi bằng chứng L4 của tuần này.
+
+| # | Việc làm | Kết quả mong đợi | Trạng thái 27/09 |
+|---|---|---|---|
+| 1 | Nhánh `practice/TV4/L4`: upload/delete 4 MIME + resize 300×300/800×600 + Mailhog email + Hangfire delayed/restart | Commit lab + test | ✅ `practice/TV4/L4` (console app, không thêm tính năng vào sản phẩm); `media 25/25`, `email 3/3`, `xml 3/3`, `jobs 8/8`; evidence `logs/lab_l4_run.log` + `logs/lab_l4_db.txt` |
+| 1b | Bổ sung 2 phase chẩn đoán (không tính vào 4 phase yêu cầu): `db` dump bảng Hangfire, `purge` dọn job sót | Dump được bằng chứng DB mà không cần `psql` | ✅ `DbEvidencePhase.cs` + `PurgePhase.cs` (chỉ chạy trên DB lab `culinary_lab`) |
+| 2 | Lab theo PHAN_CHIA tuần 3 TV4: Identity/Google/refresh/forms/FTS (phần TV4 cần học) | PR lab ngoài phần chính, có sổ K | ❌ Chưa làm (không nằm trong 4 yêu cầu L4 đã chốt) |
+
+Ghi chú rút ra từ lab (đã ghi trong `practice/TV4/L4/README.md`):
+- `Hangfire.PostgreSql 1.21` đã obsolete ctor nhận `connectionString` → phải dùng `IConnectionFactory` + `JobStorage.Current`.
+- `BackgroundJob.Enqueue` mặc định vào queue `default`; worker nghe queue khác sẽ **để job nằm `Enqueued` mãi** — phải truyền queue tường minh, và `RecurringJobOptions` **không** có thuộc tính `Queue` (queue là tham số riêng của overload).
+- Xoá object phải qua `IFileStorageService` vì `IObjectStorageWriter` chỉ có `Exists`/`Upload` — xác nhận lại ranh giới interface của N4.
 
 ---
 

@@ -15,15 +15,15 @@
 | K01 | SP | SRS/FR-NFR/ADR/API contract | ADR-TV4-001 (D08/D17/D21/D22/D23/D26/D27) + mapping FR | N0, D3, D4, D5 | Chưa làm |
 | K02 | SP | .NET10 Minimal APIs, REST/version, Scalar/RFC7807 | Archive/delete endpoints + 422/403 | D3 | Đã làm (chờ review) |
 | K03 | SP | Clean Architecture, interface, DI, value object | Presigned/proxy qua `IFileStorageService` extension + domain methods | D3, D4 | ✅ Đã làm 27/09 (D27 — `IObjectStorageReader` tách khỏi `IFileStorageService`) |
-| K04 | SP+LAB | CQRS/MediatR + logging/validation/caching behaviors | Archive/delete CQRS handlers + LAB behavior | D3 + D6 | Đã làm (D3) |
+| K04 | SP+LAB | CQRS/MediatR + logging/validation/caching behaviors | Archive/delete CQRS handlers + LAB behavior | D3 + D6 | ✅ Đã làm (CQRS/logging D3; LAB L4 dùng logging + check từng bước) |
 | K05 | SP | FluentValidation + sanitization | Validator transition trạng thái + sanitize UI input | D3, D4 | Đã làm (D3) |
 | K06 | SP | EF Core Code First, migration/config/seed, LINQ/index | Fix migration `RefreshTokens` index (N0) + migration soft-delete | N0, D3 | Đã làm (N0) |
 | K07 | SP+LAB | UoW/transaction/audit/soft delete/RowVersion | Race đổi trạng thái + soft delete | D3 | Đã làm (D3 — MarkDeleted + RowVersion 422) |
 | K10 | SP | RBAC/ownership/policy/rate limit/secrets | Ownership archive/delete + 403 non-owner | D3 | Đã làm (D3) |
-| K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | 🟡 Đã xác minh 27/09 — không cache recipe (thỏa mặc định); LAB cache L4 còn mở |
-| K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | Đã làm (E2E 3/3) |
-| K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | ✅ Đã làm phần SP 27/09 (Hangfire PA-1: job resize chạy thật `Succeeded`, retry 3, dashboard Admin-only; E2E 4/4); phần LAB delayed/restart thuộc D6 |
-| K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | 🔶 Resize đã có ở SP (xem K14); còn LAB L4 Mailhog + XML (D6) |
+| K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | 🟡 Đã xác minh 27/09 — không cache recipe (thỏa mặc định); **LAB cache L4 chưa làm** (không thuộc 4 yêu cầu L4 đã chốt — xem N5) |
+| K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | ✅ Đã làm (E2E 3/3; LAB L4 media 25/25 — 4 MIME theo magic bytes, resize 2 kích thước, idempotent, xoá sạch) |
+| K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | ✅ Đã làm 27/09 — SP: Hangfire PA-1 (job resize chạy thật `Succeeded`, retry 3, dashboard Admin-only, E2E 4/4); **LAB: fire-and-forget/delayed + restart worker/retry/recurring đều PASS (jobs 8/8)** |
+| K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | ✅ Đã làm 27/09 — LAB L4 chạy thật: Mailhog 3/3 + XML sitemap 3/3 + resize (media 25/25), tổng `all` 4 phase 39/39 PASS |
 | K16 | SP | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | Uploader UI hoàn thiện (D4) | D4 | Chưa làm (chờ D27) |
 | K17 | SP | TanStack Query, optimistic rollback, next/image | Uploader progress/gallery/primary optimistic | D4 | Chưa làm (chờ D27) |
 | K18 | SP | Responsive, WCAG2.1 AA, keyboard/loading/error | Upload/status checklist | D4 | Chưa làm |
@@ -151,6 +151,21 @@ Reviewer/ngày: Nguyễn Thanh Tâm / ___
 Lỗi còn lại: chụp trace thật vào Seq (stack nginx+seq bật) — cấu hình sẵn sàng
 ```
 
+### TV4-K04/K12/K13/K14/K15/K17/K19 (D6 — Lab L4 chạy thật: 4 MIME + resize + Mailhog + XML + 4 kiểu Hangfire) ✅
+
+```text
+Evidence: TV4-K04/K12/K13/K14/K15/K17/K19 (FR-FILE-003, FR-JOB-002/003, FR-SEO; D23/D26)
+Tuần 3 / TV4 / N5 (D6)
+Đường dẫn: practice/TV4/L4/ (Program.cs, LabConfig.cs, LabLog.cs, PhaseResult.cs, Fixtures.cs, MediaPhase.cs, LabImageScaler.cs, EmailPhase.cs, SitemapPhase.cs, LabJobs.cs, JobsPhase.cs, DbEvidencePhase.cs, PurgePhase.cs, README.md); Tuan03/SOK_LAB_L4.md
+Nhánh/PR: practice/TV4/L4
+Test/lệnh: docker run -d --name lab-mailhog -p 1025:1025 -p 8025:8025 mailhog/mailhog:v1.0.1; dotnet run --project practice/TV4/L4 -c Release -- all (TEST_DATABASE + Minio__* từ env) → 4 phase / 39/39 check PASS, exit 0; dotnet run -- … -- db (dump bằng chứng DB); dotnet run -- … -- purge (dọn job sót)
+Kết quả: media 25/25 — MIME theo nội dung file (JPEG/PNG/WebP/AVIF), file MIME giả → file.invalid_type, ảnh vượt giới hạn → file.too_large, upload+đọc lại khớp byte, resize ResizeMode.Max 300×200 + 800×533, AVIF fallback giữ original, idempotent, xoá original + 2 biến thể; email 3/3 — MailKit plain+HTML qua SMTP Mailhog, Mailhog đếm 6→8, API trả đúng subject; xml 3/3 — sitemap.xml từ DB thật culinary_test 92 URL, parse lại hợp lệ, Published 92/288; jobs 8/8 — fire-and-forget job 35 Succeeded, tắt worker job 36 còn Scheduled trong DB, restart worker job delayed Succeeded (~23s), retry job 37 Processing×3 + Failed×2 + Scheduled "Retry attempt 1,2 of 5" → Succeeded, recurring job 38/39 "Triggered by recurring job scheduler" chạy 2 lần cron */5 * * * * *, dọn sạch hash/jobqueue/object
+Lỗi cố định trong lúc làm: (1) Hangfire.PostgreSql 1.21 obsolete ctor connectionString + TreatWarningsAsErrors → NpgsqlConnectionFactory + JobStorage.Current; (2) queue mismatch — BackgroundJob.Enqueue mặc định queue `default` còn worker nghe `lab` nên job kẹt Enqueued mãi → truyền queue tường minh (RecurringJobOptions KHÔNG có thuộc tính Queue, queue là tham số riêng của overload); (3) Mailhog v2 trả subject ở items[].Content.Headers.Subject; (4) IObjectStorageWriter không có DeleteAsync → xoá object qua IFileStorageService; (5) bẫy encoding PowerShell 5.1 Get-Content/Set-Content làm hỏng tiếng Việt (ASCII) → dùng System.IO với UTF8Encoding
+Reviewer/ngày: Nguyễn Thanh Tâm / ___
+Lỗi còn lại: nhánh resize AVIF chưa có bằng chứng chạy tay trong lab (fixture AVIF hợp lệ về ftyp nhưng không decode được) — do ImageResizeD2Tests của N4 phụ trách; còn UI uploader/status của D4 (TV4-K16) sau merge PR #15
+Log: Tuan03/logs/lab_l4_run.log (log đầy đủ 1 lần chạy all), Tuan03/logs/lab_l4_db.txt (truy vấn trực tiếp culinary_lab bằng Npgsql — 15 job Succeeded, 0 Failed, 0 jobqueue, hash trống)
+```
+
 ---
 
 ## 4. Checklist cá nhân tuần 3 (chốt G5)
@@ -170,8 +185,8 @@ Lỗi còn lại: chụp trace thật vào Seq (stack nginx+seq bật) — cấu
 - [x] Invalidation cache archive/unpublish/delete — **đóng bằng xác minh 27/09**: không cache recipe (backend không OutputCache/Redis-dữ-liệu, FE `no-store`, `RecipeCacheService` orphan); handoff TV2/TV3 nếu nhóm thêm cache.
 - [x] **Proxy ảnh D27 PA-2** (27/09) — `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` + E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` chốt; suite 139/139 + 5/5.
 - [x] **Resize D2 (27/09, N4)** — Hangfire PA-1: `ResizeImageJob` 300×300/800×600, `IObjectStorageWriter` key chủ động, retry 3, dashboard `/hangfire` chỉ Admin, idempotent + original fallback + delete-vs-resize; E2E `ImageResizeD2Tests` 4/4; **chạy thật: Hangfire job `Succeeded`, proxy trả 300×200**; suite 148/148 + 5/5. Log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
-- [ ] ~~Resize original/300×300/800×600 + queue persistent + original fallback + restart/retry test~~ → **xong 27/09**; phần LAB delayed/restart + Mailhog chuyển sang D6.
+- [x] ~~Resize original/300×300/800×600 + queue persistent + original fallback + restart/retry test~~ → **xong 27/09**; phần LAB delayed/restart + Mailhog xong ở N5/D6 (dòng dưới).
 - [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) sau merge PR #15.
 - [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4.
-- [ ] Lab `practice/TV4/L4` commit + sổ evidence K cập nhật.
+- [x] **Lab L4 `practice/TV4/L4` (27/09, N5/D6)** — `all` chạy thật: `media 25/25` + `email 3/3` + `xml 3/3` + `jobs 8/8` = **39/39 PASS** (exit 0); thêm 2 phase chẩn đoán `db` (dump bằng chứng Hangfire, không cần `psql`) + `purge` (dọn job `Enqueued` còn sót trong DB lab); sổ `Tuan03/SOK_LAB_L4.md` + hướng dẫn `practice/TV4/L4/README.md`; log `Tuan03/logs/lab_l4_run.log` + `lab_l4_db.txt` (không secret). **Giới hạn đã nêu rõ**: AVIF chỉ kiểm thử ở mức MIME/upload/xoá (fixture AVIF hợp lệ về `ftyp` nhưng không decode được) → **chưa có bằng chứng chạy tay cho resize AVIF**; LAB cache L4 chưa làm; Identity/Google/forms/FTS (mục 2 của N5) chưa làm.
 - [ ] CI pass sau mỗi task; không commit secret/token/password.

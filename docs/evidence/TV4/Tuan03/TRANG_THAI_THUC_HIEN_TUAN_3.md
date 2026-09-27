@@ -163,6 +163,22 @@
 
 → Log thô không secret tại `Tuan03/logs/`.
 
+### N5 — Lab L4 (D6) chạy thật (27/09 tối)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Hình thức | Console app độc lập `practice/TV4/L4` (không thêm tính năng vào sản phẩm, không thêm vào `CulinaryBlog.sln`); tham chiếu `CulinaryBlog.Application` + `CulinaryBlog.Infrastructure` để dùng đúng đường code thật (`MinioStorageService`, `RecipeImageKeys`, `AuthDbContext`) |
+| Chạy | `dotnet run --project practice/TV4/L4 -c Release -- all` → **4 phase, 39/39 check PASS**, mã thoát `0`. Log: `Tuan03/logs/lab_l4_run.log` |
+| `media` (25/25) | MIME theo **nội dung** file: JPEG/PNG/WebP/AVIF đều đúng; file MIME giả → `file.invalid_type`; ảnh vượt giới hạn → `file.too_large`; upload+đọc lại khớp byte; resize `300×200` / `800×533` (`ResizeMode.Max`) cho JPEG/PNG/WebP; AVIF fallback giữ original; resize chạy 2 lần không ghi đè; xoá original + 2 biến thể sạch |
+| `email` (3/3) | MailKit gửi 2 mail (plain + HTML) qua SMTP Mailhog không exception; Mailhog đếm trước/sau 6→8; API trả đúng subject `[LAB L4] Plain text 20260927-182205` |
+| `xml` (3/3) | `sitemap.xml` sinh từ DB thật `culinary_test` (chỉ đọc): **92 URL**; parse lại hợp lệ; `Published 92 / tổng 288` (`Draft 181`, `Archived 21` bị loại) |
+| `jobs` (8/8) | Fire-and-forget job `35` `Succeeded`; tắt worker → job `36` còn `Scheduled` trong DB; restart worker → job delayed `Succeeded` (~23s); retry job `37` `Processing` 3 lần / `Failed` 2 lần / `Scheduled` với `Retry attempt 1,2 of 5` → `Succeeded`; recurring job `38`,`39` với reason `Triggered by recurring job scheduler`, sitemap chạy 2 lần cron `*/5 * * * * *`; dọn: `RemoveIfExists` → `hangfire.hash` trống, `jobqueue` 0 dòng, object lab đã xoá |
+| Đối chiếu DB độc lập | `Tuan03/logs/lab_l4_db.txt` (dump bằng Npgsql trong chính process lab): 15 job đều `statename = Succeeded`, `so_job_Failed_cuoi = 0`, `hangfire.jobqueue_con_lai = 0`, `hangfire.hash` trống |
+| Bổ sung | 2 phase chẩn đoán **không tính** vào 4 phase yêu cầu: `db` (dump bằng chứng) và `purge` (xoá job `Enqueued`/`Scheduled` còn sót trong DB lab) |
+| Lỗi lab đã gặp và sửa | ① API obsolete của `Hangfire.PostgreSql 1.21` (ctor `connectionString`) + `TreatWarningsAsErrors` → dùng `NpgsqlConnectionFactory` + `JobStorage.Current`; ② **queue mismatch**: `BackgroundJob.Enqueue` mặc định queue `default` còn worker nghe `lab` → job kẹt `Enqueued` mãi, phải truyền queue tường minh (`RecurringJobOptions` không có thuộc tính `Queue`); ③ subject Mailhog nằm ở `items[].Content.Headers.Subject`; ④ xoá object phải qua `IFileStorageService` (writer chỉ `Exists`/`Upload`) |
+| Tài liệu | `practice/TV4/L4/README.md` (cách chạy, biến môi trường, giới hạn) + `Tuan03/SOK_LAB_L4.md` (bằng chứng + **giới hạn cần nói rõ**) |
+| Giới hạn đã nêu rõ | ① AVIF mới chỉ kiểm thử ở mức MIME/upload/xoá — fixture AVIF hợp lệ về `ftyp` nhưng không decode được nên **không** có bằng chứng chạy tay cho nhánh resize AVIF (nhánh này do test của N4 phụ trách); ② Mailhog là hạ tầng lab, `jobs` bắt buộc có nó; ③ cron 5 giây chỉ dùng cho lab, sản phẩm giữ `02:00 UTC` theo D26; ④ số liệu (job ID, 92 URL, số mail) phụ thuộc dữ liệu máy dev nên sổ ghi kèm cả lệnh và log |
+
 ### Chi tiết E2E MinIO (`tests/CulinaryBlog.Tests/MinioE2ETests.cs`)
 
 - **Flow**: đăng ký → tạo recipe (201) → upload ảnh JPEG (201) → đọc lại (chiều xiêm + slug) → PATCH primary → publish → unpublish → archive → delete → chưa còn trong public list.

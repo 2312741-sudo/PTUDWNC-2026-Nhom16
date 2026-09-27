@@ -35,6 +35,8 @@
 | D4-SEO | `GET /recipes/sitemap` (Published-only) + `sitemap.ts`/`robots.ts`/SEO metadata trang công thức | `Discovery.cs`, `RecipeRepository.cs`, `Program.cs`, `src/frontend/src/app/{sitemap,robots}.ts`, `app/recipes/[slug]/` | ✅ Xong 24/09 |
 | D5 | OTEL trace (ASP.NET/Http/EF) + metrics + health db/redis/minio đã có từ trước | `Program.cs` + `CulinaryBlog.API.csproj` + `packages.lock.json` | ✅ **Xong** — config xác minh 27/09 + EXPLAIN/k6 số liệu (`Tuan03/logs/`) |
 | CI | Thêm service MinIO + env `MINIO_*` + bước chờ `minio/health/live` | `.github/workflows/backend.yml` | ✅ Xong 24/09 — cần CI GitHub xanh sau push |
+| D2 (N4) | Resize 300×300/800×600 + Hangfire PA-1 (queue persistent, retry 3, dashboard Admin-only) | `ResizeImageJob.cs`, `ImageResizeQueue.cs`, `ImageResizeD2Tests.cs` | ✅ Xong 27/09 — commit `6bbc542` đã push; E2E 4/4, job thật `Succeeded`, suite 148/148 + 5/5 |
+| D6 Lab L4 (N5) | Lab `practice/TV4/L4`: 4 MIME + resize 2 kích thước + Mailhog + sitemap XML + 4 kiểu Hangfire | `practice/TV4/L4/*`, `Tuan03/SOK_LAB_L4.md`, `README.md` | ✅ Xong 27/09 — `all` **4 phase / 39 check PASS** (`media 25/25`, `email 3/3`, `xml 3/3`, `jobs 8/8`); đối chiếu DB `lab_l4_db.txt`; log `lab_l4_run.log` |
 
 ---
 
@@ -47,7 +49,7 @@
 | **D27** | Bucket policy + ảnh upload hiển thị (presigned/proxy) → uploader UI | Quyết định nhóm D27 + CR | ✅ **Xong 27/09** — chốt **PA-2 proxy có auth** + endpoint `GET /resources/images/{key}` + `IObjectStorageReader`; E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` cập nhật |
 | **D4-Uploader UI** | Uploader progress/rollback/gallery/primary + status buttons ghép TV3 C4 | D27 ✅ xong + TV3 C4 | D27 proxy đã sẵn sàng; còn TV4 review PR #15 + progress/rollback + status buttons ghép TV3 C4 |
 | **D3-Invalidation (N1 item 3, 27/09)** | Không tồn tại cache recipe nào để invalidate — backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire → tiêu chí thỏa mặc định. **Đã đóng bằng xác minh 27/09.** | TV2/TV3 (nếu họ thêm ISR/output-cache cho recipe list/detail/ảnh) | Nếu TV2/TV3 thêm cache → TV4 kết nối revalidate hook (hoặc wire `RecipeCacheService` + `InvalidatePrefixAsync` khi archive/unpublish/delete) |
-| **D6 Lab L4** | `practice/TV4/L4`: 4 MIME + resize + Mailhog + Hangfire + sổ K | Không ai block — độc lập | TV4 tự làm song song, nhánh riêng |
+| **D6 Lab L4** | `practice/TV4/L4`: 4 MIME + resize + Mailhog + Hangfire + sổ K | Không ai block — độc lập | ✅ **Xong 27/09 (N5)** — 39/39 check PASS; chi tiết + giới hạn ở `Tuan03/SOK_LAB_L4.md`. Phần còn mở: cache L4, Identity/Google/forms/FTS, và **bằng chứng chạy tay cho resize AVIF** |
 | **PR #14** | Giữ nguyên trên main (D1.3 + D3.1/D3.2 đã merge nhầm) | Nhóm trưởng | Giữ nguyên theo quyết định nhóm 23/09; rà soát diff trong tuần |
 
 ---
@@ -94,6 +96,8 @@ dotnet restore CulinaryBlog.sln --locked-mode
 | `src/backend/CulinaryBlog.Infrastructure/MinioStorageService.cs` | `IObjectStorageReader` (D27) + **`IObjectStorageWriter`** (N4, ghi object key phái sinh) — `ReadAsync` copy **đồng bộ** |
 | `src/backend/CulinaryBlog.API/AdminDashboardAuthorizationFilter.cs` | N4: dashboard Hangfire chỉ Admin (anon 401 / member 403 / Admin 200) |
 | `tests/CulinaryBlog.Tests/ImageResizeD2Tests.cs` | N4: E2E resize 4/4 (kích thước, idempotent, ảnh hỏng fallback, ảnh đã xoá) |
+| `practice/TV4/L4/*` (13 file) | **N5 lab L4**: `Program.cs` (dispatcher phase), `MediaPhase`/`LabImageScaler`/`Fixtures`, `EmailPhase` (MailKit + Mailhog), `SitemapPhase`, `LabJobs`/`JobsPhase` (4 kiểu Hangfire), `DbEvidencePhase`/`PurgePhase` (chẩn đoán), `LabConfig`/`LabLog`/`PhaseResult`, `README.md` |
+| `docs/evidence/TV4/Tuan03/SOK_LAB_L4.md` | N5: sổ K lab L4 (kết quả từng phase + **giới hạn đã nêu rõ**) |
 | `.github/workflows/backend.yml` | service MinIO + bước chờ health |
 | `src/frontend/src/app/` | `sitemap.ts`, `robots.ts`, `recipes/[slug]/` SEO |
 
@@ -110,6 +114,10 @@ dotnet restore CulinaryBlog.sln --locked-mode
 7. **Đừng nâng ImageSharp lên 4.x** — 4.x bắt buộc commercial license key và build fail; giữ `3.1.11` (AVIF không decode → job đã fallback original).
 8. **Đừng dùng `async` lambda cho `WithCallbackStream`** (MinIO SDK) — `Action<Stream>` sẽ biến thành async void fire-and-forget → stream cắt cụt/ảnh hỏng. `ReadAsync` phải copy **đồng bộ** + kiểm tra `buffer.Length == stat.Size`.
 9. **Response upload có `mediumUrl`/`thumbnailUrl = null`** là chuẩn (job nền). FE (TV3) cần reload `GET /recipes/{slug}`; `imageSrc()` đã fallback `originalUrl`.
+10. **`Hangfire.PostgreSql 1.21` đã obsolete ctor nhận `connectionString`** (và `UsePostgreSqlStorage(string, ...)`) — dùng `new PostgreSqlStorage(new NpgsqlConnectionFactory(cs, options), options)`. API sản phẩm dùng `AddHangfire(...)` nên không bị; chỉ code tự dựng storage như lab mới gặp.
+11. **Luôn truyền `queue` tường minh khi enqueue** — `BackgroundJob.Enqueue` không có tham số queue sẽ vào `default`; worker nghe queue khác thì job nằm `Enqueued` mãi mà không báo lỗi. Với recurring, queue là tham số riêng trong overload `RecurringJob.AddOrUpdate<T>(id, queue, methodCall, cron, options)` — `RecurringJobOptions` **không** có thuộc tính `Queue`.
+12. **Xoá object phải qua `IFileStorageService`**, không qua `IObjectStorageWriter` (writer chỉ `ExistsAsync`/`UploadAsync`) — đây là ranh giới đã chốt ở N4, lab L4 đã dùng lại đúng cách.
+13. **Không dùng `Get-Content`/`Set-Content` mặc định của PowerShell 5.1 để sửa file tiếng Việt** — đọc/ghi UTF-8 không BOM theo ANSI làm hỏng mã nguồn và `.ps1`. Dùng `[System.IO.File]::ReadAllText/WriteAllText` kèm `UTF8Encoding`, hoặc `pwsh`.
 
 ---
 
@@ -125,3 +133,5 @@ dotnet restore CulinaryBlog.sln --locked-mode
 | 27/09 | TV4 | **N2 xong**: proxy ảnh D27 (`GET /api/v1/resources/images/{**key}` + `IObjectStorageReader`) + E2E 6/6; `IMAGE_CONTRACT.md §5` chốt PA-2; suite **139/139 + 5/5**; push `0cc279e` |
 | 27/09 | TV4 | **N3 xong**: xác minh OTEL (`2bbee0d` còn nguyên) + ghi số liệu EXPLAIN publish (0.339ms/0.044ms) + k6 smoke 20 VU×30s (3310 req, 0% fail, p95 225.63ms) — log `Tuan03/logs/` |
 | 27/09 | TV4 | **N4 xong (D2/D23 PA-1)**: package Hangfire (API 1.8.25 + PostgreSQL 1.21.1) + ImageSharp **3.1.11** (4.x cần license thương mại → build fail); `ResizeImageJob` 300×300/800×600 idempotent + original fallback + delete-vs-resize; `IObjectStorageWriter` (key chủ động, tách khỏi `IFileStorageService`); `IImageResizeQueue` (Hangfire + Inline cho Testing); dashboard `/hangfire` Admin-only; E2E `ImageResizeD2Tests` 4/4 + 5 unit; **job thật `Succeeded`**, proxy 300×200; suite **148/148 + 5/5**; `IMAGE_CONTRACT.md §7`; log `Tuan03/logs/d2_resize_hangfire*.{log,txt}` |
+| 27/09 | TV4 | **N5 xong (D6 lab L4)** trên nhánh `practice/TV4/L4`: `all` chạy thật **4 phase / 39 check PASS** (`media 25/25` · `email 3/3` · `xml 3/3` · `jobs 8/8`); 4 kiểu Hangfire (fire-and-forget, delayed + restart worker, retry 3 vòng, recurring 2 lần) trên PostgreSQL ở DB riêng `culinary_lab`; thêm phase chẩn đoán `db` + `purge`; sổ `Tuan03/SOK_LAB_L4.md` + `README.md`; log `Tuan03/logs/lab_l4_{run.log,db.txt}`. Bài học đã ghi: ctor `Hangfire.PostgreSql` obsolete → `IConnectionFactory` + `JobStorage.Current`; **queue mismatch khiến job kẹt `Enqueued` mãi** → phải truyền queue tường minh; `RecurringJobOptions` không có `Queue`; xoá object qua `IFileStorageService`; bẫy encoding PowerShell 5.1. **Giới hạn nêu rõ**: AVIF chỉ kiểm thử MIME/upload/xoá (chưa có bằng chứng chạy tay cho resize AVIF); cache L4 chưa làm |
+| 27/09 | TV4 | N4 push commit `6bbc542`; **N5 push nhánh `practice/TV4/L4`** (lab L4 + evidence + sổ K) |

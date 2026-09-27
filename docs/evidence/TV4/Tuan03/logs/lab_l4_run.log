@@ -1,0 +1,105 @@
+[01:31:48 INF] [LAB/run] === LAB L4 (TV4) bắt đầu — phase=all run=20260927-183148 ===
+[01:31:48 INF] [LAB/run] MinIO 127.0.0.1:9000 bucket culinary-blog · SMTP 127.0.0.1:1025 · DB lab culinary_lab · app DB culinary_test
+[01:31:48 INF] [LAB/run] Log ghi tại D:\WNC\PTUDWNC-2026-Nhom16\out\lab-20260927-183148.log
+[01:31:48 INF] [LAB/media] === PHASE MEDIA (L4) === bucket=culinary-blog endpoint=127.0.0.1:9000 prefix=lab/l4/20260927-183148
+[01:31:49 INF] [LAB/media] Sinh 6 fixture: sample.jpg (15613 bytes), sample.png (5607 bytes), sample.webp (1702 bytes), sample.avif (28 bytes), oversize.jpg (5243904 bytes), fake.jpg (4096 bytes)
+[01:31:49 INF] [LAB/media] UPLOAD lab/l4/20260927-183148/sample.jpg (image/jpeg, 15613 bytes) -> đọc lại 15613 bytes
+[01:31:49 INF] [LAB/media] UPLOAD lab/l4/20260927-183148/sample.png (image/png, 5607 bytes) -> đọc lại 5607 bytes
+[01:31:49 INF] [LAB/media] UPLOAD lab/l4/20260927-183148/sample.webp (image/webp, 1702 bytes) -> đọc lại 1702 bytes
+[01:31:49 INF] [LAB/media] UPLOAD lab/l4/20260927-183148/sample.avif (image/avif, 28 bytes) -> đọc lại 28 bytes
+[01:31:49 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/sample.jpg -> lab/l4/20260927-183148/sample_300x300.jpg (max 300x300)
+[01:31:49 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/sample.jpg -> lab/l4/20260927-183148/sample_800x600.jpg (max 800x600)
+[01:31:49 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/sample.png -> lab/l4/20260927-183148/sample_300x300.png (max 300x300)
+[01:31:49 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/sample.png -> lab/l4/20260927-183148/sample_800x600.png (max 800x600)
+[01:31:49 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/sample.webp -> lab/l4/20260927-183148/sample_300x300.webp (max 300x300)
+[01:31:50 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/sample.webp -> lab/l4/20260927-183148/sample_800x600.webp (max 800x600)
+[01:31:50 WRN] [CulinaryBlog.Practice.Lab4.LabImageScaler] SKIP resize lab/l4/20260927-183148/sample.avif: định dạng chưa hỗ trợ (AVIF) — giữ original.
+[01:31:50 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] IDEMPOTENT lab/l4/20260927-183148/sample_300x300.jpg đã tồn tại — không ghi đè.
+[01:31:50 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] IDEMPOTENT lab/l4/20260927-183148/sample_800x600.jpg đã tồn tại — không ghi đè.
+[01:31:50 INF] [LAB/result] [MEDIA] PASS validate sample.jpg (image/jpeg) — OK
+[01:31:50 INF] [LAB/result] [MEDIA] PASS validate sample.png (image/png) — OK
+[01:31:50 INF] [LAB/result] [MEDIA] PASS validate sample.webp (image/webp) — OK
+[01:31:50 INF] [LAB/result] [MEDIA] PASS validate sample.avif (image/avif) — OK
+[01:31:50 INF] [LAB/result] [MEDIA] PASS validate oversize.jpg -> file.too_large — bị từ chối đúng: file.too_large
+[01:31:50 INF] [LAB/result] [MEDIA] PASS validate fake.jpg -> file.invalid_type — bị từ chối đúng: file.invalid_type
+[01:31:50 INF] [LAB/result] [MEDIA] PASS upload + readback sample.jpg — 15613/15613 bytes, ct=image/jpeg
+[01:31:50 INF] [LAB/result] [MEDIA] PASS upload + readback sample.png — 5607/5607 bytes, ct=image/png
+[01:31:50 INF] [LAB/result] [MEDIA] PASS upload + readback sample.webp — 1702/1702 bytes, ct=image/webp
+[01:31:50 INF] [LAB/result] [MEDIA] PASS upload + readback sample.avif — 28/28 bytes, ct=image/avif
+[01:31:50 INF] [LAB/result] [MEDIA] PASS resize sample.jpg -> 2 biến thể — lab/l4/20260927-183148/sample_300x300.jpg | lab/l4/20260927-183148/sample_800x600.jpg
+[01:31:50 INF] [LAB/result] [MEDIA] PASS measure sample_300x300.jpg — 300x200 (1601 bytes, image/jpeg)
+[01:31:50 INF] [LAB/result] [MEDIA] PASS measure sample_800x600.jpg — 800x533 (7413 bytes, image/jpeg)
+[01:31:50 INF] [LAB/result] [MEDIA] PASS resize sample.png -> 2 biến thể — lab/l4/20260927-183148/sample_300x300.png | lab/l4/20260927-183148/sample_800x600.png
+[01:31:50 INF] [LAB/result] [MEDIA] PASS measure sample_300x300.png — 300x200 (733 bytes, image/png)
+[01:31:50 INF] [LAB/result] [MEDIA] PASS measure sample_800x600.png — 800x533 (2839 bytes, image/png)
+[01:31:50 INF] [LAB/result] [MEDIA] PASS resize sample.webp -> 2 biến thể — lab/l4/20260927-183148/sample_300x300.webp | lab/l4/20260927-183148/sample_800x600.webp
+[01:31:50 INF] [LAB/result] [MEDIA] PASS measure sample_300x300.webp — 300x200 (186 bytes, image/webp)
+[01:31:50 INF] [LAB/result] [MEDIA] PASS measure sample_800x600.webp — 800x533 (814 bytes, image/webp)
+[01:31:50 INF] [LAB/result] [MEDIA] PASS resize sample.avif -> fallback original — 0 biến thể, giữ original
+[01:31:50 INF] [LAB/result] [MEDIA] PASS resize idempotent (chạy 2 lần) — sample_300x300.jpg existed=True | sample_800x600.jpg existed=True
+[01:31:50 INF] [LAB/result] [MEDIA] PASS delete sample.jpg + 2 biến thể — không còn object
+[01:31:50 INF] [LAB/result] [MEDIA] PASS delete sample.png + 2 biến thể — không còn object
+[01:31:50 INF] [LAB/result] [MEDIA] PASS delete sample.webp + 2 biến thể — không còn object
+[01:31:50 INF] [LAB/result] [MEDIA] PASS delete sample.avif — không còn object
+[01:31:50 INF] [LAB/result] [MEDIA] PASS — 25/25 check OK
+[01:31:50 INF] [LAB/summary] SUMMARY MEDIA PASS (25/25)
+[01:31:50 INF] [LAB/email] === PHASE EMAIL (L4) === smtp=127.0.0.1:1025 api=http://127.0.0.1:8025
+[01:31:50 INF] [LAB/result] [EMAIL] PASS gửi 2 email qua SMTP (plain + HTML) — MailKit không ném exception
+[01:31:50 INF] [LAB/result] [EMAIL] PASS Mailhog nhận đủ 2 mail — trước=37 sau=39
+[01:31:50 INF] [LAB/result] [EMAIL] PASS Mailhog API trả subject của mail vừa gửi — [LAB L4] HTML + =?utf-8?b?4bqjbmg=?= 20260927-183148 | [LAB L4] Plain text 20260927-183148
+[01:31:50 INF] [LAB/result] [EMAIL] PASS — 3/3 check OK
+[01:31:50 INF] [LAB/summary] SUMMARY EMAIL PASS (3/3)
+[01:31:50 INF] [LAB/xml] === PHASE XML (L4) === sitemap từ recipe Published (DB=culinary_test (chỉ đọc))
+[01:31:51 INF] [LAB/xml] WROTE D:\WNC\PTUDWNC-2026-Nhom16\out\sitemap.xml (11701 bytes)
+[01:31:51 INF] [LAB/result] [XML] PASS sitemap có URL — 93 url, nguồn=DB culinary_test
+[01:31:51 INF] [LAB/result] [XML] PASS sitemap parse lại được (XML hợp lệ) — parse ra 93 phần tử <url>
+[01:31:51 INF] [LAB/result] [XML] PASS chỉ lấy Published — published=93 / tổng 300 (Draft/Archived/Deleted bị loại)
+[01:31:51 INF] [LAB/result] [XML] PASS — 3/3 check OK
+[01:31:51 INF] [LAB/summary] SUMMARY XML PASS (3/3)
+[01:31:51 INF] [LAB/jobs] === PHASE JOBS (L4) === queue=lab storage=PostgreSQL db=culinary_lab
+[01:31:51 INF] [LAB/jobs] Dùng database lab có sẵn culinary_lab
+[01:31:52 INF] [LAB/jobs] Hangfire storage sẵn sàng (JobStorage.Current); schema được tạo tự động nếu thiếu.
+[01:31:52 INF] [LAB/jobs] Worker đã khởi động (queue=lab, workerCount=1)
+[01:31:52 INF] [LAB/jobs] Đã upload ảnh lab lab/l4/20260927-183148/jobs-sample.jpg (15613 bytes)
+[01:31:52 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/jobs-sample.jpg -> lab/l4/20260927-183148/jobs-sample_300x300.jpg (max 300x300)
+[01:31:52 INF] [CulinaryBlog.Practice.Lab4.LabImageScaler] RESIZED lab/l4/20260927-183148/jobs-sample.jpg -> lab/l4/20260927-183148/jobs-sample_800x600.jpg (max 800x600)
+[01:31:52 INF] [CulinaryBlog.Practice.Lab4.LabResizeJob] JOB resize xong lab/l4/20260927-183148/jobs-sample.jpg: 2 biến thể
+[01:31:53 INF] [LAB/jobs] job 40 -> state Succeeded
+[01:31:53 INF] [LAB/jobs] Delayed job 41 hẹn chạy sau 15s — tắt worker NGAY để job phải chờ trong DB.
+[01:31:53 INF] [LAB/jobs] Worker đã dừng. Đợi 23s để delay trôi qua (không có worker xử lý).
+[01:32:16 INF] [LAB/jobs] Khởi động lại worker — job delayed phải tự chạy.
+[01:32:16 INF] [CulinaryBlog.Practice.Lab4.LabPingJob] JOB ping xong: delayed sau khi restart worker (SMTP 127.0.0.1:1025 OK)
+[01:32:16 INF] [LAB/jobs] job 41 -> state Succeeded
+[01:32:16 INF] [CulinaryBlog.Practice.Lab4.LabFlakyJob] JOB flaky lần 1: THROW (sẽ retry)
+[01:32:21 INF] [CulinaryBlog.Practice.Lab4.LabFlakyJob] JOB flaky lần 2: THROW (sẽ retry)
+[01:32:26 INF] [CulinaryBlog.Practice.Lab4.LabFlakyJob] JOB flaky lần 3: OK
+[01:32:26 INF] [LAB/jobs] job 42 -> state Succeeded
+[01:32:26 INF] [LAB/jobs] Đã đăng ký recurring job 'lab-sitemap' (cron */5 * * * * * UTC). Đợi 2 lần chạy...
+[01:32:31 INF] [LAB/xml] === PHASE XML (L4) === sitemap từ recipe Published (DB=culinary_test (chỉ đọc))
+[01:32:31 INF] [LAB/xml] WROTE D:\WNC\PTUDWNC-2026-Nhom16\out\sitemap.xml (11701 bytes)
+[01:32:31 INF] [LAB/result] [XML] PASS sitemap có URL — 93 url, nguồn=DB culinary_test
+[01:32:31 INF] [LAB/result] [XML] PASS sitemap parse lại được (XML hợp lệ) — parse ra 93 phần tử <url>
+[01:32:31 INF] [LAB/result] [XML] PASS chỉ lấy Published — published=93 / tổng 300 (Draft/Archived/Deleted bị loại)
+[01:32:31 INF] [LAB/result] [XML] PASS — 3/3 check OK
+[01:32:31 INF] [CulinaryBlog.Practice.Lab4.LabSitemapJob] JOB sitemap lần 1: PASS (file out/sitemap.xml)
+[01:32:36 INF] [LAB/xml] === PHASE XML (L4) === sitemap từ recipe Published (DB=culinary_test (chỉ đọc))
+[01:32:36 INF] [LAB/xml] WROTE D:\WNC\PTUDWNC-2026-Nhom16\out\sitemap.xml (11701 bytes)
+[01:32:36 INF] [LAB/result] [XML] PASS sitemap có URL — 93 url, nguồn=DB culinary_test
+[01:32:36 INF] [LAB/result] [XML] PASS sitemap parse lại được (XML hợp lệ) — parse ra 93 phần tử <url>
+[01:32:36 INF] [LAB/result] [XML] PASS chỉ lấy Published — published=93 / tổng 300 (Draft/Archived/Deleted bị loại)
+[01:32:36 INF] [LAB/result] [XML] PASS — 3/3 check OK
+[01:32:36 INF] [CulinaryBlog.Practice.Lab4.LabSitemapJob] JOB sitemap lần 2: PASS (file out/sitemap.xml)
+[01:32:36 INF] [LAB/jobs] recurring 'lab-sitemap' đã chạy 2 lần
+[01:32:36 INF] [LAB/jobs] Đã xoá object lab của lab/l4/20260927-183148/jobs-sample.jpg
+[01:32:36 INF] [LAB/jobs] Worker đã dừng, recurring job đã gỡ, object lab đã xoá.
+[01:32:36 INF] [LAB/result] [JOBS] PASS fire-and-forget: job resize — job=40 state=Succeeded
+[01:32:36 INF] [LAB/result] [JOBS] PASS resize tạo đủ 2 object phái sinh — lab/l4/20260927-183148/jobs-sample_300x300.jpg + lab/l4/20260927-183148/jobs-sample_800x600.jpg
+[01:32:36 INF] [LAB/result] [JOBS] PASS tắt worker: job vẫn còn trong DB (không mất) — job=41 state=Scheduled
+[01:32:36 INF] [LAB/result] [JOBS] PASS restart worker: job delayed chạy được — job=41 state=Succeeded
+[01:32:36 INF] [LAB/result] [JOBS] PASS retry: job hỏng 2 lần rồi thành công — job=42 state=Succeeded attempts=3 (2 lần THROW trước đó theo log)
+[01:32:36 INF] [LAB/result] [JOBS] PASS retry: số lần chạy = số lần hỏng + 1 — attempts=3 (kỳ vọng 3)
+[01:32:36 INF] [LAB/result] [JOBS] PASS recurring: sitemap chạy lặp nhiều lần — số lần chạy=2
+[01:32:36 INF] [LAB/result] [JOBS] PASS recurring: Hangfire lưu hash trạng thái job định kỳ — Queue=default, Cron=*/5 * * * * *, TimeZoneId=UTC, Job={"Type":"CulinaryBlog.Practice.Lab4.LabSitemapJob, Lab.L4, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null","Method":"RunAsync","ParameterTypes":"[]","Arguments":"[]","Queue":"lab"}, CreatedAt=2026-09-27T18:32:26.3855248Z, V=2
+[01:32:36 INF] [LAB/result] [JOBS] PASS — 8/8 check OK
+[01:32:36 INF] [LAB/summary] SUMMARY JOBS PASS (8/8)
+[01:32:36 INF] [LAB/summary] === LAB L4 PASS — 4 phase, 39 check ===
