@@ -3,15 +3,16 @@
 import { mediaUrl } from "./recipe-editor";
 
 const duration = (m?: number | null) => (m && m > 0 ? `PT${m}M` : undefined);
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function buildRecipeJsonLd(r: any) {
+export function buildRecipeJsonLd(r: any, slug?: string) {
+  const has = (v: unknown) => v !== null && v !== undefined;
   const images = [...(r.images ?? [])]
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
     .map(i => mediaUrl(i.originalUrl ?? i.url))
     .filter(Boolean);
   const n = r.nutrition;
-  const has = (v: unknown) => v !== null && v !== undefined;
   const nutrition = n && Object.values(n).some(has) ? {
     "@type": "NutritionInformation",
     calories: has(n.calories) ? `${n.calories} kcal` : undefined,
@@ -21,12 +22,14 @@ export function buildRecipeJsonLd(r: any) {
     fiberContent: has(n.fiber) ? `${n.fiber} g` : undefined,
     sodiumContent: has(n.sodium) ? `${n.sodium} mg` : undefined,
   } : undefined;
+  const s = slug ?? r.slug;
 
   // JSON.stringify tự bỏ các field undefined
   return {
     "@context": "https://schema.org",
     "@type": "Recipe",
     name: r.title,
+    url: s ? `${SITE}/recipes/${s}` : undefined,
     description: r.description || undefined,
     image: images.length ? images : undefined,
     author: r.authorName ? { "@type": "Person", name: r.authorName } : undefined,
@@ -41,7 +44,7 @@ export function buildRecipeJsonLd(r: any) {
       .map(i => [i.quantity, i.unit, i.name].filter(x => has(x) && x !== "").join(" ")),
     recipeInstructions: [...(r.steps ?? [])]
       .sort((a, b) => a.stepNumber - b.stepNumber)
-      .map(s => ({ "@type": "HowToStep", position: s.stepNumber, name: s.title, text: s.description })),
+      .map(st => ({ "@type": "HowToStep", position: st.stepNumber, name: st.title, text: st.description })),
     nutrition,
   };
 }

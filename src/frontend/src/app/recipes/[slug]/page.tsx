@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getRecipeBySlug } from '@/lib/api';
+import OwnerEditButton from '@/components/OwnerEditButton';
 import {
   ArrowLeft,
   ChefHat,
@@ -25,10 +26,11 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
     hard: 'bg-orange-100 text-orange-800',
     expert: 'bg-red-100 text-red-800',
   };
+  const labels: Record<string, string> = { easy: 'Dễ', medium: 'Trung bình', hard: 'Khó', expert: 'Chuyên gia' };
   const cls = styles[difficulty?.toLowerCase()] ?? 'bg-gray-100 text-gray-800';
   return (
     <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
-      {difficulty}
+      {labels[difficulty?.toLowerCase()] ?? difficulty}
     </span>
   );
 }
@@ -50,10 +52,14 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
   }
 
   const totalTime = recipe.totalTimeMinutes ?? recipe.prepTimeMinutes + recipe.cookTimeMinutes;
+  // Trường tuỳ DTO: đọc mềm để không phụ thuộc kiểu trong lib/api
+  const extra = recipe as unknown as { id?: string; authorId?: string; categoryName?: string };
+  // Chỉ hiện mục dinh dưỡng khi có ít nhất một giá trị
+  const hasNutrition = !!recipe.nutrition && Object.values(recipe.nutrition).some((v) => v !== null && v !== undefined);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/recipes"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-orange-600 transition-colors"
@@ -61,6 +67,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
           <ArrowLeft className="w-4 h-4" />
           Quay lại danh sách công thức
         </Link>
+        <OwnerEditButton recipeId={extra.id} slug={slug} authorId={extra.authorId} />
       </div>
 
       {/* Tiêu đề và thông số */}
@@ -68,7 +75,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold">
             <ChefHat className="w-3.5 h-3.5" />
-            <span>Công thức</span>
+            <span>{extra.categoryName ?? 'Công thức'}</span>
           </div>
           <DifficultyBadge difficulty={recipe.difficulty} />
           {recipe.status !== 'Published' && (
@@ -154,7 +161,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
           )}
 
           {/* Dinh dưỡng */}
-          {recipe.nutrition && (
+          {hasNutrition && recipe.nutrition && (
             <div className="pt-4 space-y-3">
               <h3 className="text-sm font-bold text-gray-900">Dinh dưỡng mỗi khẩu phần</h3>
               <dl className="space-y-1.5 text-sm">

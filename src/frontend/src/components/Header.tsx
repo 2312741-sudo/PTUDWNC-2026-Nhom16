@@ -1,12 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { UtensilsCrossed, Search, Menu, X, Shield } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Search, Menu, X, Shield, BookOpen, Plus, LogOut } from 'lucide-react';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  // Trạng thái đăng nhập đọc sau khi mount (tránh lệch SSR) và đọc lại mỗi lần đổi trang
+  const [loggedIn, setLoggedIn] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    setLoggedIn(!!localStorage.getItem('accessToken'));
+  }, [pathname]);
+
+  function logout() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    setLoggedIn(false);
+    setIsMobileMenuOpen(false);
+    router.push('/auth/login');
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
@@ -61,6 +78,16 @@ export default function Header() {
             <Link href="/categories" className="hover:text-emerald-600 transition-colors">
               Danh mục
             </Link>
+            {loggedIn && (
+              <Link
+                href="/dashboard/recipes"
+                aria-current={pathname?.startsWith('/dashboard/recipes') ? 'page' : undefined}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-lg hover:bg-emerald-100 transition-colors text-xs font-semibold"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                Công thức của tôi
+              </Link>
+            )}
             <Link
               href="/dashboard/categories"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 rounded-lg hover:bg-amber-100 transition-colors text-xs font-semibold"
@@ -78,18 +105,39 @@ export default function Header() {
 
           {/* Auth Buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            <Link
-              href="/auth/login"
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              href="/auth/register"
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
-            >
-              Đăng ký
-            </Link>
+            {loggedIn ? (
+              <>
+                <Link
+                  href="/dashboard/recipes/new"
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  Viết công thức
+                </Link>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Đăng xuất
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
+                >
+                  Đăng ký
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -98,6 +146,7 @@ export default function Header() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
               aria-label="Toggle Navigation Menu"
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -139,6 +188,24 @@ export default function Header() {
             >
               Danh mục
             </Link>
+            {loggedIn && (
+              <>
+                <Link
+                  href="/dashboard/recipes"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-800"
+                >
+                  Công thức của tôi
+                </Link>
+                <Link
+                  href="/dashboard/recipes/new"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-lg hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  + Viết công thức
+                </Link>
+              </>
+            )}
             <Link
               href="/dashboard/categories"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -148,18 +215,29 @@ export default function Header() {
             </Link>
           </div>
           <div className="pt-3 border-t border-gray-100 flex gap-2">
-            <Link
-              href="/auth/login"
-              className="flex-1 text-center py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              href="/auth/register"
-              className="flex-1 text-center py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200"
-            >
-              Đăng ký
-            </Link>
+            {loggedIn ? (
+              <button
+                onClick={logout}
+                className="flex-1 text-center py-2 border border-gray-200 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                Đăng xuất
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="flex-1 text-center py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="flex-1 text-center py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm shadow-emerald-200"
+                >
+                  Đăng ký
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
