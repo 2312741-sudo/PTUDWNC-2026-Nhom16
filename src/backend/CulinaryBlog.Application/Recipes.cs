@@ -518,10 +518,12 @@ public sealed class ReorderStepsHandler(
     {
         var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
 
-        await uow.ExecuteInTransactionAsync(_ =>
+        await uow.ExecuteInTransactionAsync(async _ =>
         {
+            // Unique (RecipeId, StepNumber) kiểm tra ngay sau từng UPDATE -> không thể hoán đổi trực tiếp.
+            recipe.MoveStepNumbersToTemporaryRange();
+            await repo.SaveChangesAsync(ct);
             recipe.ReorderSteps(cmd.OrderedStepIds);
-            return Task.CompletedTask;
         }, ct);
 
         return recipe.Steps.OrderBy(s => s.StepNumber).Select(s => s.ToDto()).ToList();
