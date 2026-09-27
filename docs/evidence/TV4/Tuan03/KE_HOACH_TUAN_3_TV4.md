@@ -115,10 +115,13 @@
 
 **Skills**: K04, K12, K13, K14, K15, K17, K19
 
-| # | Việc làm | Kết quả mong đợi |
-|---|---|---|
-| 1 | Nhánh `practice/TV4/L4`: upload/delete 4 MIME + resize 300×300/800×600 + Mailhog email + Hangfire delayed/restart | Commit lab + test |
-| 2 | Lab theo PHAN_CHIA tuần 3 TV4: Identity/Google/refresh/forms/FTS (phần TV4 cần học) | PR lab ngoài phần chính, có sổ K |
+> **Kết quả 28/09 (N5)**: mục 1 **xong** — commit `3642428` trên nhánh riêng `practice/TV4/L4`, `media` 25/25 · `email` 3/3 · `xml` 3/3 · `jobs` 8/8 = **4 phase · 39/39 check PASS**, sổ K `Tuan03/SOK_LAB_L4.md`. Mục 2 (Identity/Google/refresh/forms/FTS) **chưa làm**.
+
+| # | Việc làm | Kết quả mong đợi | Trạng thái 28/09 |
+|---|---|---|---|
+| 1 | Nhánh `practice/TV4/L4`: upload/delete 4 MIME + resize 300×300/800×600 + Mailhog email + Hangfire delayed/restart | Commit lab + test | ✅ **Xong** — 39/39 check; thêm 2 phase chẩn đoán `db`/`purge` (không tính vào yêu cầu); log `Tuan03/logs/lab_l4_{run.log,db.txt}` |
+| 2 | Lab theo PHAN_CHIA tuần 3 TV4: Identity/Google/refresh/forms/FTS (phần TV4 cần học) | PR lab ngoài phần chính, có sổ K | ⬜ **Chưa làm** — để tuần 4; ưu tiên sau D6-Lab |
+| 3 | *(phát sinh 28/09)* CI 5 run đỏ vì image MinIO bị gỡ khỏi registry — gỡ + harden action + sửa dev compose | CI xanh + dev stack dựng được trên máy mới | ✅ **Xong** — `cd72b27` + `d78e25c`; CI xanh run `36344662570` |
 
 ---
 
@@ -191,7 +194,9 @@
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
 - [x] **Resize D2 (27/09, N4)**: `ResizeImageJob` (300×300/800×600, idempotent, original fallback, delete-vs-resize, retry 3) + `IObjectStorageWriter` (key phái sinh chủ động, tách khỏi `IFileStorageService`) + `IImageResizeQueue` (Hangfire / Inline ở `Testing`) + dashboard `/hangfire` chỉ Admin; E2E `ImageResizeD2Tests` **4/4** + 5 unit; **job Hangfire thật `Succeeded`**, proxy trả 300×200, ảnh hỏng → fallback original; suite **148/148 + 5/5**; `IMAGE_CONTRACT.md §7`; log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
 - [x] **Invalidation cache archive/unpublish/delete (27/09 — đóng bằng xác minh)**: không có cache recipe nào để invalidate (backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire) → handoff TV2/TV3 nếu nhóm thêm ISR/output-cache.
-- [ ] Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.
+- [ ] ~~Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.~~ → **xong 28/09 (N5)**: commit `3642428`, **4 phase · 39/39 check PASS**, sổ K `Tuan03/SOK_LAB_L4.md` + `practice/TV4/L4/README.md`, log `lab_l4_{run.log,db.txt}` không secret; CI pass sau mỗi task ✅; không commit secret ✅ (quét staged diff trước khi commit).
+- [x] **CI 5 run đỏ do image MinIO bị gỡ khỏi registry (28/09)** — `quay.io/minio/minio` 401 + `minio/minio` Docker Hub 404 → job chết ở "Initialize containers", mọi bước khác bị skip. Thay bằng `rustfs/rustfs` (S3-compatible, `MinioStorageService` không đổi dòng) trong **cả** workflow lẫn dev compose; bỏ `minio-init` (app tự tạo bucket); harden CI (tag+digest, SDK pin, timeout 30', concurrency, blame-hang 10') → **CI xanh** run `36344662570`.
+- [ ] N5 mục 2: lab Identity/Google/refresh/forms/FTS theo `PHAN_CHIA` tuần 3.
 
 ---
 
@@ -200,6 +205,7 @@
 | Rủi ro | Ảnh hưởng | Giải pháp |
 |---|---|---|
 | Main CI đỏ kéo dài (duplicate migration) | Chặn mọi thành viên | ✅ Đã fix (main `a651c8a`); branch tuần 3 CI success; còn chuyển fix connection string `4830e57` lên main |
+| **Image container trong CI/compose bị gỡ khỏi registry** | Job chết ở "Initialize containers", **mọi** test bị skip → CI xanh giả trong khi không hề kiểm thử gì (xảy ra 28/09 với MinIO) | ✅ Đổi sang `rustfs/rustfs` (tag + digest) trong workflow lẫn dev compose; **gỡ bằng chứng thật** (148/148 `Skipped=0` + bucket/object có thật trong storage); ghim digest + SDK + timeout + blame-hang để lỗi tương tự lộ ra sớm hơn |
 | ~~C5 TV3 chưa bàn giao~~ | ~~D3.3 logout chưa revoke family~~ | ✅ C5 đã có trên main — D3.3 xong |
 | Eager-read connection string trong main phá override test | CI main fail 28P01 khi thêm commit deploy | TV4 fix `4830e57` (đọc trong lambda AddDbContext) → PR lên main ngay |
 | ~~D27 chưa chốt~~ | ~~Uploader ảnh không hiển thị~~ | ✅ **Chốt 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL`; làm proxy D27 |
@@ -221,4 +227,8 @@
 6. E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted.
 7. ✅ **Proxy ảnh D27** (`/resources/images/{key}`) — **xong 27/09**; còn: uploader UI + status buttons (ghép TV3 C4; FE set `NEXT_PUBLIC_MEDIA_URL`).
 8. Sitemap/robots/JSON-LD + OTEL/metrics/health.
-9. **Resize job (Hangfire — D23 chốt)** + lab L4 + sổ evidence K.
+9. ✅ **Resize job (Hangfire — D23 chốt)** — xong 27/09 (N4).
+10. ✅ **Lab L4 (N5/D6)** — xong 28/09: commit `3642428`, 39/39 check, sổ K.
+11. ✅ **Gỡ sự cố CI + dev compose** (image storage bị gỡ khỏi registry) — xong 28/09: `cd72b27` + `d78e25c`.
+12. ⬜ **N5 mục 2** — lab Identity/Google/refresh/forms/FTS (tuần 4).
+13. ⬜ Uploader UI + status buttons (D4 — ghép TV3 C4).

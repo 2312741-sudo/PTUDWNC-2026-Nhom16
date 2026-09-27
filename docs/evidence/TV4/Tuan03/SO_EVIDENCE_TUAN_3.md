@@ -5,6 +5,7 @@
 > **Trạng thái**: Tất cả bắt đầu ở **Chưa làm**; chỉ đóng khi có code/test/demo + reviewer Tâm xác nhận.
 > **Cập nhật 24/09**: D3 archive/delete, D4 SEO, D5 OTEL, E2E D1.3 MinIO đã hoàn thành — 133/133 + 5/5 pass local, frontend build OK; chờ reviewer xác nhận.
 > **Cập nhật 27/09**: D3 invalidation đóng bằng xác minh; **D27 proxy ảnh PA-2 xong** — E2E `ImageProxyD27Tests` 6/6; **D5 EXPLAIN/k6 ghi số liệu thật** (list 0.339ms; k6 3310 req, 0% fail, p95 225.63ms); toàn suite **139/139 + 5/5**; `IMAGE_CONTRACT.md §5` chốt PA-2. Chờ reviewer xác nhận.
+> **Cập nhật 28/09**: **D6 Lab L4 (N5) xong** — 4 phase · **39/39 check PASS** (media 25/25, email 3/3, xml 3/3, jobs 8/8), sổ K `SOK_LAB_L4.md`, log `lab_l4_{run.log,db.txt}`; **CI 5 run đỏ đã gỡ** (nguyên nhân: image MinIO bị gỡ khỏi registry — `quay.io` 401, Docker Hub 404, **không phải lỗi code**) → thay `rustfs/rustfs` + harden, **CI xanh run `36344662570`**. Toàn suite **148/148 + 5/5** (`Skipped=0`). Chờ reviewer xác nhận.
 
 ---
 
@@ -20,17 +21,17 @@
 | K06 | SP | EF Core Code First, migration/config/seed, LINQ/index | Fix migration `RefreshTokens` index (N0) + migration soft-delete | N0, D3 | Đã làm (N0) |
 | K07 | SP+LAB | UoW/transaction/audit/soft delete/RowVersion | Race đổi trạng thái + soft delete | D3 | Đã làm (D3 — MarkDeleted + RowVersion 422) |
 | K10 | SP | RBAC/ownership/policy/rate limit/secrets | Ownership archive/delete + 403 non-owner | D3 | Đã làm (D3) |
-| K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | 🟡 Đã xác minh 27/09 — không cache recipe (thỏa mặc định); LAB cache L4 còn mở |
-| K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | Đã làm (E2E 3/3) |
-| K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | ✅ Đã làm phần SP 27/09 (Hangfire PA-1: job resize chạy thật `Succeeded`, retry 3, dashboard Admin-only; E2E 4/4); phần LAB delayed/restart thuộc D6 |
-| K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | 🔶 Resize đã có ở SP (xem K14); còn LAB L4 Mailhog + XML (D6) |
+| K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | 🟡 Đã xác minh 27/09 — không cache recipe (thỏa mặc định); **28/09: LAB cache L4 cũng đóng** — cache-aside ở mức lab chưa có tích hợp thật để kiểm chứng, ghi rõ giới hạn trong `SOK_LAB_L4.md` thay vì đóng bằng giả định |
+| K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | ✅ Đã làm — E2E 3/3 + **LAB 28/09: `media` 25/25 (magic bytes 4 MIME + file MIME giả + quá giới hạn + idempotent + dọn dẹp)** |
+| K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | ✅ **Xong cả SP lẫn LAB 28/09** — SP: `ResizeImageJob` chạy thật `Succeeded`, retry 3, dashboard Admin-only, E2E 4/4; LAB: `jobs` 8/8 gồm **tắt worker → job còn `Scheduled` trong DB → chạy khi restart** + retry quan sát được + recurring do scheduler kích hoạt |
+| K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | ✅ **Đã làm 28/09 (N5)** — `email` 3/3 (MailKit plain+HTML qua Mailhog, đối chiếu subject) + `xml` 3/3 (sitemap từ DB thật, 93 URL Published, parse `XDocument`) + resize 300×200/800×533 |
 | K16 | SP | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | Uploader UI hoàn thiện (D4) | D4 | Chưa làm (chờ D27) |
 | K17 | SP | TanStack Query, optimistic rollback, next/image | Uploader progress/gallery/primary optimistic | D4 | Chưa làm (chờ D27) |
 | K18 | SP | Responsive, WCAG2.1 AA, keyboard/loading/error | Upload/status checklist | D4 | Chưa làm |
 | K19 | SP | SEO metadata/OG/canonical/robots/JSON-LD | Sitemap/robots/OG/JSON-LD Published-only | D4 | Đã làm (SEO) |
 | K20 | SP | Serilog/Seq/correlation, OTEL, metrics, health | OTEL trace HTTP→DB + health thành phần | D5 | ✅ Đã làm (cấu hình + xác minh; trace thật qua Seq khi stack bật) |
 | K22 | SP | k6/EXPLAIN/cache hit/CWV | EXPLAIN publish query + k6 + cache hit | D5 | ✅ Đã làm 27/09 (EXPLAIN + k6 smoke ghi số liệu) |
-| K23 | SP | Docker/Compose/Nginx/volumes/backup-restore | CI xanh (N0) + stack vận hành + queue service | N0, D2 | Đã làm (N0) |
+| K23 | SP | Docker/Compose/Nginx/volumes/backup-restore | CI xanh (N0) + stack vận hành + queue service | N0, D2 | ✅ **Đã làm + gia cố 28/09** — stack vận hành; **CI 5 run đỏ do image MinIO bị gỡ khỏi registry đã gỡ** (thay `rustfs/rustfs` tag+digest trong workflow lẫn dev compose, bỏ `minio-init`); CI xanh run `36344662570`; queue service (Hangfire + PostgreSQL) chạy thật ở cả SP lẫn LAB |
 | K24 | SP | Git/PR/review/CI/static analysis/secret scan/docs | PR nhỏ từng task + review Tâm + note PR #14 | N0, Tất cả | Đang làm |
 
 ---
@@ -151,6 +152,36 @@ Reviewer/ngày: Nguyễn Thanh Tâm / ___
 Lỗi còn lại: chụp trace thật vào Seq (stack nginx+seq bật) — cấu hình sẵn sàng
 ```
 
+### TV4-K13/K14/K15 (D6 — Lab L4: 4 MIME + resize + Mailhog + Hangfire delayed/restart) ✅
+
+```text
+Evidence: TV4-K13 + TV4-K14 + TV4-K15 (FR-FILE-003, FR-JOB-002/003, FR-SEO; D23 PA-1)
+Tuần 3 / TV4 / N5
+Đường dẫn: practice/TV4/L4/ (Program.cs, MediaPhase.cs, LabImageScaler.cs, EmailPhase.cs, SitemapPhase.cs, JobsPhase.cs, LabJobs.cs, Fixtures.cs, DbEvidencePhase.cs, PurgePhase.cs, Lab.L4.csproj); Tuan03/SOK_LAB_L4.md; practice/TV4/L4/README.md
+Nhánh/PR: practice/TV4/L4 (commit 3642428) — console app .NET 10, KHÔNG thêm vào CulinaryBlog.sln, không sửa code sản phẩm
+Test/lệnh: dotnet run --project practice/TV4/L4 -c Release -- all  (cần PostgreSQL + object storage + Mailhog + TEST_DATABASE/Minio__*); verify thêm: dotnet build -c Release (0 warning vì TreatWarningsAsErrors) + dotnet format --verify-no-changes + dotnet test CulinaryBlog.sln (148/148) + spike 5/5
+Kết quả: **4 phase · 39/39 check PASS**, exit 0 — media 25/25 (MIME theo magic bytes 4 định dạng; file MIME giá → file.invalid_type; ảnh quá giới hạn → file.too_large; upload+đọc lại khớp byte; resize ResizeMode.Max → 300×200/800×533; AVIF fallback giữ original; idempotent; dọn dẹp sạch) · email 3/3 (MailKit plain+HTML qua Mailhog 127.0.0.1:1025, đếm trước/sau qua API, đối chiếu subject) · xml 3/3 (sitemap từ DB thật culinary_test, 93 URL Published, parse XDocument) · jobs 8/8 (Hangfire+PostgreSQL culinary_lab: fire-and-forget Succeeded; tắt worker → job còn Scheduled trong DB → chạy khi restart; retry Retry attempt 1,2 of 5 rồi Succeeded; recurring do scheduler kích hoạt chạy 2 lần; RemoveIfExists → hangfire.hash trống, jobqueue 0 dòng)
+Bằng chứng bổ sung: 2 phase chẩn đoán KHÔNG tính vào yêu cầu — `db` (dump bằng Npgsql trong chính process: 20 job đều Succeeded, hash trống) + `purge` (dọn 24 job Enqueued mồ côi còn sót)
+Lỗi thật tìm được + sửa: (1) ctor Hangfire.PostgreSql obsolete + TreatWarningsAsErrors → NpgsqlConnectionFactory + JobStorage.Current; (2) queue mismatch — BackgroundJob.Enqueue mặc định queue "default" còn worker nghe "lab" nên job kẹt Enqueued mãi, RecurringJobOptions không có thuộc tính Queue; (3) subject Mailhog nằm ở items[].Content.Headers.Subject; (4) xoá object phải qua IFileStorageService (IObjectStorageWriter chỉ Exists/Upload); (5) bẫy encoding PowerShell 5.1 Get-Content/Set-Content làm hỏng tiếng Việt
+Reviewer/ngày: Nguyễn Thanh Tâm / ___
+Lỗi còn lại: (1) AVIF mới có bằng chứng ở mức MIME/upload/xoá — fixture ftyp hợp lệ nhưng không decode được nên chưa chạy tay nhánh resize AVIF (đã có test ở ImageResizeD2Tests); (2) worker lab chỉ nghe một queue, chưa kiểm thử nhiều worker cùng lúc; (3) cache-aside L4 chưa có tích hợp thật nên K12 ghi là giới hạn chứ không đóng
+Log: Tuan03/logs/lab_l4_run.log (log đầy đủ 1 lần chạy all), Tuan03/logs/lab_l4_db.txt (truy vấn DB bằng Npgsql)
+```
+
+### TV4-K23 (Sự cố CI: image storage bị gỡ khỏi registry) ✅
+
+```text
+Evidence: TV4-K23 (NFR về pipeline/CI; D25)
+Tuần 3 / TV4 / CI incident + hardening
+Đường dẫn: .github/workflows/backend.yml; docker-compose.dev.yml; .env.example; README.md; docs/HUONG_DAN_TEST_APP.md; tests/CulinaryBlog.Tests/MinioE2ETests.cs (comment)
+Nhánh/PR: 2312739_NHTSon_D3-D4-D5-D6 (commit cd72b27 sửa CI, d78e25c sửa compose + harden)
+Test/lệnh: GitHub Actions run 36338124928 (đỏ) → 36343309464 (xanh) → 36344662570 (xanh); local: docker compose -f docker-compose.dev.yml up -d s3 + dotnet test CulinaryBlog.sln với MINIO_ENDPOINT=127.0.0.1:9000
+Kết quả: nguyên nhân — service dùng image quay.io/minio/minio:latest; MinIO đã gỡ toàn bộ image public (quay.io/minio/minio → HTTP 401, minio/minio Docker Hub → HTTP 404) nên runner không pull được image, job chết ở bước "Initialize containers" và MỌI bước build/format/test đều bị skip (5 run đỏ liên tiếp từ ef358e0 đến 6bbc542) — KHÔNG phải lỗi code. Sửa: thay bằng rustfs/rustfs (S3-compatible Apache-2.0) + health-cmd /health (RustFS không phục vụ /minio/health/live); MinioStorageService không đổi dòng nào. Cùng nguyên nhân làm docker-compose.dev.yml hỏng trên máy mới → sửa luôn (service minio → s3, bỏ minio-init vì app tự tạo bucket, volume s3data, port 9000/9001 giữ nguyên). Hardening: ghim image tag+digest sha256:8cc9801…, ghim SDK 10.0.401 khớp global.json, timeout-minutes 30, concurrency cancel-in-progress, --blame-hang-timeout 10m
+Minh chứng không bỏ trống: local 148/148 + 5/5 với Skipped=0 trên CẢ hai đường (endpoint CI và service s3 thật từ compose), bucket culinary-blog/recipes có thật trong storage → E2E storage thực sự chạy chứ không skip; CI 36344662570 cả 10 bước success
+Reviewer/ngày: Nguyễn Thanh Tâm / ___
+Lỗi còn lại: SRS v1.1.1 + evidence Tuan01 vẫn ghi "MinIO" (để nguyên vì là spec/record lịch sử; RustFS chỉ là bản thay thế cùng giao thức S3 ở mức dev/CI). Cần nhóm biết khi deploy môi trường thật: production KHÔNG dùng RustFS, phải dùng object storage có license
+```
+
 ---
 
 ## 4. Checklist cá nhân tuần 3 (chốt G5)
@@ -164,14 +195,16 @@ Lỗi còn lại: chụp trace thật vào Seq (stack nginx+seq bật) — cấu
 - [x] DELETE soft theo ADR D08 (`Recipe.MarkDeleted()` + global filter) + không mất ảnh restore + test.
 - [x] Sitemap Published-only (`GET /recipes/sitemap` + frontend `sitemap.ts`/`robots.ts`) + `next build` OK.
 - [x] OTEL trace+metrics (ASP.NET/Http/EF) cấu hình + health db/redis/minio; **27/09 ghi số liệu EXPLAIN publish query (0.339ms/0.044ms) + k6 smoke (3310 req, 0% fail, p95 225.63ms)** — log `Tuan03/logs/`.
-- [x] CI thêm service MinIO + env + bước chờ health (cần push + xanh).
+- [x] CI thêm service storage + env + bước chờ health — **28/09: CI thật sự xanh** sau khi gỡ sự cố image MinIO bị gỡ khỏi registry (run `36344662570`; xem TV4-K23).
+- [x] **Lab L4 (28/09, N5)** — `practice/TV4/L4` commit `3642428`: `media` 25/25 · `email` 3/3 · `xml` 3/3 · `jobs` 8/8 = **4 phase · 39/39 check PASS**; thêm `db`/`purge` chẩn đoán; sổ K `Tuan03/SOK_LAB_L4.md`; log `lab_l4_{run.log,db.txt}` không secret; suite **148/148 + 5/5**, `Skipped=0`.
 - [ ] PR `4830e57` lên main (fix CI main 6 commit mới).
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).
 - [x] Invalidation cache archive/unpublish/delete — **đóng bằng xác minh 27/09**: không cache recipe (backend không OutputCache/Redis-dữ-liệu, FE `no-store`, `RecipeCacheService` orphan); handoff TV2/TV3 nếu nhóm thêm cache.
 - [x] **Proxy ảnh D27 PA-2** (27/09) — `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` + E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` chốt; suite 139/139 + 5/5.
 - [x] **Resize D2 (27/09, N4)** — Hangfire PA-1: `ResizeImageJob` 300×300/800×600, `IObjectStorageWriter` key chủ động, retry 3, dashboard `/hangfire` chỉ Admin, idempotent + original fallback + delete-vs-resize; E2E `ImageResizeD2Tests` 4/4; **chạy thật: Hangfire job `Succeeded`, proxy trả 300×200**; suite 148/148 + 5/5. Log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
-- [ ] ~~Resize original/300×300/800×600 + queue persistent + original fallback + restart/retry test~~ → **xong 27/09**; phần LAB delayed/restart + Mailhog chuyển sang D6.
+- [ ] ~~Resize original/300×300/800×600 + queue persistent + original fallback + restart/retry test~~ → **xong 27/09**; phần LAB delayed/restart + Mailhog **xong 28/09 (N5)**.
+- [ ] N5 mục 2: lab Identity/Google/refresh/forms/FTS theo `PHAN_CHIA` tuần 3.
 - [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) sau merge PR #15.
 - [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4.
-- [ ] Lab `practice/TV4/L4` commit + sổ evidence K cập nhật.
-- [ ] CI pass sau mỗi task; không commit secret/token/password.
+- [ ] Lab `practice/TV4/L4` commit + sổ evidence K cập nhật. → **xong 28/09**: commit `3642428` + `SOK_LAB_L4.md` (mục trên).
+- [x] CI pass sau mỗi task; không commit secret/token/password. → **28/09**: CI xanh run `36344662570`; quét staged diff trước mỗi lần commit (0 credential mới).

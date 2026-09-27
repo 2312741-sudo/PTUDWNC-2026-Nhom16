@@ -4,7 +4,14 @@
 > **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3), khởi động từ main đã cập nhật
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt đề xuất D23/D27: **D23 → Hangfire PA-1**, **D27 → base media URL proxy PA-2** theo `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`; khớp PR #15 TV3) → **đã implement xong cả hai: D27 proxy (N2) + D2 resize Hangfire (N4)**
+> **Cập nhật lần cuối**: 28/09/2026 (T8) — **N5/D6 Lab L4 xong** (4 phase · 39/39 check PASS, nhánh riêng `practice/TV4/L4`, commit `3642428`) và **CI 5 run đỏ liên tiếp đã gỡ** (nguyên nhân ngoài code: image MinIO bị gỡ khỏi registry) → commit `cd72b27` + `d78e25c`, **CI xanh** run `36344662570`.
+> Lịch sử: 27/09/2026 (T7 — chốt đề xuất D23/D27: **D23 → Hangfire PA-1**, **D27 → base media URL proxy PA-2** theo `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`; khớp PR #15 TV3) → **đã implement xong cả hai: D27 proxy (N2) + D2 resize Hangfire (N4)**
+
+> **Bản sửa đổi 28/09 T8 (N5 + sự cố CI)**:
+> - **N5/D6 — Lab L4 xong** trên nhánh riêng `practice/TV4/L4` (commit `3642428`, không thêm vào `CulinaryBlog.sln`): `media` 25/25 · `email` 3/3 · `xml` 3/3 · `jobs` 8/8 → **4 phase · 39/39 check PASS** (exit 0). Bổ sung 2 phase chẩn đoán **không tính vào yêu cầu**: `db` (dump bằng chứng bằng Npgsql trong chính process) + `purge` (dọn job kẹt). Sổ K riêng: `Tuan03/SOK_LAB_L4.md`; log: `Tuan03/logs/lab_l4_run.log` + `lab_l4_db.txt`.
+> - **Sự cố CI (5 run đỏ liên tiếp, từ `ef358e0` đến `6bbc542`)**: job chết ở bước "Initialize containers" vì service dùng image `quay.io/minio/minio:latest` — MinIO đã **gỡ toàn bộ image public** (`quay.io/minio/minio` → HTTP 401, `minio/minio` Docker Hub → HTTP 404). Không phải lỗi code; mọi bước build/format/test đều bị skip. Đã thay bằng `rustfs/rustfs` (server S3-compatible Apache-2.0) — `MinioStorageService` **không đổi dòng nào**. CI xanh từ run `36343309464`.
+> - **Giảm rủi ro lần sau** (`d78e25c`): ghim image theo **tag + digest**, ghim SDK `10.0.401` khớp `global.json`, `timeout-minutes: 30`, `concurrency` huỷ run cũ, `--blame-hang-timeout 10m`.
+> - **Cùng nguyên nhân, cảnh báo cho cả nhóm**: `docker-compose.dev.yml` cũng trỏ image MinIO + `minio/mc` (đều đã biến mất) → **máy mới của thành viên khác không dựng được dev stack**. Đã sửa: service `minio` → `s3` (RustFS), bỏ hẳn `minio-init` vì app tự tạo bucket, port 9000/9001 giữ nguyên nên cấu hình app không phải đổi.
 
 > **Bản sửa đổi 27/09 (mốc D23/D27)**:
 > Nhóm chốt hướng giải quyết 2 task bị block lâu nhất của tuần 3 (ghi trong `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`):
@@ -56,7 +63,7 @@
 
 ## 2. Đang làm / Chưa thực hiện (tuần 3)
 
-> N0 (fix migration + CI) đã được gỡ bởi main `a651c8a` (merge vào branch tuần 3). **Còn lại là xác nhận CI xanh trên GitHub + rà soát PR #14.**
+> N0 (fix migration + CI) đã được gỡ bởi main `a651c8a` (merge vào branch tuần 3). **CI GitHub đã xanh thật từ 28/09** (run `36343309464` + `36344662570`) sau khi gỡ sự cố image storage; còn lại là rà soát PR #14 và phần FE D4.
 
 | Task | Nội dung | Lý do chưa xong | Cần gì để xong |
 |---|---|---|---|
@@ -71,7 +78,9 @@
 | D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); **D27 proxy đã xong** (endpoint sẵn sàng); còn: TV4 review + bổ sung progress/rollback, status ghép TV3 C4, FE set `NEXT_PUBLIC_MEDIA_URL` | Sau khi PR #15 merge → set `NEXT_PUBLIC_MEDIA_URL`; status buttons nối API đã có |
 | ~~D4-SEO~~ | ~~Sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO | — |
 | ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09 + 27/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; **27/09: EXPLAIN publish query + k6 smoke 20 VU/30s** ghi số liệu (`logs/explain_publish_culinary_test.txt`, `logs/k6_smoke_recipes.log` + `k6_smoke_summary.json`) | — |
-| D6 | Lab `practice/TV4/L4` (4 MIME + resize + Mailhog + Hangfire) + sổ K | Chưa bắt đầu | G1/G2 đã đóng; tạo nhánh lab |
+| D6 | Lab `practice/TV4/L4` (4 MIME + resize + Mailhog + Hangfire) + sổ K | ✅ **Xong 28/09 (N5)** — commit `3642428`; `media` 25/25 · `email` 3/3 · `xml` 3/3 · `jobs` 8/8 = **4 phase · 39/39 check**; sổ K `SOK_LAB_L4.md` + `README.md`; log `lab_l4_run.log`/`lab_l4_db.txt` | — |
+| CI-28/09 | **CI 5 run đỏ** vì image MinIO bị gỡ khỏi registry (401/404) — không phải lỗi code | ✅ **Xong 28/09** — thay `quay.io/minio/minio` bằng `rustfs/rustfs` (S3-compatible), `MinioStorageService` không đổi dòng; ghim tag+digest, SDK, timeout, concurrency, blame-hang; dev compose cũng sửa theo; CI xanh run `36344662570` | — |
+| D6-Identity | Phần Identity/Google/refresh/forms/FTS trong `PHAN_CHIA` tuần 3 | ⬜ **Chưa làm** — mục 2 của N5; ưu tiên thấp hơn D6-Lab vì Lab L4 đã đủ bằng chứng cho D6 | Tuần 4 (hoặc khi nhóm yêu cầu) |
 
 ---
 
@@ -168,7 +177,32 @@
 - **Flow**: đăng ký → tạo recipe (201) → upload ảnh JPEG (201) → đọc lại (chiều xiêm + slug) → PATCH primary → publish → unpublish → archive → delete → chưa còn trong public list.
 - **Điều kiện chạy**: MinIO reachable (TCP + health) nếu không → skip (CI cũng skip khi không có MinIO); postgres local `culinary_test`.
 - **Bài học E2E thật**: (1) token từ register (không phải login) mới mang role; (2) enum dạng int (không có `JsonStringEnumConverter`); (3) multipart phải set `ContentType` để `IFormFile.ContentType` đúng → validator magic bytes pass.
-- **CI**: `.github/workflows/backend.yml` đã thêm service MinIO + env `MINIO_*` + bước chờ `minio/health/live`.
+- **CI**: `.github/workflows/backend.yml` đã có service object storage (từ 28/09 là **RustFS** thay MinIO — xem mục "Sự cố CI" bên dưới) + env `MINIO_*` + bước chờ health.
+
+### Lab L4 — N5/D6 (28/09, nhánh `practice/TV4/L4`)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Hình thức | Console app `practice/TV4/L4` (.NET 10), tham chiếu `Application` + `Infrastructure` để dùng **đúng đường code thật** (`MinioStorageService`, `RecipeImageKeys`, `AuthDbContext`); **không** thêm vào `CulinaryBlog.sln`, không sửa code sản phẩm |
+| `media` (25/25) | MIME nhận diện theo **magic bytes** (JPEG/PNG/WebP/AVIF); file MIME giả → `file.invalid_type`; ảnh vượt giới hạn → `file.too_large`; upload + đọc lại khớp byte; resize `ResizeMode.Max` → `300×200` / `800×533`; AVIF fallback giữ original; idempotent; dọn dẹp sạch |
+| `email` (3/3) | MailKit gửi plain + HTML qua SMTP Mailhog `127.0.0.1:1025`; đếm trước/sau qua Mailhog API; đối chiếu đúng subject (MailKit MIME-encode tiếng Việt) |
+| `xml` (3/3) | `sitemap.xml` sinh từ DB thật `culinary_test` (chỉ đọc) — **93 URL Published**; parse lại bằng `XDocument` |
+| `jobs` (8/8) | Hangfire + PostgreSQL (`culinary_lab`), worker trong chính process: fire-and-forget `Succeeded`; **tắt worker → job vẫn `Scheduled` trong DB → chạy khi restart**; retry quan sát được `Retry attempt 1,2 of 5` rồi `Succeeded`; recurring do scheduler kích hoạt chạy 2 lần; `RemoveIfExists` → `hangfire.hash` trống, `jobqueue` 0 dòng |
+| Phase bổ sung (không tính vào yêu cầu) | `db` — dump bằng chứng bằng Npgsql trong chính process lab (20 job đều `Succeeded`); `purge` — dọn 24 job `Enqueued` mồ côi còn sót từ các lần chạy trước |
+| Tổng | **4 phase · 39/39 check PASS**, exit `0`; lab build Release **0 warning** (repo bật `TreatWarningsAsErrors`), `dotnet format` sạch, suite **148/148 + 5/5** |
+| Sổ K + log | `Tuan03/SOK_LAB_L4.md` (kết quả từng phase, lỗi gặp, giới hạn), `practice/TV4/L4/README.md`, `Tuan03/logs/lab_l4_run.log`, `Tuan03/logs/lab_l4_db.txt` (không secret) |
+| Lỗi thật lab đã tìm + sửa | ① ctor `Hangfire.PostgreSql` obsolete + `TreatWarningsAsErrors` → `NpgsqlConnectionFactory` + `JobStorage.Current`; ② **queue mismatch** (`BackgroundJob.Enqueue` mặc định `default` còn worker nghe `lab` → job kẹt `Enqueued` mãi; `RecurringJobOptions` không có `Queue`); ③ subject Mailhog ở `items[].Content.Headers.Subject`; ④ xoá object phải qua `IFileStorageService` (`IObjectStorageWriter` chỉ `Exists`/`Upload`); ⑤ bẫy encoding PowerShell 5.1 làm hỏng tiếng Việt |
+
+### Sự cố CI — image storage biến mất khỏi registry (28/09)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Triệu chứng | 5 run đỏ liên tiếp (`ef358e0` → `6bbc542`); job **chết ở bước 2 "Initialize containers"**, các bước restore/build/format/test đều `skipped` |
+| Nguyên nhân | Service dùng `quay.io/minio/minio:latest`; MinIO đã **gỡ toàn bộ image public**: `quay.io/minio/minio` → **HTTP 401**, `minio/minio` (Docker Hub) → **HTTP 404 repository không tồn tại** → runner không pull được image. **Không phải lỗi code** |
+| Sửa (lần 1 — `cd72b27`) | Service `minio` → `objectstorage`, image `rustfs/rustfs:1.0.0` (S3-compatible Apache-2.0), env `RUSTFS_*`, health-cmd `curl /health` (RustFS **không** phục vụ `/minio/health/live`); `MinioStorageService` **không đổi dòng nào** (6 thao tác `BucketExists`/`MakeBucket`/`PutObject`/`GetObject`/`StatObject`/`RemoveObject` hoạt động y hệt) |
+| Sửa (lần 2 — `d78e25c`) | Sửa luôn `docker-compose.dev.yml` (cùng bệnh, **máy mới của thành viên khác không dựng được dev stack**): service `minio` → `s3`, bỏ hẳn `minio-init` vì app tự `BucketExists → MakeBucket`, volume `miniodata` → `s3data`, port 9000/9001 giữ nguyên; `.env.example` + README + `HUONG_DAN_TEST_APP.md` + comment `MinioE2ETests.cs` cập nhật theo |
+| Giảm rủi ro lần sau | Ghim image theo **tag + digest** `sha256:8cc9801…`; ghim SDK `10.0.401` khớp `global.json` (SDK mới có thể làm đổi kết quả `dotnet format`/warning); `timeout-minutes: 30`; `concurrency` + `cancel-in-progress` (push liên tiếp không tốn runner); `--blame-hang-timeout 10m` (test treo bị bắt dump thay vì treo hết giờ) |
+| Bằng chứng | Local: **148/148 + 5/5, `Skipped=0`** trên **cả hai** đường — endpoint CI và service `s3` thật từ compose (`127.0.0.1:9000`, console 9001 trả 200), bucket `culinary-blog/recipes` có thật trong storage → E2E MinIO chạy chứ không skip. CI: run đỏ `36338124928` → **xanh `36343309464`** (sửa lần 1) → **xanh `36344662570`** (sửa lần 2), cả 10 bước `success` |
 
 ### Đã fix khi làm D4/D5 (đã trong working tree)
 
