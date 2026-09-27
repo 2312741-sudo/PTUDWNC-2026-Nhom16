@@ -69,7 +69,7 @@
 | D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | **Đã chốt hướng 27/09 — Hangfire (PA-1)**; chưa thêm package | Implement resize job Hangfire + ImageSharp; regenerate `packages.lock.json`; test restart/retry |
 | D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); **D27 proxy đã xong** (endpoint sẵn sàng); còn: TV4 review + bổ sung progress/rollback, status ghép TV3 C4, FE set `NEXT_PUBLIC_MEDIA_URL` | Sau khi PR #15 merge → set `NEXT_PUBLIC_MEDIA_URL`; status buttons nối API đã có |
 | ~~D4-SEO~~ | ~~Sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO | — |
-| ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; còn EXPLAIN/k6 ghi sổ khi có k6 script | — |
+| ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09 + 27/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; **27/09: EXPLAIN publish query + k6 smoke 20 VU/30s** ghi số liệu (`logs/explain_publish_culinary_test.txt`, `logs/k6_smoke_recipes.log` + `k6_smoke_summary.json`) | — |
 | D6 | Lab `practice/TV4/L4` (4 MIME + resize + Mailhog + Hangfire) + sổ K | Chưa bắt đầu | G1/G2 đã đóng; tạo nhánh lab |
 
 ---
@@ -135,6 +135,17 @@
 | Test | `tests/CulinaryBlog.Tests/ImageProxyD27Tests.cs` — **6/6 pass** E2E MinIO (Published public+cache; Draft 403→owner 200; non-owner 403; Archived 403→owner 200; Unpublished 403; invalid/unknown/deleted 404) |
 | Contract | `docs/IMAGE_CONTRACT.md §5`: chốt PA-2 + rule quyền + cách stream |
 | Toàn suite | **139/139 + 5/5 spike pass** |
+
+### Số liệu D5 — EXPLAIN + k6 (27/09, DB `culinary_test` local: 66 recipe / 50 published)
+
+| Hạng mục | Số liệu thật |
+|---|---|
+| EXPLAIN publish list (page 1, size 12) | `Execution Time: 0.339 ms`; 12 rows; **Seq Scan** `Recipes` (filter `Status=0 AND NOT IsDeleted`, 50/66 rows) — tối ưu ở quy mô 66 rows; Author dùng `PK_AspNetUsers`, ảnh primary dùng `ux_recipe_images_one_primary`; `IDX_Recipe_Status`/`IDX_Recipe_IsDeleted`/`IDX_Recipe_PublishedAt` đã có cho data lớn hơn |
+| EXPLAIN count published | `Execution Time: 0.044 ms` (Aggregate + Seq Scan, 50 rows) |
+| k6 smoke `GET /api/v1/recipes?page=1&pageSize=12` + `/api/v1/categories` (20 VU × 30s) | **3310 req, 0% fail, check 100%**; `http_req_duration` avg **81.58ms**, p90 **193.45ms**, **p95 225.63ms** (<250 threshold ✓); **109.42 req/s** |
+| OTEL | Config có từ commit `2bbee0d`, còn nguyên `Program.cs` (trace ASP.NET/Http/EF + metrics + OTLP, packages.lock 1.19.x) — xác minh 27/09 |
+
+→ Log thô không secret tại `Tuan03/logs/`.
 
 ### Chi tiết E2E MinIO (`tests/CulinaryBlog.Tests/MinioE2ETests.cs`)
 

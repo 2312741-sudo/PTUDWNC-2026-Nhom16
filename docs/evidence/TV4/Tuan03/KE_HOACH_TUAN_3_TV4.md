@@ -96,7 +96,7 @@
 |---|---|---|
 | 1 | Serilog/Seq/OTEL: trace HTTP→DB có correlation id qua Nginx (phối hợp TV1) | Trace thấy request đi qua Nginx→API→DB |
 | 2 | Metrics: request duration/count, DB query time; health endpoint thành phần (db/redis/minio) đúng D22 | `/health` phản ánh đúng; Redis down → API fallback nhưng readiness 503 |
-| 3 | EXPLAIN + k6/load cho publish/list query (K22) | Số liệu thật ghi trong sổ evidence |
+| 3 | EXPLAIN + k6/load cho publish/list query (K22) | ✅ **Xong 27/09** — EXPLAIN `0.339ms/0.044ms`; k6 smoke 20 VU×30s: **3310 req 0% fail, p95 225.63ms**; log tại `Tuan03/logs/` |
 
 ### N4 — D2 (bàn giao thiếu tuần 2): Resize original/300×300/800×600 + job (FR-JOB-002/003, D23)
 
@@ -183,7 +183,7 @@
 - [x] **Archive/DELETE (24/09)**: `PATCH /recipes/{id}/archive` (ẩn public ngay, owner/Admin, idempotent) + `DELETE /recipes/{id}` soft theo D08 (`MarkDeleted` + global filter, giữ ảnh restore); chỉnh núm 133/133 + 5/5.
 - [x] **E2E D1.3 MinIO (24/09)**: `MinioE2ETests` upload/PATCH primary/publish/unpublish/archive/delete 3/3 pass; MinIO down → skip an toàn; không lộ secret; CI đã thêm service MinIO.
 - [x] **Sitemap/robots/SEO (24/09)**: `GET /recipes/sitemap` Published-only + `sitemap.ts`/`robots.ts` + SEO metadata trang công thức; `next build` exit 0.
-- [x] **OTEL/metrics/health (24/09)**: trace ASP.NET/Http/EF + metrics + health db/redis/minio; còn EXPLAIN/k6 số liệu nối tiếp.
+- [x] **OTEL/metrics/health (24/09)**: trace ASP.NET/Http/EF + metrics + health db/redis/minio; **27/09 hoàn tất EXPLAIN publish query + k6 smoke** (`logs/`) — N3 xong.
 - [ ] PR fix connection string lazy `4830e57` → main (CI main 6 commit mới có thể dính 28P01).
 - [x] **Proxy ảnh D27 (27/09)**: `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` (tách khỏi `IFileStorageService`); Published public + cache; Draft/Archived owner/Admin else `403 image.forbidden`; `404` invalid/unknown/soft-deleted; E2E `ImageProxyD27Tests` **6/6**; `IMAGE_CONTRACT.md §5` chốt PA-2.
 - [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`).

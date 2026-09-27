@@ -32,7 +32,7 @@
 | D3.3 | Logout revoke refresh family — C5 refresh đã có trên main | main (`IdentityService.cs`) | ✅ Xong 23/09 (7 test Week3 + 16 test Auth) |
 | D3.4/D1.1c | **E2E D1.3 trên MinIO**: register→create→upload JPEG→readback→PATCH primary→publish→unpublish→archive→delete→public list; MinIO down → skip an toàn; log không lộ secret | `tests/CulinaryBlog.Tests/MinioE2ETests.cs` (factory `ApiFactoryWithMinio`) | ✅ Xong 24/09 — 3/3 pass lặp lại nhiều lần |
 | D4-SEO | `GET /recipes/sitemap` (Published-only) + `sitemap.ts`/`robots.ts`/SEO metadata trang công thức | `Discovery.cs`, `RecipeRepository.cs`, `Program.cs`, `src/frontend/src/app/{sitemap,robots}.ts`, `app/recipes/[slug]/` | ✅ Xong 24/09 |
-| D5 | OTEL trace (ASP.NET/Http/EF) + metrics + health db/redis/minio đã có từ trước | `Program.cs` + `CulinaryBlog.API.csproj` + `packages.lock.json` | ✅ Xong 24/09 (EXPLAIN/k6 ghi số liệu còn nối tiếp) |
+| D5 | OTEL trace (ASP.NET/Http/EF) + metrics + health db/redis/minio đã có từ trước | `Program.cs` + `CulinaryBlog.API.csproj` + `packages.lock.json` | ✅ **Xong** — config xác minh 27/09 + EXPLAIN/k6 số liệu (`Tuan03/logs/`) |
 | CI | Thêm service MinIO + env `MINIO_*` + bước chờ `minio/health/live` | `.github/workflows/backend.yml` | ✅ Xong 24/09 — cần CI GitHub xanh sau push |
 
 ---
@@ -113,3 +113,5 @@ dotnet restore CulinaryBlog.sln --locked-mode
 | 24/09 | TV4 | D3 archive/delete + D4-SEO + D5-OTEL + E2E MinIO (3/3) + CI MinIO service; **133/133 + 5/5 pass local**, frontend build OK |
 | 24/09 | TV4 | Phát hiện & fix JWT `RoleClaimType="role"` (bug 403 API thật, không lộ qua test trước đây vì test toàn dùng handler) |
 | 27/09 | TV4 | Chốt D23 → PA-1 Hangfire; D27 → PA-2 base media URL proxy (`DE_XUAT_GIAI_QUYET_D23_D27.md`); PR #14 giữ nguyên (nhóm chung tay sửa); **đóng N1 invalidation bằng xác minh** (không cache recipe; `RecipeCacheService` orphan) |
+| 27/09 | TV4 | **N2 xong**: proxy ảnh D27 (`GET /api/v1/resources/images/{**key}` + `IObjectStorageReader`) + E2E 6/6; `IMAGE_CONTRACT.md §5` chốt PA-2; suite **139/139 + 5/5**; push `0cc279e` |
+| 27/09 | TV4 | **N3 xong**: xác minh OTEL (`2bbee0d` còn nguyên) + ghi số liệu EXPLAIN publish (0.339ms/0.044ms) + k6 smoke 20 VU×30s (3310 req, 0% fail, p95 225.63ms) — log `Tuan03/logs/` |

@@ -4,7 +4,7 @@
 > **Reviewer nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
 > **Trạng thái**: Tất cả bắt đầu ở **Chưa làm**; chỉ đóng khi có code/test/demo + reviewer Tâm xác nhận.
 > **Cập nhật 24/09**: D3 archive/delete, D4 SEO, D5 OTEL, E2E D1.3 MinIO đã hoàn thành — 133/133 + 5/5 pass local, frontend build OK; chờ reviewer xác nhận.
-> **Cập nhật 27/09**: D3 invalidation đóng bằng xác minh; **D27 proxy ảnh PA-2 xong** — E2E `ImageProxyD27Tests` 6/6; toàn suite **139/139 + 5/5**; `IMAGE_CONTRACT.md §5` chốt PA-2. Chờ reviewer xác nhận.
+> **Cập nhật 27/09**: D3 invalidation đóng bằng xác minh; **D27 proxy ảnh PA-2 xong** — E2E `ImageProxyD27Tests` 6/6; **D5 EXPLAIN/k6 ghi số liệu thật** (list 0.339ms; k6 3310 req, 0% fail, p95 225.63ms); toàn suite **139/139 + 5/5**; `IMAGE_CONTRACT.md §5` chốt PA-2. Chờ reviewer xác nhận.
 
 ---
 
@@ -28,8 +28,8 @@
 | K17 | SP | TanStack Query, optimistic rollback, next/image | Uploader progress/gallery/primary optimistic | D4 | Chưa làm (chờ D27) |
 | K18 | SP | Responsive, WCAG2.1 AA, keyboard/loading/error | Upload/status checklist | D4 | Chưa làm |
 | K19 | SP | SEO metadata/OG/canonical/robots/JSON-LD | Sitemap/robots/OG/JSON-LD Published-only | D4 | Đã làm (SEO) |
-| K20 | SP | Serilog/Seq/correlation, OTEL, metrics, health | OTEL trace HTTP→DB + health thành phần | D5 | Đã làm (cấu hình; còn chụp trace/k6) |
-| K22 | SP | k6/EXPLAIN/cache hit/CWV | EXPLAIN publish query + k6 + cache hit | D5 | Chưa làm (ghi số liệu) |
+| K20 | SP | Serilog/Seq/correlation, OTEL, metrics, health | OTEL trace HTTP→DB + health thành phần | D5 | ✅ Đã làm (cấu hình + xác minh; trace thật qua Seq khi stack bật) |
+| K22 | SP | k6/EXPLAIN/cache hit/CWV | EXPLAIN publish query + k6 + cache hit | D5 | ✅ Đã làm 27/09 (EXPLAIN + k6 smoke ghi số liệu) |
 | K23 | SP | Docker/Compose/Nginx/volumes/backup-restore | CI xanh (N0) + stack vận hành + queue service | N0, D2 | Đã làm (N0) |
 | K24 | SP | Git/PR/review/CI/static analysis/secret scan/docs | PR nhỏ từng task + review Tâm + note PR #14 | N0, Tất cả | Đang làm |
 
@@ -122,17 +122,18 @@ Reviewer/ngày: Nguyễn Thanh Tâm / ___
 Lỗi còn lại: uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) — sau merge PR #15; status buttons ghép TV3 C4
 ```
 
-### TV4-K20/K22 (D5 — OTEL/metrics/health) 🔶 (OTEL traces+metrics xong; k6/EXPLAIN số liệu đang ghi nối)
+### TV4-K20/K22 (D5 — OTEL/metrics/health + EXPLAIN/k6) ✅ (config 24/09; số liệu 27/09)
 
 ```text
 Evidence: TV4-K20/K22 (FR-OBS-001/003; D20/D21/D22)
 Tuần 3 / TV4 / D5
-Đường dẫn: Program.cs AddOpenTelemetry (tracing: ASP.NET/HttpClient/EF Core/OTLP; metrics: ASP.NET/HttpClient/Microsoft.EntityFrameworkCore meter); CulinaryBlog.API.csproj + packages.lock.json (OTEL 1.19.x + EF instrumentation)
+Đường dẫn: Program.cs AddOpenTelemetry (tracing: ASP.NET/HttpClient/EF Core/OTLP; metrics: ASP.NET/HttpClient/Microsoft.EntityFrameworkCore meter); CulinaryBlog.API.csproj + packages.lock.json (OTEL 1.19.x + EF instrumentation); health /health{/live,/ready}
+Ghi chú: chạy lệnh EXPLAIN/k6 dưới đây (DB culinary_test local, MinIO+nginx tùy chọn)
 Nhánh/PR: 2312739_NHTSon_D3-D4-D5-D6
-Test/lệnh: dotnet build -c Release 0 warning; health/db,health/redis,health/minio endpoints đã có từ trước (D21/D22)
-Kết quả: trace HTTP→ASP.NET→EF→DB + metrics DB có trong cấu hình; cần chạy stack + collector để chụp trace thật; EXPLAIN/k6 ghi số liệu còn nối tiếp
+Test/lệnh: (1) dotnet run API PORT=5099 ConnectionStrings__Database=...culinary_test; (2) EXPLAIN ANALYZE publish list + count (log: logs/explain_publish_culinary_test.txt); (3) docker run grafana/k6 20 VUs × 30s GET /api/v1/recipes?page=1&pageSize=12 + /api/v1/categories (log: logs/k6_smoke_recipes.log + k6_smoke_summary.json)
+Kết quả: EXPLAIN list 0.339ms (12 rows, Seq Scan 50/66 — hợp lý cỡ nhỏ; ảnh primary qua ux_recipe_images_one_primary); count 0.044ms; k6 3310 req, 0% fail, check 100%, avg 81.58ms, p95 225.63ms (<250 ✓), 109.42 req/s
 Reviewer/ngày: Nguyễn Thanh Tâm / ___
-Lỗi còn lại: chụp trace/metrix thật + k6/EXPLAIN số liệu
+Lỗi còn lại: chụp trace thật vào Seq (stack nginx+seq bật) — cấu hình sẵn sàng
 ```
 
 ---
@@ -147,7 +148,7 @@ Lỗi còn lại: chụp trace/metrix thật + k6/EXPLAIN số liệu
 - [x] Archive `PATCH /recipes/{id}/archive` + ẩn public ngay + ownership test.
 - [x] DELETE soft theo ADR D08 (`Recipe.MarkDeleted()` + global filter) + không mất ảnh restore + test.
 - [x] Sitemap Published-only (`GET /recipes/sitemap` + frontend `sitemap.ts`/`robots.ts`) + `next build` OK.
-- [x] OTEL trace+metrics (ASP.NET/Http/EF) cấu hình + health db/redis/minio đã có; EXPLAIN/k6 còn nối tiếp.
+- [x] OTEL trace+metrics (ASP.NET/Http/EF) cấu hình + health db/redis/minio; **27/09 ghi số liệu EXPLAIN publish query (0.339ms/0.044ms) + k6 smoke (3310 req, 0% fail, p95 225.63ms)** — log `Tuan03/logs/`.
 - [x] CI thêm service MinIO + env + bước chờ health (cần push + xanh).
 - [ ] PR `4830e57` lên main (fix CI main 6 commit mới).
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).

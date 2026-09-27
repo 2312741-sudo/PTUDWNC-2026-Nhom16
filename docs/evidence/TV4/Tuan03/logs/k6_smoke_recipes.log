@@ -1,0 +1,146 @@
+﻿
+         /\      Grafana   /ΓÇ╛ΓÇ╛/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ΓÇ╛ΓÇ╛\ 
+  /          \   |   (  |  (ΓÇ╛)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /k6.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 20 max VUs, 1m0s max duration (incl. graceful stop):
+              * smoke: 20 looping VUs for 30s (gracefulStop: 30s)
+
+
+running (0m01.0s), 20/20 VUs, 20 complete and 0 interrupted iterations
+smoke   [   3% ] 20 VUs  01.0s/30s
+
+running (0m02.0s), 20/20 VUs, 66 complete and 0 interrupted iterations
+smoke   [   7% ] 20 VUs  02.0s/30s
+
+running (0m03.0s), 20/20 VUs, 118 complete and 0 interrupted iterations
+smoke   [  10% ] 20 VUs  03.0s/30s
+
+running (0m04.0s), 20/20 VUs, 171 complete and 0 interrupted iterations
+smoke   [  13% ] 20 VUs  04.0s/30s
+
+running (0m05.0s), 20/20 VUs, 194 complete and 0 interrupted iterations
+smoke   [  17% ] 20 VUs  05.0s/30s
+
+running (0m06.0s), 20/20 VUs, 254 complete and 0 interrupted iterations
+smoke   [  20% ] 20 VUs  06.0s/30s
+
+running (0m07.0s), 20/20 VUs, 301 complete and 0 interrupted iterations
+smoke   [  23% ] 20 VUs  07.0s/30s
+
+running (0m08.0s), 20/20 VUs, 349 complete and 0 interrupted iterations
+smoke   [  27% ] 20 VUs  08.0s/30s
+
+running (0m09.0s), 20/20 VUs, 391 complete and 0 interrupted iterations
+smoke   [  30% ] 20 VUs  09.0s/30s
+
+running (0m10.0s), 20/20 VUs, 433 complete and 0 interrupted iterations
+smoke   [  33% ] 20 VUs  10.0s/30s
+
+running (0m11.0s), 20/20 VUs, 494 complete and 0 interrupted iterations
+smoke   [  37% ] 20 VUs  11.0s/30s
+
+running (0m12.0s), 20/20 VUs, 542 complete and 0 interrupted iterations
+smoke   [  40% ] 20 VUs  12.0s/30s
+
+running (0m13.0s), 20/20 VUs, 603 complete and 0 interrupted iterations
+smoke   [  43% ] 20 VUs  13.0s/30s
+
+running (0m14.0s), 20/20 VUs, 652 complete and 0 interrupted iterations
+smoke   [  47% ] 20 VUs  14.0s/30s
+
+running (0m15.0s), 20/20 VUs, 716 complete and 0 interrupted iterations
+smoke   [  50% ] 20 VUs  15.0s/30s
+
+running (0m16.0s), 20/20 VUs, 778 complete and 0 interrupted iterations
+smoke   [  53% ] 20 VUs  16.0s/30s
+
+running (0m17.0s), 20/20 VUs, 824 complete and 0 interrupted iterations
+smoke   [  57% ] 20 VUs  17.0s/30s
+
+running (0m18.0s), 20/20 VUs, 886 complete and 0 interrupted iterations
+smoke   [  60% ] 20 VUs  18.0s/30s
+
+running (0m19.0s), 20/20 VUs, 950 complete and 0 interrupted iterations
+smoke   [  63% ] 20 VUs  19.0s/30s
+
+running (0m20.0s), 20/20 VUs, 1012 complete and 0 interrupted iterations
+smoke   [  67% ] 20 VUs  20.0s/30s
+
+running (0m21.0s), 20/20 VUs, 1059 complete and 0 interrupted iterations
+smoke   [  70% ] 20 VUs  21.0s/30s
+
+running (0m22.0s), 20/20 VUs, 1116 complete and 0 interrupted iterations
+smoke   [  73% ] 20 VUs  22.0s/30s
+
+running (0m23.0s), 20/20 VUs, 1185 complete and 0 interrupted iterations
+smoke   [  77% ] 20 VUs  23.0s/30s
+
+running (0m24.0s), 20/20 VUs, 1251 complete and 0 interrupted iterations
+smoke   [  80% ] 20 VUs  24.0s/30s
+
+running (0m25.0s), 20/20 VUs, 1318 complete and 0 interrupted iterations
+smoke   [  83% ] 20 VUs  25.0s/30s
+
+running (0m26.0s), 20/20 VUs, 1383 complete and 0 interrupted iterations
+smoke   [  87% ] 20 VUs  26.0s/30s
+
+running (0m27.0s), 20/20 VUs, 1445 complete and 0 interrupted iterations
+smoke   [  90% ] 20 VUs  27.0s/30s
+
+running (0m28.0s), 20/20 VUs, 1510 complete and 0 interrupted iterations
+smoke   [  93% ] 20 VUs  28.0s/30s
+
+running (0m29.0s), 20/20 VUs, 1571 complete and 0 interrupted iterations
+smoke   [  97% ] 20 VUs  29.0s/30s
+
+running (0m30.0s), 20/20 VUs, 1634 complete and 0 interrupted iterations
+smoke   [ 100% ] 20 VUs  30.0s/30s
+
+
+  Γûê THRESHOLDS 
+
+    http_req_duration
+    Γ£ô 'p(95)<250' p(95)=225.63ms
+
+    http_req_failed
+    Γ£ô 'rate<0.01' rate=0.00%
+
+
+  Γûê TOTAL RESULTS 
+
+    checks_total.......: 3310    109.423921/s
+    checks_succeeded...: 100.00% 3310 out of 3310
+    checks_failed......: 0.00%   0 out of 3310
+
+    Γ£ô recipes 200
+    Γ£ô categories 200
+
+    HTTP
+    http_req_duration..............: avg=81.58ms  min=4.65ms   med=57.24ms  max=468.58ms p(90)=193.45ms p(95)=225.63ms
+      { expected_response:true }...: avg=81.58ms  min=4.65ms   med=57.24ms  max=468.58ms p(90)=193.45ms p(95)=225.63ms
+    http_req_failed................: 0.00%  0 out of 3310
+    http_reqs......................: 3310   109.423921/s
+
+    EXECUTION
+    iteration_duration.............: avg=364.14ms min=248.59ms med=342.12ms max=756.69ms p(90)=455.53ms p(95)=497.54ms
+    iterations.....................: 1655   54.711961/s
+    vus............................: 20     min=20        max=20
+    vus_max........................: 20     min=20        max=20
+
+    NETWORK
+    data_received..................: 72 MB  2.4 MB/s
+    data_sent......................: 351 kB 12 kB/s
+
+
+
+
+running (0m30.2s), 00/20 VUs, 1655 complete and 0 interrupted iterations
+smoke Γ£ô [ 100% ] 20 VUs  30s
