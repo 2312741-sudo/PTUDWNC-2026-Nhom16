@@ -16,6 +16,8 @@ public sealed class RecipeIngredientConfiguration : IEntityTypeConfiguration<Rec
         b.Property(i => i.Unit).HasMaxLength(50);                       // nullable
         b.Property(i => i.Notes).HasMaxLength(500);
         b.Property(i => i.OrderIndex).IsRequired();
+        // Id sinh o domain (Guid.NewGuid) -> EF phai INSERT entity con moi, khong phai UPDATE
+        b.Property(i => i.Id).ValueGeneratedNever();
         b.Property(i => i.RowVersion).HasColumnType("bytea").IsConcurrencyToken().IsRequired();
 
         b.HasIndex(i => new { i.RecipeId, i.OrderIndex });

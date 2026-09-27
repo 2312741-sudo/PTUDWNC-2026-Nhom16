@@ -16,6 +16,8 @@ public sealed class RecipeStepConfiguration : IEntityTypeConfiguration<RecipeSte
         b.Property(s => s.Description).HasMaxLength(2000).IsRequired();
         b.Property(s => s.TimerMinutes);                               // nullable, >=0
         b.Property(s => s.ImageUrl).HasMaxLength(500);
+        // Id sinh o domain (Guid.NewGuid) -> EF phai INSERT entity con moi, khong phai UPDATE
+        b.Property(s => s.Id).ValueGeneratedNever();
         b.Property(s => s.RowVersion).HasColumnType("bytea").IsConcurrencyToken().IsRequired();
 
         // Unique (RecipeId, StepNumber) - đảm bảo liên tục 1..N + chống race khi renumber
