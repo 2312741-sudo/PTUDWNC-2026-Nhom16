@@ -1,0 +1,6 @@
+<Project>
+  <!-- LAB tự quản lý version, không dùng Central Package Management của sản phẩm -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
