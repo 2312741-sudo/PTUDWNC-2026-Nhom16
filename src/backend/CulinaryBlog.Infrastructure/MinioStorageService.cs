@@ -19,7 +19,20 @@ public interface IObjectStorageReader
 }
 
 /// <summary>Nội dung object đọc từ MinIO (stream đã buffer, Content-Type, kích thước).</summary>
-public sealed record MediaContent(Stream Stream, string ContentType, long Length);
+public sealed record MediaContent(Stream Stream, string ContentType, long Length) : IDisposable
+{
+    public void Dispose() => Stream?.Dispose();
+}
+
+/// <summary>
+/// Ghi object MinIO theo key CHỦ ĐỘNG (D23 D2 resize cần key phái sinh ổn định {uuid}_300x300.jpg / {uuid}_800x600.jpg).
+/// TÁCH khỏi IFileStorageService (HANDOFF 5.1) — không sửa UploadAsync/DeleteAsync tự sinh UUID. ExistsAsync để job idempotent.
+/// </summary>
+public interface IObjectStorageWriter
+{
+    Task<bool> ExistsAsync(string key, CancellationToken ct = default);
+    Task UploadAsync(string key, Stream content, string contentType, long length, CancellationToken ct = default);
+}
 
 /// <summary>
 /// Triển khai IFileStorageService bằng MinIO SDK (D1/W2).
@@ -28,7 +41,7 @@ public sealed record MediaContent(Stream Stream, string ContentType, long Length
 /// qua presigned/proxy được làm rõ trong IMAGE_CONTRACT.md theo quyết định D27.
 /// Không nuốt lỗi im lặng: exception MinIO lan ra để handler ánh xạ 5xx/4xx phù hợp.
 /// </summary>
-public sealed class MinioStorageService : IFileStorageService, IObjectStorageReader
+public sealed class MinioStorageService : IFileStorageService, IObjectStorageReader, IObjectStorageWriter
 {
     private readonly IMinioClient _client;
     private readonly MinioOptions _options;
@@ -101,17 +114,28 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         var buffer = new MemoryStream();
         try
         {
+            // Callback của MinIO SDK là Action<Stream> (đồng bộ) — PHẢI copy đồng bộ.
+            // Nếu truyền async lambda thì C# tạo async void (fire-and-forget): GetObjectAsync có thể trả về
+            // trước khi copy xong => buffer cắt cụt (ảnh không decode được), và lỗi nền không ai quan sát
+            // (ArgumentOutOfRangeException từ HttpConnection.CopyFromBufferAsync làm crash test host).
             await _client.GetObjectAsync(
                 new GetObjectArgs()
                     .WithBucket(_options.Bucket)
                     .WithObject(key)
-                    .WithCallbackStream(async stream => { await stream.CopyToAsync(buffer, ct).ConfigureAwait(false); }),
+                    .WithCallbackStream(stream => stream.CopyTo(buffer)),
                 ct).ConfigureAwait(false);
         }
         catch (ObjectNotFoundException)
         {
             buffer.Dispose();
             return null;
+        }
+
+        if (buffer.Length != stat.Size)
+        {
+            var copied = buffer.Length;
+            buffer.Dispose();
+            throw new IOException($"Đọc object '{key}' không đầy đủ: {copied}/{stat.Size} bytes.");
         }
 
         buffer.Position = 0;
@@ -129,5 +153,41 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
             ".avif" => "image/avif",
             _ => "application/octet-stream"
         };
+    }
+
+    /// <summary>D23: object phái sinh {uuid}_300x300/_800x600 đã tồn tại chưa (idempotent — không ghi đè).</summary>
+    public async Task<bool> ExistsAsync(string key, CancellationToken ct = default)
+    {
+        try
+        {
+            await _client.StatObjectAsync(
+                new StatObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (ObjectNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>D23: ghi object với key chỉ định (resize job), tạo bucket nếu thiếu.</summary>
+    public async Task UploadAsync(string key, Stream content, string contentType, long length, CancellationToken ct = default)
+    {
+        var bucketExists = await _client.BucketExistsAsync(
+            new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+        if (!bucketExists)
+        {
+            await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+            _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
+        }
+
+        await _client.PutObjectAsync(
+            new PutObjectArgs()
+                .WithBucket(_options.Bucket)
+                .WithObject(key)
+                .WithStreamData(content)
+                .WithObjectSize(length)
+                .WithContentType(contentType),
+            ct).ConfigureAwait(false);
     }
 }

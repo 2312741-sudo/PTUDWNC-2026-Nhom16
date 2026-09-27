@@ -4,13 +4,14 @@
 > **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3), khởi động từ main đã cập nhật
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt đề xuất D23/D27: **D23 → Hangfire PA-1**, **D27 → base media URL proxy PA-2** theo `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`; khớp PR #15 TV3)
+> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt đề xuất D23/D27: **D23 → Hangfire PA-1**, **D27 → base media URL proxy PA-2** theo `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`; khớp PR #15 TV3) → **đã implement xong cả hai: D27 proxy (N2) + D2 resize Hangfire (N4)**
 
 > **Bản sửa đổi 27/09 (mốc D23/D27)**:
 > Nhóm chốt hướng giải quyết 2 task bị block lâu nhất của tuần 3 (ghi trong `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`):
 > - **D23 → PA-1 Hangfire**: queue persistent PostgreSQL + dashboard Admin + retry 3 + regenerate `packages.lock.json` → mở D2 resize.
 > - **D27 → PA-2 base media URL qua proxy có auth** (`GET /resources/images/{key}`): Published công khai, Draft/Archived chỉ owner/Admin; FE TV3 (PR #15) đã ghép `NEXT_PUBLIC_MEDIA_URL` → chỉ cần cấu hình env, không phá UI đã merged.
 > D1/D4 display + D2 resize chuyển từ **block** sang **có phương án được duyệt, bắt đầu thực hiện**.
+> **Kết quả 27/09 (tối)**: D27 proxy xong (N2) và **D2 resize xong (N4)** — job Hangfire chạy thật (`Succeeded`), ảnh 300×300/800×600, idempotent + original fallback, dashboard `/hangfire` chỉ Admin. Chi tiết ở mục "Implement D2" bên dưới.
 
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_3_TV4.md`; nền tảng trạng thái tuần 2 xem `docs/evidence/TV4/Tuan02/`.
 
@@ -66,7 +67,7 @@
 | ~~D3.4~~ | ~~E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted~~ | ✅ **Xong 24/09** — `MinioE2ETests` 3/3 pass trên MinIO local; CI đã thêm service MinIO | — |
 | ~~D3-invalid~~ | ~~Invalidation archive/unpublish/delete — clear cache (Redis/OutputCache/ISR)~~ | ✅ **Đóng 27/09 bằng xác minh (N1 item 3)**: không tồn tại cache recipe nào — backend không OutputCache/Redis-dữ-liệu (chỉ `RedisHealthCheck`); FE recipe/sitemap luôn `no-store`; `RecipeCacheService` (`Infrastructure`) orphan/chưa wire → "Archived/Draft không phục vụ bởi cache cũ" thỏa mặc định. Ghi handoff TV2/TV3 nếu nhóm sau này thêm ISR/output-cache cho recipe | — |
 | ~~D1.7/D27~~ | ~~Proxy ảnh `GET /resources/images/{key}` (Published public; Draft/Archived owner/Admin; stream MinIO)~~ | ✅ **Xong 27/09** — endpoint `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` (tách khỏi `IFileStorageService`); Published public cache, Draft/Archived owner/Admin else `403 image.forbidden`; `404` key/recipe/soft-deleted; `IMAGE_CONTRACT.md §5` đã chốt PA-2 (chi tiết `DE_XUAT_GIAI_QUYET_D23_D27.md` Phần B) | **Test E2E `ImageProxyD27Tests` 6/6 pass** |
-| D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | **Đã chốt hướng 27/09 — Hangfire (PA-1)**; chưa thêm package | Implement resize job Hangfire + ImageSharp; regenerate `packages.lock.json`; test restart/retry |
+| ~~D2~~ | ~~Resize original/300×300/800×600 + job nền (FR-JOB-002/003)~~ | ✅ **Xong 27/09 (N4)** — `ResizeImageJob` + `HangfireImageResizeQueue` (queue PostgreSQL, retry 3, dashboard `/hangfire` chỉ Admin) + ImageSharp 3.1.11; `IObjectStorageWriter` (key phái sinh chủ động, tách khỏi `IFileStorageService`); `IImageResizeQueue` (Testing chạy inline); xoá ảnh → xoá luôn object phái sinh; `IMAGE_CONTRACT.md §7` | **Test E2E `ImageResizeD2Tests` 4/4 + unit `RecipeImageTests` (5 test mới); full 148/148 + spike 5/5; chạy thật Hangfire job `Succeeded`** |
 | D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); **D27 proxy đã xong** (endpoint sẵn sàng); còn: TV4 review + bổ sung progress/rollback, status ghép TV3 C4, FE set `NEXT_PUBLIC_MEDIA_URL` | Sau khi PR #15 merge → set `NEXT_PUBLIC_MEDIA_URL`; status buttons nối API đã có |
 | ~~D4-SEO~~ | ~~Sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO | — |
 | ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09 + 27/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; **27/09: EXPLAIN publish query + k6 smoke 20 VU/30s** ghi số liệu (`logs/explain_publish_culinary_test.txt`, `logs/k6_smoke_recipes.log` + `k6_smoke_summary.json`) | — |
@@ -80,7 +81,7 @@
 |---|---|---|---|
 | D3.3 logout revoke | ✅ Xong — C5 refresh đã có trên main | — | Đã gỡ |
 | D1/D4 ảnh display | Uploader UI hiển thị ảnh upload qua API cần base media URL/proxy | ~~D27~~ → ✅ **Chốt + implement 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`; `IMAGE_CONTRACT.md §5`) | **Đã gỡ 27/09; proxy xong** — còn UI review (PR #15) |
-| D2 resize | Queue chưa chốt | ~~D23~~ → ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`) | Đã gỡ 27/09; implement D2 |
+| ~~D2 resize~~ | ~~Queue chưa chốt~~ | ~~D23~~ → ✅ **Chốt 27/09 — PA-1 Hangfire**; **đã implement xong (N4)** | **Đã gỡ + xong 27/09** |
 | ~~N0-1 CI xanh~~ | ~~Migration trùng `RefreshTokens`~~ | ✅ **Đã gỡ** — main `a651c8a` đã fix; local 120/120 + 5/5 | Đã gỡ 23/09 T2; chờ CI GitHub xác nhận |
 | PR #14 giữ/xoá | PR đã merge nhầm — cần thống nhất nhóm | Nhóm trưởng + nhóm | Đầu tuần 3 |
 
@@ -135,6 +136,21 @@
 | Test | `tests/CulinaryBlog.Tests/ImageProxyD27Tests.cs` — **6/6 pass** E2E MinIO (Published public+cache; Draft 403→owner 200; non-owner 403; Archived 403→owner 200; Unpublished 403; invalid/unknown/deleted 404) |
 | Contract | `docs/IMAGE_CONTRACT.md §5`: chốt PA-2 + rule quyền + cách stream |
 | Toàn suite | **139/139 + 5/5 spike pass** |
+
+### Implement D2 — Resize ảnh PA-1 Hangfire (27/09)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Package | API: `Hangfire.AspNetCore 1.8.25` + `Hangfire.PostgreSql 1.21.1`; Infrastructure: `Hangfire.Core 1.8.25` + `SixLabors.ImageSharp **3.1.11**` (bản 4.x **bắt buộc license key thương mại** → phải khoanh 3.1.x). `packages.lock.json` regenerate (không `--locked-mode`) |
+| Job | `ResizeImageJob.ExecuteAsync(recipeId, imageId, originalKey)` — `[AutomaticRetry(Attempts = 3)]`; đọc original (`IObjectStorageReader`) → resize `ResizeMode.Max` 300×300 / 800×600 → ghi `IObjectStorageWriter` (key chủ động `{base}_300x300.{ext}`, `{base}_800x600.{ext}`) → cập nhật `RecipeImage.MediumUrl/ThumbnailUrl` |
+| Bất biến | **Idempotent** (`ExistsAsync` trước khi upload) · **delete-vs-resize** (row biến mất → không tái sinh) · **original fallback** (ảnh hỏng / AVIF không decode → URL giữ `null`, KHÔNG lỗi 5xx cho request upload) · xoá ảnh → xoá luôn 2 object phái sinh |
+| Queue | `IImageResizeQueue` (Application, không phụ thuộc Hangfire) → `HangfireImageResizeQueue` (`BackgroundJob.Enqueue`); `Testing` dùng `InlineImageResizeQueue` (job chạy ngay sau upload → assert deterministic, không worker nền) |
+| Wiring | `Program.cs`: `AddHangfire(UsePostgreSqlStorage(UseNpgsqlConnectionString(conn)))` + `AddHangfireServer(WorkerCount = 4)`; dashboard `/hangfire` **chỉ Admin** (`AdminDashboardAuthorizationFilter`); không đăng ký Hangfire ở `Testing` |
+| Test | `tests/CulinaryBlog.Tests/ImageResizeD2Tests.cs` — **4/4 pass**: resize đúng kích thước qua proxy (1200×800 → 300×200 / 800×533), idempotent khi chạy 2 lần, ảnh hỏng → fallback original (vẫn 201, original phục vụ đúng bytes), ảnh đã xoá → không tái sinh object (proxy 404). `RecipeImageTests` +5 unit test (enqueue hook, `ResizedKeys`, xoá object phái sinh) |
+| Chạy thật (evidence) | API thật + MinIO + Postgres: upload JPEG 1200×800 → **Hangfire job id=1 `Succeeded`** (~1s) → DB có `MediumUrl`/`ThumbnailUrl`; proxy trả `300x200` (`200 image/jpeg`); `/hangfire`: anon **401**, member **403**, Admin **200**. Log: `Tuan03/logs/d2_resize_hangfire.log` + `d2_resize_hangfire_db.txt` |
+| Bug thật phát hiện khi test | `MinioStorageService.ReadAsync` truyền `async stream => …` cho `WithCallbackStream` (delegate `Action<Stream>`) → biến thành **async void fire-and-forget**: `GetObjectAsync` có thể trả về khi copy chưa xong → **ảnh cắt cụt** (proxy D27 trả ảnh hỏng) và lỗi nền không ai quan sát (**crash test host**: `ArgumentOutOfRangeException` trong `HttpConnection.CopyFromBufferAsync`). Đã sửa: copy **đồng bộ** + kiểm tra `buffer.Length == stat.Size` (thiếu → `IOException`). Test D2 flaky ~50% trước khi sửa, 6/6 xanh sau khi sửa |
+| Contract | `docs/IMAGE_CONTRACT.md §7` (chuyển §6 → §8): key phái sinh, bảng bất biến, hành vi response upload (`mediumUrl`/`thumbnailUrl` = `null` lúc upload — FE reload detail) |
+| Toàn suite | **148/148 + 5/5 spike pass** (2 vòng liên tiếp), `dotnet format --verify-no-changes` sạch |
 
 ### Số liệu D5 — EXPLAIN + k6 (27/09, DB `culinary_test` local: 66 recipe / 50 published)
 

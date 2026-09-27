@@ -129,9 +129,28 @@ Mọi phản hồi lỗi dùng `Content-Type: application/problem+json` và head
 
 ---
 
-## 6. Tích hợp cho TV3 (Recipe editor)
+## 7. Resize ảnh (D2 — ✅ chốt 27/09: PA-1 Hangfire + ImageSharp)
+
+- **Định dạng phái sinh**: thumbnail **300×300**, medium **800×600** (`ResizeMode.Max` → không phóng to ảnh nhỏ hơn).
+- **Key object phái sinh** (giữ nguyên extension gốc): `recipes/{recipeId}/{uuid}_300x300.{ext}` và `recipes/{recipeId}/{uuid}_800x600.{ext}`.
+- **Chạy ngoài request**: `POST /recipes/{id}/images` enqueue job Hangfire (queue PostgreSQL, retry 3) rồi trả `201` ngay → **`mediumUrl`/`thumbnailUrl` lúc upload luôn `null`**, FE đọc lại qua `GET /recipes/{slug}` (job xong mới có). Đây là hành vi mong muốn (upload không bị chặn bởi CPU encode).
+- **Job** `ResizeImageJob` (Infrastructure): đọc original qua `IObjectStorageReader` → resize ImageSharp → ghi qua `IObjectStorageWriter` (interface mới, key chủ động; **không** sửa `IFileStorageService`/`StoredFile` — HANDOFF 5.1) → cập nhật `RecipeImage.MediumUrl/ThumbnailUrl`.
+- **Bất biến**:
+  | Tình huống | Hành vi |
+  |---|---|
+  | Object phái sinh đã tồn tại (retry / job chạy 2 lần) | Bỏ qua upload, URL trong DB vẫn đúng (idempotent, FR-JOB-002) |
+  | Ảnh đã bị xoá khi job chạy | Không tái sinh object (delete-vs-resize) |
+  | Ảnh hỏng/không decode (JPEG cắt dở), hoặc **AVIF** (ImageSharp 3.1 không decode AVIF) | `mediumUrl`/`thumbnailUrl` giữ `null` → FE fallback `originalUrl` (FR-JOB-003); **không** lỗi `5xx` cho request upload |
+  | Xoá ảnh qua API | Xoá luôn original + 2 object phái sinh (`DeleteRecipeImageHandler`) |
+- **Dashboard**: `GET /hangfire` chỉ Admin (`AdminDashboardAuthorizationFilter`): anonymous `401`, member `403`, Admin `200`. Không đăng ký Hangfire ở môi trường `Testing` (E2E chạy job inline qua `InlineImageResizeQueue` để assert deterministic).
+- **Kiểm thử**: `ImageResizeD2Tests` (4/4) — resize đúng kích thước qua proxy, idempotent, fallback ảnh hỏng, xoá ảnh không tái sinh; unit test `ResizedKeys_*` + `Upload_*enqueue*` trong `RecipeImageTests`. Evidence chạy thật (Hangfire job `Succeeded`): `docs/evidence/TV4/Tuan03/logs/d2_resize_hangfire.log` + `d2_resize_hangfire_db.txt`.
+
+---
+
+## 8. Tích hợp cho TV3 (Recipe editor)
 
 - TV3 gọi `POST /recipes/{id}/images` với `multipart/form-data` (field `file`, tùy chọn `altText`) → nhận `RecipeImageDto`.
 - Sau upload, dùng `PATCH .../{imageId}` để set `isPrimary` (ảnh đại diện) hoặc sửa `altText`.
 - `DELETE .../{imageId}` → `204`; UI xoá khỏi gallery và gọi đồng bộ.
 - Ảnh đầu tiên tự thành primary — editor chỉ cần set primary khi có ≥ 2 ảnh.
+- **Gallery sau upload**: poll/reload `GET /recipes/{slug}` để lấy `thumbnailUrl`/`mediumUrl` (job resize bất đồng bộ — xem §7). `imageSrc()` của FE đã tự fallback về `originalUrl` khi hai URL này còn `null`.

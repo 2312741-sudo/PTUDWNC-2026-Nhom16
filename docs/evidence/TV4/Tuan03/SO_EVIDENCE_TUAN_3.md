@@ -22,8 +22,8 @@
 | K10 | SP | RBAC/ownership/policy/rate limit/secrets | Ownership archive/delete + 403 non-owner | D3 | Đã làm (D3) |
 | K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | 🟡 Đã xác minh 27/09 — không cache recipe (thỏa mặc định); LAB cache L4 còn mở |
 | K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | Đã làm (E2E 3/3) |
-| K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | Chưa làm (chờ D23) |
-| K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | Chưa làm |
+| K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | ✅ Đã làm phần SP 27/09 (Hangfire PA-1: job resize chạy thật `Succeeded`, retry 3, dashboard Admin-only; E2E 4/4); phần LAB delayed/restart thuộc D6 |
+| K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | 🔶 Resize đã có ở SP (xem K14); còn LAB L4 Mailhog + XML (D6) |
 | K16 | SP | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | Uploader UI hoàn thiện (D4) | D4 | Chưa làm (chờ D27) |
 | K17 | SP | TanStack Query, optimistic rollback, next/image | Uploader progress/gallery/primary optimistic | D4 | Chưa làm (chờ D27) |
 | K18 | SP | Responsive, WCAG2.1 AA, keyboard/loading/error | Upload/status checklist | D4 | Chưa làm |
@@ -109,6 +109,21 @@ Reviewer/ngày: Nguyễn Thanh Tâm / ___
 Lỗi còn lại: —
 ```
 
+### TV4-K14/K23 (D2 — Resize ảnh Hangfire PA-1: job 300×300/800×600, idempotent + original fallback) ✅
+
+```text
+Evidence: TV4-K14 + TV4-K23 (FR-JOB-002/003, FR-FILE-003; D23 PA-1)
+Tuần 3 / TV4 / N4
+Đường dẫn: src/backend/CulinaryBlog.Infrastructure/ResizeImageJob.cs; ImageResizeQueue.cs (Hangfire + Inline); MinioStorageService.cs (IObjectStorageWriter: ExistsAsync/UploadAsync với key chủ động); src/backend/CulinaryBlog.Application/RecipeImages.cs (IImageResizeQueue + RecipeImageKeys + hook enqueue + xoá object phái sinh); src/backend/CulinaryBlog.API/Program.cs (AddHangfire/AddHangfireServer/dashboard /hangfire Admin-only); src/backend/CulinaryBlog.API/AdminDashboardAuthorizationFilter.cs; tests/CulinaryBlog.Tests/ImageResizeD2Tests.cs; docs/IMAGE_CONTRACT.md §7
+Nhánh/PR: 2312739_NHTSon_D3-D4-D5-D6
+Test/lệnh: (1) dotnet test --filter ImageResizeD2Tests (MinIO 127.0.0.1:9000 + culinary_test) → 4/4; (2) RecipeImageTests → 5 test mới; (3) toàn suite 148/148 + 5/5 spike (2 vòng) + dotnet format sạch; (4) chạy thật: dotnet bin/Release/net10.0/CulinaryBlog.API.dll --no-auto-migrate (PORT=5099, culinary_test) → upload JPEG 1200×800 → Hangfire job Succeeded
+Kết quả: ảnh phái sinh {base}_300x300.jpg + {base}_800x600.jpg (proxy trả 300×200 / 800×533 từ ảnh 1200×800); DB cập nhật MediumUrl/ThumbnailUrl sau job (response upload luôn null — FE reload detail); idempotent (ExistsAsync), delete-vs-resize không tái sinh, ảnh hỏng/AVIF → giữ original (không 5xx); xoá ảnh → xoá luôn object phái sinh; dashboard /hangfire: anon 401 / member 403 / Admin 200; Hangfire tự tạo 12 bảng schema `hangfire` trong DB
+Lỗi cố định trong lúc làm: (1) SixLabors.ImageSharp 4.x **bắt buộc license key thương mại** (build fail) → khoanh 3.1.11; (2) MinIO SDK `WithCallbackStream` nhận `Action<Stream>` — truyền `async` lambda tạo **async void** fire-and-forget → ảnh đọc bị cắt cụt (~50% test D2 fail) + unobserved exception làm crash test host → sửa copy đồng bộ + kiểm tra `buffer.Length == stat.Size`; (3) `AddHangfireServer`/PostgreSQL API dùng `UseNpgsqlConnection` + lambda 2 tham số; (4) `DashboardContext.GetHttpContext()` thay vì property
+Reviewer/ngày: Nguyễn Thanh Tâm / ___
+Lỗi còn lại: —
+Log: Tuan03/logs/d2_resize_hangfire.log (log API/Hangfire), Tuan03/logs/d2_resize_hangfire_db.txt (query RecipeImages + trạng thái Hangfire job + HTTP code dashboard/proxy)
+```
+
 ### TV4-K16/K17/K19 (D4 — Uploader UI + status + SEO) 🔶 (SEO + proxy D27 xong; còn UI hoàn thiện sau merge PR #15)
 
 ```text
@@ -154,7 +169,8 @@ Lỗi còn lại: chụp trace thật vào Seq (stack nginx+seq bật) — cấu
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).
 - [x] Invalidation cache archive/unpublish/delete — **đóng bằng xác minh 27/09**: không cache recipe (backend không OutputCache/Redis-dữ-liệu, FE `no-store`, `RecipeCacheService` orphan); handoff TV2/TV3 nếu nhóm thêm cache.
 - [x] **Proxy ảnh D27 PA-2** (27/09) — `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` + E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` chốt; suite 139/139 + 5/5.
-- [ ] Resize original/300×300/800×600 + queue persistent (tuỳ D23 — ✅ chốt Hangfire PA-1) + original fallback + restart/retry test.
+- [x] **Resize D2 (27/09, N4)** — Hangfire PA-1: `ResizeImageJob` 300×300/800×600, `IObjectStorageWriter` key chủ động, retry 3, dashboard `/hangfire` chỉ Admin, idempotent + original fallback + delete-vs-resize; E2E `ImageResizeD2Tests` 4/4; **chạy thật: Hangfire job `Succeeded`, proxy trả 300×200**; suite 148/148 + 5/5. Log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
+- [ ] ~~Resize original/300×300/800×600 + queue persistent + original fallback + restart/retry test~~ → **xong 27/09**; phần LAB delayed/restart + Mailhog chuyển sang D6.
 - [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua proxy D27 (`NEXT_PUBLIC_MEDIA_URL`) sau merge PR #15.
 - [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4.
 - [ ] Lab `practice/TV4/L4` commit + sổ evidence K cập nhật.

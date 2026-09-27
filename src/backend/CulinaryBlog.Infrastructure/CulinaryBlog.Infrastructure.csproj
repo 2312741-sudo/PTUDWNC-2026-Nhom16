@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 <ItemGroup>
+<PackageReference Include="Hangfire.Core" Version="1.8.25" />
 <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
 <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -7,6 +8,7 @@
 </PackageReference>
 <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
 <PackageReference Include="Minio" Version="7.0.0" />
+<PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
 <ProjectReference Include="../CulinaryBlog.Application/CulinaryBlog.Application.csproj" />
 <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
 <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />

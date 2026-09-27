@@ -8,6 +8,9 @@ using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Infrastructure.Persistence.Interceptors;
+using Hangfire;
+using Hangfire.Dashboard;
+using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -110,6 +113,33 @@ builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio
 builder.Services.AddScoped<MinioStorageService>();
 builder.Services.AddScoped<IFileStorageService>(sp => sp.GetRequiredService<MinioStorageService>());
 builder.Services.AddScoped<IObjectStorageReader>(sp => sp.GetRequiredService<MinioStorageService>());
+// D23 (TV4): resize ảnh 300x300/800x600 ngoài request qua Hangfire (queue PostgreSQL, retry 3).
+// IObjectStorageWriter tách riêng IFileStorageService: cần ghi object với key phái sinh CHỦ ĐỘNG (HANDOFF 5.1).
+builder.Services.AddScoped<IObjectStorageWriter>(sp => sp.GetRequiredService<MinioStorageService>());
+builder.Services.AddScoped<ResizeImageJob>();
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    // Testing/E2E: không bật worker nền — chạy job inline để assert DB/MinIO deterministic.
+    builder.Services.AddScoped<IImageResizeQueue, InlineImageResizeQueue>();
+}
+else
+{
+    var hangfireConnection = Program.NormalizePostgreSqlConnectionString(
+        builder.Configuration.GetConnectionString("Database")
+        ?? builder.Configuration["DATABASE_URL"]
+        ?? throw new InvalidOperationException("Configure ConnectionStrings:Database or DATABASE_URL."));
+    builder.Services.AddHangfire((_, cfg) => cfg
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(hangfireConnection)));
+    builder.Services.AddHangfireServer((_, options) =>
+    {
+        options.WorkerCount = 4;
+        options.ShutdownTimeout = TimeSpan.FromSeconds(30);
+    });
+    builder.Services.AddScoped<IImageResizeQueue, HangfireImageResizeQueue>();
+}
 builder.Services.AddHealthChecks()
     .AddCheck<LivenessHealthCheck>("liveness", tags: ["live"])
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready", "all"])
@@ -234,6 +264,14 @@ app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+// D23: dashboard Hangfire chỉ Admin (không public). Không bật ở Testing (Hangfire chỉ đăng ký ngoài Testing).
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new AdminDashboardAuthorizationFilter()]
+    });
+}
 app.MapOpenApi();
 app.MapScalarApiReference();
 

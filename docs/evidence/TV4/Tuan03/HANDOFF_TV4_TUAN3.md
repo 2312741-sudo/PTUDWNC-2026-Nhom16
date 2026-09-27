@@ -3,7 +3,7 @@
 > **Tác giả**: Nguyễn Hữu Trung Sơn (2312739 — TV4)
 > **Mục đích**: tổng hợp task TV4 tuần 3 **đã đóng** + những mục **còn block/cần quyết định**, điều kiện gỡ, và **hướng dẫn tự túc để người khác tiếp tục/kiểm tra** khi TV4 vắng mặt.
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026) · **Nhánh**: `2312739_NHTSon_D3-D4-D5-D6` · **Reviewer**: Nguyễn Thanh Tâm
-> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt D23/D27; đóng N1 invalidation bằng xác minh; chuẩn bị triển khai N2/N4)
+> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt D23/D27; đóng N1 invalidation bằng xác minh; **N2 proxy D27 + N4 resize Hangfire đã xong**: suite **148/148 + 5/5**)
 
 ---
 
@@ -11,12 +11,13 @@
 
 | Hạng mục | Kết quả |
 |---|---|
-| CulinaryBlog.Tests | **133/133 pass** (130 + 3 E2E MinIO trong `MinioE2ETests.cs`) |
+| CulinaryBlog.Tests | **148/148 pass** (139 cũ + 5 unit resize/queue + 4 E2E `ImageResizeD2Tests`) |
 | Concurrency spike | **5/5 pass** |
 | Build + format | Release 0 warning/error; `dotnet format --verify-no-changes` exit 0 |
 | Frontend `next build` | exit 0 — 13 routes + `robots.txt` + `sitemap.xml` |
-| Nội dung mới trong branch | D3 archive/delete (soft D08), D4 SEO (sitemap Published-only/robots/detail SEO), D5 OTEL (trace+metrics HTTP→DB), E2E D1.3 trên MinIO, CI thêm service MinIO |
-| Fix thật phát hiện bởi E2E | JWT `RoleClaimType="role"` (+ `NameClaimType="sub"`) — trước đây AuthorPolicy/AdminPolicy luôn 403 khi gọi API thật vì `MapInboundClaims=false` |
+| Nội dung mới trong branch | D3 archive/delete (soft D08), D4 SEO, D5 OTEL, E2E D1.3 trên MinIO, CI MinIO, **D27 proxy ảnh (N2)**, **D2 resize Hangfire (N4)** |
+| Fix thật phát hiện bởi E2E | JWT `RoleClaimType="role"` (+ `NameClaimType="sub"`); **MinIO `WithCallbackStream` với `async` lambda → async void làm stream cắt cụt/ảnh hỏng** (N4) |
+| ImageSharp | Giữ **3.1.11** — 4.x bắt buộc license key thương mại, build fail |
 
 ---
 
@@ -42,7 +43,7 @@
 | Task | Nội dung | Block bởi | Điều kiện gỡ |
 |---|---|---|---|
 | **PR `4830e57`** | Fix connection string lazy (CI main 6 commit deploy/100 ảnh/UI có thể dính 28P01) | Reviewer nhóm | TV4/trưởng nhóm tạo PR → main; CI main xanh |
-| **D2/D23** | Resize original/300×300/800×600 + queue persistent (Hangfire/BackgroundService) | Quyết định nhóm D23 | ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); TV4 đang thực hiện D2 |
+| **D2/D23** | Resize original/300×300/800×600 + queue persistent (Hangfire/BackgroundService) | Quyết định nhóm D23 | ✅ **Xong 27/09 (N4)** — PA-1 Hangfire: `ResizeImageJob` + `HangfireImageResizeQueue` + ImageSharp 3.1.11, retry 3, dashboard Admin-only, idempotent + original fallback; E2E 4/4, job thật `Succeeded`; `IMAGE_CONTRACT.md §7` |
 | **D27** | Bucket policy + ảnh upload hiển thị (presigned/proxy) → uploader UI | Quyết định nhóm D27 + CR | ✅ **Xong 27/09** — chốt **PA-2 proxy có auth** + endpoint `GET /resources/images/{key}` + `IObjectStorageReader`; E2E `ImageProxyD27Tests` 6/6; `IMAGE_CONTRACT.md §5` cập nhật |
 | **D4-Uploader UI** | Uploader progress/rollback/gallery/primary + status buttons ghép TV3 C4 | D27 ✅ xong + TV3 C4 | D27 proxy đã sẵn sàng; còn TV4 review PR #15 + progress/rollback + status buttons ghép TV3 C4 |
 | **D3-Invalidation (N1 item 3, 27/09)** | Không tồn tại cache recipe nào để invalidate — backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire → tiêu chí thỏa mặc định. **Đã đóng bằng xác minh 27/09.** | TV2/TV3 (nếu họ thêm ISR/output-cache cho recipe list/detail/ảnh) | Nếu TV2/TV3 thêm cache → TV4 kết nối revalidate hook (hoặc wire `RecipeCacheService` + `InvalidatePrefixAsync` khi archive/unpublish/delete) |
@@ -62,8 +63,9 @@ $env:TEST_DATABASE = "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=p
 # 2) Build + format + full test
 dotnet build CulinaryBlog.sln -c Release
 dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
-dotnet test CulinaryBlog.sln --no-build -c Release        # kỳ vọng 133/133 pass, 0 skip
+dotnet test CulinaryBlog.sln --no-build -c Release        # kỳ vọng 148/148 pass, 0 skip
 dotnet test tests/concurrency-spike/ConcurrencySpike.csproj -c Release   # 5/5 pass
+dotnet test CulinaryBlog.sln --no-build -c Release --filter ImageResizeD2Tests   # 4/4 resize (cần MinIO)
 
 # 3) Frontend
 cd src/frontend; npx next build                          # robots.txt + sitemap.xml có trong routes
@@ -87,7 +89,11 @@ dotnet restore CulinaryBlog.sln --locked-mode
 | `src/backend/CulinaryBlog.Domain/Entities/Recipe.cs` | `MarkDeleted()` (soft D08) |
 | `src/backend/CulinaryBlog.Application/Discovery.cs` | `GetSitemapQuery`/`SitemapRecipeDto` |
 | `src/backend/CulinaryBlog.Infrastructure/RecipeRepository.cs` | `GetPublishedForSitemapAsync` |
-| `src/backend/CulinaryBlog.API/Program.cs` | `.MapGet("/sitemap")`, OTEL, JWT `RoleClaimType/NameClaimType`, endpoints archive/delete |
+| `src/backend/CulinaryBlog.API/Program.cs` | `.MapGet("/sitemap")`, OTEL, JWT `RoleClaimType/NameClaimType`, endpoints archive/delete, **Hangfire PostgreSQL + server 4 worker + dashboard `/hangfire` (Admin-only, tắt ở `Testing`)** |
+| `src/backend/CulinaryBlog.Infrastructure/ResizeImageJob.cs` + `ImageResizeQueue.cs` | **N4**: job resize 300×300/800×600 (idempotent, original fallback, delete-vs-resize) + `HangfireImageResizeQueue` / `InlineImageResizeQueue` |
+| `src/backend/CulinaryBlog.Infrastructure/MinioStorageService.cs` | `IObjectStorageReader` (D27) + **`IObjectStorageWriter`** (N4, ghi object key phái sinh) — `ReadAsync` copy **đồng bộ** |
+| `src/backend/CulinaryBlog.API/AdminDashboardAuthorizationFilter.cs` | N4: dashboard Hangfire chỉ Admin (anon 401 / member 403 / Admin 200) |
+| `tests/CulinaryBlog.Tests/ImageResizeD2Tests.cs` | N4: E2E resize 4/4 (kích thước, idempotent, ảnh hỏng fallback, ảnh đã xoá) |
 | `.github/workflows/backend.yml` | service MinIO + bước chờ health |
 | `src/frontend/src/app/` | `sitemap.ts`, `robots.ts`, `recipes/[slug]/` SEO |
 
@@ -101,6 +107,9 @@ dotnet restore CulinaryBlog.sln --locked-mode
 4. **Package mới (ImageSharp/Hangfire) phải regenerate `packages.lock.json`** bằng `dotnet restore` (không `--locked-mode` khi thêm), CI `--locked-mode` mới khớp.
 5. **Không xoá `ux_recipe_images_one_primary` / RowVersion** — phòng thủ D19.
 6. **Conflicts RowVersion** trả 422 `recipe.version_conflict` qua `ApiExceptionHandler` — giữ mapping đó (E2E đã dựa trên nó, ổn định).
+7. **Đừng nâng ImageSharp lên 4.x** — 4.x bắt buộc commercial license key và build fail; giữ `3.1.11` (AVIF không decode → job đã fallback original).
+8. **Đừng dùng `async` lambda cho `WithCallbackStream`** (MinIO SDK) — `Action<Stream>` sẽ biến thành async void fire-and-forget → stream cắt cụt/ảnh hỏng. `ReadAsync` phải copy **đồng bộ** + kiểm tra `buffer.Length == stat.Size`.
+9. **Response upload có `mediumUrl`/`thumbnailUrl = null`** là chuẩn (job nền). FE (TV3) cần reload `GET /recipes/{slug}`; `imageSrc()` đã fallback `originalUrl`.
 
 ---
 
@@ -115,3 +124,4 @@ dotnet restore CulinaryBlog.sln --locked-mode
 | 27/09 | TV4 | Chốt D23 → PA-1 Hangfire; D27 → PA-2 base media URL proxy (`DE_XUAT_GIAI_QUYET_D23_D27.md`); PR #14 giữ nguyên (nhóm chung tay sửa); **đóng N1 invalidation bằng xác minh** (không cache recipe; `RecipeCacheService` orphan) |
 | 27/09 | TV4 | **N2 xong**: proxy ảnh D27 (`GET /api/v1/resources/images/{**key}` + `IObjectStorageReader`) + E2E 6/6; `IMAGE_CONTRACT.md §5` chốt PA-2; suite **139/139 + 5/5**; push `0cc279e` |
 | 27/09 | TV4 | **N3 xong**: xác minh OTEL (`2bbee0d` còn nguyên) + ghi số liệu EXPLAIN publish (0.339ms/0.044ms) + k6 smoke 20 VU×30s (3310 req, 0% fail, p95 225.63ms) — log `Tuan03/logs/` |
+| 27/09 | TV4 | **N4 xong (D2/D23 PA-1)**: package Hangfire (API 1.8.25 + PostgreSQL 1.21.1) + ImageSharp **3.1.11** (4.x cần license thương mại → build fail); `ResizeImageJob` 300×300/800×600 idempotent + original fallback + delete-vs-resize; `IObjectStorageWriter` (key chủ động, tách khỏi `IFileStorageService`); `IImageResizeQueue` (Hangfire + Inline cho Testing); dashboard `/hangfire` Admin-only; E2E `ImageResizeD2Tests` 4/4 + 5 unit; **job thật `Succeeded`**, proxy 300×200; suite **148/148 + 5/5**; `IMAGE_CONTRACT.md §7`; log `Tuan03/logs/d2_resize_hangfire*.{log,txt}` |

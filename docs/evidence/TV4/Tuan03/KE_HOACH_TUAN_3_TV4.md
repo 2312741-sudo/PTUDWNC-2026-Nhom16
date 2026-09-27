@@ -44,8 +44,8 @@
 | C5 refresh (TV3) | ✅ **Đã có trên main** (23/09 verify) | D3.3 logout revoke family ĐÃ xong (7 test Week3 + 16 test Auth pass) |
 | Dockerize/Render | ✅ Mới trên main: `Dockerfile`, `render.yaml`, `DATABASE_URL`/`PORT`/normalize | D5 health/jobs có base deploy thật; TV4 cần chuyển fix connection string `4830e57` lên main |
 | Seed 100 ảnh thật | ✅ Mới trên main: `/images/recipes/{slug}.jpg` + `SetOriginalUrl` + UI Emerald | Ảnh seed hiển thị được static path; D4 uploader focus ảnh UPLOAD qua API (D27) |
-| D2 resize | ❌ Chưa bắt đầu (chờ chốt D23 queue) | Nếu chốt sớm, làm trong tuần 3 kèm D5 jobs |
-| D27 bucket policy | ❌ Chưa chốt nhóm | Uploader UI cần presigned/proxy để hiển thị ảnh upload qua API |
+| D2 resize | ✅ **Xong 27/09 (N4)** — PA-1 Hangfire + ImageSharp, job thật `Succeeded`, E2E 4/4 | LAB delayed/restart còn lại → N5/D6 |
+| D27 bucket policy | ✅ **Chốt + xong 27/09 (N2)** — PA-2 proxy có auth; FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL` | Uploader UI (progress/rollback/gallery/primary) còn lại cho D4 |
 | Frontend Next.js | ✅ UI Emerald & Gold + logo (main `e9c1241`) | D4 uploader/status ghép TV3 C4 + TV1 host/deploy |
 
 ---
@@ -102,13 +102,14 @@
 
 **Skills**: K13, K14, K15, K23 · **ADR**: D23 (queue persistent + retry) · **Block**: quyết định D23 của nhóm
 
-> **Cập nhật 27/09 (mốc D23)**: nhóm chốt **PA-1 Hangfire** theo đề xuất `docs/DE_XUAT_GIAI_QUYET_D23_D27.md` (queue persistent PostgreSQL + dashboard Admin; retry 3; khớp SRS tr.38). Bắt đầu thực hiện D2.
+> **Cập nhật 27/09 (mốc D23)**: nhóm chốt **PA-1 Hangfire** theo đề xuất `docs/DE_XUAT_GIAI_QUYET_D23_D27.md` (queue persistent PostgreSQL + dashboard Admin; retry 3; khớp SRS tr.38).
+> **Kết quả 27/09 (tối)**: N4 **xong** — xem bảng trạng thái bên dưới. Phần LAB (delayed job/restart worker) chuyển sang **N5/D6**.
 
-| # | Việc làm | Kết quả mong đợi |
-|---|---|---|
-| 1 | ✅ Chốt queue với nhóm — **Hangfire (PA-1)** theo `DE_XUAT_GIAI_QUYET_D23_D27.md`; regenerate `packages.lock.json` (không `--locked-mode` khi thêm) | Quyết định ghi ADR D23 + lockfile khớp CI `--locked-mode` |
-| 2 | Resize tạo `{uuid}_original/300x300/800x600`, URLs DB, config kích thước không hard-code; enqueue sau upload; original fallback khi lỗi | Đủ 3 kích thước; original fallback; test unit + E2E |
-| 3 | Job persistent: retry idempotent (3), restart worker không mất job; boundary delete vs resize; dashboard `/hangfire` chỉ Admin | Test restart/retry; không tái sinh ảnh đã xoá |
+| # | Việc làm | Kết quả mong đợi | Trạng thái 27/09 |
+|---|---|---|---|
+| 1 | Chốt queue với nhóm — **Hangfire (PA-1)** theo `DE_XUAT_GIAI_QUYET_D23_D27.md`; regenerate `packages.lock.json` (không `--locked-mode` khi thêm) | Quyết định ghi ADR D23 + lockfile khớp CI `--locked-mode` | ✅ API `Hangfire.AspNetCore 1.8.25` + `Hangfire.PostgreSql 1.21.1`; Infra `Hangfire.Core 1.8.25` + `ImageSharp **3.1.11**` (4.x cần license thương mại) |
+| 2 | Resize tạo `{base}_300x300` / `{base}_800x600`, cập nhật URL DB, enqueue sau upload; original fallback khi lỗi/AVIF | Đủ 2 kích thước phái sinh; fallback original; test unit + E2E | ✅ `ResizeImageJob` + `RecipeImageKeys` + hook enqueue; E2E `ImageResizeD2Tests` 4/4 + 5 unit |
+| 3 | Job persistent: retry idempotent (3), restart worker không mất job; boundary delete vs resize; dashboard `/hangfire` chỉ Admin | Test restart/retry; không tái sinh ảnh đã xoá | ✅ retry 3 + `ExistsAsync` idempotent + delete-vs-resize; dashboard Admin-only (401/403/200); **chạy thật job `Succeeded`**; phần LAB delayed/restart để N5/D6 |
 
 ### N5 — D6: Lab L4 hoàn thiện
 
@@ -188,7 +189,7 @@
 - [x] **Proxy ảnh D27 (27/09)**: `GET /api/v1/resources/images/{**key}` + `IObjectStorageReader` (tách khỏi `IFileStorageService`); Published public + cache; Draft/Archived owner/Admin else `403 image.forbidden`; `404` invalid/unknown/soft-deleted; E2E `ImageProxyD27Tests` **6/6**; `IMAGE_CONTRACT.md §5` chốt PA-2.
 - [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`).
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
-- [ ] Resize original/300×300/800×600 + queue persistent **Hangfire (D23 chốt PA-1)** + retry 3 + original fallback.
+- [x] **Resize D2 (27/09, N4)**: `ResizeImageJob` (300×300/800×600, idempotent, original fallback, delete-vs-resize, retry 3) + `IObjectStorageWriter` (key phái sinh chủ động, tách khỏi `IFileStorageService`) + `IImageResizeQueue` (Hangfire / Inline ở `Testing`) + dashboard `/hangfire` chỉ Admin; E2E `ImageResizeD2Tests` **4/4** + 5 unit; **job Hangfire thật `Succeeded`**, proxy trả 300×200, ảnh hỏng → fallback original; suite **148/148 + 5/5**; `IMAGE_CONTRACT.md §7`; log `Tuan03/logs/d2_resize_hangfire*.{log,txt}`.
 - [x] **Invalidation cache archive/unpublish/delete (27/09 — đóng bằng xác minh)**: không có cache recipe nào để invalidate (backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire) → handoff TV2/TV3 nếu nhóm thêm ISR/output-cache.
 - [ ] Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.
 
@@ -202,7 +203,9 @@
 | ~~C5 TV3 chưa bàn giao~~ | ~~D3.3 logout chưa revoke family~~ | ✅ C5 đã có trên main — D3.3 xong |
 | Eager-read connection string trong main phá override test | CI main fail 28P01 khi thêm commit deploy | TV4 fix `4830e57` (đọc trong lambda AddDbContext) → PR lên main ngay |
 | ~~D27 chưa chốt~~ | ~~Uploader ảnh không hiển thị~~ | ✅ **Chốt 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL`; làm proxy D27 |
-| ~~D23 chưa chốt queue~~ | ~~Resize (D2) trễ~~ | ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); thực hiện D2 resize |
+| ~~D23 chưa chốt queue~~ | ~~Resize (D2) trễ~~ | ✅ **Xong 27/09** — PA-1 Hangfire đã implement (N4), job chạy thật `Succeeded` |
+| ImageSharp 4.x bắt buộc license key thương mại | Build fail khi nâng version | Giữ **3.1.11**; AVIF không decode → job fallback original (đã xử lý) |
+| MinIO SDK `WithCallbackStream` + `async` lambda | Ảnh cắt cụt/stream hỏng khi đọc đồng thời | Copy **đồng bộ** trong `ReadAsync` + kiểm tra `buffer.Length == stat.Size` (đã sửa, test ổn định) |
 | D27 proxy qua API có thể tăng tải/đi qua app | Bandwidth/token khi phục vụ ảnh | Cache-Control hợp lý (Published cache); cân nhắc Nginx route thẳng MinIO sau khi chốt vị trí proxy với TV1 |
 | PR #14 đã merge nhầm gây xung đột docs/số liệu | Doc nhầm trạng thái | Rà soát diff, note rõ trong sổ evidence; đưa vào báo cáo nhóm |
 
