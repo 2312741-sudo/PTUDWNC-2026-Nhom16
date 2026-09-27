@@ -3,7 +3,7 @@
 > **Tác giả**: Nguyễn Hữu Trung Sơn (2312739 — TV4)
 > **Mục đích**: tổng hợp task TV4 tuần 3 **đã đóng** + những mục **còn block/cần quyết định**, điều kiện gỡ, và **hướng dẫn tự túc để người khác tiếp tục/kiểm tra** khi TV4 vắng mặt.
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026) · **Nhánh**: `2312739_NHTSon_D3-D4-D5-D6` · **Reviewer**: Nguyễn Thanh Tâm
-> **Cập nhật lần cuối**: 24/09/2026 (T4 — hoàn tất D3/D4-SEO/D5/E2E MinIO; 133/133 + 5/5 pass local)
+> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt D23/D27; đóng N1 invalidation bằng xác minh; chuẩn bị triển khai N2/N4)
 
 ---
 
@@ -45,6 +45,7 @@
 | **D2/D23** | Resize original/300×300/800×600 + queue persistent (Hangfire/BackgroundService) | Quyết định nhóm D23 | Chốt queue → thêm package (nhớ regenerate `packages.lock.json`; CI `--locked-mode`) |
 | **D27** | Bucket policy + ảnh upload hiển thị (presigned/proxy) → uploader UI | Quyết định nhóm D27 + CR | Chốt private+presigned (khuyến nghị) hay public-read theo SRS 2.4.1 |
 | **D4-Uploader UI** | Uploader progress/rollback/gallery/primary + status buttons ghép TV3 C4 | D27 + TV3 C4 | Sau D27: dùng `IFileStorageService` sinh presigned hoặc proxy có auth; status buttons nối API đã có |
+| **D3-Invalidation (N1 item 3, 27/09)** | Không tồn tại cache recipe nào để invalidate — backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire → tiêu chí thỏa mặc định. **Đã đóng bằng xác minh 27/09.** | TV2/TV3 (nếu họ thêm ISR/output-cache cho recipe list/detail/ảnh) | Nếu TV2/TV3 thêm cache → TV4 kết nối revalidate hook (hoặc wire `RecipeCacheService` + `InvalidatePrefixAsync` khi archive/unpublish/delete) |
 | **D6 Lab L4** | `practice/TV4/L4`: 4 MIME + resize + Mailhog + Hangfire + sổ K | Không ai block — độc lập | TV4 tự làm song song, nhánh riêng |
 | **PR #14** | Giữ nguyên trên main (D1.3 + D3.1/D3.2 đã merge nhầm) | Nhóm trưởng | Giữ nguyên theo quyết định nhóm 23/09; rà soát diff trong tuần |
 
@@ -111,3 +112,4 @@ dotnet restore CulinaryBlog.sln --locked-mode
 | 23/09 | TV4 `4830e57` | Fix connection string lazy (đọc trong lambda AddDbContext) để `TEST_DATABASE` override có hiệu lực |
 | 24/09 | TV4 | D3 archive/delete + D4-SEO + D5-OTEL + E2E MinIO (3/3) + CI MinIO service; **133/133 + 5/5 pass local**, frontend build OK |
 | 24/09 | TV4 | Phát hiện & fix JWT `RoleClaimType="role"` (bug 403 API thật, không lộ qua test trước đây vì test toàn dùng handler) |
+| 27/09 | TV4 | Chốt D23 → PA-1 Hangfire; D27 → PA-2 base media URL proxy (`DE_XUAT_GIAI_QUYET_D23_D27.md`); PR #14 giữ nguyên (nhóm chung tay sửa); **đóng N1 invalidation bằng xác minh** (không cache recipe; `RecipeCacheService` orphan) |

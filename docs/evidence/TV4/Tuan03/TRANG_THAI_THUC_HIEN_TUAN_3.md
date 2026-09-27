@@ -64,6 +64,7 @@
 | ~~D3.2c~~ | ~~DELETE recipe soft theo D08 (FR-RCP-007)~~ | ✅ **Xong 24/09** — `DeleteRecipeCommand` + `Recipe.MarkDeleted()` + global filter + test | — |
 | D3.3 | Logout revoke refresh family (FR-AUTH-005) | ✅ **Xong** — C5 refresh đã có trên main | — |
 | ~~D3.4~~ | ~~E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted~~ | ✅ **Xong 24/09** — `MinioE2ETests` 3/3 pass trên MinIO local; CI đã thêm service MinIO | — |
+| ~~D3-invalid~~ | ~~Invalidation archive/unpublish/delete — clear cache (Redis/OutputCache/ISR)~~ | ✅ **Đóng 27/09 bằng xác minh (N1 item 3)**: không tồn tại cache recipe nào — backend không OutputCache/Redis-dữ-liệu (chỉ `RedisHealthCheck`); FE recipe/sitemap luôn `no-store`; `RecipeCacheService` (`Infrastructure`) orphan/chưa wire → "Archived/Draft không phục vụ bởi cache cũ" thỏa mặc định. Ghi handoff TV2/TV3 nếu nhóm sau này thêm ISR/output-cache cho recipe | — |
 | D1.7/D27 | **Proxy ảnh** `GET /resources/images/{key}` (Published public; Draft/Archived owner/Admin; stream MinIO) | Mới chốt 27/09 | Implement theo `DE_XUAT_GIAI_QUYET_D23_D27.md` (PA-2) + test 403/404 + cập nhật `IMAGE_CONTRACT.md` |
 | D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | **Đã chốt hướng 27/09 — Hangfire (PA-1)**; chưa thêm package | Implement resize job Hangfire + ImageSharp; regenerate `packages.lock.json`; test restart/retry |
 | D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); TV4 review + bổ sung progress/rollback; nối URL proxy D27; status ghép TV3 C4 | Sau khi PR #15 merge + proxy D27 xong → set `NEXT_PUBLIC_MEDIA_URL` |
@@ -118,6 +119,12 @@
 | Frontend build | **OK** (`next build` exit 0; 13 routes + robots.txt + sitemap.xml) | `npx next build` trong `src/frontend` |
 | E2E MinIO | upload/PATCH primary/DELETE (+ unpublish/archive) 3/3 pass lặp nhiều lần | MinIO local `127.0.0.1:9000`, bucket `culinary-blog` |
 | Fix thật phát hiện bởi E2E | **JWT policy 403 → chỉ cần `RoleClaimType="role"`** (`MapInboundClaims=false`) | `Program.cs` `TokenValidationParameters` — trước đây AuthorPolicy luôn 403 khi gọi API thật |
+
+### Xác minh N1 item 3 — Invalidation cache (27/09)
+
+- **Kết quả**: không có cache recipe nào để invalidate → tiêu chí "Draft/Archived không được phục vụ bởi cache cũ" **thỏa mặc định**.
+- Bằng chứng: `Program.cs` không có `AddOutputCache`/`IDistributedCache`; chỉ `RedisHealthCheck` + docker redis (không cache dữ liệu); `RecipeCacheService` (in-memory) **orphan** — chưa đăng ký DI, không nơi nào gọi; FE `src/frontend/src/lib/api.ts` recipe list/search/detail/sitemap đều `cache: 'no-store'` (category ISR 3600/600s không chứa nội dung recipe).
+- Hành động: ghi `HANDOFF_TV4_TUAN3.md` — nếu TV2/TV3 thêm ISR/output-cache cho recipe thì cần revalidate hook; bay giờ không wire cache để tránh rủi ro vô ích.
 
 ### Chi tiết E2E MinIO (`tests/CulinaryBlog.Tests/MinioE2ETests.cs`)
 

@@ -71,7 +71,7 @@
 |---|---|---|
 | 1 | `PATCH /recipes/{id}/archive`: Published/Draft → Archived, ẩn public ngay, giữ dữ liệu, owner/Admin (403 non-owner); idempotent | Mã lỗi chuẩn + test happy/403/404 |
 | 2 | `DELETE /recipes/{id}` (tuỳ ADR D08): soft delete theo ADR, không xoá vật lý ảnh cần restore; không lộ trong search/cache | Test delete + không còn trong public list/search |
-| 3 | Invalidation khi archive/unpublish/delete: clear cache (Redis/OutputCache/ISR — phối hợp TV2/TV3) | Draft/Archived không được phục vụ bởi cache cũ |
+| 3 | ~~Invalidation khi archive/unpublish/delete: clear cache~~ — ✅ **Đóng 27/09 bằng xác minh**: không tồn tại cache recipe nào (backend không OutputCache/Redis-dữ-liệu; FE recipe luôn `no-store`; `RecipeCacheService` orphan chưa wire) → tiêu chí thỏa mặc định; ghi handoff TV2/TV3: nếu nhóm thêm ISR/output-cache cho recipe → cần revalidate hook | Draft/Archived không được phục vụ bởi cache cũ — ✅ xác minh: không có cache |
 | 4 | ~~D3.3 logout revoke refresh family~~ — ✅ **Đã xong** (23/09): C5 refresh token đã có trên main (`RefreshTokenAsync` rotation + family revocation + `LogoutAsync`); 7 test Week3 + 16 test Auth pass | 204; refresh cũ không dùng được — cần xác nhận test logout revoke family chạy trong suite |
 | 5 | Hoàn tất E2E D1.3 + D1.1c: chạy với MinIO local: upload/PATCH primary/DELETE, MinIO down → lỗi rõ ràng + log redacted | Evidence log thật, không commit secret |
 
@@ -144,7 +144,7 @@
 ### Thứ tự ưu tiên:
 1. ✅ Fix CI main (N0) — **đã xong** 23/09; bổ sung PR fix connection string `4830e57` lên main.
 2. ✅ Chốt D27 (PA-2 proxy) + D23 (PA-1 Hangfire) — **đã chốt 27/09**; bắt đầu thực hiện.
-3. Archive/delete + invalidation (D3) → proxy ảnh D27 → uploader UI ghép TV3 C4.
+3. ~~Archive/delete + invalidation (D3)~~ — ✅ **xong 24/09; đóng invalidation bằng xác minh 27/09 (không cache)** → proxy ảnh D27 → uploader UI ghép TV3 C4.
 4. Resize Hangfire (D2 theo D23) → sitemap/JSON-LD/OTEL (D4/D5) → cuối tuần chốt G5.
 
 ---
@@ -161,7 +161,7 @@
 | K06 | SP | migration fix `RefreshTokens` + index mới | TV4-K06 |
 | K07 | SP | concurrency khi đổi trạng thái/xoá (RowVersion) | TV4-K07 |
 | K10 | SP | ownership archive/delete; 403 non-owner | TV4-K10 |
-| K12 | SP+LAB | invalidation archive/unpublish/delete + LAB cache | TV4-K12 |
+| K12 | SP+LAB | invalidation archive/unpublish/delete — 🟡 đóng bằng xác minh 27/09 (không cache recipe) + LAB cache L4 | TV4-K12 |
 | K13 | SP+LAB | upload/delete + E2E MinIO + 4 MIME (lab) | TV4-K13 |
 | K14 | SP+LAB | resize job + restart/retry (D23) | TV4-K14 |
 | K15 | LAB | Mailhog + resize + sitemap (lab) | TV4-K15 |
@@ -189,7 +189,7 @@
 - [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`).
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
 - [ ] Resize original/300×300/800×600 + queue persistent **Hangfire (D23 chốt PA-1)** + retry 3 + original fallback.
-- [ ] Invalidation cache archive/unpublish/delete (phối hợp TV2/TV3).
+- [x] **Invalidation cache archive/unpublish/delete (27/09 — đóng bằng xác minh)**: không có cache recipe nào để invalidate (backend không OutputCache/Redis-dữ-liệu; FE recipe `no-store`; `RecipeCacheService` orphan chưa wire) → handoff TV2/TV3 nếu nhóm thêm ISR/output-cache.
 - [ ] Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.
 
 ---
@@ -214,7 +214,7 @@
 2. ✅ Merge main mới (deploy Render/100 ảnh/UI) — đã merge + fix connection string lazy `4830e57`.
 3. **PR `4830e57` lên main** (CI main 6 commit mới có thể dính 28P01).
 4. ✅ Chốt D27 (PA-2 proxy) + D23 (PA-1 Hangfire) — **27/09** theo `DE_XUAT_GIAI_QUYET_D23_D27.md`; ghi ADR.
-5. Archive/delete CQRS + invalidation + test.
+5. ✅ Archive/delete CQRS — **xong 24/09**; invalidation — **đóng bằng xác minh 27/09** (không cache recipe; handoff TV2/TV3).
 6. E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted.
 7. **Proxy ảnh D27** (`/resources/images/{key}`) → uploader UI + status buttons (ghép TV3 C4; FE set `NEXT_PUBLIC_MEDIA_URL`).
 8. Sitemap/robots/JSON-LD + OTEL/metrics/health.

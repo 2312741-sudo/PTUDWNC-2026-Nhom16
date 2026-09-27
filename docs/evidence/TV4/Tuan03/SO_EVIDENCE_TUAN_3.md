@@ -19,7 +19,7 @@
 | K06 | SP | EF Core Code First, migration/config/seed, LINQ/index | Fix migration `RefreshTokens` index (N0) + migration soft-delete | N0, D3 | Đã làm (N0) |
 | K07 | SP+LAB | UoW/transaction/audit/soft delete/RowVersion | Race đổi trạng thái + soft delete | D3 | Đã làm (D3 — MarkDeleted + RowVersion 422) |
 | K10 | SP | RBAC/ownership/policy/rate limit/secrets | Ownership archive/delete + 403 non-owner | D3 | Đã làm (D3) |
-| K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | Chưa làm |
+| K12 | SP+LAB | Redis cache-aside, OutputCache, invalidation | Invalidation archive/unpublish/delete + LAB | D3 + D6 | 🟡 Đã xác minh 27/09 — không cache recipe (thỏa mặc định); LAB cache L4 còn mở |
 | K13 | SP+LAB | MinIO upload/delete, magic bytes, MIME, GUID path | E2E D1.3 trên MinIO + 4 MIME + SP upload/delete | D3 + D6 | Đã làm (E2E 3/3) |
 | K14 | SP+LAB | Hangfire fire-and-forget/delayed/recurring/retry | SP resize job + LAB delayed/restart | D2 + D6 | Chưa làm (chờ D23) |
 | K15 | LAB | SMTP/MailKit, resize 300×300/800×600, sitemap XML | LAB L4 Mailhog + resize + XML | D6 | Chưa làm |
@@ -136,7 +136,7 @@ Lỗi còn lại: chụp trace/metrix thật + k6/EXPLAIN số liệu
 - [x] CI thêm service MinIO + env + bước chờ health (cần push + xanh).
 - [ ] PR `4830e57` lên main (fix CI main 6 commit mới).
 - [ ] Rà soát diff PR #14 đã merge (giữ nguyên theo quyết định nhóm).
-- [ ] Invalidation cache archive/unpublish/delete (phối hợp TV2/TV3).
+- [x] Invalidation cache archive/unpublish/delete — **đóng bằng xác minh 27/09**: không cache recipe (backend không OutputCache/Redis-dữ-liệu, FE `no-store`, `RecipeCacheService` orphan); handoff TV2/TV3 nếu nhóm thêm cache.
 - [ ] Resize original/300×300/800×600 + queue persistent (tuỳ D23) + original fallback + restart/retry test.
 - [ ] Uploader UI progress/rollback/gallery/primary + ảnh hiển thị qua presigned/proxy (D27).
 - [ ] Status buttons Publish/Unpublish/Archive ghép TV3 C4.
