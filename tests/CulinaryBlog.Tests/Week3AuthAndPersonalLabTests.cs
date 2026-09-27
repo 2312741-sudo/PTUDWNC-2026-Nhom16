@@ -7,15 +7,20 @@ using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 namespace CulinaryBlog.Tests;
+
 
 public sealed class Week3AuthAndPersonalLabTests : IClassFixture<ApiFactory>
 {
+
     private readonly HttpClient _client;
+    private readonly ApiFactory _factory;
 
     public Week3AuthAndPersonalLabTests(ApiFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         factory.EnsureMigrated();
     }
@@ -194,5 +199,50 @@ public sealed class Week3AuthAndPersonalLabTests : IClassFixture<ApiFactory>
         var dataFallback = await cache.GetOrSetAsync("recipe:pho-bo", FetchFromDbAsync, TimeSpan.FromMinutes(10));
         Assert.Equal("Recipe-Content-Version-3", dataFallback);
         Assert.Equal(3, factoryCallCount); // Vẫn hoạt động trơn tru mà không làm crash app!
+    }
+    // ===== Bổ sung TV3 (C5 / NFR-SEC-002 / D05) =====
+
+    [Fact]
+    public async Task Concurrent_refresh_issues_exactly_one_valid_token()
+    {
+        // Hai request refresh cùng một token, chạy song song.
+        // Rotation phải đảm bảo chỉ một nhánh token hợp lệ được cấp;
+        // nếu cả hai cùng thành công thì một refresh token đã sinh ra hai phiên — lỗ hổng bảo mật.
+        var regResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", NewUser());
+        var auth = (await regResponse.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>())!.Data;
+        var refreshToken = auth.RefreshToken!;
+
+        var results = await Task.WhenAll(
+            Enumerable.Range(0, 2).Select(_ =>
+                _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshTokenCommand(refreshToken))));
+
+        Assert.Single(results, r => r.StatusCode == HttpStatusCode.OK);
+        Assert.Single(results, r => r.StatusCode != HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Expired_refresh_token_is_rejected()
+    {
+        var regResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", NewUser());
+        var auth = (await regResponse.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>())!.Data;
+        var refreshToken = auth.RefreshToken!;
+
+        // Đẩy hạn về quá khứ để mô phỏng token hết hạn (7 ngày là quá dài để chờ trong test).
+        var tokenHash = Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(refreshToken))).ToLowerInvariant();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            await db.Database.ExecuteSqlRawAsync(
+                """UPDATE "RefreshTokens" SET "ExpiresAt" = {0} WHERE "TokenHash" = {1}""",
+                DateTime.UtcNow.AddMinutes(-1), tokenHash);
+        }
+
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh", new RefreshTokenCommand(refreshToken));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

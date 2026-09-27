@@ -221,6 +221,17 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
     /// Gán số âm ở bước trung gian để không va chạm unique (RecipeId, StepNumber) khi hoán đổi.
     /// Handler phải bọc trong transaction.
     /// </summary>
+    /// <summary>
+    /// Pha 1 khi đánh số lại: đẩy StepNumber sang vùng tạm (+10000) để các lệnh UPDATE lần lượt của EF
+    /// không vi phạm unique index (RecipeId, StepNumber). Gọi + SaveChanges trước ReorderSteps, trong cùng transaction.
+    /// </summary>
+    public void MoveStepNumbersToTemporaryRange()
+    {
+        foreach (var s in _steps) s.SetNumber(s.StepNumber + TemporaryStepNumberOffset);
+    }
+
+    private const int TemporaryStepNumberOffset = 10_000;
+
     public void ReorderSteps(IReadOnlyList<Guid> orderedIds)
     {
         if (orderedIds.Count != _steps.Count || orderedIds.Distinct().Count() != orderedIds.Count)
@@ -261,5 +272,12 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
     {
         if (Status == RecipeStatus.Archived) return;
         Status = RecipeStatus.Archived;
+    }
+
+    /// <summary>Xoá mềm (ADR-0001): đặt IsDeleted, global query filter tự ẩn bản ghi.</summary>
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

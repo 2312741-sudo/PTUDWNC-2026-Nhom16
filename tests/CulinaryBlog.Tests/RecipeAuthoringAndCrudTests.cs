@@ -32,6 +32,7 @@ public sealed class FakeAuthoringRecipeRepository : IRecipeRepository
         Task.FromResult(Categories.Contains(categoryId));
 
     public void Add(Recipe recipe) => Recipes.Add(recipe);
+    public void Remove(Recipe recipe) => Recipes.Remove(recipe);
 
     public void RemoveIngredient(RecipeIngredient ingredient) { }
 
@@ -86,8 +87,8 @@ public sealed class RecipeAuthoringAndCrudTests
         Assert.Equal("Bún bò Huế gia truyền", result.Title);
         Assert.Equal("bun-bo-hue-gia-truyen", result.Slug);
         Assert.Equal(_user.UserId, result.AuthorId);
-        Assert.Equal(RecipeStatus.Draft, result.Status);
-        Assert.Equal(RecipeDifficulty.Hard, result.Difficulty);
+        Assert.Equal(nameof(RecipeStatus.Draft), result.Status);
+        Assert.Equal(nameof(RecipeDifficulty.Hard), result.Difficulty);
         Assert.Single(_repo.Recipes);
     }
 

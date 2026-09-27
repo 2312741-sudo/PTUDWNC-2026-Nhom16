@@ -22,6 +22,7 @@ public sealed class FakeOwnedRecipeRepository : IRecipeRepository
     public Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken ct) => Task.FromResult(true);
 
     public void Add(Recipe recipe) => Store.Add(recipe);
+    public void Remove(Recipe recipe) => Store.Remove(recipe);
 
     public void RemoveIngredient(RecipeIngredient ingredient) { }
 
@@ -65,7 +66,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Published, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Published), dto.Status);
         Assert.Equal(RecipeStatus.Published, recipe.Status);
         Assert.NotNull(recipe.PublishedAt);
         Assert.Equal(recipe.PublishedAt, dto.PublishedAt);
@@ -111,7 +112,7 @@ public sealed class RecipeLifecycleHandlerTests
         var publishedAt = recipe.PublishedAt;
         var second = await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Published, second.Status);
+        Assert.Equal(nameof(RecipeStatus.Published), second.Status);
         Assert.Equal(publishedAt, recipe.PublishedAt);   // PublishedAt giữ nguyên sau publish lần 2
         Assert.Equal(first.PublishedAt, second.PublishedAt);
     }
@@ -140,7 +141,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Published, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Published), dto.Status);
     }
 
     [Fact]
@@ -177,7 +178,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Draft, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Draft), dto.Status);
         Assert.Equal(RecipeStatus.Draft, recipe.Status);
     }
 
@@ -191,7 +192,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Draft, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Draft), dto.Status);
     }
 
     [Fact]
