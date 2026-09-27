@@ -18,13 +18,22 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U culinary_test -d culinary_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
-      minio:
-        image: quay.io/minio/minio:latest
+      # MinIO đã gỡ toàn bộ image public (quay.io/minio/minio trả 401, docker.io/minio/minio
+      # trả 404) nên runner không pull được và job chết ngay ở bước "Initialize containers".
+      # RustFS là server S3-compatible Apache-2.0, nói đúng giao thức nên Minio SDK của
+      # MinioStorageService dùng được không đổi dòng code. Endpoint sức khoẻ là /health,
+      # không phải /minio/health/live. Pin tag để CI không lại vỡ khi upstream đổi latest.
+      objectstorage:
+        image: rustfs/rustfs:1.0.0
         env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
+          RUSTFS_ACCESS_KEY: minioadmin
+          RUSTFS_SECRET_KEY: minioadmin
+          RUSTFS_CONSOLE_ENABLE: 'false'
+          RUSTFS_VOLUMES: /data
         ports: ['9000:9000']
-        command: server /data
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/health"
+          --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       TEST_DATABASE: Host=localhost;Port=5432;Database=culinary_test;Username=culinary_test;Password=ci-ephemeral-only
       MINIO_ENDPOINT: 127.0.0.1:9000
@@ -39,15 +48,15 @@ jobs:
       - run: dotnet restore CulinaryBlog.sln --locked-mode
       - run: dotnet build CulinaryBlog.sln --no-restore --configuration Release
       - run: dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
-      - name: Wait for MinIO
+      - name: Wait for object storage
         run: |
           for i in $(seq 1 30); do
-            if curl -s -f http://127.0.0.1:9000/minio/health/live > /dev/null 2>&1; then
-              echo "MinIO is ready"; exit 0
+            if curl -s -f http://127.0.0.1:9000/health > /dev/null 2>&1; then
+              echo "Object storage is ready"; exit 0
             fi
             sleep 1
           done
-          echo "MinIO did not become ready in time"; exit 1
+          echo "Object storage did not become ready in time"; exit 1
       - run: dotnet test CulinaryBlog.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
       - uses: actions/upload-artifact@v4
         if: always()
