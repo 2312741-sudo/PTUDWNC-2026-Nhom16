@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ApiError, BasicInfo, Category, DIFFICULTIES, RecipeDetail, UnauthorizedError,
+  ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, Nutrition, RecipeDetail, UnauthorizedError,
   createRecipe, getCategories, getRecipeDetail, updateRecipe,
 } from "@/lib/recipe-editor";
 import IngredientsStep from "./IngredientsStep";
@@ -27,7 +27,6 @@ type Action =
   | { type: "goto"; step: number }
   | { type: "setInfo"; patch: Partial<BasicInfo> }
   | { type: "saving" }
-  | { type: "done" }
   | { type: "detail"; detail: RecipeDetail }
   | { type: "error"; message: string };
 
@@ -37,12 +36,13 @@ export const emptyInfo: BasicInfo = {
   difficulty: "Easy", categoryId: "", nutrition: null,
 };
 
+const emptyNutrition: Nutrition = { calories: null, protein: null, carbohydrates: null, fat: null, fiber: null, sodium: null };
+
 function reducer(s: WizardState, a: Action): WizardState {
   switch (a.type) {
     case "goto": return { ...s, step: a.step, error: null };
     case "setInfo": return { ...s, info: { ...s.info, ...a.patch } };
     case "saving": return { ...s, saving: true, error: null };
-    case "done": return { ...s, saving: false };
     case "detail": return {
       ...s, saving: false, detail: a.detail,
       recipeId: a.detail.id, slug: a.detail.slug, rowVersion: a.detail.rowVersion,
@@ -51,12 +51,15 @@ function reducer(s: WizardState, a: Action): WizardState {
   }
 }
 
+// Khớp CreateRecipeValidator / NutritionValidator bên backend
 function validate(i: BasicInfo): string | null {
-  const t = i.title.trim().length; if (t < 5 || t > 200) return "Tiêu đề phải từ 5 đến 200 ký tự";
+  const t = i.title.trim().length;
+  if (t < 5 || t > 200) return "Tiêu đề phải từ 5 đến 200 ký tự";
   if (i.description.length > 2000) return "Mô tả tối đa 2000 ký tự";
   if (!i.categoryId) return "Vui lòng chọn danh mục";
-  if (i.servings < 1) return "Khẩu phần phải ≥ 1";
+  if (!Number.isInteger(i.servings) || i.servings < 1) return "Khẩu phần phải là số nguyên ≥ 1";
   if (i.prepTimeMinutes <= 0 || i.cookTimeMinutes <= 0) return "Thời gian sơ chế và nấu phải lớn hơn 0";
+  if (i.nutrition && Object.values(i.nutrition).some(v => v !== null && v < 0)) return "Giá trị dinh dưỡng không được âm";
   return null;
 }
 
@@ -78,8 +81,6 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return; }
     if (e instanceof ApiError && e.code === "RECIPE_PUBLISH_INCOMPLETE")
       return dispatch({ type: "error", message: "Cần ít nhất 1 nguyên liệu và 1 bước thực hiện trước khi xuất bản." });
-    if (e instanceof ApiError && e.status === 422 && /CONCURRENCY|ROW_?VERSION/i.test(e.code ?? ""))
-      return dispatch({ type: "error", message: "Dữ liệu đã bị thay đổi ở nơi khác, hãy tải lại trang." });
     dispatch({ type: "error", message: e instanceof Error ? e.message : "Có lỗi xảy ra" });
   }
 
@@ -88,7 +89,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     dispatch({ type: "detail", detail: await getRecipeDetail(slug) });
   }
 
-  // Chạy một thao tác API rồi tải lại chi tiết (để có RowVersion + danh sách mới)
+  // Chạy một thao tác API rồi tải lại chi tiết (danh sách + RowVersion mới)
   async function run(fn: () => Promise<unknown>) {
     dispatch({ type: "saving" });
     try { await fn(); await reload(); return true; }
@@ -104,12 +105,18 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
         ? await updateRecipe(s.recipeId, s.info, s.rowVersion!)
         : await createRecipe(s.info);
       await reload(saved.slug);
+      // Đổi URL sang trang edit: F5 hay bấm lại không tạo thêm bản nháp trùng
+      const url = `/dashboard/recipes/${saved.id}/edit?slug=${encodeURIComponent(saved.slug)}`;
+      if (window.location.pathname + window.location.search !== url) window.history.replaceState(null, "", url);
       dispatch({ type: "goto", step: 1 });
     } catch (e) { handleError(e); }
   }
 
   const set = (patch: Partial<BasicInfo>) => dispatch({ type: "setInfo", patch });
+  const setNut = (key: keyof Nutrition, raw: string) =>
+    set({ nutrition: { ...(s.info.nutrition ?? emptyNutrition), [key]: raw === "" ? null : +raw } });
   const canGo = (i: number) => i === 0 || !!s.detail;
+  const hasNutrition = !!s.info.nutrition && Object.values(s.info.nutrition).some(v => v !== null);
 
   return (
     <div className="mx-auto max-w-3xl p-6">
@@ -132,10 +139,10 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
       {s.step === 0 && (
         <div className="space-y-3">
           <label className="block text-sm">Tiêu đề *
-            <input className="w-full rounded border p-2" placeholder="VD: Canh chua cá lóc"
+            <input className="w-full rounded border p-2" placeholder="VD: Canh chua cá lóc" maxLength={200}
               value={s.info.title} onChange={e => set({ title: e.target.value })} /></label>
-          <label className="block text-sm">Mô tả
-            <textarea className="w-full rounded border p-2" rows={3}
+          <label className="block text-sm">Mô tả <span className="text-gray-400">({s.info.description.length}/2000)</span>
+            <textarea className="w-full rounded border p-2" rows={3} maxLength={2000}
               value={s.info.description} onChange={e => set({ description: e.target.value })} /></label>
           <label className="block text-sm">Hướng dẫn chung
             <textarea className="w-full rounded border p-2" rows={4}
@@ -148,7 +155,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
               <input type="number" min={1} className="w-full rounded border p-2"
                 value={s.info.cookTimeMinutes} onChange={e => set({ cookTimeMinutes: +e.target.value })} /></label>
             <label className="text-sm">Khẩu phần *
-              <input type="number" min={1} className="w-full rounded border p-2"
+              <input type="number" min={1} step={1} className="w-full rounded border p-2"
                 value={s.info.servings} onChange={e => set({ servings: +e.target.value })} /></label>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -164,6 +171,17 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select></label>
           </div>
+
+          <details className="rounded border p-3" open={hasNutrition}>
+            <summary className="cursor-pointer text-sm font-semibold">Dinh dưỡng (mỗi khẩu phần, không bắt buộc)</summary>
+            <div className="mt-3 grid grid-cols-3 gap-3">
+              {NUTRITION_FIELDS.map(f => (
+                <label key={f.key} className="text-sm">{f.label} ({f.unit})
+                  <input type="number" min={0} step="any" className="w-full rounded border p-2"
+                    value={s.info.nutrition?.[f.key] ?? ""} onChange={e => setNut(f.key, e.target.value)} /></label>
+              ))}
+            </div>
+          </details>
         </div>
       )}
 
@@ -177,7 +195,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
         <ReviewStep recipe={s.detail} categories={categories} busy={s.saving} run={run} />
       )}
 
-      {s.error && <p className="mt-4 rounded bg-red-50 p-3 text-red-700">{s.error}</p>}
+      {s.error && <p role="alert" className="mt-4 rounded bg-red-50 p-3 text-red-700">{s.error}</p>}
 
       <div className="mt-6 flex justify-between">
         <button disabled={s.step === 0 || s.saving} onClick={() => dispatch({ type: "goto", step: s.step - 1 })}

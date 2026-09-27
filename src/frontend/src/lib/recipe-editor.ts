@@ -85,7 +85,21 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 // Backend nhận Difficulty dạng số (enum), trả về dạng chuỗi
 const DIFFICULTY_NUM: Record<Difficulty, number> = { Easy: 1, Medium: 2, Hard: 3, Expert: 4 };
-const toPayload = (i: BasicInfo) => ({ ...i, difficulty: DIFFICULTY_NUM[i.difficulty] });
+export const NUTRITION_FIELDS: { key: keyof Nutrition; label: string; unit: string }[] = [
+  { key: "calories", label: "Năng lượng", unit: "kcal" },
+  { key: "protein", label: "Đạm", unit: "g" },
+  { key: "carbohydrates", label: "Tinh bột", unit: "g" },
+  { key: "fat", label: "Chất béo", unit: "g" },
+  { key: "fiber", label: "Chất xơ", unit: "g" },
+  { key: "sodium", label: "Natri", unit: "mg" },
+];
+// NutritionDto: gửi đủ 6 field (JSON strict); tất cả trống -> null
+const normNutrition = (n: Nutrition | null): Nutrition | null => {
+  if (!n) return null;
+  const full = Object.fromEntries(NUTRITION_FIELDS.map(f => [f.key, n[f.key] ?? null])) as unknown as Nutrition;
+  return Object.values(full).every(v => v === null) ? null : full;
+};
+const toPayload = (i: BasicInfo) => ({ ...i, difficulty: DIFFICULTY_NUM[i.difficulty], nutrition: normNutrition(i.nutrition) });
 
 export function toBasicInfo(d: RecipeDetail): BasicInfo {
   return {
