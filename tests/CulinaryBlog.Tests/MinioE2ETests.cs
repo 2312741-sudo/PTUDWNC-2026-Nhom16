@@ -15,8 +15,9 @@ using Recipe = CulinaryBlog.Domain.Entities.Recipe;
 namespace CulinaryBlog.Tests;
 
 /// <summary>
-/// E2E (D1.3/D1.1c, TV4): chạy thật qua MinIO. Cần MinIO local (docker compose -f docker-compose.dev.yml up -d minio minio-init)
-/// hoặc service MinIO trong CI. Nếu MinIO không sẵn sàng, bỏ qua để không phá CI/local không có MinIO.
+/// E2E (D1.3/D1.1c, TV4): chạy thật qua object storage S3-compatible. Cần server local
+/// (docker compose -f docker-compose.dev.yml up -d s3, image RustFS vì image MinIO đã bị gỡ)
+/// hoặc service tương đương trong CI. Nếu không sẵn sàng, bỏ qua để không phá CI/local không có storage.
 /// </summary>
 public sealed class ApiFactoryWithMinio : WebApplicationFactory<Program>
 {

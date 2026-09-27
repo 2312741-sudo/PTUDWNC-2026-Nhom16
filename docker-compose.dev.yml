@@ -1,6 +1,6 @@
 # Stack dev cho cả nhóm (TV4/D5). Chạy: docker compose -f docker-compose.dev.yml up -d
 # Lưu ý: dùng image có tag qua biến môi trường để dễ khóa phiên bản (D25);
-# MINIO_TAG mặc định là latest chỉ cho phát triển cục bộ.
+# S3_TAG mặc định là 1.0.0 của RustFS, không dùng latest để tránh upstream đổi bất ngờ.
 services:
   postgres:
     image: postgres:16-alpine
@@ -29,41 +29,30 @@ services:
     volumes:
       - redisdata:/data
 
-  minio:
-    image: minio/minio:${MINIO_TAG:-latest}
-    container_name: culinaryblog-minio
+  # MinIO đã gỡ toàn bộ image public (quay.io/minio/minio trả 401, docker.io/minio/minio trả
+  # 404 năm 2026) nên image kéo về sẽ hỏng. RustFS là server S3-compatible Apache-2.0, nói
+  # đúng giao thức nên MinioStorageService chạy được không đổi dòng code. Endpoint sức khoẻ
+  # là /health (RustFS không phục vụ /minio/health/live). Pin tag qua S3_TAG theo D25.
+  # Không còn container init tạo bucket: MinioStorageService tự BucketExists -> MakeBucket.
+  s3:
+    image: rustfs/rustfs:${S3_TAG:-1.0.0}
+    container_name: culinaryblog-s3
     restart: unless-stopped
-    command: ["server", "/data", "--console-address", ":9001"]
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-minioadmin}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-minioadmin}
+      RUSTFS_CONSOLE_ENABLE: 'true'
+      RUSTFS_VOLUMES: /data
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Console
     volumes:
-      - miniodata:/data
+      - s3data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 5s
       timeout: 5s
       retries: 10
-
-  minio-init:
-    image: minio/mc:latest
-    container_name: culinaryblog-minio-init
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - >
-        mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
-        mc mb --ignore-existing local/culinary-blog &&
-        mc anonymous set none local/culinary-blog
-    restart: "no"
 
   mailhog:
     image: mailhog/mailhog:v1.0.1
@@ -96,5 +85,5 @@ services:
 volumes:
   pgdata:
   redisdata:
-  miniodata:
+  s3data:
   seqdata:

@@ -185,7 +185,7 @@ docker compose -f docker-compose.dev.yml ps
 |---|:---:|---|---|
 | **PostgreSQL 16** | `5432` | `localhost:5432` | `culinary / culinary_dev_secret` |
 | **Redis 7** | `6379` | `localhost:6379` | Không mật khẩu (dev) |
-| **MinIO Storage** | `9000` / `9001` | Console: **http://localhost:9001** | `minioadmin / minioadmin` |
+| **S3 Storage (RustFS)** | `9000` / `9001` | Console: **http://localhost:9001** | `minioadmin / minioadmin` |
 | **MailHog Web UI** | `8025` | Web: **http://localhost:8025** | Không cần mật khẩu |
 | **Seq Log Server** | `5341` | Web: **http://localhost:5341** | Không cần mật khẩu |
 | **Nginx Reverse Proxy**| `80` | Web: **http://localhost:80** | Điều hướng API & Web |

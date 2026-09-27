@@ -202,7 +202,7 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 |---|---|:---:|---|
 | **PostgreSQL 16** | `postgres:16-alpine` | `5432` | Cơ sở dữ liệu quan hệ chính & test DB |
 | **Redis 7** | `redis:7-alpine` | `6379` | Cache-aside, Rate Limiting & Blacklist |
-| **MinIO Object Storage** | `minio/minio` | `9000` (API) / `9001` (Console) | Lưu trữ ảnh món ăn và avatar người dùng |
+| **S3 Object Storage (RustFS)** | `rustfs/rustfs` | `9000` (API) / `9001` (Console) | Lưu trữ ảnh món ăn và avatar người dùng (thay image MinIO đã bị gỡ khỏi registry) |
 | **MailHog** | `mailhog/mailhog` | `1025` (SMTP) / `8025` (Web UI) | Máy chủ thử nghiệm gửi email chào mừng và thông báo |
 | **Seq** | `datalust/seq:latest` | `5341` | Máy chủ thu thập log tập trung có cấu trúc (Structured Logging) |
 | **Nginx** | `nginx:alpine` | `80` | Reverse proxy môi trường dev |
