@@ -4,7 +4,13 @@
 > **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3), khởi động từ main đã cập nhật
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 24/09/2026 (T4 — hoàn tất D3/D4/D5 + E2E D1.3 trên MinIO; 133/133 + 5/5 pass)
+> **Cập nhật lần cuối**: 27/09/2026 (T7 — chốt đề xuất D23/D27: **D23 → Hangfire PA-1**, **D27 → base media URL proxy PA-2** theo `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`; khớp PR #15 TV3)
+
+> **Bản sửa đổi 27/09 (mốc D23/D27)**:
+> Nhóm chốt hướng giải quyết 2 task bị block lâu nhất của tuần 3 (ghi trong `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`):
+> - **D23 → PA-1 Hangfire**: queue persistent PostgreSQL + dashboard Admin + retry 3 + regenerate `packages.lock.json` → mở D2 resize.
+> - **D27 → PA-2 base media URL qua proxy có auth** (`GET /resources/images/{key}`): Published công khai, Draft/Archived chỉ owner/Admin; FE TV3 (PR #15) đã ghép `NEXT_PUBLIC_MEDIA_URL` → chỉ cần cấu hình env, không phá UI đã merged.
+> D1/D4 display + D2 resize chuyển từ **block** sang **có phương án được duyệt, bắt đầu thực hiện**.
 
 > Chi tiết kế hoạch xem `KE_HOACH_TUAN_3_TV4.md`; nền tảng trạng thái tuần 2 xem `docs/evidence/TV4/Tuan02/`.
 
@@ -58,8 +64,10 @@
 | ~~D3.2c~~ | ~~DELETE recipe soft theo D08 (FR-RCP-007)~~ | ✅ **Xong 24/09** — `DeleteRecipeCommand` + `Recipe.MarkDeleted()` + global filter + test | — |
 | D3.3 | Logout revoke refresh family (FR-AUTH-005) | ✅ **Xong** — C5 refresh đã có trên main | — |
 | ~~D3.4~~ | ~~E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted~~ | ✅ **Xong 24/09** — `MinioE2ETests` 3/3 pass trên MinIO local; CI đã thêm service MinIO | — |
-| D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | Chưa bắt đầu | Chốt D23 (Hangfire/BackgroundService) + ImageSharp |
-| ~~D4~~ | ~~Uploader UI/progress/primary + sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09 (SEO)** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO; **uploader/status UI chờ D27 + TV3 C4** | Chốt D27 (presigned/proxy) + ghép TV3 C4 |
+| D1.7/D27 | **Proxy ảnh** `GET /resources/images/{key}` (Published public; Draft/Archived owner/Admin; stream MinIO) | Mới chốt 27/09 | Implement theo `DE_XUAT_GIAI_QUYET_D23_D27.md` (PA-2) + test 403/404 + cập nhật `IMAGE_CONTRACT.md` |
+| D2 | Resize original/300×300/800×600 + job nền (FR-JOB-002/003) | **Đã chốt hướng 27/09 — Hangfire (PA-1)**; chưa thêm package | Implement resize job Hangfire + ImageSharp; regenerate `packages.lock.json`; test restart/retry |
+| D4-UI | Uploader/editor ảnh + status buttons | **FE editor đã có trong PR #15** (`ImagesStep.tsx`); TV4 review + bổ sung progress/rollback; nối URL proxy D27; status ghép TV3 C4 | Sau khi PR #15 merge + proxy D27 xong → set `NEXT_PUBLIC_MEDIA_URL` |
+| ~~D4-SEO~~ | ~~Sitemap/robots/OG/JSON-LD~~ | ✅ **Xong 24/09** — `/sitemap` endpoint Published-only + `sitemap.ts`/`robots.ts`/detail page SEO | — |
 | ~~D5~~ | ~~OTEL/metrics/health/EXPLAIN/k6~~ | ✅ **Xong 24/09** — OTEL trace+metrics HTTP→DB, health db/redis/minio, README hướng dẫn; còn EXPLAIN/k6 ghi sổ khi có k6 script | — |
 | D6 | Lab `practice/TV4/L4` (4 MIME + resize + Mailhog + Hangfire) + sổ K | Chưa bắt đầu | G1/G2 đã đóng; tạo nhánh lab |
 
@@ -70,8 +78,8 @@
 | Task | Nội dung | Block bởi | Thời điểm dự kiến gỡ |
 |---|---|---|---|
 | D3.3 logout revoke | ✅ Xong — C5 refresh đã có trên main | — | Đã gỡ |
-| D1/D4 ảnh display | Uploader UI hiển thị ảnh upload qua API cần presigned/proxy | Quyết định D27 + CR | Đầu tuần 3 |
-| D2 resize | Queue chưa chốt | Quyết định D23 | Đầu tuần 3 |
+| D1/D4 ảnh display | Uploader UI hiển thị ảnh upload qua API cần base media URL/proxy | ~~D27~~ → ✅ **Chốt 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`) | Đã gỡ 27/09; implement proxy |
+| D2 resize | Queue chưa chốt | ~~D23~~ → ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`) | Đã gỡ 27/09; implement D2 |
 | ~~N0-1 CI xanh~~ | ~~Migration trùng `RefreshTokens`~~ | ✅ **Đã gỡ** — main `a651c8a` đã fix; local 120/120 + 5/5 | Đã gỡ 23/09 T2; chờ CI GitHub xác nhận |
 | PR #14 giữ/xoá | PR đã merge nhầm — cần thống nhất nhóm | Nhóm trưởng + nhóm | Đầu tuần 3 |
 
@@ -81,10 +89,11 @@
 
 | # | Nội dung | Mô tả | Quyết định dự kiến |
 |---|---|---|---|
-| CR-1 (từ tuần 1) | Bucket policy MinIO private vs public-read | Ảnh public theo SRS 2.4.1 nhưng Draft/Archived không lộ | Giữ private + presigned/proxy; xác nhận nhóm + giảng viên |
-| CR-2 | Resize job Hangfire vs BackgroundService | SRS mô tả Hangfire persistent; phụ thuộc mới có thể phá lockfile | Chốt D23 với nhóm |
+| CR-1 (từ tuần 1) | Bucket policy MinIO private vs public-read | Ảnh public theo SRS 2.4.1 nhưng Draft/Archived không lộ | ✅ **Chốt 27/09: giữ private + proxy D27 (PA-2)** — `DE_XUAT_GIAI_QUYET_D23_D27.md`; vẫn gửi giảng viên xác nhận quy trình |
+| CR-2 | Resize job Hangfire vs BackgroundService | SRS mô tả Hangfire persistent; phụ thuộc mới có thể phá lockfile | ✅ **Chốt 27/09: Hangfire (PA-1)** — `DE_XUAT_GIAI_QUYET_D23_D27.md`; regenerate `packages.lock.json` |
 | CR-3 | Soft delete recipe → ảnh xử lý thế nào | Giữ hay xoá object khi recipe bị soft delete | Ghi vào ADR TV4-001/D08 |
-| CR-4 (mới) | PR #14 merge nhầm vào main | Giữ nguyên và rà soát, hay revert? | Giữ nguyên theo quyết định nhóm 23/09; ghi ADR |
+| CR-4 (mới) | PR #14 merge nhầm vào main | Giữ nguyên và rà soát, hay revert? | ✅ Giữ nguyên theo quyết định nhóm 23/09; ghi ADR |
+| CR-5 (mới) | Review PR #15 (TV3 C4) | Wizard ảnh đã có editor; `ValueGeneratedNever` child có thể liên quan fix `e3e8315` | Review diff; xác nhận không trùng/quyện fix concurrency TV4; MinIO mirror `coollabsio` |
 
 ---
 

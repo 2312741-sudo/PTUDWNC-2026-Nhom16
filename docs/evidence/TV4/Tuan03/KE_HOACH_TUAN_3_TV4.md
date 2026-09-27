@@ -5,6 +5,7 @@
 - **Mã task tuần 3** (theo 6-tuần, dòng 3 TV4): D3 (archive/delete theo ADR D08), D4 (hoàn thiện uploader UI + status + SEO sitemap/robots/OG/JSON-LD), D5 (OTEL/metrics/health), D6 (lab L4 Identity/Google/refresh/forms/FTS). Cộng phần bàn giao thiếu tuần 2: D2 resize, D1.1c test MinIO down, E2E D1.3. (D3.3 logout revoke refresh family — ✅ đã xong vì C5 refresh đã có trên main.)
 - **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3) — đã merge `origin/main` mới nhất (a651c8a + 6 commit deploy/Render/100 ảnh) → HEAD `4830e57`; lab: `practice/TV4/L4`.
 > **Cập nhật 24/09**: working tree đã thêm D3 archive/delete + D4 SEO + D5 OTEL + E2E MinIO + CI MinIO service. **133/133 + 5/5 pass local, frontend build OK** — chưa commit/push.
+> **Cập nhật 27/09 (mốc D23/D27)**: nhóm chốt hướng **D23 → Hangfire (PA-1)** + **D27 → base media URL proxy có auth (PA-2)** theo đề xuất `docs/DE_XUAT_GIAI_QUYET_D23_D27.md` (khớp FE TV3 PR #15 đã ghép `NEXT_PUBLIC_MEDIA_URL`). D2 resize + D1/D4 display chuyển từ "chờ quyết định" sang "có phương án được duyệt".
 - **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng).
 - **Cổng**: G4 giữa tuần (publish/unpublish/archive end-to-end + ảnh hiển thị được qua presigned theo D27; sitemap Published-only) → G5 cuối tuần (đủ FR media/status/jobs/health; queue persistent; sitemap/OG/JSON-LD; OTEL trace HTTP→DB; CI xanh).
 
@@ -29,7 +30,7 @@
 |---|---|
 | Nghiệp vụ | Archive/delete recipe theo ADR D08 (FR-RCP-006/007); hoàn thiện uploader UI + status/action buttons (FR-RCP-008, C4/TV3 editor); sitemap XML Published-only + robots + canonical + JSON-LD (FR-SEO, D26); OTEL/metrics/health thành phần (FR-OBS-001/003, D20/D21/D22); logout revoke refresh family nếu TV3 C5 bàn giao (FR-AUTH-005) |
 | Nghiệm thu | Archive ẩn public ngay, giữ dữ liệu, owner/Admin; DELETE recipe soft theo D08, không lộ search/cache, không mất ảnh cần restore; uploader hiển thị ảnh bằng URL hợp lệ (D27); sitemap chỉ chứa Published, không chứa Draft/Archived; trace HTTP→DB có correlation; CI xanh toàn bộ |
-| Skill | Chứng minh SP K01/K02/K03/K04/K05/K06/K07/K10/K12/K13/K20/K22/K23/K24; LAB L4 K04/K13/K14/K15/K12/K17/K19; chốt ADR D08/D17/D21/D22/D23/D26/D27 |
+| Skill | Chứng minh SP K01->K07/K10/K12/K13/K20-K24; LAB L4 K04/K12->15/K17/K19; chốt ADR D08/D17/D21->D23/D26/D27 |
 
 ---
 
@@ -78,11 +79,13 @@
 
 **Skills**: K16, K17, K18, K19, K22 · **ADR**: D17 (PATCH images), D26 (sitemap), D27 (presigned/proxy)
 
+> **Cập nhật 27/09 (mốc D23/D27)**: FE editor ảnh đã có sẵn trong PR #15 (TV3) `ImagesStep.tsx` (upload/delete/set-primary/gallery); D27 được chốt **PA-2 base media URL qua proxy** (đề xuất `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`) → TV4 giảm phạm vi xuống: review + bổ sung progress/rollback + nối URL proxy, FE gần như chỉ cấu hình `NEXT_PUBLIC_MEDIA_URL`.
+
 | # | Việc làm | Kết quả mong đợi |
 |---|---|---|
-| 1 | Uploader UI (Next.js + TanStack Query optimistic): progress, rollback khi lỗi, gallery/thumbnail, chọn primary | Progress thật; lỗi hiển thị + rollback; đúng 1 primary |
+| 1 | Review PR #15 `ImagesStep.tsx` + bổ sung progress upload thật + rollback khi lỗi | Upload hiển thị tiến trình; lỗi hiển thị + rollback; gallery đúng 1 primary |
 | 2 | Status/action buttons: Publish/Unpublish/Archive từ dashboard edit (phối hợp TV3 C4) | Đổi trạng thái end-to-end, reload UI theo trạng thái |
-| 3 | Ảnh hiển thị qua presigned URL hoặc proxy có auth theo D27 | `<img>` hiển thị được; Draft/Archived ảnh không lộ public |
+| 3 | Ảnh hiển thị qua proxy D27 (`GET /resources/images/{key}`) theo đề xuất PA-2 | `<img>` hiển thị được; Draft/Archived ảnh không lộ public; FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL` |
 | 4 | Sitemap XML **Published-only** + robots.txt + canonical + JSON-LD (dữ liệu có cấu trúc); cron 02:00 UTC (D26) | Sitemap không chứa Draft/Archived; Google-tested file hợp lệ |
 
 ### N3 — D5: OTEL/metrics/health (FR-OBS-001/003, D20/D21/D22)
@@ -99,11 +102,13 @@
 
 **Skills**: K13, K14, K15, K23 · **ADR**: D23 (queue persistent + retry) · **Block**: quyết định D23 của nhóm
 
+> **Cập nhật 27/09 (mốc D23)**: nhóm chốt **PA-1 Hangfire** theo đề xuất `docs/DE_XUAT_GIAI_QUYET_D23_D27.md` (queue persistent PostgreSQL + dashboard Admin; retry 3; khớp SRS tr.38). Bắt đầu thực hiện D2.
+
 | # | Việc làm | Kết quả mong đợi |
 |---|---|---|
-| 1 | Chốt queue với nhóm (Hangfire/BackgroundService) | Quyết định ghi ADR D23 |
-| 2 | Resize tạo `{uuid}_original/300x300/800x600`, URLs DB, config kích thước không hard-code | Đủ 3 kích thước; original fallback khi lỗi |
-| 3 | Job persistent: retry idempotent, restart worker không mất job; boundary delete vs resize | Test restart/retry; không tái sinh ảnh đã xoá |
+| 1 | ✅ Chốt queue với nhóm — **Hangfire (PA-1)** theo `DE_XUAT_GIAI_QUYET_D23_D27.md`; regenerate `packages.lock.json` (không `--locked-mode` khi thêm) | Quyết định ghi ADR D23 + lockfile khớp CI `--locked-mode` |
+| 2 | Resize tạo `{uuid}_original/300x300/800x600`, URLs DB, config kích thước không hard-code; enqueue sau upload; original fallback khi lỗi | Đủ 3 kích thước; original fallback; test unit + E2E |
+| 3 | Job persistent: retry idempotent (3), restart worker không mất job; boundary delete vs resize; dashboard `/hangfire` chỉ Admin | Test restart/retry; không tái sinh ảnh đã xoá |
 
 ### N5 — D6: Lab L4 hoàn thiện
 
@@ -122,24 +127,25 @@
 | Từ | Nhận gì | Khi nào |
 |---|---|---|
 | ~~TV3 (C5)~~ | ~~Refresh token family để logout revoke (D3.3)~~ — ✅ C5 đã có trên main, không cần | — |
-| Cả nhóm | Quyết định D27 bucket policy (presigned/proxy vs public-read) | Đầu tuần 3 |
-| Cả nhóm | Quyết định D23 queue (Hangfire vs BackgroundService) | Đầu tuần 3 |
-| Nhóm trưởng | Xác nhận giữ nguyên PR #14 đã merge hay cần điều chỉnh | Đầu tuần 3 |
+| Cả nhóm | ✅ Quyết định D27 — **PA-2 base media URL proxy có auth** (`DE_XUAT_GIAI_QUYET_D23_D27.md`, 27/09) | ✅ Đầu tuần 3 |
+| Cả nhóm | ✅ Quyết định D23 queue — **PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`, 27/09) | ✅ Đầu tuần 3 |
+| ~~Nhóm trưởng~~ | ~~Xác nhận giữ nguyên PR #14 đã merge hay cần điều chỉnh~~ — ✅ PR #14 đã được nhóm chung tay sửa; thống nhất giữ nguyên (mọi task/CR từ PR #14 xem như hoàn thành) | — |
 | Nhóm trưởng | Reviewer cho PR fix connection string `4830e57` → main | Ngày 1–2 |
+| Nhóm trưởng | Review/duyệt đề xuất D23/D27 (`DE_XUAT_GIAI_QUYET_D23_D27.md`) + ghi ADR | Sau 27/09 |
 
 ### TV4 phải bàn giao sớm:
 | Bàn giao cho | Gì | Khi nào |
 |---|---|---|
 | Cả nhóm | Fix duplicate migration `RefreshTokens` + CI xanh | Ngày 1–2 — ✅ đã xong (branch CI success) |
 | Cả nhóm | Fix connection string lazy `4830e57` (CI main đang dính eager-read) | Ngày 1–2 |
-| TV3 (C4) | Contract/status API archive + image URL hiển thị (presigned/proxy) | Giữa tuần 3 |
-| Cả nhóm | E2E D1.3/D3 + D2 resize + D5 metrics chạy thật | Cuối tuần 3 |
+| TV3 (C4) | Contract/status API archive + **image URL proxy D27** (`/resources/images/{key}`) cho editor | Giữa tuần 3 |
+| Cả nhóm | E2E D1.3/D3 + D2 resize (Hangfire) + D5 metrics chạy thật | Cuối tuần 3 |
 
 ### Thứ tự ưu tiên:
 1. ✅ Fix CI main (N0) — **đã xong** 23/09; bổ sung PR fix connection string `4830e57` lên main.
-2. Chốt D27 + D23 (ảnh hiển thị + resize).
-3. Archive/delete + invalidation (D3) → uploader UI ghép TV3 C4.
-4. Sitemap/JSON-LD/OTEL (D4/D5) → cuối tuần chốt G5.
+2. ✅ Chốt D27 (PA-2 proxy) + D23 (PA-1 Hangfire) — **đã chốt 27/09**; bắt đầu thực hiện.
+3. Archive/delete + invalidation (D3) → proxy ảnh D27 → uploader UI ghép TV3 C4.
+4. Resize Hangfire (D2 theo D23) → sitemap/JSON-LD/OTEL (D4/D5) → cuối tuần chốt G5.
 
 ---
 
@@ -147,7 +153,7 @@
 
 | K | Loại | Sẽ chứng minh ở | Evidence key |
 |---|---|---|---|
-| K01 | SP | ADR D08/D17/D21/D22/D23/D26/D27 + mapping FR | TV4-K01 |
+| K01 | SP | ADR D08/D17/D21/D22/D23/D26/D27 + mapping FR + đề xuất `DE_XUAT_GIAI_QUYET_D23_D27.md` | TV4-K01 |
 | K02 | SP | archive/delete status endpoints + RFC7807 | TV4-K02 |
 | K03 | SP | presigned/proxy qua `IFileStorageService` + domain methods | TV4-K03 |
 | K04 | SP+LAB | archive/delete CQRS handlers; LAB behavior | TV4-K04 |
@@ -179,9 +185,10 @@
 - [x] **Sitemap/robots/SEO (24/09)**: `GET /recipes/sitemap` Published-only + `sitemap.ts`/`robots.ts` + SEO metadata trang công thức; `next build` exit 0.
 - [x] **OTEL/metrics/health (24/09)**: trace ASP.NET/Http/EF + metrics + health db/redis/minio; còn EXPLAIN/k6 số liệu nối tiếp.
 - [ ] PR fix connection string lazy `4830e57` → main (CI main 6 commit mới có thể dính 28P01).
-- [ ] Uploader UI: progress + rollback + gallery + primary; ảnh hiển thị qua presigned/proxy (D27).
+- [ ] Proxy ảnh D27 (`GET /resources/images/{key}`): Published public, Draft/Archived owner/Admin; stream MinIO; cache-control; test 403/404.
+- [ ] Uploader UI: review PR #15 `ImagesStep.tsx` + progress + rollback + gallery + primary; nối URL proxy (set `NEXT_PUBLIC_MEDIA_URL`).
 - [ ] Status buttons Publish/Unpublish/Archive end-to-end với TV3 C4.
-- [ ] Resize original/300×300/800×600 + queue persistent + retry + original fallback (nếu D23 chốt).
+- [ ] Resize original/300×300/800×600 + queue persistent **Hangfire (D23 chốt PA-1)** + retry 3 + original fallback.
 - [ ] Invalidation cache archive/unpublish/delete (phối hợp TV2/TV3).
 - [ ] Lab `practice/TV4/L4` commit + sổ skill cập nhật; CI pass sau mỗi task; không commit secret.
 
@@ -194,8 +201,9 @@
 | Main CI đỏ kéo dài (duplicate migration) | Chặn mọi thành viên | ✅ Đã fix (main `a651c8a`); branch tuần 3 CI success; còn chuyển fix connection string `4830e57` lên main |
 | ~~C5 TV3 chưa bàn giao~~ | ~~D3.3 logout chưa revoke family~~ | ✅ C5 đã có trên main — D3.3 xong |
 | Eager-read connection string trong main phá override test | CI main fail 28P01 khi thêm commit deploy | TV4 fix `4830e57` (đọc trong lambda AddDbContext) → PR lên main ngay |
-| D27 chưa chốt | Uploader ảnh (upload qua API) không hiển thị | Tạm presigned tự động trong code; 100 ảnh seed đã hiển thị static path; chốt nhóm trước G4 |
-| D23 chưa chốt queue | Resize (D2) trễ | Dùng `BackgroundService` tối giản tạm nếu cần minh chứng, đổi Hangfire khi thống nhất |
+| ~~D27 chưa chốt~~ | ~~Uploader ảnh không hiển thị~~ | ✅ **Chốt 27/09 — PA-2 proxy** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); FE TV3 chỉ set `NEXT_PUBLIC_MEDIA_URL`; làm proxy D27 |
+| ~~D23 chưa chốt queue~~ | ~~Resize (D2) trễ~~ | ✅ **Chốt 27/09 — PA-1 Hangfire** (`DE_XUAT_GIAI_QUYET_D23_D27.md`); thực hiện D2 resize |
+| D27 proxy qua API có thể tăng tải/đi qua app | Bandwidth/token khi phục vụ ảnh | Cache-Control hợp lý (Published cache); cân nhắc Nginx route thẳng MinIO sau khi chốt vị trí proxy với TV1 |
 | PR #14 đã merge nhầm gây xung đột docs/số liệu | Doc nhầm trạng thái | Rà soát diff, note rõ trong sổ evidence; đưa vào báo cáo nhóm |
 
 ---
@@ -205,9 +213,9 @@
 1. ✅ Fix duplicate migration `RefreshTokens` — **đã xong** (main `a651c8a`); CI branch tuần 3 success (`818522b`).
 2. ✅ Merge main mới (deploy Render/100 ảnh/UI) — đã merge + fix connection string lazy `4830e57`.
 3. **PR `4830e57` lên main** (CI main 6 commit mới có thể dính 28P01).
-4. Xác nhận với nhóm: giữ PR #14 trên main? D27 bucket? D23 queue?
+4. ✅ Chốt D27 (PA-2 proxy) + D23 (PA-1 Hangfire) — **27/09** theo `DE_XUAT_GIAI_QUYET_D23_D27.md`; ghi ADR.
 5. Archive/delete CQRS + invalidation + test.
 6. E2E D1.3 trên MinIO + D1.1c MinIO down/log redacted.
-7. Presigned/proxy hiển thị ảnh upload qua API → uploader UI + status buttons (ghép TV3 C4).
+7. **Proxy ảnh D27** (`/resources/images/{key}`) → uploader UI + status buttons (ghép TV3 C4; FE set `NEXT_PUBLIC_MEDIA_URL`).
 8. Sitemap/robots/JSON-LD + OTEL/metrics/health.
-9. Resize job (tuỳ D23) + lab L4 + sổ evidence K.
+9. **Resize job (Hangfire — D23 chốt)** + lab L4 + sổ evidence K.
