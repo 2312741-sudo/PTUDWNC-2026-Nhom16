@@ -242,7 +242,7 @@ export default function DashboardRecipesPage() {
                             Xem
                           </Link>
                         )}
-                        <Link href={`/dashboard/recipes/${r.id}/edit`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
+                        <Link href={`/dashboard/recipes/${r.id}/edit?slug=${encodeURIComponent(r.slug)}`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
                           Sửa
                         </Link>
                         <button
