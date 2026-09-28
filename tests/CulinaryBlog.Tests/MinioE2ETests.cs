@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using CulinaryBlog.API;
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
@@ -24,22 +25,20 @@ public sealed class ApiFactoryWithMinio : WebApplicationFactory<Program>
     private static readonly object MigrationLock = new();
     private static bool migrated;
 
-    public static string MinioEndpoint =
-        Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "127.0.0.1:9000";
-    public static string MinioAccess =
-        Environment.GetEnvironmentVariable("MINIO_ACCESS") ?? "minioadmin";
-    public static string MinioSecret =
-        Environment.GetEnvironmentVariable("MINIO_SECRET") ?? "minioadmin";
-    public static string MinioBucket =
-        Environment.GetEnvironmentVariable("MINIO_BUCKET") ?? "culinary-blog";
+    // Đọc qua EnvFileLoader.Get để .env của máy được nạp trước, rồi mới đọc biến môi trường.
+    // Default trùng với docker-compose.dev.yml để máy mới clone không cần .env vẫn chạy được.
+    public static string MinioEndpoint = EnvFileLoader.Get("MINIO_ENDPOINT", "127.0.0.1:9000");
+    public static string MinioAccess = EnvFileLoader.Get("MINIO_ACCESS", "minioadmin");
+    public static string MinioSecret = EnvFileLoader.Get("MINIO_SECRET", "minioadmin");
+    public static string MinioBucket = EnvFileLoader.Get("MINIO_BUCKET", "culinary-blog");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE")
-                ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=admin123",
+            ["ConnectionStrings:Database"] = EnvFileLoader.Get("TEST_DATABASE",
+                "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres"),
             ["Jwt:SigningKey"] = new string('t', 64),
             ["Minio:Endpoint"] = MinioEndpoint,
             ["Minio:AccessKey"] = MinioAccess,

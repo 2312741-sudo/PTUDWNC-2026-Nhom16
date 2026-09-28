@@ -33,17 +33,21 @@ giữ default `AccessKey = ""`, `SecretKey = ""` (`src/backend/CulinaryBlog.Infr
 
 ### 2.1 Phát hiện thêm: cùng lớp bug, khác biến — mật khẩu PostgreSQL
 
-`appsettings.Development.json` cũng khai `Password=postgres`, trong khi `docker-compose.dev.yml:20`
-dùng `${POSTGRES_PASSWORD:-admin123}`. Hai file mâu thuẫn nhau ⇒ máy mới clone repo chạy
-`dotnet run` sẽ gặp `28P01` ở mọi endpoint cần DB (register/login/recipe), **trước cả** khi tới
+**Tình trạng gốc (đã xử lý xong, xem 3.1b):** `appsettings.Development.json` khai `Password=postgres`, trong khi
+`docker-compose.dev.yml:20` dùng `${POSTGRES_PASSWORD:-admin123}`. Hai file mâu thuẫn nhau ⇒ máy mới clone repo
+chạy `dotnet run` sẽ gặp `28P01` ở mọi endpoint cần DB (register/login/recipe), **trước cả** khi tới
 bước upload ảnh. Đây là lý do báo cáo gốc buộc phải export `ConnectionStrings__Database` mới chạy
 được — tức là "cấu hình chuẩn của repo" và "cấu hình app thật" không khớp.
+
+**Cách đã chọn để gỡ:** đưa **cả hai về cùng một default chuẩn `postgres`**, rồi để giá trị thật của từng
+máy nằm ở `.env` (gitignored) và được loader nạp tự động. Chi tiết ở
+[`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
 
 ### 2.2 Vì sao test backend vẫn xanh (điểm cốt lõi của câu hỏi "test riêng thì ổn")
 
 | Tầng | Nguồn credential | Vì sao không bắt được bug |
 |---|---|---|
-| Test `AuthTests`/`Recipe*Tests` | `ApiFactoryWithMinio` nạp in-memory `Minio:AccessKey=minioadmin` (`tests/CulinaryBlog.Tests/MinioE2ETests.cs:44-48`) và `ConnectionStrings:Database` mặc định `admin123` (`AuthTests.cs:36`) | Test **không** đọc `appsettings.Development.json` ⇒ cấu hình dev lệch hoàn toàn mà test vẫn xanh |
+| Test `AuthTests`/`Recipe*Tests` | `ApiFactoryWithMinio` nạp in-memory `Minio:AccessKey=minioadmin` (`tests/CulinaryBlog.Tests/MinioE2ETests.cs:44-48`) và `ConnectionStrings:Database` mặc định `postgres` (`AuthTests.cs`) | Test **không** đọc `appsettings.Development.json` ⇒ cấu hình dev lệch hoàn toàn mà test vẫn xanh |
 | Test storage (`MinioE2ETests`…) | Tự nạp credential, và nếu storage down thì **`return` (skip im lặng)** | Lỗi cấu hình ≠ storage down ⇒ không vào nhánh skip |
 | FE | `NEXT_PUBLIC_API_URL` mặc định `http://localhost:5080/api/v1`, upload đúng multipart | Không liên quan cấu hình storage |
 
@@ -57,10 +61,9 @@ nạp cấu hình của riêng nó, không ai kiểm tra cấu hình mà app th�
 ### 3.1 `src/backend/CulinaryBlog.API/appsettings.Development.json` (file dev-only)
 
 ```diff
-   "ConnectionStrings": {
--    "Database": "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=postgres"
-+    "Database": "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
-   },
+    "ConnectionStrings": {
+      "Database": "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=postgres"
+    },
 +  "Minio": {
 +    "Endpoint": "localhost:9000",
 +    "Bucket": "culinary-blog",
@@ -71,11 +74,33 @@ nạp cấu hình của riêng nó, không ai kiểm tra cấu hình mà app th�
 ```
 
 Giá trị lấy đúng từ `docker-compose.dev.yml:48-49` (`RUSTFS_ACCESS_KEY`/`RUSTFS_SECRET_KEY`) và
-`.env.example:7` (mật khẩu DB). Đây là **cùng bộ credential dev đã nằm sẵn trong repo** ở
+`.env.example` (mật khẩu DB). Đây là **cùng bộ credential dev đã nằm sẵn trong repo** ở
 `docker-compose.dev.yml` — không thêm bí mật mới, và **không** đụng `appsettings.json` (file này
 đọc ở production nên không được đặt credential dev vào).
 
 Sau khi sửa, `dotnet run` trên máy mới hoạt động **không cần** export biến môi trường nào.
+
+### 3.1b Bổ sung lần 2 (28/09/2026): default chuẩn + `.env` override — gỡ block B3
+
+Bản sửa đầu tiên đặt `Password=admin123` trong `appsettings.Development.json` để "khớp với compose".
+Cách đó **vẫn để lại mâu thuẫn**: file đã commit chứa mật khẩu của riêng một máy, và máy khác clone
+repo về vẫn phải sửa file đã commit. Lần này đảo ngược hướng:
+
+| Tầng | File | Giá trị | Thay đổi |
+|---|---|---|:---:|
+| Default trong repo | `appsettings.Development.json` | `Password=postgres` | 🆕 (trước: `admin123`) |
+| Default trong repo | `docker-compose.dev.yml` | `${POSTGRES_PASSWORD:-postgres}` | 🆕 (trước: `admin123`) |
+| Default trong repo | `.env.example` | mô hình default/override | 🆕 |
+| **Thật của máy** | `.env` ở thư mục gốc (**gitignored**) | `Password=admin123` | 🆕 |
+| Loader | `src/backend/CulinaryBlog.API/EnvFileLoader.cs` | nạp `.env` trước `CreateBuilder` | 🆕 |
+
+Lý do phải có `.env`: volume `culinaryblog_pg_data` của máy TV4 đã được khởi tạo với `admin123`
+từ trước; `POSTGRES_PASSWORD` chỉ có tác dụng lúc init volume lần đầu. Xem
+`docs/HUONG_DAN_CHAY_TV4.md` mục 2 (lỗi B) và mục 5.
+
+Bằng chứng loader có tác dụng: tạm đổi tên `.env` ⇒ API rơi về default `postgres` ⇒ log
+`28P01 password authentication failed for user "postgres"`; khôi phục `.env` ⇒ `/health/ready` = `200`.
+Chi tiết đầy đủ ở [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.4.
 
 ### 3.2 `tests/CulinaryBlog.Tests/DevConfigParityTests.cs` (test chống tái diễn)
 
@@ -134,14 +159,37 @@ GET /api/v1/resources/images/{thumbUrl}  -> 200
 
 ### 4.4 Hồi quy
 
+Chạy lại **sau lần sửa thứ 2** (thêm `DotNetEnv` + đổi mô hình default/`.env`), ngày 28/09/2026:
+
 ```
 dotnet build CulinaryBlog.sln -c Release   -> Build succeeded, 0 Warning, 0 Error
 dotnet format --verify-no-changes          -> không đổi (sạch)
 dotnet test CulinaryBlog.sln -c Release    -> 157/157 pass, Skipped=0   (154 cũ + 3 mới)
                                                5/5   pass, Skipped=0   (ConcurrencySpike)
+docker compose config --quiet              -> exit 0
+git diff --check                           -> sạch (không lỗi whitespace)
+```
+
+Bộ test tích hợp FE+BE (chạy qua API thật, cấu hình lấy từ `.env`):
+
+```
+QA flow 41/41 PASS, 0 FAIL
+  A01-A06 auth · B01-B03 categories · C01-C07 recipe + reorder
+  D01-D07 upload/proxy/validate  · E01-E08 publish + public
+  F01-F05 concurrency + soft-delete · G01-G03 refresh/logout · H01-H02 openapi/scalar
+```
+
+Frontend:
+
+```
+npx tsc --noEmit  -> exit 0
+npm run build     -> exit 0, 17 route (15 static + dynamic)
 ```
 
 > `157` = `154` test cũ + `3` test `DevConfigParityTests` mới. Không sửa test cũ, không xoá test nào.
+>
+> `DevConfigParityTests` **bắt được** hồi quy khi cấu hình lệch: tạm đổi default trong
+> `docker-compose.dev.yml` về `admin123` → `1 FAIL`; trả lại `postgres` → `3/3 PASS`.
 
 ---
 
@@ -161,14 +209,21 @@ NEXT_PUBLIC_MEDIA_URL"* — tức **không** hiện ảnh. Đã sửa hướng d
 Sáu hạng mục cải thiện còn lại (kể cả 4/6 mục trong §6 của báo cáo gốc) **không tự sửa** vì đụng
 quyết định nhóm/contract. Xem [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md).
 
+**Cập nhật 28/09/2026:** **B3 đã gỡ** (thêm `DotNetEnv` + `EnvFileLoader`) — xem §3.1b và
+[`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8. Còn lại **B1, B2, B4, B5, B6**
+vẫn chờ quyết định nhóm.
+
 ## 7. Tài liệu tham chiếu
 
 | File | Vai trò |
 |---|---|
 | `src/backend/CulinaryBlog.API/appsettings.Development.json` | file sửa (cấu hình dev) |
+| `src/backend/CulinaryBlog.API/EnvFileLoader.cs` | loader `.env` (B3) |
+| `src/backend/CulinaryBlog.API/Program.cs:31` | gọi `EnvFileLoader.Load()` trước `CreateBuilder` |
+| `.env.example` / `.env` / `.gitignore` / `.dockerignore` | mô hình default + override |
 | `tests/CulinaryBlog.Tests/DevConfigParityTests.cs` | test chống tái diễn |
 | `docker-compose.dev.yml:20,48-49` | nguồn sự thật cho credential dev |
 | `src/backend/CulinaryBlog.Infrastructure/MinioOptions.cs:6-7` | default rỗng = gốc rễ |
 | `src/backend/CulinaryBlog.API/ApiExceptionHandler.cs:29-32` | nhánh generic sinh 500 |
-| `docs/HUONG_DAN_CHAY_TV4.md` | hướng dẫn TV4 (đã sửa L9) |
+| `docs/HUONG_DAN_CHAY_TV4.md` | hướng dẫn TV4 (đã sửa L9 + mô hình `.env`) |
 | `TEST_CASE_TICH_HOP_FE_BE.md` | bộ test case dùng để tái hiện & soát |

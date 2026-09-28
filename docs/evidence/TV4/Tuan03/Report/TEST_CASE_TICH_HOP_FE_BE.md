@@ -160,17 +160,22 @@ credential sai** vì chỉ là TCP probe ⇒ **không dùng `/health` để kế
 | # | Vấn đề | Mức | Trạng thái |
 |---|---|---|---|
 | 1 | `POST /recipes/{id}/images` → **500 `server.error`** vì thiếu `Minio:*` trong `appsettings.Development.json` | **Blocker** | ✅ **Đã sửa** + test `DevConfigParityTests` |
-| 2 | Mật khẩu DB trong `appsettings.Development.json` (`postgres`) lệch `docker-compose.dev.yml` (`admin123`) → `28P01` mọi endpoint cần DB | **Blocker** | ✅ **Đã sửa** + test parity |
+| 2 | Mật khẩu DB trong `appsettings.Development.json` (`postgres`) lệch `docker-compose.dev.yml` (`admin123`) → `28P01` mọi endpoint cần DB | **Blocker** | ✅ **Đã sửa** (cả hai về default `postgres`) + test parity |
 | 3 | Hướng dẫn bảo để trống `NEXT_PUBLIC_MEDIA_URL` — thực tế UI **không** hiện ảnh | Trung bình | ✅ Đã sửa `HUONG_DAN_CHAY_TV4.md` |
 | 4 | Xem ảnh recipe **Draft** trong wizard: `<img>` không gửi Bearer ⇒ proxy `403` | Trung bình | ⛔ Block 05 (cần quyết định) |
 | 5 | Storage hỏng/credential sai vẫn trả `500` chung chung, không phân biệt lỗi hạ tầng | Trung bình | ⛔ Block 01 |
 | 6 | Thiếu credential ⇒ API vẫn khởi động "thành công", lỗi lộ ra lúc user bấm nút | Trung bình | ⛔ Block 02 |
-| 7 | `.env.example` liệt kê `Minio__*` nhưng app **không** nạp `.env` | Thấp | ⛔ Block 03 |
+| 7 | `.env.example` liệt kê `Minio__*` nhưng app **không** nạp `.env` | Thấp | ✅ **Block 03 đã gỡ** (thêm `DotNetEnv` + `EnvFileLoader`) |
 | 8 | `/health` kiểm storage bằng TCP ⇒ báo Healthy khi sai credential | Thấp | ⛔ Block 04 |
 | 9 | Không có user Admin ⇒ không ai test được `/hangfire` và CRUD category | Thấp | ⛔ Block 06 |
 
 Không phát hiện lỗi nào ở luồng auth, concurrency (RowVersion), soft-delete, proxy quyền truy cập
 ảnh, hay job resize — 41/41 PASS.
+
+> **Lưu ý khi chạy lại (sau 28/09/2026):** script QA và API giờ đọc `.env` ở thư mục gốc.
+> Trên máy có volume `culinaryblog_pg_data` cũ (`admin123`) thì **phải có `.env`**, nếu không app rơi
+> về default `postgres` và mọi case cần DB sẽ `FAIL` với `28P01`. Trên máy mới clone (volume mới) thì
+> chạy được ngay mà không cần `.env`. Chi tiết: [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
 
 ## 10. Cách chạy lại nhanh (không cần viết script tay)
 

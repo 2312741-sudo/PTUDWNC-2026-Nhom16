@@ -1,9 +1,9 @@
 # Hướng dẫn cài đặt & chạy ứng dụng — riêng TV4 (Nguyễn Hữu Trung Sơn)
 
 > **Vì sao cần file này?** `README.md` mục 5 viết cho **bash** (`export ...`) và giả định
-> PostgreSQL của container **vừa được tạo** (password `admin123`).
+> PostgreSQL của container **vừa được tạo** (với mật khẩu mặc định `postgres`).
 > Trên máy TV4 (Windows + **PowerShell 5.1**) và với volume `pgdata` đã tạo từ trước
-> (khi `docker-compose.dev.yml` còn dùng image MinIO / password khác), các lệnh đó **không chạy được**.
+> (khi `docker-compose.dev.yml` còn dùng image MinIO / password `admin123`), các lệnh đó **không chạy được**.
 > File này ghi đúng thứ tự thao tác trên máy TV4, mọi lệnh dưới đây **đã chạy thật và kiểm chứng** ngày 28/09/2026.
 >
 > Liên quan: `README.md` §5, `docs/HUONG_DAN_TEST_APP.md`,
@@ -11,36 +11,58 @@
 
 ---
 
-## 0. TL;DR — copy-paste toàn bộ (PowerShell)
+## 0. Mô hình cấu hình (đọc trước khi làm gì cả)
+
+| Tầng | Ở đâu | Có commit? | Vai trò |
+|---|---|:---:|---|
+| **Default** | `src/backend/CulinaryBlog.API/appsettings*.json`, `docker-compose.dev.yml` | ✅ | Giá trị **chuẩn** để máy mới clone chạy được ngay, không cần làm gì thêm |
+| **Giá trị thật của máy** | `.env` ở thư mục gốc | ❌ (`.gitignore`) | **Override** default. Tạo bằng `cp .env.example .env` |
+| **Mẫu** | `.env.example` | ✅ | Chỉ là template, **không** chứa giá trị thật |
+
+Cả hai tầng **đều được đọc**:
+
+- `docker compose` tự nạp `.env` cho biến `${VAR:-default}`.
+- API + test đọc `.env` qua `EnvFileLoader` (`src/backend/CulinaryBlog.API/EnvFileLoader.cs`).
+  Bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`; biến đã export sẵn trong shell/CI **luôn thắng** `.env`.
+
+> Default PostgreSQL trong repo là **`postgres`** (chuẩn PostgreSQL). Máy TV4 dùng volume cũ
+> nên `.env` của TV4 để `admin123` — đây là lý do phải có `.env`, không sửa file đã commit.
+
+---
+
+## 0.1. TL;DR — copy-paste toàn bộ (PowerShell)
 
 ```powershell
 # 0) Chuyển tới repo
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
 
-# 1) Bật hạ tầng Docker (Postgres, Redis, RustFS, Mailhog, Seq, Nginx)
+# 1) Tạo .env cho máy này (copy từ mẫu, KHÔNG commit)
+Copy-Item .env.example .env
+#    -> sửa .env: POSTGRES_PASSWORD + ConnectionStrings__Database + TEST_DATABASE
+#       cùng dùng MỘT mật khẩu. Máy TV4 giữ admin123 (volume cũ).
+
+# 2) Bật hạ tầng Docker (Postgres, Redis, RustFS, Mailhog, Seq, Nginx)
 docker compose -f docker-compose.dev.yml up -d
 
-# 2) Đặt lại password Postgres về admin123 (chỉ cần khi gặp 28P01 - xem mục 3)
+# 3) Đặt lại password Postgres cho khớp .env (chỉ cần khi gặp 28P01 - xem mục 3)
 docker exec culinaryblog-pg psql -U postgres -c "ALTER USER postgres PASSWORD 'admin123';"
 
-# 3) Biến môi trường cho backend + test (PowerShell dùng $env:, KHÔNG dùng export)
-$env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
-$env:Jwt__SigningKey            = "tv4_local_jwt_signing_key_super_secret_at_least_64_characters_long_0123456789"
-$env:ASPNETCORE_ENVIRONMENT    = "Development"
-$env:TEST_DATABASE              = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
-
-# 4) Backend: restore -> migrate -> chạy API ở cổng 5080
+# 4) Backend: restore -> migrate -> chạy API ở cổng 5080 (.env được nạp tự động)
 dotnet restore CulinaryBlog.sln --locked-mode
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
 dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
 
 # 5) Mở cửa sổ PowerShell THỨ HAI cho frontend (giữ nguyên cửa sổ API đang chạy)
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
+Copy-Item ..\..\.env.example .env.local   # rồi sửa .env.local phần Frontend ở cuối file
 npm install
 npm run dev
 ```
 
 Sau khi chạy xong: **http://localhost:3000** · API docs **http://localhost:5080/scalar/v1**
+
+> **Không còn phải `export` gì cho API.** Nếu vẫn muốn override trong 1 phiên shell thì dùng
+> `$env:TEN = "gia tri"` (PowerShell) — biến đó thắng `.env`.
 
 ---
 
@@ -64,13 +86,13 @@ Ba nguyên nhân độc lập, cần loại trừ theo thứ tự:
 
 | # | Triệu chứng | Nguyên nhân | Lệnh kiểm tra |
 |---|---|---|---|
-| A | `$env:ConnectionStrings__Database = ...` chạy xong nhưng app vẫn lỗi kết nối | `README.md` dùng cú pháp **bash `export`**; PowerShell hiểu `export` là lệnh *khác* nên biến không được set | `echo $env:ConnectionStrings__Database` |
-| B | `28P01 password authentication failed for user "postgres"` dù `.env`/compose đã để `admin123` | `POSTGRES_PASSWORD` **chỉ được dùng lúc khởi tạo volume lần đầu**. Volume `pgdata` đã tạo từ trước (khi còn dùng image MinIO) nên đổi biến môi trường **không có tác dụng** — mật khẩu nằm trong volume | `docker exec culinaryblog-pg psql -U postgres -tAc "select rolpassword from pg_authid where rolname='postgres'"` |
+| A | `$env:ConnectionStrings__Database = ...` chạy xong nhưng app vẫn lỗi kết nối | `README.md` (bản cũ) dùng cú pháp **bash `export`**; PowerShell hiểu `export` là lệnh *khác* nên biến không được set | `echo $env:ConnectionStrings__Database` |
+| B | `28P01 password authentication failed for user "postgres"` dù `.env`/compose đã để `admin123` | `POSTGRES_PASSWORD` **chỉ được dùng lúc khởi tạo volume lần đầu**. Volume `pgdata` của TV4 đã tạo từ trước (khi còn dùng image MinIO) với `admin123`, còn default mới trong repo là `postgres` ⇒ hai bên lệch nhau | `docker exec culinaryblog-pg psql -U postgres -tAc "select rolpassword from pg_authid where rolname='postgres'"` |
 | C | `42P03 database "culinary_blog" does not exist` | Database chưa được tạo (EF tự tạo ở lần `--migrate` đầu tiên, nếu user có quyền `CREATEDB`) | `docker exec culinaryblog-pg psql -U postgres -tAc "select datname from pg_database where datistemplate=false"` |
 
 > **Bĩ quán:** chọn **một** mật khẩu duy nhất rồi dùng ở **cả 3 nơi**:
-> (1) PostgreSQL thật, (2) `$env:ConnectionStrings__Database` cho API, (3) `$env:TEST_DATABASE` cho test.
-> Lệch 1 chỗ là `28P01`.
+> (1) PostgreSQL thật, (2) `ConnectionStrings__Database` trong `.env` cho API, (3) `TEST_DATABASE` trong `.env` cho test.
+> Lệch 1 chỗ là `28P01`. Cả 3 biến nằm trong `.env` ở gốc repo — sửa một lần là xong.
 
 ---
 
@@ -118,39 +140,46 @@ Nếu container `Up` nhưng `unhealthy`, xem mục 9 (L4).
 
 ## 5. Bước 2 — Chọn một trong hai cách xử lý mật khẩu
 
-### Cách A (khuyến nghị) — đặt lại mật khẩu trong volume cũ về `admin123`
+> Mọi cách dưới đây đều ghi vào **`.env`** (không sửa file đã commit). Sửa `.env` xong thì
+> `docker compose` và API đều tự đọc, **không** cần `export`.
 
-Giữ nguyên `README.md`, `docker-compose.dev.yml`, `.env.example` không phải sửa gì.
-Lệnh dưới đây **đã kiểm chứng** (chạy qua socket nội bộ `trust` nên không cần mật khẩu cũ):
+### Cách A (khuyến nghị cho máy có volume cũ) — giữ `admin123`, khai trong `.env`
+
+Volume `pgdata` của TV4 đã tạo từ trước với mật khẩu `admin123`, trong khi default mới trong repo là
+`postgres`. Cách ít rủi ro nhất là **giữ nguyên volume** và khai `admin123` trong `.env`:
 
 ```powershell
-docker exec culinaryblog-pg psql -U postgres -c "ALTER USER postgres PASSWORD 'admin123';"
+# .env — 3 dòng này phải cùng một mật khẩu
+POSTGRES_PASSWORD=admin123
+ConnectionStrings__Database=Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123
+TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123
 ```
 
 Xác minh bằng lệnh 3.2 ở mục 3 (phải ra `1`).
+
+Nếu volume của bạn **rỗng/mới**, dùng default `postgres` thì bỏ mục này, copy `.env.example` là xong.
 
 > 💡 Còn một cách nữa là xoá volume cho sạch:
 > `docker compose -f docker-compose.dev.yml down -v` rồi `up -d`.
 > **Không dùng nếu bạn còn dữ liệu dev** — lệnh này xoá **cả** `pgdata`, `s3data` (ảnh recipe), `redisdata`.
 
-### Cách B — giữ mật khẩu PostgreSQL của riêng bạn
+### Cách B — đặt mật khẩu PostgreSQL của riêng bạn về mặc định `postgres`
 
-Đặt **cùng một mật khẩu** ở cả 3 nơi, không sửa file đã commit:
+Sửa `.env` thành `postgres` cho cả 3 biến, rồi đặt lại mật khẩu trong volume:
 
 ```powershell
-# (1) PostgreSQL thật (nếu bạn dùng PostgreSQL native cài trên Windows, BỎ QUA container
-#     culinaryblog-pg để khỏi tranh cổng 5432 — xem mục 9, lỗi L3)
-$env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
-$env:TEST_DATABASE               = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+# (1) Nếu bạn dùng PostgreSQL native cài trên Windows, BỎ QUA container culinaryblog-pg
+#     để khỏi tranh cổng 5432 — xem mục 9, lỗi L3
+#
+# (2) Sửa .env: POSTGRES_PASSWORD / ConnectionStrings__Database / TEST_DATABASE = postgres
 
-# (2) Nếu vẫn dùng container: đặt mật khẩu trong compose qua biến môi trường, rồi tạo lại container
-$env:POSTGRES_PASSWORD = "<MAT_KHAU_CUA_BAN>"
+# (3) Đặt mật khẩu trong volume cho khớp (chạy qua socket nội bộ trust nên không cần mật khẩu cũ)
+docker exec culinaryblog-pg psql -U postgres -c "ALTER USER postgres PASSWORD 'postgres';"
 docker compose -f docker-compose.dev.yml up -d --force-recreate postgres
-# LƯU Ý: nếu volume đã tồn tại thì biến này vẫn không có tác dụng → dùng Cách A
 ```
 
-Sau khi đặt xong, **giữ các biến đó trong cửa sổ PowerShell** khi chạy app và test
-(biến chỉ sống trong phiên hiện tại; muốn giữ lâu dài thì dùng `[Environment]::SetEnvironmentVariable(...)`).
+> ⚠️ Biến trong shell (đã `export`/`$env:`) **thắng** `.env`. Nếu từng set rồi quên xoá thì app vẫn
+> dùng giá trị cũ. Kiểm tra bằng `echo $env:ConnectionStrings__Database`, xoá bằng `Remove-Item Env:ConnectionStrings__Database`.
 
 ---
 
@@ -162,10 +191,10 @@ Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
 # 1) Khôi phục package đúng phiên bản đã khoá (CI cũng chạy lệnh này)
 dotnet restore CulinaryBlog.sln --locked-mode
 
-# 2) Biến môi trường (PowerShell — không dùng export)
-$env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
-$env:Jwt__SigningKey            = "tv4_local_jwt_signing_key_super_secret_at_least_64_characters_long_0123456789"
-$env:ASPNETCORE_ENVIRONMENT    = "Development"
+# 2) Cấu hình: .env đã tự được nạp bởi EnvFileLoader (mục 0).
+#    Muốn override trong 1 phiên shell thì dùng $env: (PowerShell), KHÔNG dùng export.
+#    $env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=..."
+#    $env:Jwt__SigningKey            = "chuoi_ky_ban >= 64 bytes"
 
 # 3) Áp dụng migration (tự tạo DB `culinary_blog` nếu chưa có)
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
@@ -192,17 +221,25 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 
 ```powershell
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
+
+# Next.js KHÔNG đọc .env ở thư mục gốc — cần .env.local riêng cho frontend
+Copy-Item ..\..\.env.example .env.local
+# Trong .env.local, sửa khối "Frontend" cuối file:
+#   NEXT_PUBLIC_API_URL=http://localhost:5080/api/v1
+#   NEXT_PUBLIC_MEDIA_URL=http://localhost:5080/api/v1/resources/images
+#   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
 npm install
 npm run dev
 ```
 
-Mở **http://localhost:3000**. Frontend tự lấy API từ `http://localhost:5080/api/v1`
-(nếu không đặt `NEXT_PUBLIC_API_URL`). Các biến tuỳ chọn:
+Mở **http://localhost:3000**. `NEXT_PUBLIC_API_URL` có sẵn default trong code
+(`http://localhost:5080/api/v1`) nên API vẫn chạy được ngay cả khi thiếu `.env.local`. Các biến tuỳ chọn:
 
 | Biến | Mặc định | Công dụng |
 |---|---|---|
 | `NEXT_PUBLIC_API_URL` | `http://localhost:5080/api/v1` | Địa chỉ API |
-| `NEXT_PUBLIC_MEDIA_URL` | `http://localhost:5080/api/v1/resources/images` | Tiền tố URL ảnh (API trả `originalUrl`/`mediumUrl`/`thumbnailUrl` ở dạng **key**, ví dụ `recipes/{id}/{uuid}_300x300.png` — không có host). **Để trống thì UI hiện ô "Chưa cấu hình NEXT_PUBLIC_MEDIA_URL" chứ không hiện ảnh.** Lưu ý: `<img>` không gửi header Bearer, nên xem trước ảnh của recipe **Draft** qua proxy sẽ 403 — xem `docs/evidence/TV4/Tuan03/Report/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md` |
+| `NEXT_PUBLIC_MEDIA_URL` | *(không có default trong code)* | Tiền tố URL ảnh (API trả `originalUrl`/`mediumUrl`/`thumbnailUrl` ở dạng **key**, ví dụ `recipes/{id}/{uuid}_300x300.png` — không có host). **Để trống thì UI hiện ô "Chưa cấu hình NEXT_PUBLIC_MEDIA_URL" chứ không hiện ảnh** ⇒ phải khai trong `src/frontend/.env.local`. Lưu ý: `<img>` không gửi header Bearer, nên xem trước ảnh của recipe **Draft** qua proxy sẽ 403 — xem `docs/evidence/TV4/Tuan03/Report/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md` |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Site URL cho canonical/OG/sitemap (D4/D26) |
 
 ---
@@ -212,7 +249,9 @@ Mở **http://localhost:3000**. Frontend tự lấy API từ `http://localhost:5
 ```powershell
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
 
-$env:TEST_DATABASE = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+# TEST_DATABASE lấy từ .env (EnvFileLoader nạp sẵn). Không có .env thì test tự dùng
+# default khớp docker-compose.dev.yml (Username=postgres;Password=postgres).
+# $env:TEST_DATABASE = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=..."
 
 # Kiểm tra mã + định dạng (giống hệt CI)
 dotnet build CulinaryBlog.sln --configuration Release
@@ -251,6 +290,8 @@ git switch practice/TV4/L4
 docker run -d --name lab-mailhog -p 1025:1025 -p 8025:8025 mailhog/mailhog:v1.0.1
 
 # Biến môi trường cho lab
+# LƯU Ý: lab nằm ở nhánh practice/TV4/L4 — nhánh đó CHƯA có EnvFileLoader,
+# nên vẫn phải set thủ công (API ở nhánh chính thì đọc .env rồi, mục 0).
 $env:TEST_DATABASE      = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
 $env:Minio__Endpoint    = "127.0.0.1:9000"
 $env:Minio__AccessKey   = "minioadmin"
@@ -293,7 +334,8 @@ dotnet test CulinaryBlog.sln                                                  # 
 | L3 | `Failed to bind to address http://127.0.0.1:5432: address already in use` | Đã có PostgreSQL native trên Windows chiếm cổng | `Get-NetTCPConnection -LocalPort 5432 -State Listen` để xem; hoặc đổi cổng publish trong compose và sửa connection string cho khớp |
 | L4 | `culinaryblog-pg` hoặc `culinaryblog-s3` `unhealthy` | Healthcheck sai/chưa sẵn sàng | `docker compose -f docker-compose.dev.yml logs --tail 50 s3`; RustFS health là `/health` (**không** phải `/minio/health/live`) |
 | L5 | `42P03 database "culinary_blog" does not exist` | Chưa migrate | `dotnet run --project src/backend/CulinaryBlog.API -- --migrate` |
-| L6 | Test đỏ hàng loạt với `Npgsql.PostgresException` | Thiếu `$env:TEST_DATABASE` | Mục 8; nhớ set trong **đúng cửa sổ** đang chạy test |
+| L6 | Test đỏ hàng loạt với `Npgsql.PostgresException` | `TEST_DATABASE` sai hoặc lệch với mật khẩu DB thật | Sửa `TEST_DATABASE` trong `.env` (mục 8). Nhớ `.env` chỉ nạp 1 lần mỗi tiến trình — sửa xong phải chạy lại `dotnet test` |
+| L6b | Sửa `.env` xong mà app vẫn dùng giá trị cũ | Biến đã `export`/`$env:` trong shell **thắng** `.env` | `echo $env:ConnectionStrings__Database`; xoá bằng `Remove-Item Env:ConnectionStrings__Database` (mục 5 Cách B) |
 | L7 | `next build` báo `Dynamic server usage: Route /sitemap.xml` | Cố tĩnh pre-render sitemap khi backend chưa chạy | Đã xử lý bằng `export const dynamic = 'force-dynamic'` trong `src/frontend/src/app/sitemap.ts` — build vẫn exit 0 |
 | L8 | `next lint` mở prompt hỏi cấu hình ESLint | Repo **chưa** có cấu hình ESLint | Không phải lỗi; kiểm tra FE bằng `npx tsc --noEmit` + `npm run build` |
 | L9 | Ảnh recipe không hiện | `NEXT_PUBLIC_MEDIA_URL` sai hoặc để trống; hoặc dùng nhầm URL gốc của object storage | Đặt `NEXT_PUBLIC_MEDIA_URL=http://localhost:5080/api/v1/resources/images` (xem `docs/IMAGE_CONTRACT.md` §5). Ảnh recipe **Draft** vẫn 403 vì `<img>` không gửi Bearer — xem `docs/evidence/TV4/Tuan03/Report/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md` |
@@ -310,14 +352,15 @@ dotnet test CulinaryBlog.sln                                                  # 
 | `Remove-Item Env:FOO` | `unset FOO` |
 | `Get-NetTCPConnection -LocalPort 5432` | `ss -ltnp \| grep 5432` |
 
-Biến dùng trong toàn bộ hướng dẫn:
+Biến dùng trong toàn bộ hướng dẫn — **khai trong `.env` ở thư mục gốc** (trừ nhóm `NEXT_PUBLIC_*` khai trong `src/frontend/.env.local`):
 `ConnectionStrings__Database`, `Jwt__SigningKey`, `ASPNETCORE_ENVIRONMENT`, `TEST_DATABASE`,
-`POSTGRES_PASSWORD`, `Minio__Endpoint`, `Minio__AccessKey`, `Minio__SecretKey`, `Minio__Bucket`,
-`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_MEDIA_URL`, `NEXT_PUBLIC_SITE_URL`.
+`POSTGRES_PASSWORD`, `Minio__Endpoint`, `Minio__AccessKey`, `Minio__SecretKey`, `Minio__Bucket`.
 
-> 🔒 **Không commit secret.** Mật khẩu `admin123`/`minioadmin` ở trên là giá trị **dev-only**
-> (đã nằm sẵn trong `docker-compose.dev.yml` và `.env.example`). Production phải dùng
-> object storage **có license** — không dùng RustFS (xem `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md` §6).
+> 🔒 **Không commit secret.** `.env` đã nằm trong `.gitignore` **và** `.dockerignore` (nên không lọt vào
+> Docker image). Mật khẩu `admin123`/`minioadmin` ở trên là giá trị **dev-only** — trong repo chỉ còn
+> default `postgres`/`minioadmin` trong `appsettings.Development.json` và `docker-compose.dev.yml`.
+> Production phải dùng object storage **có license** — không dùng RustFS
+> (xem `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md` §6).
 
 ---
 

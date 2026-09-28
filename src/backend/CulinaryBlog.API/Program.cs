@@ -26,6 +26,10 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
 
+// Nạp .env (giá trị thật của máy) TRƯỚC khi dựng builder, vì CreateBuilder đọc biến môi trường.
+// Default nằm trong appsettings*.json; .env chỉ override, và bị bỏ qua khi Production.
+EnvFileLoader.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 var envPort = Environment.GetEnvironmentVariable("PORT");

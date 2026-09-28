@@ -204,8 +204,8 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 | **Redis 7** | `redis:7-alpine` | `6379` | Cache-aside, Rate Limiting & Blacklist |
 | **S3 Object Storage (RustFS)** | `rustfs/rustfs` | `9000` (API) / `9001` (Console) | Lưu trữ ảnh món ăn và avatar người dùng (thay image MinIO đã bị gỡ khỏi registry) |
 | **MailHog** | `mailhog/mailhog` | `1025` (SMTP) / `8025` (Web UI) | Máy chủ thử nghiệm gửi email chào mừng và thông báo |
-| **Seq** | `datalust/seq:latest` | `5341` | Máy chủ thu thập log tập trung có cấu trúc (Structured Logging) |
-| **Nginx** | `nginx:alpine` | `80` | Reverse proxy môi trường dev |
+| **Seq** | `datalust/seq:2026.1` | `5341` | Máy chủ thu thập log tập trung có cấu trúc (Structured Logging) |
+| **Nginx** | `nginx:1.27-alpine` | `8080` | Reverse proxy môi trường dev (publish `8080` → cổng `80` trong container) |
 
 ---
 
@@ -256,10 +256,8 @@ docker compose -f docker-compose.dev.yml ps
 # 1. Khôi phục dependencies theo locked-mode
 dotnet restore CulinaryBlog.sln --locked-mode
 
-# 2. Thiết lập biến môi trường kết nối (password admin123 khớp container compose)
-export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
-export Jwt__SigningKey="super_secret_jwt_signing_key_for_culinary_blog_min_64_bytes_long_string_12345"
-export ASPNETCORE_ENVIRONMENT=Development
+# 2. Tạo .env cho máy này (giá trị thật, KHÔNG commit)
+cp .env.example .env
 
 # 3. Áp dụng migration cơ sở dữ liệu
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
@@ -270,6 +268,10 @@ dotnet run --project src/backend/CulinaryBlog.API -- --seed
 # 5. Chạy Backend API server
 dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
 ```
+> Không cần `export` gì thêm: `EnvFileLoader` nạp `.env` tự động (bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`).
+> Không có `.env` thì app dùng default trong `appsettings.Development.json` (`Password=postgres`) — khớp default của `docker-compose.dev.yml`.
+> Muốn dùng JWT key riêng thì sửa `Jwt__SigningKey` trong `.env` (≥ 64 bytes).
+
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
 
 ### 5.4. Khởi động Frontend (Next.js 15)
@@ -293,23 +295,28 @@ npm run dev
 
 ### 5.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
-# Thiết lập chuỗi kết nối database test chuyên biệt (password admin123 khớp container compose)
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+# Chuỗi kết nối database test đọc từ TEST_DATABASE trong .env (đã tạo ở bước 2 mục 5.3).
+# Không có .env thì test tự dùng default khớp docker-compose.dev.yml (Password=postgres).
 
-# Chạy toàn bộ 90 tests trong solution
+# Chạy toàn bộ test trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 ```
 
 ### 5.6. Dành cho thành viên dùng PostgreSQL native
-Nếu máy đã có sẵn PostgreSQL cài trực tiếp (password khác `admin123`), **không sửa file cấu hình đã commit** — chỉ cần override bằng biến môi trường cục bộ:
+Mô hình cấu hình: **default trong repo, giá trị thật trong `.env`**. Nếu máy đã có sẵn PostgreSQL
+cài trực tiếp (hoặc đổi mật khẩu), **không sửa file cấu hình đã commit** — sửa `.env` của bạn:
 
 ```bash
-# API: trỏ về DB native của bạn
-export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+# Sửa .env: trỏ API về DB native của bạn
+ConnectionStrings__Database=Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>
 
-# Test: trỏ về DB test của bạn
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+# Sửa .env: trỏ test về DB test của bạn
+TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>
 ```
+
+> `docker compose` **tự** đọc `.env`; API và test đọc qua `EnvFileLoader`. Biến môi trường đã được
+> export sẵn trong shell/CI vẫn thắng `.env`.
+> Đổi `POSTGRES_PASSWORD` sau khi volume đã tạo **không** có tác dụng — xem ghi chú cuối `.env.example`.
 
 ---
 

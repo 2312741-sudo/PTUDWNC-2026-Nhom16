@@ -9,6 +9,17 @@
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026) — FR-FILE-001, FR-FILE-002, FR-RCP-008
 > **Reviewer theo contract**: TV3 (Recipe) — tích hợp editor ảnh D4/C4
 
+> ⚠️ **ĐÂY LÀ BÁO CÁO TRẠNG THÁI *TRƯỚC KHI SỬA*.** Toàn bộ mô tả bên dưới (kể cả "app không nạp
+> `.env`", "phải export biến thủ công", "giá trị mặc định trong compose") ghi lại **đúng trạng thái
+> ngày 28/09/2026 lúc phát hiện lỗi** và được giữ nguyên làm bằng chứng gốc — đừng dùng làm
+> hướng dẫn cấu hình hiện hành.
+>
+> **Trạng thái sau khi sửa:** xem [`BAO_CAO_LOI_UPLOAD_ANH_500_DA_SUA.md`](./BAO_CAO_LOI_UPLOAD_ANH_500_DA_SUA.md)
+> (§3.1 thêm section `Minio`, §3.1b đổi mô hình default + `.env`) và
+> [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md).
+> Riêng câu "app không nạp `.env`" **đã hết hiệu lực**: nhóm đã thêm `DotNetEnv` + `EnvFileLoader` —
+> xem [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
+
 ---
 
 ## 0. Tóm tắt một nén
