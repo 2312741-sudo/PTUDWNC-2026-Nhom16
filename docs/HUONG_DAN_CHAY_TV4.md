@@ -202,7 +202,7 @@ Mở **http://localhost:3000**. Frontend tự lấy API từ `http://localhost:5
 | Biến | Mặc định | Công dụng |
 |---|---|---|
 | `NEXT_PUBLIC_API_URL` | `http://localhost:5080/api/v1` | Địa chỉ API |
-| `NEXT_PUBLIC_MEDIA_URL` | *(trống)* | Tiền tố URL ảnh. **Để trống** thì ảnh đi qua proxy có auth `GET /api/v1/resources/images/{key}` (PA-2) — xem `docs/IMAGE_CONTRACT.md` §5 |
+| `NEXT_PUBLIC_MEDIA_URL` | `http://localhost:5080/api/v1/resources/images` | Tiền tố URL ảnh (API trả `originalUrl`/`mediumUrl`/`thumbnailUrl` ở dạng **key**, ví dụ `recipes/{id}/{uuid}_300x300.png` — không có host). **Để trống thì UI hiện ô "Chưa cấu hình NEXT_PUBLIC_MEDIA_URL" chứ không hiện ảnh.** Lưu ý: `<img>` không gửi header Bearer, nên xem trước ảnh của recipe **Draft** qua proxy sẽ 403 — xem `docs/evidence/TV4/Tuan03/Report/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md` |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Site URL cho canonical/OG/sitemap (D4/D26) |
 
 ---
@@ -296,7 +296,7 @@ dotnet test CulinaryBlog.sln                                                  # 
 | L6 | Test đỏ hàng loạt với `Npgsql.PostgresException` | Thiếu `$env:TEST_DATABASE` | Mục 8; nhớ set trong **đúng cửa sổ** đang chạy test |
 | L7 | `next build` báo `Dynamic server usage: Route /sitemap.xml` | Cố tĩnh pre-render sitemap khi backend chưa chạy | Đã xử lý bằng `export const dynamic = 'force-dynamic'` trong `src/frontend/src/app/sitemap.ts` — build vẫn exit 0 |
 | L8 | `next lint` mở prompt hỏi cấu hình ESLint | Repo **chưa** có cấu hình ESLint | Không phải lỗi; kiểm tra FE bằng `npx tsc --noEmit` + `npm run build` |
-| L9 | Ảnh recipe không hiện | `NEXT_PUBLIC_MEDIA_URL` sai, hoặc dùng nhầm URL gốc của object storage | Để `NEXT_PUBLIC_MEDIA_URL` **trống** để dùng proxy `GET /api/v1/resources/images/{key}` (xem `docs/IMAGE_CONTRACT.md` §5) |
+| L9 | Ảnh recipe không hiện | `NEXT_PUBLIC_MEDIA_URL` sai hoặc để trống; hoặc dùng nhầm URL gốc của object storage | Đặt `NEXT_PUBLIC_MEDIA_URL=http://localhost:5080/api/v1/resources/images` (xem `docs/IMAGE_CONTRACT.md` §5). Ảnh recipe **Draft** vẫn 403 vì `<img>` không gửi Bearer — xem `docs/evidence/TV4/Tuan03/Report/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md` |
 | L10 | `culinaryblog-seq` cứ `Restarting (1)`; log ghi `No default admin password was supplied` | Từ Seq 2026.1, lần chạy đầu **bắt buộc** có `SEQ_FIRSTRUN_ADMINPASSWORD` hoặc `SEQ_FIRSTRUN_NOAUTHENTICATION`; volume `seqdata` cũ chưa có cấu hình này | Compose đã đặt `SEQ_FIRSTRUN_NOAUTHENTICATION=true` và ghim tag `datalust/seq:2026.1`. Nếu container vẫn lỗi: xoá riêng volume seq rồi `up -d seq` → `docker volume rm <tên-thư-mục>_seqdata` |
 
 ---
