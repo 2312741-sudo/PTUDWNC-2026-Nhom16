@@ -221,6 +221,17 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
     /// Gán số âm ở bước trung gian để không va chạm unique (RecipeId, StepNumber) khi hoán đổi.
     /// Handler phải bọc trong transaction.
     /// </summary>
+    /// <summary>
+    /// Pha 1 khi đánh số lại: đẩy StepNumber sang vùng tạm (+10000) để các lệnh UPDATE lần lượt của EF
+    /// không vi phạm unique index (RecipeId, StepNumber). Gọi + SaveChanges trước ReorderSteps, trong cùng transaction.
+    /// </summary>
+    public void MoveStepNumbersToTemporaryRange()
+    {
+        foreach (var s in _steps) s.SetNumber(s.StepNumber + TemporaryStepNumberOffset);
+    }
+
+    private const int TemporaryStepNumberOffset = 10_000;
+
     public void ReorderSteps(IReadOnlyList<Guid> orderedIds)
     {
         if (orderedIds.Count != _steps.Count || orderedIds.Distinct().Count() != orderedIds.Count)
@@ -264,12 +275,19 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
     }
 
     /// <summary>
-    /// Soft delete (D08): đánh dấu IsDeleted — global query filter ẩn khỏi mọi truy vấn ngay,
+    /// Soft delete (D08 / ADR-0001): đánh dấu IsDeleted — global query filter ẩn khỏi mọi truy vấn ngay,
     /// dữ liệu (kể cả ảnh cần restore) được giữ. Không xoá vật lý.
     /// </summary>
     public void MarkDeleted()
     {
         IsDeleted = true;
         Status = RecipeStatus.Archived;
+        UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Tên gọi tương thích với ADR-0001 (main/TV3) — cùng hành vi với <see cref="MarkDeleted"/>.
+    /// Giữ cả hai để không phá vỡ call site đã có trên nhánh khác.
+    /// </summary>
+    public void SoftDelete() => MarkDeleted();
 }

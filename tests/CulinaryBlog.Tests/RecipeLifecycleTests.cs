@@ -22,6 +22,7 @@ public sealed class FakeOwnedRecipeRepository : IRecipeRepository
     public Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken ct) => Task.FromResult(true);
 
     public void Add(Recipe recipe) => Store.Add(recipe);
+    public void Remove(Recipe recipe) => Store.Remove(recipe);
 
     public void RemoveIngredient(RecipeIngredient ingredient) { }
 
@@ -65,7 +66,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Published, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Published), dto.Status);
         Assert.Equal(RecipeStatus.Published, recipe.Status);
         Assert.NotNull(recipe.PublishedAt);
         Assert.Equal(recipe.PublishedAt, dto.PublishedAt);
@@ -111,7 +112,7 @@ public sealed class RecipeLifecycleHandlerTests
         var publishedAt = recipe.PublishedAt;
         var second = await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Published, second.Status);
+        Assert.Equal(nameof(RecipeStatus.Published), second.Status);
         Assert.Equal(publishedAt, recipe.PublishedAt);   // PublishedAt giữ nguyên sau publish lần 2
         Assert.Equal(first.PublishedAt, second.PublishedAt);
     }
@@ -140,7 +141,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Published, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Published), dto.Status);
     }
 
     [Fact]
@@ -177,7 +178,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Draft, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Draft), dto.Status);
         Assert.Equal(RecipeStatus.Draft, recipe.Status);
     }
 
@@ -191,7 +192,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Draft, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Draft), dto.Status);
     }
 
     [Fact]
@@ -242,7 +243,7 @@ public sealed class RecipeLifecycleHandlerTests
 
         var dto = await handler.Handle(new ArchiveRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Archived, dto.Status);
+        Assert.Equal(nameof(RecipeStatus.Archived), dto.Status);
         Assert.Equal(RecipeStatus.Archived, recipe.Status);
         Assert.Single(recipe.Ingredients);            // dữ liệu được giữ
         Assert.False(recipe.IsDeleted);              // archive KHÔNG soft-delete
@@ -259,7 +260,7 @@ public sealed class RecipeLifecycleHandlerTests
         await handler.Handle(new ArchiveRecipeCommand(recipe.Id), CancellationToken.None);
         var second = await handler.Handle(new ArchiveRecipeCommand(recipe.Id), CancellationToken.None);
 
-        Assert.Equal(RecipeStatus.Archived, second.Status);
+        Assert.Equal(nameof(RecipeStatus.Archived), second.Status);
         Assert.False(recipe.IsDeleted);
     }
 
@@ -298,10 +299,25 @@ public sealed class RecipeLifecycleHandlerTests
         repo.Store.Add(recipe);
         var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
-        await handler.Handle(new DeleteRecipeCommand(recipe.Id), CancellationToken.None);
+        await handler.Handle(new DeleteRecipeCommand(recipe.Id, null), CancellationToken.None);
 
         Assert.True(recipe.IsDeleted);
         Assert.Equal(RecipeStatus.Archived, recipe.Status);
+    }
+
+    [Fact]
+    public async Task Delete_stale_row_version_throws_422()
+    {
+        var recipe = NewDraftRecipe();
+        var repo = new FakeOwnedRecipeRepository();
+        repo.Store.Add(recipe);
+        var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-1"));
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
+            new DeleteRecipeCommand(recipe.Id, "bm90LXNhdHctaGVyZQ=="), CancellationToken.None));
+
+        Assert.Equal(422, ex.Status);
+        Assert.False(recipe.IsDeleted);
     }
 
     [Fact]
@@ -313,7 +329,7 @@ public sealed class RecipeLifecycleHandlerTests
         var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-9"));
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
-            new DeleteRecipeCommand(recipe.Id), CancellationToken.None));
+            new DeleteRecipeCommand(recipe.Id, null), CancellationToken.None));
         Assert.Equal(403, ex.Status);
     }
 
@@ -324,7 +340,7 @@ public sealed class RecipeLifecycleHandlerTests
         var handler = new DeleteRecipeHandler(repo, new FakeCurrentUser("author-1"));
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
-            new DeleteRecipeCommand(Guid.NewGuid()), CancellationToken.None));
+            new DeleteRecipeCommand(Guid.NewGuid(), null), CancellationToken.None));
         Assert.Equal(404, ex.Status);
     }
 
@@ -341,8 +357,8 @@ public sealed class RecipeLifecycleHandlerTests
     public async Task Delete_validator_rejects_empty_recipe_id()
     {
         var validator = new DeleteRecipeValidator();
-        var result = await validator.ValidateAsync(new DeleteRecipeCommand(Guid.Empty));
+        var result = await validator.ValidateAsync(new DeleteRecipeCommand(Guid.Empty, null));
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == nameof(DeleteRecipeCommand.RecipeId));
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(DeleteRecipeCommand.Id));
     }
 }

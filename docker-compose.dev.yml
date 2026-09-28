@@ -1,4 +1,13 @@
 # Stack dev cho cả nhóm (TV4/D5). Chạy: docker compose -f docker-compose.dev.yml up -d
+#
+# ⚠️ Object storage KHÔNG dùng MinIO nữa: MinIO đã gỡ toàn bộ image public
+# (quay.io/minio/minio → HTTP 401, docker.io/minio/minio → HTTP 404) nên image kéo về
+# sẽ hỏng và mọi test E2E storage bị skip. Dùng RustFS (S3-compatible, Apache-2.0):
+# nói đúng giao thức S3 nên MinioStorageService chạy được không đổi dòng code.
+# Endpoint sức khoẻ là /health (RustFS không phục vụ /minio/health/live).
+# Không có container init tạo bucket: MinioStorageService tự BucketExists -> MakeBucket.
+# Chi tiết: docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md
+#
 # Lưu ý: dùng image có tag qua biến môi trường để dễ khóa phiên bản (D25);
 # S3_TAG mặc định là 1.0.0 của RustFS, không dùng latest để tránh upstream đổi bất ngờ.
 services:
@@ -29,13 +38,10 @@ services:
     volumes:
       - redisdata:/data
 
-  # MinIO đã gỡ toàn bộ image public (quay.io/minio/minio trả 401, docker.io/minio/minio trả
-  # 404 năm 2026) nên image kéo về sẽ hỏng. RustFS là server S3-compatible Apache-2.0, nói
-  # đúng giao thức nên MinioStorageService chạy được không đổi dòng code. Endpoint sức khoẻ
-  # là /health (RustFS không phục vụ /minio/health/live). Pin tag qua S3_TAG theo D25.
-  # Không còn container init tạo bucket: MinioStorageService tự BucketExists -> MakeBucket.
   s3:
-    image: rustfs/rustfs:${S3_TAG:-1.0.0}
+    # Ghim tag + digest (ADR-TV4-002, R1): tag bị đổi/xoá vẫn không làm hỏng local.
+    # Digest mặc định là digest thật của rustfs/rustfs:1.0.0 (khớp CI .github/workflows/backend.yml).
+    image: rustfs/rustfs:${S3_TAG:-1.0.0}@${S3_DIGEST:-sha256:8cc9801755448b71a786705ce76692c77e14936cccd87cf2fc31842e58f4d1ff}
     container_name: culinaryblog-s3
     restart: unless-stopped
     environment:

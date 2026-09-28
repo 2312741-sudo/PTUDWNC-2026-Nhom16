@@ -82,6 +82,7 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<RecipeRepository>();
 builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
+builder.Services.AddScoped<IMyRecipesRepository, MyRecipesRepository>();
 builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
@@ -195,6 +196,7 @@ builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document,
     document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme { Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT" };
     return Task.CompletedTask;
 }));
+builder.Services.AddControllers();
 var app = builder.Build();
 _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
@@ -379,6 +381,15 @@ recipes.MapPut("/{id:guid}", async (Guid id, UpdateRecipeBody body, ISender send
     .Produces<object>(200).ProducesValidationProblem()
     .ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
 
+recipes.MapDelete("/{id:guid}", async (Guid id, HttpRequest request, ISender sender, CancellationToken ct) =>
+{
+    var rowVersion = request.Headers.IfMatch.Count > 0 ? request.Headers.IfMatch.ToString().Trim('"') : null;
+    await sender.Send(new DeleteRecipeCommand(id, rowVersion), ct);
+    return Results.NoContent();
+})
+    .RequireAuthorization("AuthorPolicy").WithName("DeleteRecipe")
+    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404).ProducesProblem(422);
+
 recipes.MapPost("/{id:guid}/ingredients", async (Guid id, IngredientBody b, ISender sender, CancellationToken ct) =>
 {
     var created = await sender.Send(new AddIngredientCommand(id, b.Name, b.Quantity, b.Unit, b.Notes), ct);
@@ -453,19 +464,12 @@ recipes.MapPatch("/{id:guid}/unpublish", async (Guid id, ISender sender, Cancell
     .RequireAuthorization("AuthorPolicy").WithName("UnpublishRecipe")
     .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
-// D3 (TV4): archive/delete — archive ẩn public ngay giữ dữ liệu; delete soft (D08) giữ ảnh để restore.
+// D3 (TV4): archive — ẩn public ngay, giữ dữ liệu. Delete soft (D08) giữ ảnh để restore;
+// endpoint DELETE đã khai báo ở trên (bản C2.4 có If-Match/RowVersion nên mới hơn, trả 422 khi bản ghi đã đổi).
 recipes.MapPatch("/{id:guid}/archive", async (Guid id, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new ArchiveRecipeCommand(id), ct) }))
     .RequireAuthorization("AuthorPolicy").WithName("ArchiveRecipe")
     .Produces<object>(200).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
-
-recipes.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
-{
-    await sender.Send(new DeleteRecipeCommand(id), ct);
-    return Results.NoContent();
-})
-    .RequireAuthorization("AuthorPolicy").WithName("DeleteRecipe")
-    .Produces(204).ProducesProblem(401).ProducesProblem(403).ProducesProblem(404);
 
 // D1.3 (TV4): quản lý hình ảnh recipe — upload, chỉnh metadata, xóa (IMAGE_CONTRACT).
 recipes.MapPost("/{id:guid}/images", async (Guid id, [Microsoft.AspNetCore.Mvc.FromForm] IFormFile file, [Microsoft.AspNetCore.Mvc.FromForm] string? altText, ISender sender, HttpRequest request, CancellationToken ct) =>
@@ -545,6 +549,7 @@ resourcesImages.MapGet("/{**key}", async (string key, IObjectStorageReader stora
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
+app.MapControllers();
 app.Run();
 
 public partial class Program

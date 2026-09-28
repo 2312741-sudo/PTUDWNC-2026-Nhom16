@@ -180,6 +180,18 @@ Kết quả: nguyên nhân — service dùng image quay.io/minio/minio:latest; M
 Minh chứng không bỏ trống: local 148/148 + 5/5 với Skipped=0 trên CẢ hai đường (endpoint CI và service s3 thật từ compose), bucket culinary-blog/recipes có thật trong storage → E2E storage thực sự chạy chứ không skip; CI 36344662570 cả 10 bước success
 Reviewer/ngày: Nguyễn Thanh Tâm / ___
 Lỗi còn lại: SRS v1.1.1 + evidence Tuan01 vẫn ghi "MinIO" (để nguyên vì là spec/record lịch sử; RustFS chỉ là bản thay thế cùng giao thức S3 ở mức dev/CI). Cần nhóm biết khi deploy môi trường thật: production KHÔNG dùng RustFS, phải dùng object storage có license
+
+---
+
+### TV4-K23b (28/09 — CR-6 chốt RustFS + gỡ 7 conflict khi merge `origin/main` cho PR #16)
+Evidence: TV4-K23; CR-6 trong `TRANG_THAI_THUC_HIEN_TUAN_3.md`
+Đường dẫn: docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md; README.md (§7.1 bảng quyết định); docker-compose.dev.yml; .github/workflows/backend.yml; src/backend/CulinaryBlog.API/Program.cs; src/backend/CulinaryBlog.Application/Recipes.cs; src/backend/CulinaryBlog.Domain/Entities/Recipe.cs; src/frontend/src/lib/api.ts; src/frontend/src/app/recipes/[slug]/page.tsx; src/frontend/src/components/RecipeCard.tsx; src/frontend/src/app/sitemap.ts; tests/CulinaryBlog.Tests/RecipeLifecycleTests.cs; tests/CulinaryBlog.Tests/AuthTests.cs; tests/concurrency-spike/SpikeDbFixture.cs
+Nhánh/PR: 2312739_NHTSon_D3-D4-D5-D6 → PR #16 (merge commit của origin/main)
+Test/lệnh: dotnet build CulinaryBlog.slnx (0 warning, TreatWarningsAsErrors) → dotnet test CulinaryBlog.slnx → npx tsc --noEmit → npm run build (next) → docker compose -f docker-compose.dev.yml config --quiet + up -d s3
+Kết quả: chốt CR-6 = `rustfs/rustfs` cho dev + CI (tag `1.0.0` + digest `sha256:8cc9801…` ở CẢ compose lẫn workflow; `minio-init` bỏ vì app tự `BucketExists→MakeBucket`; `MinioStorageService`/tên env `MINIO_*` không đổi). 7 conflict: compose (RustFS), `Program.cs` (bỏ DELETE trùng route → giữ bản `If-Match`/`RowVersion` 422 + `NameClaimType=sub`), `Recipes.cs` (giữ `ArchiveRecipeCommand` TV4 + `DeleteRecipeCommand(id,rowVersion)` TV3), `Entities/Recipe.cs` (`MarkDeleted` + alias `SoftDelete`), FE `api.ts` (giữ `getSitemapRecipes` D26 + `getRecipeBySlug(token)` của main), `RecipeCard.tsx`, `recipes/[slug]/page.tsx` (UI của main + `generateMetadata` canonical/OG của D4; JSON-LD ở `layout.tsx` qua `lib/recipe-jsonld.ts`)
+Minh chứng không bỏ trống: `dotnet test` **154/154 + 5/5, Skipped=0** (thêm test mới `Delete_stale_row_version_throws_422`); `tsc --noEmit` exit 0; `next build` exit 0 (16/16 trang); compose `config --quiet` exit 0 và container `culinaryblog-s3` healthy với digest pin
+Reviewer/ngày: Nguyễn Thanh Tâm / ___
+Lỗi còn lại: `next lint` chưa có cấu hình ESLint trong repo (prompt tương tác) nên chưa chạy lint; production vẫn phải dùng object storage có license
 ```
 
 ---

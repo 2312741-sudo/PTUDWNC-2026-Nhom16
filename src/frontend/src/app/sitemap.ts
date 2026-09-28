@@ -5,6 +5,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL
   ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   : 'http://localhost:3000';
 
+// Sitemap lấy dữ liệu Published từ API -> render động (ISR 1 giờ) để không bị
+// coi là static route lúc build khi backend chưa chạy.
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {

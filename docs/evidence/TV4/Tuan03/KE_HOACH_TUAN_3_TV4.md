@@ -218,7 +218,7 @@
 | D27 proxy qua API có thể tăng tải/đi qua app | Bandwidth/token khi phục vụ ảnh | Cache-Control hợp lý (Published cache); cân nhắc Nginx route thẳng MinIO sau khi chốt vị trí proxy với TV1 |
 | PR #14 đã merge nhầm gây xung đột docs/số liệu | Doc nhầm trạng thái | Rà soát diff, note rõ trong sổ evidence; đưa vào báo cáo nhóm |
 | **Nhánh lệch main 23 commit** (28/09) | D4 UI không sửa được (thiếu `dashboard/recipes/**` của PR #15); dễ mất thay đổi của TV1/TV2/TV3 | Merge `origin/main` trước khi làm D4; xử lý conflict `docker-compose.dev.yml` + `.github/workflows/backend.yml` |
-| **Hai image storage khác nhau trên main vs nhánh** (28/09) | Nhánh `rustfs/rustfs` (digest) vs main `coollabsio/minio:RELEASE.2025-10-15T17-29-55Z` (TV3 `84dddd4`) → conflict khi merge; CI main chưa có service storage nên E2E vẫn **skip âm thầm** | CR-6: nhóm trưởng chốt một image cho dev + CI rồi áp dụng cả hai nơi, ghim digest; production vẫn dùng storage có license |
+| ~~**Hai image storage khác nhau trên main vs nhánh**~~ (28/09) | Nhánh `rustfs/rustfs` (digest) vs main `coollabsio/minio:RELEASE.2025-10-15T17-29-55Z` (TV3 `84dddd4`) → conflict khi merge; CI main chưa có service storage nên E2E vẫn **skip âm thầm** | ✅ **Đã gỡ (PR #16)**: CR-6 chốt `rustfs/rustfs` cho dev + CI, ghim tag+digest ở cả compose lẫn workflow; xem `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md`. Production vẫn dùng storage có license |
 | **Fix `4830e57` chưa lên main** (28/09) | CI main có nguy cơ 28P01 với các commit deploy mới | PR lên main (nhóm trưởng duyệt) |
 | Sitemap chỉ on-demand, chưa có job lịch + distributed lock | Lệch yêu cầu đề (cron 02:00 UTC); nhiều worker có thể sinh trùng | CR-7: Hangfire recurring (đã có) hoặc ghi rõ giới hạn trong sổ |
 
@@ -238,6 +238,6 @@
 10. ✅ **Lab L4 (N5/D6)** — xong 28/09: commit `3642428`, 39/39 check, sổ K.
 11. ✅ **Gỡ sự cố CI + dev compose** (image storage bị gỡ khỏi registry) — xong 28/09: `cd72b27` + `d78e25c`.
 12. ⬜ **N5 mục 2** — lab Identity/Google/refresh/forms/FTS (**yêu cầu của tuần 3** theo `PHAN_CHIA` mục 3.4 — cần nhóm trưởng chốt làm tối giản hay ghi nhận dời tuần 4).
-13. ⬜ **Merge `origin/main`** vào nhánh (behind 23) → xử lý conflict compose/workflow (CR-6) → làm D4 UI.
+13. ✅ **Merge `origin/main`** vào nhánh → gỡ 7 conflict (compose theo RustFS, `Program.cs`, `Recipes.cs`, `Recipe.cs`, 3 file frontend) trong PR #16; giữ cả D3 archive/delete của TV4 lẫn soft-delete có `RowVersion` của TV3; `dotnet test` **159/159, `Skipped=0`**, `tsc`/`next build` sạch.
 14. ⬜ **Uploader UI + status buttons** (D4 — sau khi merge main): thanh progress upload + nút Unpublish/Archive (Publish đã có trên main).
 15. ⬜ **Trace thật vào Seq** (K20) + **sitemap job 02:00 UTC/distributed lock** (CR-7) + **bảng mapping K01**.

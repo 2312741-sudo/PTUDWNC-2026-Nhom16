@@ -44,7 +44,8 @@ public sealed class SpikeDbFixture : IAsyncLifetime
             return builder.ConnectionString;
         }
 
-        return "Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=postgres";
+        // Mặc định khớp POSTGRES_PASSWORD của docker-compose.dev.yml (admin123); CI override bằng TEST_DATABASE/SPIKE_DB
+        return "Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=admin123";
     }
 
     public AuthDbContext NewContext()

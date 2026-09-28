@@ -334,6 +334,25 @@ export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=p
 
 ## 📚 7. Danh Mục Tài Liệu Kỹ Thuật Tham Chiếu
 
+### 7.1. Bảng Quyết Định Kiến trúc & ADR (đọc tóm tắt ở đây, chi tiết ở link)
+
+| Mã | Vấn đề / Quyết định | Chọn gì | Áp dụng ở đâu | Tài liệu chi tiết |
+|---|---|---|---|---|
+| **ADR-TV4-002** | ⚠️ **Image MinIO đã bị gỡ khỏi registry** (quay.io 401, Docker Hub 404) → CI đỏ 5 run, mọi test bị skip, dev stack không dựng được | **RustFS** (S3-compatible, Apache-2.0, ghim tag + digest) cho dev + CI; `MinioStorageService` **không đổi dòng nào** | `docker-compose.dev.yml`, `.github/workflows/backend.yml`, `.env.example` | **[ADR-TV4-002 — đổi MinIO sang RustFS](docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md)** ⚠️ *đọc trước khi chạy dev* |
+| **ADR-TV4-001 / D27** | Ảnh recipe Draft/Archived có bị lộ ra public không | Bucket **private**, ảnh phục vụ qua **proxy có auth** (`/api/v1/resources/images/{key}`); Published được cache công khai | `Program.cs`, `MinioStorageService`, FE `NEXT_PUBLIC_MEDIA_URL` | [ADR-TV4-001](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) · [IMAGE_CONTRACT §5](docs/IMAGE_CONTRACT.md) |
+| **D27 / PA-2** | Ảnh upload hiển thị trên FE bằng URL nào | **Proxy có auth** thay vì presigned URL (bucket giữ private) | `Program.cs`, `ImagesStep.tsx` | [Đề xuất giải quyết D23/D27](docs/DE_XUAT_GIAI_QUYET_D23_D27.md) |
+| **D23 / PA-1** | Resize ảnh chạy nền bằng gì | **Hangfire + PostgreSQL** (queue persistent, retry, dashboard `/hangfire` chỉ Admin) — không dùng `BackgroundService` | `ResizeImageJob`, `ImageResizeQueue` | [Đề xuất giải quyết D23/D27](docs/DE_XUAT_GIAI_QUYET_D23_D27.md) |
+| **D22** | Redis chết thì `/health` trả gì | `/health/live` luôn 200 · `/health/ready` cần DB + Redis → **503** khi thiếu · API vẫn fallback đọc DB | `Health.cs` | [ADR-TV4-001](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) |
+| **D06 / D05** | Logout thu hồi token ra sao | `POST /auth/logout` cần Bearer, trả **204**, thu hồi refresh token **+ toàn bộ family** | `IdentityService.cs` | [ADR-TV4-001](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) |
+| **C01–C09** | 9 mâu thuẫn nội tại SRS (soft/hard delete, điều kiện publish, TTL cache, pageSize, tên field, response wrapper) | Chuẩn hóa theo **SRS v1.1.1** (bảng đối chiếu ở README §4.2) | Toàn hệ thống | [Báo cáo mâu thuẫn SRS](docs/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md) |
+| **ImageSharp** | Ảnh resize bằng thư viện nào | **3.1.11** — bản 4.x **bắt buộc license key thương mại** → build fail | `ResizeImageJob` | [SO_EVIDENCE tuần 3 §TV4-K14](docs/evidence/TV4/Tuan03/SO_EVIDENCE_TUAN_3.md) |
+
+> ⚠️ **Lưu ý quan trọng cho thành viên mới**: môi trường dev/CI **không dùng MinIO nữa** (MinIO đã gỡ toàn bộ image public).
+> Lệnh dựng hạ tầng: `docker compose -f docker-compose.dev.yml up -d` — service tên là **`s3`**, console ở http://localhost:9001,
+> và **không còn** container `minio-init` (app tự tạo bucket). Chi tiết đầy đủ ở [ADR-TV4-002](docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md).
+
+### 7.2. Danh mục đầy đủ
+
 - 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](docs/HUONG_DAN_TEST_APP.md)
 - ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
 - 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)

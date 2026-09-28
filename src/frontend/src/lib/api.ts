@@ -346,18 +346,26 @@ export async function getSitemapRecipes(): Promise<SitemapRecipe[]> {
   }
 }
 
+// ----------------------------------------------------------------------
+// Recipe Detail (TV3 - Tuần 3)
+// ----------------------------------------------------------------------
+
 export async function getRecipeBySlug(
-  slug: string
-): Promise<{ success: boolean; data?: any; error?: string }> {
+  slug: string,
+  token?: string
+): Promise<import('@/types/recipe').RecipeDetail | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, {
-      cache: 'no-store',
+      ...(token
+        ? { cache: 'no-store' as const, headers: { Authorization: `Bearer ${token}` } }
+        : { next: { revalidate: 300 } }),
     });
-    if (res.status === 404) return { success: false, error: 'Không tìm thấy công thức.' };
+    if (res.status === 404) return null;
     if (!res.ok) throw new Error('Không thể tải chi tiết công thức.');
     const json = await res.json();
-    return { success: true, data: json.data ?? json };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+    return json.data ?? json;
+  } catch (error) {
+    console.error('Error in getRecipeBySlug:', error);
+    return null;
   }
 }

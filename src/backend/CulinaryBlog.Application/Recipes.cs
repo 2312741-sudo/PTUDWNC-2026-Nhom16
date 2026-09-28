@@ -24,7 +24,7 @@ namespace CulinaryBlog.Application;
 public sealed record RecipeDto(
     Guid Id, string Title, string Slug, string Description, string Instructions,
     int PrepTimeMinutes, int CookTimeMinutes, int Servings,
-    RecipeDifficulty Difficulty, RecipeStatus Status, DateTime? PublishedAt,
+    string Difficulty, string Status, DateTime? PublishedAt,
     Guid CategoryId, string AuthorId, NutritionDto? Nutrition,
     string RowVersion,                      // base64 — client gửi lại khi update (D19)
     DateTime CreatedAt, DateTime? UpdatedAt);
@@ -32,7 +32,7 @@ public sealed record RecipeDto(
 public sealed record RecipeDetailDto(
     Guid Id, string Title, string Slug, string Description, string Instructions,
     int PrepTimeMinutes, int CookTimeMinutes, int Servings, int TotalTimeMinutes,
-    RecipeDifficulty Difficulty, RecipeStatus Status, DateTime? PublishedAt,
+    string Difficulty, string Status, DateTime? PublishedAt,
     Guid CategoryId, string AuthorId, NutritionDto? Nutrition,
     IReadOnlyList<RecipeIngredientDto> Ingredients,
     IReadOnlyList<RecipeStepDto> Steps,
@@ -76,14 +76,14 @@ internal static class RecipeMapper
     public static RecipeDto ToDto(this Recipe r) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
-        r.Difficulty, r.Status, r.PublishedAt, r.CategoryId, r.AuthorId,
+        r.Difficulty.ToString(), r.Status.ToString(), r.PublishedAt, r.CategoryId, r.AuthorId,
         r.Nutrition.ToDto(), Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt);
 
     public static RecipeDetailDto ToDetailDto(this Recipe r) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
         r.PrepTimeMinutes + r.CookTimeMinutes,
-        r.Difficulty, r.Status, r.PublishedAt, r.CategoryId, r.AuthorId,
+        r.Difficulty.ToString(), r.Status.ToString(), r.PublishedAt, r.CategoryId, r.AuthorId,
         r.Nutrition.ToDto(),
         r.Ingredients.OrderBy(i => i.OrderIndex).Select(i => i.ToDto()).ToList(),
         r.Steps.OrderBy(s => s.StepNumber).Select(s => s.ToDto()).ToList(),
@@ -118,6 +118,7 @@ public interface IRecipeRepository
     Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken ct);
 
     void Add(Recipe recipe);
+    void Remove(Recipe recipe);
     void RemoveIngredient(RecipeIngredient ingredient);
     void RemoveStep(RecipeStep step);
 
@@ -517,10 +518,12 @@ public sealed class ReorderStepsHandler(
     {
         var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
 
-        await uow.ExecuteInTransactionAsync(_ =>
+        await uow.ExecuteInTransactionAsync(async _ =>
         {
+            // Unique (RecipeId, StepNumber) kiểm tra ngay sau từng UPDATE -> không thể hoán đổi trực tiếp.
+            recipe.MoveStepNumbersToTemporaryRange();
+            await repo.SaveChangesAsync(ct);
             recipe.ReorderSteps(cmd.OrderedStepIds);
-            return Task.CompletedTask;
         }, ct);
 
         return recipe.Steps.OrderBy(s => s.StepNumber).Select(s => s.ToDto()).ToList();
@@ -579,7 +582,7 @@ public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser 
 
 #endregion
 
-#region D3 — Archive / Delete công thức (FR-RCP-006/007, D08)
+#region D3 — Archive công thức (FR-RCP-006, D08)
 
 public sealed record ArchiveRecipeCommand(Guid RecipeId) : IRequest<RecipeDto>;
 
@@ -603,25 +606,30 @@ public sealed class ArchiveRecipeHandler(IRecipeRepository repo, ICurrentUser cu
     }
 }
 
-public sealed record DeleteRecipeCommand(Guid RecipeId) : IRequest<Unit>;
+#endregion
+
+#region C2.4 — Xoá công thức (FR-RCP-007) — soft delete (ADR-0001)
+
+// Xoá mềm: set IsDeleted, global query filter tự ẩn khỏi mọi truy vấn.
+// Con (ingredient/step/image) để nguyên — ON DELETE CASCADE chỉ chạy khi hard delete;
+// với soft delete ta chỉ cần ẩn aggregate gốc là đủ (D-recipe không lộ qua filter).
+public sealed record DeleteRecipeCommand(Guid Id, string? RowVersion) : IRequest;
 
 public sealed class DeleteRecipeValidator : AbstractValidator<DeleteRecipeCommand>
 {
-    public DeleteRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
+    public DeleteRecipeValidator() => RuleFor(x => x.Id).NotEmpty();
 }
 
 public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
-    : IRequestHandler<DeleteRecipeCommand, Unit>
+    : IRequestHandler<DeleteRecipeCommand>
 {
-    public async Task<Unit> Handle(DeleteRecipeCommand cmd, CancellationToken ct)
+    public async Task Handle(DeleteRecipeCommand cmd, CancellationToken ct)
     {
-        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.Id, ct);
+        RecipeGuard.EnsureVersion(recipe, cmd.RowVersion);   // 422 nếu bản ghi đã đổi ở nơi khác
 
-        // Soft delete (D08): giữ dữ liệu + ảnh để restore; global query filter ẩn khỏi public/list/search ngay.
-        recipe.MarkDeleted();
-
+        recipe.SoftDelete();                 // set IsDeleted + Status=Archived; interceptor cập nhật RowVersion
         await repo.SaveChangesAsync(ct);
-        return Unit.Value;
     }
 }
 
