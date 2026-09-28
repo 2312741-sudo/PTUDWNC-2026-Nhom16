@@ -354,6 +354,7 @@ export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=p
 ### 7.2. Danh mục đầy đủ
 
 - 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](docs/HUONG_DAN_TEST_APP.md)
+- 🖥️ [Hướng dẫn cài đặt & chạy ứng dụng — riêng TV4 (PowerShell, xử lý sai mật khẩu PostgreSQL)](docs/HUONG_DAN_CHAY_TV4.md)
 - ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
 - 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)
 - 📋 [Kế hoạch phân chia công việc 6 tuần](docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md)

@@ -1,0 +1,339 @@
+# Hướng dẫn cài đặt & chạy ứng dụng — riêng TV4 (Nguyễn Hữu Trung Sơn)
+
+> **Vì sao cần file này?** `README.md` mục 5 viết cho **bash** (`export ...`) và giả định
+> PostgreSQL của container **vừa được tạo** (password `admin123`).
+> Trên máy TV4 (Windows + **PowerShell 5.1**) và với volume `pgdata` đã tạo từ trước
+> (khi `docker-compose.dev.yml` còn dùng image MinIO / password khác), các lệnh đó **không chạy được**.
+> File này ghi đúng thứ tự thao tác trên máy TV4, mọi lệnh dưới đây **đã chạy thật và kiểm chứng** ngày 28/09/2026.
+>
+> Liên quan: `README.md` §5, `docs/HUONG_DAN_TEST_APP.md`,
+> `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md` (vì sao dev/CI dùng RustFS thay MinIO).
+
+---
+
+## 0. TL;DR — copy-paste toàn bộ (PowerShell)
+
+```powershell
+# 0) Chuyển tới repo
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
+
+# 1) Bật hạ tầng Docker (Postgres, Redis, RustFS, Mailhog, Seq, Nginx)
+docker compose -f docker-compose.dev.yml up -d
+
+# 2) Đặt lại password Postgres về admin123 (chỉ cần khi gặp 28P01 - xem mục 3)
+docker exec culinaryblog-pg psql -U postgres -c "ALTER USER postgres PASSWORD 'admin123';"
+
+# 3) Biến môi trường cho backend + test (PowerShell dùng $env:, KHÔNG dùng export)
+$env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
+$env:Jwt__SigningKey            = "tv4_local_jwt_signing_key_super_secret_at_least_64_characters_long_0123456789"
+$env:ASPNETCORE_ENVIRONMENT    = "Development"
+$env:TEST_DATABASE              = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+
+# 4) Backend: restore -> migrate -> chạy API ở cổng 5080
+dotnet restore CulinaryBlog.sln --locked-mode
+dotnet run --project src/backend/CulinaryBlog.API -- --migrate
+dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
+
+# 5) Mở cửa sổ PowerShell THỨ HAI cho frontend (giữ nguyên cửa sổ API đang chạy)
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
+npm install
+npm run dev
+```
+
+Sau khi chạy xong: **http://localhost:3000** · API docs **http://localhost:5080/scalar/v1**
+
+---
+
+## 1. Yêu cầu môi trường
+
+| Công cụ | Phiên bản | Kiểm tra |
+|---|---|---|
+| .NET SDK | 10.x | `dotnet --version` |
+| Node.js | 20+ | `node -v` |
+| Docker Desktop | đang **chạy** | `docker version` (phải có dòng `Server:`) |
+| Git | bất kỳ | `git --version` |
+
+Nếu `docker version` báo `error during connect ... the daemon is not running` → mở Docker Desktop
+và đợi tới khi có dòng `Server:` (xem mục 9, lỗi L1).
+
+---
+
+## 2. Vì sao lệnh trong `README.md` không chạy được trên máy TV4?
+
+Ba nguyên nhân độc lập, cần loại trừ theo thứ tự:
+
+| # | Triệu chứng | Nguyên nhân | Lệnh kiểm tra |
+|---|---|---|---|
+| A | `$env:ConnectionStrings__Database = ...` chạy xong nhưng app vẫn lỗi kết nối | `README.md` dùng cú pháp **bash `export`**; PowerShell hiểu `export` là lệnh *khác* nên biến không được set | `echo $env:ConnectionStrings__Database` |
+| B | `28P01 password authentication failed for user "postgres"` dù `.env`/compose đã để `admin123` | `POSTGRES_PASSWORD` **chỉ được dùng lúc khởi tạo volume lần đầu**. Volume `pgdata` đã tạo từ trước (khi còn dùng image MinIO) nên đổi biến môi trường **không có tác dụng** — mật khẩu nằm trong volume | `docker exec culinaryblog-pg psql -U postgres -tAc "select rolpassword from pg_authid where rolname='postgres'"` |
+| C | `42P03 database "culinary_blog" does not exist` | Database chưa được tạo (EF tự tạo ở lần `--migrate` đầu tiên, nếu user có quyền `CREATEDB`) | `docker exec culinaryblog-pg psql -U postgres -tAc "select datname from pg_database where datistemplate=false"` |
+
+> **Bĩ quán:** chọn **một** mật khẩu duy nhất rồi dùng ở **cả 3 nơi**:
+> (1) PostgreSQL thật, (2) `$env:ConnectionStrings__Database` cho API, (3) `$env:TEST_DATABASE` cho test.
+> Lệch 1 chỗ là `28P01`.
+
+---
+
+## 3. Kiểm tra mật khẩu PostgreSQL đang dùng (3 lệnh, đã kiểm chứng)
+
+```powershell
+# 3.1 Xem Postgres đang lưu mật khẩu gì (SCRAM-SHA-256$... = có đặt mật khẩu)
+docker exec culinaryblog-pg psql -U postgres -tAc "select rolpassword from pg_authid where rolname='postgres'"
+
+# 3.2 Thử đúng đường đi mà app/test đi: từ container KHÁC trong cùng network
+docker run --rm -e PGPASSWORD=admin123 --network ptudwnc-2026-nhom16_default postgres:16-alpine psql -h culinaryblog-pg -U postgres -tAc "select 1"
+# Trả về 1  -> mật khẩu ĐÚNG
+# Trả về lỗi 28P01 -> mật khẩu SAI
+```
+
+> ⚠️ **Cảnh báo dễ bị sai:** `docker exec culinaryblog-pg psql -U postgres ...` **không có `-h`**
+> luôn trả về `1` kể cả khi sai mật khẩu, vì `pg_hba.conf` của image `postgres:16-alpine` đang là
+> `local all all trust` và `host ... 127.0.0.1/32 trust`. Chỉ kết nối từ container khác
+> (`-h culinaryblog-pg`) mới đi đúng rule `host all all all scram-sha-256` như app thật.
+> Tên network lấy bằng: `docker network ls | Select-String "_default"`
+> (thường là `<tên-thư-mục>_default`, ví dụ `ptudwnc-2026-nhom16_default`).
+
+---
+
+## 4. Bước 1 — Khởi động hạ tầng Docker
+
+```powershell
+docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml ps
+```
+
+Cần **6 container** `Up`, trong đó `culinaryblog-pg` và `culinaryblog-s3` phải là `healthy`:
+
+| Container | Vai trò | Cổng máy host |
+|---|---|---|
+| `culinaryblog-pg` | PostgreSQL 16 | `5432` |
+| `culinaryblog-redis` | Redis 7 | `6379` |
+| `culinaryblog-s3` | **RustFS** (S3-compatible, thay image MinIO đã bị gỡ khỏi registry) | `9000` (S3 API) / `9001` (console) |
+| `culinaryblog-mailhog` | Mailhog (xem mail WelcomeEmail) | `1025` (SMTP) / `8025` (web UI) |
+| `culinaryblog-seq` | Seq (nhận log OTEL) | `5341` || `culinaryblog-nginx` | Nginx dev | `8080` |
+
+Nếu container `Up` nhưng `unhealthy`, xem mục 9 (L4).
+
+---
+
+## 5. Bước 2 — Chọn một trong hai cách xử lý mật khẩu
+
+### Cách A (khuyến nghị) — đặt lại mật khẩu trong volume cũ về `admin123`
+
+Giữ nguyên `README.md`, `docker-compose.dev.yml`, `.env.example` không phải sửa gì.
+Lệnh dưới đây **đã kiểm chứng** (chạy qua socket nội bộ `trust` nên không cần mật khẩu cũ):
+
+```powershell
+docker exec culinaryblog-pg psql -U postgres -c "ALTER USER postgres PASSWORD 'admin123';"
+```
+
+Xác minh bằng lệnh 3.2 ở mục 3 (phải ra `1`).
+
+> 💡 Còn một cách nữa là xoá volume cho sạch:
+> `docker compose -f docker-compose.dev.yml down -v` rồi `up -d`.
+> **Không dùng nếu bạn còn dữ liệu dev** — lệnh này xoá **cả** `pgdata`, `s3data` (ảnh recipe), `redisdata`.
+
+### Cách B — giữ mật khẩu PostgreSQL của riêng bạn
+
+Đặt **cùng một mật khẩu** ở cả 3 nơi, không sửa file đã commit:
+
+```powershell
+# (1) PostgreSQL thật (nếu bạn dùng PostgreSQL native cài trên Windows, BỎ QUA container
+#     culinaryblog-pg để khỏi tranh cổng 5432 — xem mục 9, lỗi L3)
+$env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+$env:TEST_DATABASE               = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+
+# (2) Nếu vẫn dùng container: đặt mật khẩu trong compose qua biến môi trường, rồi tạo lại container
+$env:POSTGRES_PASSWORD = "<MAT_KHAU_CUA_BAN>"
+docker compose -f docker-compose.dev.yml up -d --force-recreate postgres
+# LƯU Ý: nếu volume đã tồn tại thì biến này vẫn không có tác dụng → dùng Cách A
+```
+
+Sau khi đặt xong, **giữ các biến đó trong cửa sổ PowerShell** khi chạy app và test
+(biến chỉ sống trong phiên hiện tại; muốn giữ lâu dài thì dùng `[Environment]::SetEnvironmentVariable(...)`).
+
+---
+
+## 6. Bước 3 — Chạy Backend API (.NET 10)
+
+```powershell
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
+
+# 1) Khôi phục package đúng phiên bản đã khoá (CI cũng chạy lệnh này)
+dotnet restore CulinaryBlog.sln --locked-mode
+
+# 2) Biến môi trường (PowerShell — không dùng export)
+$env:ConnectionStrings__Database = "Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
+$env:Jwt__SigningKey            = "tv4_local_jwt_signing_key_super_secret_at_least_64_characters_long_0123456789"
+$env:ASPNETCORE_ENVIRONMENT    = "Development"
+
+# 3) Áp dụng migration (tự tạo DB `culinary_blog` nếu chưa có)
+dotnet run --project src/backend/CulinaryBlog.API -- --migrate
+
+# 4) (Tùy chọn) Nạp dữ liệu mẫu: 25 danh mục + 100 công thức
+dotnet run --project src/backend/CulinaryBlog.API -- --seed
+
+# 5) Chạy API
+dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
+```
+
+| Kiểm tra | Kết quả mong đợi |
+|---|---|
+| http://localhost:5080/health/live | `200` |
+| http://localhost:5080/health/ready | `200` (Redis + Postgres sẵn sàng) |
+| http://localhost:5080/scalar/v1 | Trang tài liệu API |
+
+> 💡 API **tự migrate + seed lúc khởi động** (trừ khi chạy `--no-auto-migrate` hoặc môi trường `Testing`),
+> nên bước 3/4 ở trên chỉ cần khi muốn chủ động chạy trước.
+
+---
+
+## 7. Bước 4 — Chạy Frontend (Next.js 15)
+
+```powershell
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
+npm install
+npm run dev
+```
+
+Mở **http://localhost:3000**. Frontend tự lấy API từ `http://localhost:5080/api/v1`
+(nếu không đặt `NEXT_PUBLIC_API_URL`). Các biến tuỳ chọn:
+
+| Biến | Mặc định | Công dụng |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:5080/api/v1` | Địa chỉ API |
+| `NEXT_PUBLIC_MEDIA_URL` | *(trống)* | Tiền tố URL ảnh. **Để trống** thì ảnh đi qua proxy có auth `GET /api/v1/resources/images/{key}` (PA-2) — xem `docs/IMAGE_CONTRACT.md` §5 |
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Site URL cho canonical/OG/sitemap (D4/D26) |
+
+---
+
+## 8. Bước 5 — Chạy bộ kiểm thử (bắt buộc `Skipped=0`)
+
+```powershell
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
+
+$env:TEST_DATABASE = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+
+# Kiểm tra mã + định dạng (giống hệt CI)
+dotnet build CulinaryBlog.sln --configuration Release
+dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
+
+# Toàn bộ test
+dotnet test CulinaryBlog.sln
+```
+
+Kết quả chuẩn trên máy TV4 (28/09/2026, sau khi merge `origin/main` cho PR #16):
+
+```
+Passed!  - Failed: 0, Passed: 154, Skipped: 0, Total: 154 - CulinaryBlog.Tests.dll
+Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5 - ConcurrencySpike.dll
+```
+
+> 🚨 **Quy tắc của nhóm (không được phá):** CI xanh mà `Skipped > 0` là **xanh giả**.
+> Test E2E storage cố tình *skip an toàn* khi không kết nối được object storage —
+> đó chính là lý do 5 run CI trước đó "xanh/skip" mà không ai thấy lỗi
+> (xem `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md`).
+> Muốn E2E storage chạy thật thì container `culinaryblog-s3` phải `healthy`:
+> ```powershell
+> docker compose -f docker-compose.dev.yml ps s3
+> ```
+
+---
+
+## 9. Bước 6 (tuỳ chọn) — Chạy lab L4 của TV4
+
+Lab nằm ở **nhánh riêng** `practice/TV4/L4` (không có trong nhánh PR #16):
+
+```powershell
+git switch practice/TV4/L4
+
+# Bật Mailhog (lab cần SMTP + API để đọc mail)
+docker run -d --name lab-mailhog -p 1025:1025 -p 8025:8025 mailhog/mailhog:v1.0.1
+
+# Biến môi trường cho lab
+$env:TEST_DATABASE      = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+$env:Minio__Endpoint    = "127.0.0.1:9000"
+$env:Minio__AccessKey   = "minioadmin"
+$env:Minio__SecretKey   = "minioadmin"
+$env:Minio__Bucket      = "culinary-blog"
+
+# 4 phase yêu cầu (exit code 0 = PASS, 1 = FAIL)
+dotnet run --project practice/TV4/L4 -- all
+
+# phase chẩn đoán (không tính vào 4 phase)
+dotnet run --project practice/TV4/L4 -- db
+dotnet run --project practice/TV4/L4 -- purge
+
+git switch 2312739_NHTSon_D3-D4-D5-D6   # quay lại nhánh chính
+```
+
+Log mỗi lần chạy nằm ở `out/lab-<RunId>.log`; sổ bằng chứng: `docs/evidence/TV4/Tuan03/SOK_LAB_L4.md`.
+
+---
+
+## 10. Checklist "đã chạy được"
+
+```powershell
+docker compose -f docker-compose.dev.yml ps                                   # 6 container, pg + s3 = healthy
+docker exec culinaryblog-pg psql -U postgres -tAc "select 1"                  # Postgres OK
+Invoke-WebRequest http://localhost:5080/health/ready -UseBasicParsing | Select-Object StatusCode   # 200
+Invoke-WebRequest http://localhost:9000/health -UseBasicParsing | Select-Object StatusCode         # 200 (RustFS)
+Invoke-WebRequest http://localhost:3000 -UseBasicParsing | Select-Object StatusCode                # 200
+dotnet test CulinaryBlog.sln                                                  # 154 + 5, Skipped=0
+```
+
+---
+
+## 11. Xử lý sự cố thường gặp
+
+| # | Lỗi / triệu chứng | Nguyên nhân | Cách xử lý |
+|---|---|---|---|
+| L1 | `error during connect ... the daemon is not running` | Docker Desktop chưa chạy | Mở `Docker Desktop`, đợi có dòng `Server:` trong `docker version` |
+| L2 | `Npgsql.PostgresException 28P01 password authentication failed for user "postgres"` | Mật khẩu trong volume ≠ mật khẩu bạn truyền vào | Mục 3 + **Cách A** mục 5 |
+| L3 | `Failed to bind to address http://127.0.0.1:5432: address already in use` | Đã có PostgreSQL native trên Windows chiếm cổng | `Get-NetTCPConnection -LocalPort 5432 -State Listen` để xem; hoặc đổi cổng publish trong compose và sửa connection string cho khớp |
+| L4 | `culinaryblog-pg` hoặc `culinaryblog-s3` `unhealthy` | Healthcheck sai/chưa sẵn sàng | `docker compose -f docker-compose.dev.yml logs --tail 50 s3`; RustFS health là `/health` (**không** phải `/minio/health/live`) |
+| L5 | `42P03 database "culinary_blog" does not exist` | Chưa migrate | `dotnet run --project src/backend/CulinaryBlog.API -- --migrate` |
+| L6 | Test đỏ hàng loạt với `Npgsql.PostgresException` | Thiếu `$env:TEST_DATABASE` | Mục 8; nhớ set trong **đúng cửa sổ** đang chạy test |
+| L7 | `next build` báo `Dynamic server usage: Route /sitemap.xml` | Cố tĩnh pre-render sitemap khi backend chưa chạy | Đã xử lý bằng `export const dynamic = 'force-dynamic'` trong `src/frontend/src/app/sitemap.ts` — build vẫn exit 0 |
+| L8 | `next lint` mở prompt hỏi cấu hình ESLint | Repo **chưa** có cấu hình ESLint | Không phải lỗi; kiểm tra FE bằng `npx tsc --noEmit` + `npm run build` |
+| L9 | Ảnh recipe không hiện | `NEXT_PUBLIC_MEDIA_URL` sai, hoặc dùng nhầm URL gốc của object storage | Để `NEXT_PUBLIC_MEDIA_URL` **trống** để dùng proxy `GET /api/v1/resources/images/{key}` (xem `docs/IMAGE_CONTRACT.md` §5) |
+| L10 | `culinaryblog-seq` cứ `Restarting (1)`; log ghi `No default admin password was supplied` | Từ Seq 2026.1, lần chạy đầu **bắt buộc** có `SEQ_FIRSTRUN_ADMINPASSWORD` hoặc `SEQ_FIRSTRUN_NOAUTHENTICATION`; volume `seqdata` cũ chưa có cấu hình này | Compose đã đặt `SEQ_FIRSTRUN_NOAUTHENTICATION=true` và ghim tag `datalust/seq:2026.1`. Nếu container vẫn lỗi: xoá riêng volume seq rồi `up -d seq` → `docker volume rm <tên-thư-mục>_seqdata` |
+
+---
+
+## 12. Phụ lục A — Tương đương cho bash / Git Bash / WSL / CI
+
+| PowerShell | bash |
+|---|---|
+| `$env:FOO = "bar"` | `export FOO="bar"` |
+| `echo $env:FOO` | `echo $FOO` |
+| `Remove-Item Env:FOO` | `unset FOO` |
+| `Get-NetTCPConnection -LocalPort 5432` | `ss -ltnp \| grep 5432` |
+
+Biến dùng trong toàn bộ hướng dẫn:
+`ConnectionStrings__Database`, `Jwt__SigningKey`, `ASPNETCORE_ENVIRONMENT`, `TEST_DATABASE`,
+`POSTGRES_PASSWORD`, `Minio__Endpoint`, `Minio__AccessKey`, `Minio__SecretKey`, `Minio__Bucket`,
+`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_MEDIA_URL`, `NEXT_PUBLIC_SITE_URL`.
+
+> 🔒 **Không commit secret.** Mật khẩu `admin123`/`minioadmin` ở trên là giá trị **dev-only**
+> (đã nằm sẵn trong `docker-compose.dev.yml` và `.env.example`). Production phải dùng
+> object storage **có license** — không dùng RustFS (xem `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md` §6).
+
+---
+
+## 13. Phụ lục B — Những gì đã kiểm chứng trên máy TV4 (28/09/2026)
+
+| Hạng mục | Kết quả |
+|---|---|
+| `docker compose -f docker-compose.dev.yml up -d` | 6 container `Up`; `culinaryblog-pg`, `culinaryblog-s3` = `healthy` |
+| API chạy đúng với biến trong hướng dẫn | `/health/live` = 200, `/health/ready` = 200, `/openapi/v1.json` = 200, `/scalar/v1` = 200; `--migrate` in *"Database migrations applied successfully."* |
+| `http://localhost:9000/health` (RustFS) | 200 |
+| `http://localhost:5341` (Seq) | 200 sau khi ghim `datalust/seq:2026.1` + `SEQ_FIRSTRUN_NOAUTHENTICATION=true` (trước đó container loop `Restarting (1)`) |
+| `ALTER USER postgres PASSWORD '...'` qua `docker exec` | Thành công (socket `trust` không cần mật khẩu cũ); sau đó test sai/đúng mật khẩu qua container khác cho kết quả `28P01` / `1` như mong đợi |
+| `pg_hba.conf` của `culinaryblog-pg` | `local ... trust`, `host ... 127.0.0.1/32 trust`, `host all all all scram-sha-256` → giải thích vì sao `psql` không có `-h` luôn "thành công" |
+| `dotnet build CulinaryBlog.sln --configuration Release` | 0 warning, 0 error |
+| `dotnet format CulinaryBlog.sln --verify-no-changes` | Sạch |
+| `dotnet test CulinaryBlog.sln` | 154/154 + 5/5, `Skipped=0` |
+| `npx tsc --noEmit` (frontend) | exit 0 |
+| `npm run build` (frontend) | exit 0, 16/16 trang |
+| CI sau khi push PR #16 | run `36391382819` — `154/154 + 5/5`, `Skipped=0` |
