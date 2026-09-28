@@ -1,0 +1,25 @@
+﻿Evidence D2 resize (D23 PA-1 Hangfire) - truy van DB sau khi upload JPEG that 1200x800
+DB: PostgreSQL 127.0.0.1:5432 / culinary_test
+
+-- 1) RecipeImages sau khi Hangfire worker chay xong (MediumUrl/ThumbnailUrl da cap nhat)
+                                    OriginalUrl                                    |                                         MediumUrl                                         |                                       ThumbnailUrl                                        
+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------
+ recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91.jpg | recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91_800x600.jpg | recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91_300x300.jpg
+(1 row)
+
+
+-- 2) Hangfire job state (job resize da Succeeded)
+ job_id | last_state |  state_created_utc  |                                                                                                               invocation                                                                                                               
+--------+------------+---------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      1 | Succeeded  | 2026-09-27 17:34:17 | {"Type": "CulinaryBlog.Infrastructure.ResizeImageJob, CulinaryBlog.Infrastructure", "Method": "ExecuteAsync", "Arguments": "[\"\\\"a7bc070a-f6a5-4b94-83db-cb3b765575e4\\\"\",\"\\\"50aaf46d-43ad-4c04-94af-0e6e8262cdb8\\\"\",\"\\\"r
+(1 row)
+
+
+-- 3) Hangfire schema da duoc tao trong DB (12 bang trong schema hangfire)
+aggregatedcounter, counter, hash, job, jobparameter, jobqueue, list, lock, schema, server, set, state
+
+-- 4) Proxy phuc vu ban resize + dashboard (curl)
+ANON  GET /hangfire                              -> 401 (khong phai admin)
+MEMBER(non-admin) GET /hangfire                  -> 403
+ADMIN  GET /hangfire                             -> 200
+OWNER  GET /api/v1/resources/images/{key}_300x300.jpg -> 200 image/jpeg 1599 bytes, kich thuoc 300x200

@@ -322,6 +322,31 @@ export async function register(
 }
 
 // ----------------------------------------------------------------------
+// Sitemap (SEO, D26/TV4): chỉ trả công thức Published (backend đã lọc)
+// ----------------------------------------------------------------------
+
+export interface SitemapRecipe {
+  id: string;
+  slug: string;
+  publishedAt?: string | null;
+}
+
+export async function getSitemapRecipes(): Promise<SitemapRecipe[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/recipes/sitemap`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Không thể tải sitemap.');
+    const json = await res.json();
+    const data = json.data ?? json;
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Error in getSitemapRecipes:', error);
+    return [];
+  }
+}
+
+// ----------------------------------------------------------------------
 // Recipe Detail (TV3 - Tuần 3)
 // ----------------------------------------------------------------------
 

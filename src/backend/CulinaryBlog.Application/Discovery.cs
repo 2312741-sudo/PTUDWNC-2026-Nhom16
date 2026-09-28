@@ -47,7 +47,14 @@ public interface IRecipeDiscoveryRepository
 {
     Task<PagedResult<RecipeSummaryDto>> GetPublishedRecipesAsync(GetRecipesQuery query, CancellationToken ct);
     Task<PagedResult<RecipeSummaryDto>> SearchPublishedRecipesAsync(SearchRecipesQuery query, CancellationToken ct);
+
+    /// <summary>
+    /// Danh sách công thức Published (không Draft/Archived/Deleted) phục vụ sitemap SEO (D26).
+    /// </summary>
+    Task<List<SitemapRecipeDto>> GetPublishedForSitemapAsync(CancellationToken ct);
 }
+
+public sealed record SitemapRecipeDto(Guid Id, string Slug, DateTimeOffset? PublishedAt);
 
 public sealed class GetRecipesHandler(IRecipeDiscoveryRepository repository) : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
@@ -59,6 +66,15 @@ public sealed class SearchRecipesHandler(IRecipeDiscoveryRepository repository) 
 {
     public Task<PagedResult<RecipeSummaryDto>> Handle(SearchRecipesQuery request, CancellationToken ct) =>
         repository.SearchPublishedRecipesAsync(request, ct);
+}
+
+public sealed record GetSitemapQuery : IRequest<List<SitemapRecipeDto>>;
+
+public sealed class GetSitemapHandler(IRecipeDiscoveryRepository repository)
+    : IRequestHandler<GetSitemapQuery, List<SitemapRecipeDto>>
+{
+    public Task<List<SitemapRecipeDto>> Handle(GetSitemapQuery request, CancellationToken ct) =>
+        repository.GetPublishedForSitemapAsync(ct);
 }
 
 public sealed class GetRecipesValidator : AbstractValidator<GetRecipesQuery>

@@ -1,0 +1,19 @@
+# Evidence verify N4 (D2 resize - D23 PA-1 Hangfire) - 27/09/2026
+# Chuoi: dotnet build CulinaryBlog.sln -c Release
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+Time Elapsed 00:00:03.14
+
+# dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
+(khong output - sach) exit code 0
+
+# $env:TEST_DATABASE="Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;..."
+# dotnet test CulinaryBlog.sln --no-build -c Release
+Passed!  - Failed: 0, Passed: 148, Skipped: 0, Total: 148, Duration: 3 m 12 s - CulinaryBlog.Tests.dll (net10.0)
+Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5, Duration: 1 s    - ConcurrencySpike.dll (net10.0)
+
+# Filter rieng (2 lan chay deu 4/4, 6/6 truoc khi sua loi doc MinIO):
+#   dotnet test CulinaryBlog.sln --no-build -c Release --filter ImageResizeD2Tests
+#   -> 4/4 pass (resize kich thuoc qua proxy, idempotent, anh hong fallback original, anh da xoa khong tai sinh)
+# Ghi chu: test E2E bo qua (skip) neu khong env TEST_DATABASE / MinIO khong TCP-reachable.

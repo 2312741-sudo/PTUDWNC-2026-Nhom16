@@ -55,8 +55,14 @@ Dự án áp dụng mô hình Kim tự tháp kiểm thử (Testing Pyramid) vớ
 export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=culinary;Password=culinary_dev_secret"
 
 # Nếu chạy PostgreSQL trên cổng khác hoặc tài khoản test riêng:
-# export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=postgres"
+# export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+# (admin123 = mặc định POSTGRES_PASSWORD của docker-compose.dev.yml; đổi cả 3 nơi nếu dùng mật khẩu khác)
 ```
+
+> ⚠️ **Trên Windows PowerShell dùng `$env:` chứ không dùng `export`:**
+> `$env:TEST_DATABASE = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"`
+> Nếu gặp `28P01 password authentication failed` mặc dù đã khai báo mật khẩu,
+> xem `docs/HUONG_DAN_CHAY_TV4.md` mục 3 và 5 (volume `pgdata` cũ giữ mật khẩu cũ).
 
 ### 2.3. Chạy Toàn bộ 54 Tests
 ```bash
@@ -185,7 +191,7 @@ docker compose -f docker-compose.dev.yml ps
 |---|:---:|---|---|
 | **PostgreSQL 16** | `5432` | `localhost:5432` | `culinary / culinary_dev_secret` |
 | **Redis 7** | `6379` | `localhost:6379` | Không mật khẩu (dev) |
-| **MinIO Storage** | `9000` / `9001` | Console: **http://localhost:9001** | `minioadmin / minioadmin` |
+| **S3 Storage (RustFS)** | `9000` / `9001` | Console: **http://localhost:9001** | `minioadmin / minioadmin` |
 | **MailHog Web UI** | `8025` | Web: **http://localhost:8025** | Không cần mật khẩu |
 | **Seq Log Server** | `5341` | Web: **http://localhost:5341** | Không cần mật khẩu |
 | **Nginx Reverse Proxy**| `80` | Web: **http://localhost:80** | Điều hướng API & Web |

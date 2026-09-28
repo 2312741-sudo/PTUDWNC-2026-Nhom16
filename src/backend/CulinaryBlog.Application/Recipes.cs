@@ -582,6 +582,32 @@ public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser 
 
 #endregion
 
+#region D3 — Archive công thức (FR-RCP-006, D08)
+
+public sealed record ArchiveRecipeCommand(Guid RecipeId) : IRequest<RecipeDto>;
+
+public sealed class ArchiveRecipeValidator : AbstractValidator<ArchiveRecipeCommand>
+{
+    public ArchiveRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
+}
+
+public sealed class ArchiveRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+    : IRequestHandler<ArchiveRecipeCommand, RecipeDto>
+{
+    public async Task<RecipeDto> Handle(ArchiveRecipeCommand cmd, CancellationToken ct)
+    {
+        var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.RecipeId, ct);
+
+        // Published/Draft -> Archived, ẩn public ngay (D08). Idempotent nếu đã Archived.
+        recipe.Archive();
+
+        await repo.SaveChangesAsync(ct);
+        return recipe.ToDto();
+    }
+}
+
+#endregion
+
 #region C2.4 — Xoá công thức (FR-RCP-007) — soft delete (ADR-0001)
 
 // Xoá mềm: set IsDeleted, global query filter tự ẩn khỏi mọi truy vấn.
@@ -602,7 +628,7 @@ public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser cur
         var recipe = await RecipeGuard.LoadOwnedAsync(repo, currentUser, cmd.Id, ct);
         RecipeGuard.EnsureVersion(recipe, cmd.RowVersion);   // 422 nếu bản ghi đã đổi ở nơi khác
 
-        recipe.SoftDelete();                 // set IsDeleted; interceptor cập nhật RowVersion
+        recipe.SoftDelete();                 // set IsDeleted + Status=Archived; interceptor cập nhật RowVersion
         await repo.SaveChangesAsync(ct);
     }
 }

@@ -1,6 +1,8 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getRecipeBySlug } from '@/lib/api';
+import { mediaUrl } from '@/lib/recipe-editor';
 import OwnerEditButton from '@/components/OwnerEditButton';
 import {
   ArrowLeft,
@@ -17,6 +19,38 @@ export const revalidate = 300; // ISR 5 phút cho công thức đã xuất bản
 
 interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+// Ảnh đại diện: ưu tiên ảnh chính, sau đó ảnh đầu tiên (originalUrl là key object storage -> qua mediaUrl)
+function primaryImageKey(recipe: any): string | null {
+  const images = recipe?.images ?? [];
+  const primary = images.find((i: any) => i.isPrimary) ?? images[0];
+  return primary?.originalUrl ?? primary?.url ?? null;
+}
+
+// D4/TV4: canonical + OpenGraph (JSON-LD do recipes/[slug]/layout.tsx nhúng qua lib/recipe-jsonld.ts)
+export async function generateMetadata({ params }: RecipeDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const recipe = await getRecipeBySlug(slug);
+  if (!recipe) return {};
+
+  const url = `${SITE_URL}/recipes/${encodeURIComponent(slug)}`;
+  const image = mediaUrl(primaryImageKey(recipe));
+  return {
+    title: recipe.title,
+    description: recipe.description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: recipe.title,
+      description: recipe.description,
+      type: 'article',
+      url,
+      images: image ? [{ url: image }] : [],
+      publishedTime: recipe.publishedAt ? new Date(recipe.publishedAt).toISOString() : undefined,
+    },
+  };
 }
 
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
@@ -56,6 +90,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
   const extra = recipe as unknown as { id?: string; authorId?: string; categoryName?: string };
   // Chỉ hiện mục dinh dưỡng khi có ít nhất một giá trị
   const hasNutrition = !!recipe.nutrition && Object.values(recipe.nutrition).some((v) => v !== null && v !== undefined);
+  const imageUrl = mediaUrl(primaryImageKey(recipe));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
@@ -122,6 +157,15 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
           </div>
         </dl>
       </header>
+
+      {/* Ảnh chính của công thức (D1.3) */}
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={recipe.title}
+          className="w-full h-72 sm:h-96 object-cover rounded-3xl shadow-lg shadow-orange-50 border border-gray-100"
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Nguyên liệu */}
