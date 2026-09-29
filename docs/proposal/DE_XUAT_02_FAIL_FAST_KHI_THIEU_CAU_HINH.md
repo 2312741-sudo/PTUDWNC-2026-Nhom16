@@ -1,7 +1,7 @@
 # Đề xuất gỡ block B2 — Fail-fast khi thiếu cấu hình object storage (và DB)
 
-> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B2
-> **Mức**: 🔴 Cao · **Nguồn**: §6 mục 1 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](./BAO_CAO_LOI_UPLOAD_ANH_500.md)
+> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B2
+> **Mức**: 🔴 Cao · **Nguồn**: §6 mục 1 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../report/BAO_CAO_LOI_UPLOAD_ANH_500.md)
 > **Cần ai quyết**: nhóm (quyết định này ảnh hưởng tới mọi thành viên)
 
 ---

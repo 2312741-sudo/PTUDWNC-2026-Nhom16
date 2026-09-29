@@ -1,7 +1,7 @@
 # Đề xuất gỡ block B3 — App không nạp `.env` dù `.env.example` liệt kê đầy đủ biến
 
-> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B3
-> **Mức**: 🟡 Trung bình · **Nguồn**: §5.2 và §6 mục 4 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](./BAO_CAO_LOI_UPLOAD_ANH_500.md)
+> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B3
+> **Mức**: 🟡 Trung bình · **Nguồn**: §5.2 và §6 mục 4 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../report/BAO_CAO_LOI_UPLOAD_ANH_500.md)
 > **Cần ai quyết**: nhóm (thêm dependency mới hay chỉ sửa tài liệu)
 
 ---

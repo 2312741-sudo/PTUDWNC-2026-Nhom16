@@ -2,7 +2,7 @@
 
 > **Mục đích**: săn bug chỉ xuất hiện khi **ghép** frontend + backend + hạ tầng thật — loại bug mà
 > test backend và test frontend riêng lẽ **đều xanh**.
-> **Nguồn**: phát sinh từ [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](./BAO_CAO_LOI_UPLOAD_ANH_500.md).
+> **Nguồn**: phát sinh từ [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../../../../report/BAO_CAO_LOI_UPLOAD_ANH_500.md).
 > **Ngày chạy**: 28/09/2026 · **Kết quả**: **41/41 PASS** sau khi sửa (trước đó `D01` = 500).
 > **Phạm vi**: toàn bộ luồng người dùng trên UI: đăng ký → tạo công thức → thêm nguyên liệu/bước →
 > **upload ảnh** → publish → khám phá (list/search/sitemap) → sửa/xoá → vòng đời token.
@@ -175,7 +175,7 @@ Không phát hiện lỗi nào ở luồng auth, concurrency (RowVersion), soft-
 > **Lưu ý khi chạy lại (sau 28/09/2026):** script QA và API giờ đọc `.env` ở thư mục gốc.
 > Trên máy có volume `culinaryblog_pg_data` cũ (`admin123`) thì **phải có `.env`**, nếu không app rơi
 > về default `postgres` và mọi case cần DB sẽ `FAIL` với `28P01`. Trên máy mới clone (volume mới) thì
-> chạy được ngay mà không cần `.env`. Chi tiết: [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
+> chạy được ngay mà không cần `.env`. Chi tiết: [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../../../../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
 
 ## 10. Cách chạy lại nhanh (không cần viết script tay)
 

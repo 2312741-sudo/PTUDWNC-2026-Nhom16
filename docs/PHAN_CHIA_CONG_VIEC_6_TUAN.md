@@ -1,6 +1,6 @@
 # PHÂN CHIA CÔNG VIỆC CULINARY BLOG — 4 NGƯỜI, 6 TUẦN
 
-Cập nhật: 16/09/2026.
+Cập nhật: 30/09/2026 (Tuần 4).
 Danh sách thành viên:
 
 - **TV1 (Nhóm trưởng)**: 2312741 — Nguyễn Thanh Tâm
@@ -11,7 +11,7 @@ Danh sách thành viên:
 Người review & nghiệm thu toàn bộ: **Nguyễn Thanh Tâm (Nhóm trưởng)**.
 Tuần 1 tính từ ngày nhóm bắt đầu; chưa có ngày bắt đầu cụ thể nên không tự gán lịch ngày tháng.
 
-Nguồn yêu cầu: **SRS Culinary Blog v1.1.1** (đã giải quyết toàn bộ 9 mâu thuẫn nội tại C01–C09 và chuẩn hóa Auth API §8.1). Tài liệu liên quan: [Kế hoạch dự án tổng thể](KE_HOACH_DU_AN.md), [Báo cáo mâu thuẫn nội tại](docs/root/SRS_Contradictions_Report.md). File này dùng để giao việc, theo dõi tiến độ và nghiệm thu cá nhân.
+Nguồn yêu cầu: **SRS Culinary Blog v1.1.1** (đã giải quyết toàn bộ 9 mâu thuẫn nội tại C01–C09 và chuẩn hóa Auth API §8.1). Tài liệu liên quan: [Kế hoạch dự án tổng thể](KE_HOACH_DU_AN.md), [Báo cáo mâu thuẫn nội tại](root/SRS_Contradictions_Report.md). File này dùng để giao việc, theo dõi tiến độ và nghiệm thu cá nhân.
 
 ## 1. Nguyên tắc và phạm vi mỗi người
 
@@ -87,6 +87,14 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 | 4 — D5, D6, D7 | Hoàn tất LAB; retry/race/security/publish E2E; backup/restore, health failure, shared cache/multi-worker | 24/24 kỹ năng; xóa-vs-resize không tái sinh file sai; restore và lỗi dependency có bằng chứng |
 | 5 — D5, D7 | Tự deploy/restore/test2 API; Nguyễn Thanh Tâm (Nhóm trưởng) review; HTTPS/CORS/volumes, load/SEO/runbook | Staging đầy đủ; trace HTTP→DB; Nginx/health đúng; số đo và giới hạn được ghi rõ |
 | 6 — D7 | Regression/release, demo publish/media/ops và lab; chốt evidence | Reviewer Nguyễn Thanh Tâm xác nhận; 5 E2E pass; runbook, backup/restore và secrets instructions bàn giao |
+
+**Tình hình hiện tại của TV4 (cập nhật 30/09/2026, Tuần 4)**:
+
+- ✅ **Tuần 3 đã đóng** và merge vào `main` qua PR #16: D23 (Hangfire queue persistent + dashboard Admin), D27 (media proxy có auth, Published công khai / Draft-Archived giới hạn owner), D2 (resize 300×300/800×600 idempotent), D4 (sitemap/robots/OG/JSON-LD), D5 (EXPLAIN + k6), D6 (Lab L4 — 4 phase · 39/39 check PASS trên nhánh `practice/TV4/L4`); kèm gỡ sự cố CI 5 run đỏ do image MinIO bị gỡ khỏi registry → chuyển `rustfs/rustfs` và ghim tag + digest.
+- ✅ **Tuần 4 — phần đã xong (30/09)**: phát hiện và sửa bug upload ảnh trả `500` (`storage` thiếu cấu hình `Minio`/S3 → credential rỗng → RustFS trả `401` → bị bọc thành `500 server.error`); chuẩn hóa nạp `.env` cho local dev (B3) bằng `DotNetEnv`, kèm `.env.example`; thêm 3 test `DevConfigParityTests` chống hồi quy; chuẩn hóa default PostgreSQL; QA tích hợp Frontend–Backend **41/41 PASS**; toàn hệ thống **172/172 test xanh** sau khi sync `origin/main`. Đóng gói trong **PR #19**, đang chờ review.
+- 🔄 **Tuần 4 — phần đang làm**: chờ review/merge PR #19; chuẩn bị đề xuất **B1** (đổi lỗi storage `500` → `503 storage.unavailable` có mã lỗi rõ ràng) và **B2** (semantics fail-fast khi thiếu cấu hình) để không lặp lại lỗi khó chẩn đoán.
+- ⛔ **Còn block, chờ quyết định nhóm**: **B4** (health check storage phải xác thực credential thay vì chỉ TCP probe), **B5** (cơ chế xem ảnh Draft trong wizard — phụ thuộc IMAGE_CONTRACT D27 đã chốt PA-2), **B6** (tạo/distribute tài khoản Admin — phụ thuộc seed data của TV1).
+- ⏳ **Chưa bắt đầu ở Tuần 4**: retry/race/publish E2E, backup & restore trên multi-container, shared cache/multi-worker, kịch bản file-size attack và MIME spoofing — cần hoàn thành để đạt 24/24 ô kỹ năng (hiện 9/24).
 
 ## 4. Phụ thuộc, bàn giao và cân bằng khối lượng
 
@@ -166,10 +174,18 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 
 | Thành viên | MSSV | Phần công việc | Kỹ năng xác nhận | Deploy/restore staging | Demo cuối kỳ | Trạng thái hiện tại |
 |---|---|---|---|---|---|---|
-| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 14/24 (K01, K02, K04, K05, K08, K10, K14, K15, K16, K17, K20, K21, K23, K24) | Đạt kiểm thử CI/Dev | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1 & 2 (A1-A5, A7) |
-| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 20/24 (K01, K02, K03, K04, K05, K06, K07, K08, K09, K10, K11, K12, K13, K16, K17, K18, K19, K20, K21, K24) | Chờ Staging | Hoàn thành Tuần 1, 2 & 3 | ✅ Hoàn thành Tuần 1, 2 & 3 (B1-B7) |
-| TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 7/24 (K01, K02, K03, K05, K06, K07, K21) | Chờ Staging | Hoàn thành Tuần 1 | 🔄 Hoàn thành Tuần 1, Đang làm Tuần 2 |
-| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 8/24 (K01, K05, K11, K12, K13, K20, K23, K24) | Chờ Staging | Hoàn thành Tuần 1 | 🔄 Hoàn thành Tuần 1, Đang làm Tuần 2 |
+| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 18/24 (K01, K02, K04, K05, K06, K08, K10, K11, K12, K14, K15, K16, K17, K19, K20, K21, K23, K24) | Đạt kiểm thử CI/Dev | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1, 2 & 3 (A1–A5, A7) |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 20/24 (K01, K02, K03, K04, K05, K06, K07, K08, K09, K10, K11, K12, K13, K16, K17, K18, K19, K20, K21, K24) | Chờ Staging | Hoàn thành Tuần 1, 2 & 3 | ✅ Hoàn thành Tuần 1, 2 & 3 (B1–B7) — PR #18 đã merge vào `main` |
+| TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 8/24 (K01, K02, K03, K05, K06, K07, K08, K21) | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 (Recipe Aggregate, RowVersion, RefreshTokens) |
+| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 9/24 (K01, K05, K08, K11, K12, K13, K20, K23, K24) | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 — PR #16 đã merge; 🔄 Tuần 4 đang thực hiện (PR #19 chờ review) |
+
+> **Cập nhật tiến độ 30/09/2026 (Tuần 4)**: số `x / 24` bằng đúng số mã K liệt kê trong cột trên — chỉ tính ô đã có minh chứng và được reviewer xác nhận. Trạng thái "Hoàn thành Tuần N" nghĩa là đã có code + test + evidence trên nhánh đã merge; `Kỹ năng xác nhận` mới là phần nghiệm thu 24/24 của G4.
+>
+> **Kết quả kiểm chứng chung tính đến 30/09/2026**: `dotnet build` Release 0 warning/0 error; `dotnet format --verify-no-changes` exit 0; `dotnet test` **172/172 pass** (167 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Skipped=0`); QA tích hợp Frontend–Backend **41/41 PASS**; `tsc --noEmit` và `next build` exit 0; `docker compose config --quiet` exit 0.
+>
+> **Việc mới hoàn thành trong Tuần 4**: TV4 gỡ bug upload ảnh trả `500` do thiếu cấu hình `Minio`/S3, chuẩn hóa nạp `.env` (gỡ block B3), thêm 3 test `DevConfigParityTests`, ghi báo cáo trước/sau và 6 đề xuất B1–B6 — đóng gói trong **PR #19** đang chờ review. TV2 hoàn tất Search & Cache Tuần 3 qua **PR #18** (đã merge). PR #16 của TV4 đã merge gồm D23 (Hangfire queue + dashboard Admin), D27 (media proxy có auth), D2 (resize 300×300/800×600), D4 (sitemap/robots/OG/JSON-LD), D5 (EXPLAIN + k6) và D6 (Lab L4 — 39/39 check PASS); kèm gỡ sự cố CI 5 run đỏ do image MinIO bị gỡ khỏi registry (chuyển sang `rustfs/rustfs`).
+>
+> **Chưa đạt G4 (cổng cuối Tuần 4)**: ô kỹ năng còn thiếu — TV1 6/24, TV2 4/24, TV3 16/24, TV4 15/24; line coverage chưa đo tới 80%; 5 E2E flows Playwright chưa có; mọi thành viên đều chưa tự deploy/restore staging. Các block B1, B2, B4, B5, B6 của TV4 còn **chờ quyết định nhóm**.
 
 Mẫu một bản ghi:
 

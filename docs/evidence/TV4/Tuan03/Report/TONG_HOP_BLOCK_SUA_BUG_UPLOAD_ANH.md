@@ -1,6 +1,6 @@
 # Tổng hợp block khi sửa bug upload ảnh 500
 
-> **Ngữ cảnh**: sửa [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](./BAO_CAO_LOI_UPLOAD_ANH_500.md) và soát
+> **Ngữ cảnh**: sửa [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../../../../report/BAO_CAO_LOI_UPLOAD_ANH_500.md) và soát
 > tích hợp ([`TEST_CASE_TICH_HOP_FE_BE.md`](./TEST_CASE_TICH_HOP_FE_BE.md)).
 > **Phạm vi tài liệu này**: các hạng mục **đã xác định nguyên nhân + đã có đề xuất giải pháp +
 > rủi ro + test case**, nhưng **cần quyết định của nhóm** mới sửa được. Không phải handoff.
@@ -21,12 +21,12 @@
 
 | # | Block | Vì sao block | Loại quyết định | File đề xuất | Mức |
 |---|---|---|---|---|---|
-| B1 | Lỗi object storage trả `500 server.error` chung chung, FE không phân biệt được | Đổi **contract lỗi API** (thêm mã `storage.unavailable`, đổi 500 → 503) ⇒ FE phải biết mã mới, có thể cần thêm retry | Nhóm thống nhất contract lỗi (có TV3 là consumer) | [`DE_XUAT_01_LOI_STORAGE_TRA_503_CO_MA_LOI.md`](./DE_XUAT_01_LOI_STORAGE_TRA_503_CO_MA_LOI.md) | 🔴 Cao |
-| B2 | API khởi động "thành công" dù thiếu credential storage; lỗi lộ ra giữa lúc user đang dùng | Bắt validate lúc startup ⇒ **thành viên không bật được storage cũng không chạy được API** (mất khả năng làm việc nhóm khác) | Nhóm chọn: fail-fast toàn cục / cảnh báo / chỉ dev | [`DE_XUAT_02_FAIL_FAST_KHI_THIEU_CAU_HINH.md`](./DE_XUAT_02_FAIL_FAST_KHI_THIEU_CAU_HINH.md) | 🔴 Cao |
-| B3 | `.env.example` liệt kê `Minio__*` nhưng app **không** nạp `.env` ⇒ tưởng đã cấu hình | Thêm package `DotNetEnv` (dependency mới + `.env` có thể lọt vào CI/log) **hoặc** chỉ sửa tài liệu | ✅ **Đã chốt + đã làm**: thêm `DotNetEnv` 3.2.0, 2 chốt chặn (bỏ qua `Production`, không ghi đè biến đã có) | [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8 | ✅ Xong |
-| B4 | `/health` báo `minio=Healthy` khi credential sai (chỉ TCP probe) | Đổi ngữ nghĩa `/health`; kết quả này được dùng để quyết định "app sẵn sàng" ⇒ báo sai hướng nguy hiểm | Nhóm chốt ngữ nghĩa health check | [`DE_XUAT_04_HEALTH_CHECK_STORAGE_XAC_THUC.md`](./DE_XUAT_04_HEALTH_CHECK_STORAGE_XAC_THUC.md) | 🟡 TB |
-| B5 | Xem trước ảnh recipe **Draft** trong wizard: `<img>` không gửi Bearer ⇒ proxy `403` | Cần chọn cơ chế: presigned URL / token trong query / cookie / chấp nhận không xem được. **Đụng IMAGE_CONTRACT D27** | Nhóm + TV3 (chủ sở hữu UI wizard) | [`DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md`](./DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) | 🟡 TB |
-| B6 | Không có user **Admin** ⇒ không ai mở được `/hangfire`, không ai test được CRUD category | Tạo user Admin trong seeder = dữ liệu/mật khẩu seed ⇒ cần chốt tài khoản & cách phân phối mật khẩu | Nhóm + TV1 (quản trị dữ liệu seed) | [`DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md`](./DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) | 🟢 Thấp |
+| B1 | Lỗi object storage trả `500 server.error` chung chung, FE không phân biệt được | Đổi **contract lỗi API** (thêm mã `storage.unavailable`, đổi 500 → 503) ⇒ FE phải biết mã mới, có thể cần thêm retry | Nhóm thống nhất contract lỗi (có TV3 là consumer) | [`DE_XUAT_01_LOI_STORAGE_TRA_503_CO_MA_LOI.md`](../../../../proposal/DE_XUAT_01_LOI_STORAGE_TRA_503_CO_MA_LOI.md) | 🔴 Cao |
+| B2 | API khởi động "thành công" dù thiếu credential storage; lỗi lộ ra giữa lúc user đang dùng | Bắt validate lúc startup ⇒ **thành viên không bật được storage cũng không chạy được API** (mất khả năng làm việc nhóm khác) | Nhóm chọn: fail-fast toàn cục / cảnh báo / chỉ dev | [`DE_XUAT_02_FAIL_FAST_KHI_THIEU_CAU_HINH.md`](../../../../proposal/DE_XUAT_02_FAIL_FAST_KHI_THIEU_CAU_HINH.md) | 🔴 Cao |
+| B3 | `.env.example` liệt kê `Minio__*` nhưng app **không** nạp `.env` ⇒ tưởng đã cấu hình | Thêm package `DotNetEnv` (dependency mới + `.env` có thể lọt vào CI/log) **hoặc** chỉ sửa tài liệu | ✅ **Đã chốt + đã làm**: thêm `DotNetEnv` 3.2.0, 2 chốt chặn (bỏ qua `Production`, không ghi đè biến đã có) | [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../../../../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8 | ✅ Xong |
+| B4 | `/health` báo `minio=Healthy` khi credential sai (chỉ TCP probe) | Đổi ngữ nghĩa `/health`; kết quả này được dùng để quyết định "app sẵn sàng" ⇒ báo sai hướng nguy hiểm | Nhóm chốt ngữ nghĩa health check | [`DE_XUAT_04_HEALTH_CHECK_STORAGE_XAC_THUC.md`](../../../../proposal/DE_XUAT_04_HEALTH_CHECK_STORAGE_XAC_THUC.md) | 🟡 TB |
+| B5 | Xem trước ảnh recipe **Draft** trong wizard: `<img>` không gửi Bearer ⇒ proxy `403` | Cần chọn cơ chế: presigned URL / token trong query / cookie / chấp nhận không xem được. **Đụng IMAGE_CONTRACT D27** | Nhóm + TV3 (chủ sở hữu UI wizard) | [`DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md`](../../../../proposal/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) | 🟡 TB |
+| B6 | Không có user **Admin** ⇒ không ai mở được `/hangfire`, không ai test được CRUD category | Tạo user Admin trong seeder = dữ liệu/mật khẩu seed ⇒ cần chốt tài khoản & cách phân phối mật khẩu | Nhóm + TV1 (quản trị dữ liệu seed) | [`DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md`](../../../../proposal/DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) | 🟢 Thấp |
 
 ## 3. Khuyến nghị thứ tự gỡ
 
@@ -45,7 +45,7 @@ B3 đã triển khai theo **Phương án B** (thêm `DotNetEnv`). Kèm theo đó
 - Chặn `.env` ở cả `.gitignore` **và** `.dockerignore`.
 - Viết lại `.env.example` thành mô hình **default/override**.
 
-Chi tiết code + bằng chứng kiểm chứng: [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
+Chi tiết code + bằng chứng kiểm chứng: [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../../../../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
 
 ## 4. Điều **không** bị block (đã làm trong lần sửa này)
 

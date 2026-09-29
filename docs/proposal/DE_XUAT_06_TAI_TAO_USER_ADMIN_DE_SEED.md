@@ -1,7 +1,7 @@
 # Đề xuất gỡ block B6 — Không có user **Admin** nên không test được `/hangfire` và CRUD category
 
-> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B6
-> **Mức**: 🟢 Thấp · **Phát hiện**: [`TEST_CASE_TICH_HOP_FE_BE.md`](./TEST_CASE_TICH_HOP_FE_BE.md) B03, §8
+> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B6
+> **Mức**: 🟢 Thấp · **Phát hiện**: [`TEST_CASE_TICH_HOP_FE_BE.md`](../evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md) B03, §8
 > **Cần ai quyết**: nhóm (chốt tài khoản seed + cách chia mật khẩu) + TV1 (quản lý dữ liệu seed)
 
 ---

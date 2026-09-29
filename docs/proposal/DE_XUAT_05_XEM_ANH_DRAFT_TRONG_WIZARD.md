@@ -1,7 +1,7 @@
 # Đề xuất gỡ block B5 — Xem trước ảnh recipe **Draft** trong wizard (proxy cần Bearer, `<img>` không gửi được)
 
-> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B5
-> **Mức**: 🟡 Trung bình · **Phát hiện**: [`TEST_CASE_TICH_HOP_FE_BE.md`](./TEST_CASE_TICH_HOP_FE_BE.md) §4 (D03/D04)
+> **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B5
+> **Mức**: 🟡 Trung bình · **Phát hiện**: [`TEST_CASE_TICH_HOP_FE_BE.md`](../evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md) §4 (D03/D04)
 > **Cần ai quyết**: nhóm + **TV3 (Huỳnh Quốc Trung — chủ sở hữu UI wizard `ImagesStep.tsx`)**
 > **Đụng quyết định**: D27 / PA-2 trong `docs/IMAGE_CONTRACT.md` §5
 

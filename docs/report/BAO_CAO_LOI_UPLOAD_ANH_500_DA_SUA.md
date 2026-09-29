@@ -4,7 +4,7 @@
 > **Người thực hiện**: Nguyễn Hữu Trung Sơn (2312739 — TV4)
 > **Ngày sửa**: 28/09/2026
 > **Nhánh**: `2312739_NHTSon_D3-D4-D5-D6`
-> **Trạng thái**: **ĐÃ SỬA + ĐÃ THÊM TEST CHỐNG TÁI DIỄN** — 6 phần cải thiện còn lại thành block, xem [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md)
+> **Trạng thái**: **ĐÃ SỬA + ĐÃ THÊM TEST CHỐNG TÁI DIỄN** — 6 phần cải thiện còn lại thành block, xem [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md)
 
 ---
 
@@ -41,7 +41,7 @@ bước upload ảnh. Đây là lý do báo cáo gốc buộc phải export `Con
 
 **Cách đã chọn để gỡ:** đưa **cả hai về cùng một default chuẩn `postgres`**, rồi để giá trị thật của từng
 máy nằm ở `.env` (gitignored) và được loader nạp tự động. Chi tiết ở
-[`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
+[`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
 
 ### 2.2 Vì sao test backend vẫn xanh (điểm cốt lõi của câu hỏi "test riêng thì ổn")
 
@@ -100,7 +100,7 @@ từ trước; `POSTGRES_PASSWORD` chỉ có tác dụng lúc init volume lần 
 
 Bằng chứng loader có tác dụng: tạm đổi tên `.env` ⇒ API rơi về default `postgres` ⇒ log
 `28P01 password authentication failed for user "postgres"`; khôi phục `.env` ⇒ `/health/ready` = `200`.
-Chi tiết đầy đủ ở [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.4.
+Chi tiết đầy đủ ở [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.4.
 
 ### 3.2 `tests/CulinaryBlog.Tests/DevConfigParityTests.cs` (test chống tái diễn)
 
@@ -207,10 +207,10 @@ NEXT_PUBLIC_MEDIA_URL"* — tức **không** hiện ảnh. Đã sửa hướng d
 ## 6. Phần còn lại — đã tách thành block
 
 Sáu hạng mục cải thiện còn lại (kể cả 4/6 mục trong §6 của báo cáo gốc) **không tự sửa** vì đụng
-quyết định nhóm/contract. Xem [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md).
+quyết định nhóm/contract. Xem [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md).
 
 **Cập nhật 28/09/2026:** **B3 đã gỡ** (thêm `DotNetEnv` + `EnvFileLoader`) — xem §3.1b và
-[`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8. Còn lại **B1, B2, B4, B5, B6**
+[`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8. Còn lại **B1, B2, B4, B5, B6**
 vẫn chờ quyết định nhóm.
 
 ## 7. Tài liệu tham chiếu

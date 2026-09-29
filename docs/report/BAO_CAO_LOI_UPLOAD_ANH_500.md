@@ -16,9 +16,9 @@
 >
 > **Trạng thái sau khi sửa:** xem [`BAO_CAO_LOI_UPLOAD_ANH_500_DA_SUA.md`](./BAO_CAO_LOI_UPLOAD_ANH_500_DA_SUA.md)
 > (§3.1 thêm section `Minio`, §3.1b đổi mô hình default + `.env`) và
-> [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](./TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md).
+> [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md).
 > Riêng câu "app không nạp `.env`" **đã hết hiệu lực**: nhóm đã thêm `DotNetEnv` + `EnvFileLoader` —
-> xem [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](./DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
+> xem [`DE_XUAT_03_NAP_FILE_DOT_ENV.md`](../proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) §8.
 
 ---
 
