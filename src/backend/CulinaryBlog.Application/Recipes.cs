@@ -543,7 +543,7 @@ public sealed class PublishRecipeValidator : AbstractValidator<PublishRecipeComm
     public PublishRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
 }
 
-public sealed class PublishRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+public sealed class PublishRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser, IRecipeCacheService? cache = null)
     : IRequestHandler<PublishRecipeCommand, RecipeDto>
 {
     public async Task<RecipeDto> Handle(PublishRecipeCommand cmd, CancellationToken ct)
@@ -554,6 +554,14 @@ public sealed class PublishRecipeHandler(IRecipeRepository repo, ICurrentUser cu
         recipe.Publish();
 
         await repo.SaveChangesAsync(ct);
+
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("recipes:list:", ct);
+            await cache.InvalidatePrefixAsync("recipes:search:", ct);
+            await cache.InvalidatePrefixAsync("categories:", ct);
+        }
+
         return recipe.ToDto();
     }
 }
@@ -565,7 +573,7 @@ public sealed class UnpublishRecipeValidator : AbstractValidator<UnpublishRecipe
     public UnpublishRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
 }
 
-public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser, IRecipeCacheService? cache = null)
     : IRequestHandler<UnpublishRecipeCommand, RecipeDto>
 {
     public async Task<RecipeDto> Handle(UnpublishRecipeCommand cmd, CancellationToken ct)
@@ -576,6 +584,14 @@ public sealed class UnpublishRecipeHandler(IRecipeRepository repo, ICurrentUser 
         recipe.Unpublish();
 
         await repo.SaveChangesAsync(ct);
+
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("recipes:list:", ct);
+            await cache.InvalidatePrefixAsync("recipes:search:", ct);
+            await cache.InvalidatePrefixAsync("categories:", ct);
+        }
+
         return recipe.ToDto();
     }
 }
@@ -591,7 +607,7 @@ public sealed class ArchiveRecipeValidator : AbstractValidator<ArchiveRecipeComm
     public ArchiveRecipeValidator() => RuleFor(x => x.RecipeId).NotEmpty();
 }
 
-public sealed class ArchiveRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+public sealed class ArchiveRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser, IRecipeCacheService? cache = null)
     : IRequestHandler<ArchiveRecipeCommand, RecipeDto>
 {
     public async Task<RecipeDto> Handle(ArchiveRecipeCommand cmd, CancellationToken ct)
@@ -602,6 +618,14 @@ public sealed class ArchiveRecipeHandler(IRecipeRepository repo, ICurrentUser cu
         recipe.Archive();
 
         await repo.SaveChangesAsync(ct);
+
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("recipes:list:", ct);
+            await cache.InvalidatePrefixAsync("recipes:search:", ct);
+            await cache.InvalidatePrefixAsync("categories:", ct);
+        }
+
         return recipe.ToDto();
     }
 }
@@ -620,7 +644,7 @@ public sealed class DeleteRecipeValidator : AbstractValidator<DeleteRecipeComman
     public DeleteRecipeValidator() => RuleFor(x => x.Id).NotEmpty();
 }
 
-public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser)
+public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser currentUser, IRecipeCacheService? cache = null)
     : IRequestHandler<DeleteRecipeCommand>
 {
     public async Task Handle(DeleteRecipeCommand cmd, CancellationToken ct)
@@ -630,6 +654,13 @@ public sealed class DeleteRecipeHandler(IRecipeRepository repo, ICurrentUser cur
 
         recipe.SoftDelete();                 // set IsDeleted + Status=Archived; interceptor cập nhật RowVersion
         await repo.SaveChangesAsync(ct);
+
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("recipes:list:", ct);
+            await cache.InvalidatePrefixAsync("recipes:search:", ct);
+            await cache.InvalidatePrefixAsync("categories:", ct);
+        }
     }
 }
 
