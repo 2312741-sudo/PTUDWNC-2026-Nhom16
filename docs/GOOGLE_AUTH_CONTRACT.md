@@ -68,12 +68,13 @@ Nguồn SRS: Tr. 19–20, Tr. 47–50, Phụ lục Chương 8.
 
 ## 3. Cấu hình Môi trường (Environment Variables)
 
-* **Frontend (`.env.local`):**
+* **Frontend (`src/frontend/.env.local`):**
   ```bash
   AUTH_SECRET=your_authjs_secret_key_32_chars
   AUTH_GOOGLE_ID=your_google_client_id.apps.googleusercontent.com
   AUTH_GOOGLE_SECRET=your_google_client_secret
-  NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+  # API dev chạy ở 5080 (launchSettings.json), KHÔNG phải 5000.
+  NEXT_PUBLIC_API_URL=http://localhost:5080/api/v1
   ```
 * **Backend (`appsettings.json` / User Secrets):**
   ```json

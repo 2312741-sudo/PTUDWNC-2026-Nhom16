@@ -4,7 +4,8 @@
 > **Nhánh Git đề xuất**: `2312739_NHTSon_D3-D4-D5-D6` (tv4/week3), khởi động từ main đã cập nhật
 > **Lab nhánh**: `practice/TV4/L4`
 > **Reviewer & nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Cập nhật lần cuối**: 28/09/2026 (T8) — **N5/D6 Lab L4 xong** (4 phase · 39/39 check PASS, nhánh riêng `practice/TV4/L4`, commit `3642428`) và **CI 5 run đỏ liên tiếp đã gỡ** (nguyên nhân ngoài code: image MinIO bị gỡ khỏi registry) → commit `cd72b27` + `d78e25c`, **CI xanh** run `36344662570`.
+> **Cập nhật lần cuối**: 30/09/2026 (T9) — **sửa xong bug upload ảnh `500` + chuẩn hóa nạp `.env` (gỡ block B3)**, thêm 3 test `DevConfigParityTests`, QA tích hợp 41/41, toàn hệ thống **172/172 test xanh** sau khi sync `origin/main`; đóng gói trong **PR #19** đang chờ review. Chi tiết ở mục "Sự cố upload 500" bên dưới.
+> Lịch sử: 28/09/2026 (T8) — **N5/D6 Lab L4 xong** (4 phase · 39/39 check PASS, nhánh riêng `practice/TV4/L4`, commit `3642428`) và **CI 5 run đỏ liên tiếp đã gỡ** (nguyên nhân ngoài code: image MinIO bị gỡ khỏi registry) → commit `cd72b27` + `d78e25c`, **CI xanh** run `36344662570`. PR #16 đã merge vào `main`.
 > Lịch sử: 27/09/2026 (T7 — chốt đề xuất D23/D27: **D23 → Hangfire PA-1**, **D27 → base media URL proxy PA-2** theo `docs/DE_XUAT_GIAI_QUYET_D23_D27.md`; khớp PR #15 TV3) → **đã implement xong cả hai: D27 proxy (N2) + D2 resize Hangfire (N4)**
 
 > **Bản sửa đổi 28/09 T8 (N5 + sự cố CI)**:
@@ -218,6 +219,22 @@
 | `ArchiveRecipeCommand`/`DeleteRecipeCommand` + `Recipe.MarkDeleted()` (soft D08) | `Recipes.cs`, `Recipe.cs` |
 | OTEL trace + metrics (ASP.NET/HttpClient/EF) | `Program.cs` + `CulinaryBlog.API.csproj` + `packages.lock.json` |
 | robots.txt + sitemap.xml + SEO metadata trang công thức | `src/frontend/src/app/robots.ts`, `sitemap.ts`, `app/recipes/[slug]/` |
+
+### Sự cố upload ảnh trả `500` — điều tra, sửa và chuẩn hóa `.env` (30/09 T9)
+
+| Nội dung | Chi tiết |
+|---|---|
+| **Triệu chứng** | `POST /api/v1/recipes/{id}/images` trả `500 server.error`, dù `GET /resources/images/{key}` (D27 proxy) chạy được. Lỗi xuất hiện sau khi cài máy mới / đổi môi trường. |
+| **Nguyên nhân gốc** | Section cấu hình `Minio`/S3 **không được nạp** → `AccessKey`/`SecretKey` rỗng → RustFS trả `401` → service ném exception → middleware bọc thành `500` chung. Không phải lỗi logic upload, không phải do đổi MinIO → RustFS. |
+| **Sửa cấu hình** | Bổ sung section `Minio` cho `appsettings.Development.json`; chuẩn hóa default chuỗi PostgreSQL về `postgres` để khớp `docker-compose.dev.yml`; `CulinaryBlog.Infrastructure/appsettings.json` dùng `postgres` (còn file local dùng `admin123` theo volume cũ — không commit). |
+| **Nạp `.env` (B3)** | Thêm `DotNetEnv` 3.2.0 + `src/backend/CulinaryBlog.API/EnvFileLoader.cs`, gọi **trước** `WebApplication.CreateBuilder(args)`. Thứ tự ưu tiên: biến môi trường/CI > `.env` > `appsettings`. Production **không** nạp `.env`. |
+| **File mới** | `.env.example` (chỉ placeholder), cập nhật `.gitignore` + `.dockerignore`; file `.env` thật chứa credential của TV4 được gitignore, **không** đưa vào commit. |
+| **Test chống hồi quy** | `tests/CulinaryBlog.Tests/DevConfigParityTests.cs` — 3 test đối chiếu `appsettings.Development.json` với biến môi trường và nội dung `.env` cho chuỗi kết nối PostgreSQL và object storage. |
+| **QA tích hợp FE–BE** | **41/41 PASS** — xem `Report/TEST_CASE_TICH_HOP_FE_BE.md`. |
+| **Kết quả kiểm chứng** | `dotnet build` Release **0 warning / 0 error**; `dotnet format --verify-no-changes` exit 0; `dotnet test` **167/167 + 5/5**, `Skipped=0` (tổng **172/172**) sau khi merge `origin/main`; `npx tsc --noEmit` và `npm run build` exit 0; `docker compose config --quiet` exit 0. |
+| **Bàn giao** | Commit `b833aa3` (cấu hình + fix) và `997ef5f` (merge `origin/main`), đã push lên `2312739_NHTSon_D3-D4-D5-D6`; mở **PR #19** — chờ review, **chưa merge**. |
+| **Tài liệu** | Báo cáo trước/sau: `docs/report/BAO_CAO_LOI_UPLOAD_ANH_500.md` và `docs/report/BAO_CAO_LOI_UPLOAD_ANH_500_DA_SUA.md`; đề xuất B1–B6 trong `docs/proposal/`; tổng hợp block tại `Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`. |
+| **Còn lại** | B1 (`500` → `503 storage.unavailable`), B2 (fail-fast khi thiếu cấu hình), B4, B5, B6 — **chờ quyết định nhóm**. |
 
 ---
 

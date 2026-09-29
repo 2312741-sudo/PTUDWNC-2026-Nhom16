@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\backend\CulinaryBlog.Infrastructure\CulinaryBlog.Infrastructure.csproj" />
+    <!-- Để dùng chung EnvFileLoader (đọc .env) với API, tránh mỗi test project tự parse .env. -->
+    <ProjectReference Include="..\..\src\backend\CulinaryBlog.API\CulinaryBlog.API.csproj" />
   </ItemGroup>
 
 </Project>

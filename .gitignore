@@ -19,3 +19,6 @@ env.ps1
 next-env.d.ts
 
 *.zip
+
+# Log chạy local
+run.log

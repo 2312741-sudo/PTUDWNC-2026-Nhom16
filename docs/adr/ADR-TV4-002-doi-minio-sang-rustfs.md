@@ -143,7 +143,7 @@ RustFS **không** phục vụ `/minio/health/live` → dùng `--health-cmd "curl
 
 - [`ADR-TV4-001` — Vận hành, storage và logout tuần 1](ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) (D27)
 - [`IMAGE_CONTRACT.md` §5](../IMAGE_CONTRACT.md) — proxy ảnh có auth (PA-2), §7 — ảnh phái sinh
-- [`DE_XUAT_GIAI_QUYET_D23_D27.md`](../DE_XUAT_GIAI_QUYET_D23_D27.md) — Hangfire (PA-1) + proxy (PA-2)
+- [`DE_XUAT_GIAI_QUYET_D23_D27.md`](../proposal/DE_XUAT_GIAI_QUYET_D23_D27.md) — Hangfire (PA-1) + proxy (PA-2)
 - [`HUONG_DAN_TEST_APP.md`](../HUONG_DAN_TEST_APP.md) — chạy test với storage thật, kiểm tra `Skipped=0`
 - [`SO_EVIDENCE_TUAN_3.md` §TV4-K23](../evidence/TV4/Tuan03/SO_EVIDENCE_TUAN_3.md) — bằng chứng gỡ sự cố
 - [`HANDOFF_TV4_TUAN3.md`](../evidence/TV4/Tuan03/HANDOFF_TV4_TUAN3.md) — quy tắc cho người tiếp nhận
