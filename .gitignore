@@ -9,6 +9,7 @@
 
 env.ps1
 .vscode/
+.vs/
 
 # Frontend dependencies and build
 **/node_modules/

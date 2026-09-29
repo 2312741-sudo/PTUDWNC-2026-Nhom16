@@ -110,6 +110,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
+builder.Services.AddSingleton<IRecipeCacheService, RecipeCacheService>();
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
 builder.Services.AddScoped<MinioStorageService>();
 builder.Services.AddScoped<IFileStorageService>(sp => sp.GetRequiredService<MinioStorageService>());

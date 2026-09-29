@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCategoryBySlug, getRecipes } from '@/lib/api';
@@ -8,6 +9,30 @@ export const revalidate = 600; // ISR 10 mins as per SRS
 
 interface CategoryDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: CategoryDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const category = await getCategoryBySlug(slug);
+
+  if (!category) {
+    return {
+      title: 'Không tìm thấy danh mục | Culinary Blog',
+    };
+  }
+
+  return {
+    title: `${category.name} | Culinary Blog`,
+    description: category.description || `Khám phá các công thức món ăn thuộc danh mục ${category.name} trên Culinary Blog.`,
+    alternates: {
+      canonical: `/categories/${category.slug}`,
+    },
+    openGraph: {
+      title: `${category.name} | Culinary Blog`,
+      description: category.description || `Tổng hợp công thức nấu ăn ngon thuộc danh mục ${category.name}.`,
+      images: category.imageUrl ? [{ url: category.imageUrl }] : undefined,
+    },
+  };
 }
 
 export default async function CategoryDetailPage({ params }: CategoryDetailPageProps) {

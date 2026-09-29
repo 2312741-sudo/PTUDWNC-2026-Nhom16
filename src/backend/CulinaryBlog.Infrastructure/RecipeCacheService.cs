@@ -1,14 +1,8 @@
 using System.Collections.Concurrent;
+using CulinaryBlog.Application;
 using Microsoft.Extensions.Logging;
 
 namespace CulinaryBlog.Infrastructure;
-
-public interface IRecipeCacheService
-{
-    Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan ttl, CancellationToken ct = default);
-    Task InvalidateAsync(string key, CancellationToken ct = default);
-    Task InvalidatePrefixAsync(string prefix, CancellationToken ct = default);
-}
 
 public sealed class RecipeCacheService : IRecipeCacheService
 {
