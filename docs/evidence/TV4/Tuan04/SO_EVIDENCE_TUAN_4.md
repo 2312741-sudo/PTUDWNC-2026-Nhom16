@@ -52,6 +52,12 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 | 4 | File mới `src/frontend/src/components/SearchFilterSelect.tsx` | ✅ có `'use client'`; `onChange` nằm trong Client Component; props truyền vào (`name`, `defaultValue`, `options`) **đều serialize được** |
 | 5 | Đã merge `main` vào nhánh tuần 4 | ✅ merge `4770602`, kéo thêm `1492b39` (TV2: sửa hiển thị ảnh + thêm ô tìm kiếm ở trang `/recipes`) |
 | 6 | Chạy thật TC1–TC4 (`/search`, `?q=a`, `?q=gà`, `?q=pho`) | ⬜ **Chưa chạy** — dừng theo chỉ đạo, không tự dựng app để test vì việc sửa đã ở trên `main`; chuyển sang làm cùng **N2-2 (E2E luồng search)** để có bằng chứng lặp lại được |
+| 7 | Frontend build sau khi merge `main` | ✅ `npx tsc --noEmit` **exit 0**; `npm run build` **exit 0** (log: `Tuan04/logs/baseline_frontend.log`) |
+
+> **Lưu ý về ý nghĩa của `next build`**: build xanh **không** phủ được lỗi `500` của `/search` — route
+> `/search` được Next.js đánh dấu là **dynamic** (`ƒ /search`), lỗi RSC "Event handlers cannot be
+> passed to Client Component props" chỉ nổ lúc render runtime. Vì vậy mục #7 chỉ chứng minh
+> *TypeScript + build không hỏng*, còn bằng chứng lỗi đã hết vẫn phải lấy bằng E2E ở **N2-2**.
 
 > Báo cáo `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` **giữ nguyên 100%** (không sửa, không xoá)
 > theo quyết định trước đó; trạng thái "đã có bản sửa trên `main`" được ghi ở đây và ở
@@ -63,10 +69,13 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 
 > Cột **Đã có (trước tuần 4)** = 9 ô đã được `PHAN_CHIA_CONG_VIEC_6_TUAN.md` ghi nhận.
 > Cột **Tuần 4** = việc sẽ bù; chi tiết ở `KE_HOACH_TUAN_4_TV4.md` mục 5.
+> Bản **mapping đầy đủ 24 dòng** (FR/NFR ↔ ADR ↔ đường dẫn evidence ↔ lệnh kiểm chứng ↔ kết quả đo
+> ↔ reviewer) nằm ở **`MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`** — lập 30/09, chờ Tâm xác nhận.
+> Bảng dưới đây là bản rút gọn theo nhóm người làm, **không** tự nâng trạng thái ô lên ✅.
 
 | K | Kỹ thuật con cần chứng minh | Đã có (trước tuần 4) | Việc tuần 4 | Evidence key | Trạng thái |
 |---|---|---|---|---|---|
-| K01 | SRS/FR-NFR/ADR/API contract | ✅ (ADR media/vận hành) | Bảng mapping FR ↔ ADR ↔ evidence 24 dòng (N0-5) | TV4-K01 | 🟡 Nền có · tuần 4 làm nốt mapping |
+| K01 | SRS/FR-NFR/ADR/API contract | ✅ (ADR media/vận hành) | Bảng mapping FR ↔ ADR ↔ evidence 24 dòng (N0-5) | `MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` | 🟡 **Mapping xong 30/09** · 24 dòng K01–K24 · chờ Tâm xác nhận |
 | K02 | .NET 10 Minimal APIs, REST/version, Scalar/RFC7807 | ❌ | Health check mới, mã lỗi `storage.unavailable` (B1 nếu duyệt), mã lỗi từ chối file (N1-1, N1-7, N2-4) | TV4-K02 | ⬜ Chưa làm |
 | K03 | Clean Architecture, interface, DI, value object | ❌ | `ObjectStorageHealthCheck` đúng tầng; dùng lại `IObjectStorageReader` (N1-1) | TV4-K03 | ⬜ Chưa làm |
 | K04 | CQRS/MediatR + behavior logging/validation/caching | ❌ | Lab L5 tự viết behavior tối thiểu (N3-2) | TV4-K04 | ⬜ Chưa làm |

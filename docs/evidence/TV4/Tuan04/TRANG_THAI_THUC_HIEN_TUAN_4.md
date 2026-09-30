@@ -11,12 +11,12 @@
 
 | Nhóm | Task | Kế hoạch | Đã xong | Đang làm | Còn lại | Tỷ lệ |
 |---|---|---|---|---|---|---|
-| N0 | Mở đầu tuần 4 (baseline, bằng chứng 500, merge main, mapping K01) | 6 | 4 | 0 | 2 | 67% |
+| N0 | Mở đầu tuần 4 (baseline, bằng chứng 500, merge main, mapping K01) | 6 | 6 | 0 | 0 | 100% |
 | N1 | D5 — Health/observability/backup/multi-instance | 8 | 0 | 0 | 8 | 0% |
 | N2 | D7 — E2E, tấn công file, CI, số đo | 8 | 0 | 0 | 8 | 0% |
 | N3 | D6 — Lab L5 + bù mục 2 L4 | 4 | 0 | 0 | 4 | 0% |
 | N4 | Runbook, release, bàn giao | 4 | 0 | 0 | 4 | 0% |
-| **Tổng** | | **30** | **4** | **0** | **26** | **≈13%** |
+| **Tổng** | | **30** | **6** | **0** | **24** | **20%** |
 
 > Tỷ lệ tính theo **số việc đã có bằng chứng**, không tính "đã lên kế hoạch".
 
@@ -30,13 +30,13 @@
 | 2 | Tạo `docs/evidence/TV4/Tuan04/` với 4 tài liệu | ✅ Xong | `KE_HOACH_TUAN_4_TV4.md`, `MO_TA_CONG_VIEC_TUAN_4.md`, `SO_EVIDENCE_TUAN_4.md`, `TRANG_THAI_THUC_HIEN_TUAN_4.md` |
 | 3 | Commit `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` vào nhánh này | ✅ Xong | `a4fc8d8` (nội dung **không sửa**) |
 | 4 | Chạy lại baseline (build / format / test / coverage) và ghi số liệu thật | ✅ Xong 30/09 | **Build 0 warning/0 error** · **format exit 0** · **Test 178/178** (173 + 5, `Skipped=0`) · **Coverage `Application` line 83.37%**. Log: `Tuan04/logs/baseline_{build,format,test,coverage}.log` |
-| 5 | Xác nhận lỗi `500` `/search` đã có bản sửa trên `main` (**không tự gỡ lỗi**) | ✅ Xong 30/09 | `e523579` đã là ancestor của `origin/main`; `page.tsx` còn **0** `onChange`; `SearchFilterSelect.tsx` có `'use client'`. Chi tiết: `SO_EVIDENCE_TUAN_4.md` §1.1 |
+| 5 | Xác nhận lỗi `500` `/search` đã có bản sửa trên `main` (**không tự gỡ lỗi**) | ✅ Xong 30/09 | `e523579` đã là ancestor của `origin/main`; `page.tsx` còn **0** `onChange`; `SearchFilterSelect.tsx` có `'use client'`. Frontend build xanh: `npx tsc --noEmit` **exit 0**, `npm run build` **exit 0**. Log: `Tuan04/logs/baseline_frontend.log`. Chi tiết: `SO_EVIDENCE_TUAN_4.md` §1.1 |
 | 6 | Merge `main` vào nhánh tuần 4 | ✅ Xong 30/09 | Merge `4770602` — kéo `1492b39` (TV2: sửa hiển thị ảnh + ô tìm kiếm ở `/recipes`) |
-| 7 | Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô | ⬜ Chưa làm | Tuần 3 ghi "Chưa làm" — cần cho G4 |
+| 7 | Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô | ✅ Xong 30/09 | `Tuan04/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` — 24 dòng K01–K24, mỗi dòng có FR/NFR · ADR · đường dẫn evidence · commit · lệnh kiểm chứng · kết quả đo · reviewer. Kết luận: **0/24 ô đủ bằng chứng**, 9 ô có nền, 15 ô còn thiếu. **Chờ Tâm xác nhận** cột FR/NFR và ngày |
 
-**Còn lại của N0**: bảng mapping K01 (mục 7). Phần chạy thật TC1–TC4 để lấy bằng chứng `/search`
-đã được chuyển sang làm cùng **N2-2 (E2E luồng "tìm kiếm")** — vì bản sửa đã có trên `main`, chạy
-tay một lần không tạo ra bằng chứng lặp lại được cho cổng CI.
+**N0 đã xong 6/6.** Phần chạy thật TC1–TC4 để lấy bằng chứng `/search` đã được chuyển sang làm cùng
+**N2-2 (E2E luồng "tìm kiếm")** — vì bản sửa đã có trên `main`, chạy tay một lần không tạo ra bằng chứng
+lặp lại được cho cổng CI.
 
 **Ghi chú bổ sung (30/09)** — nằm ở **tài liệu trạng thái này**, không sửa báo cáo gốc: lỗi
 `/search` đã được **TV2 sửa trên `main`** bằng commit `e523579` *"fix(frontend): extract
@@ -142,9 +142,11 @@ Chi tiết theo ô: `SO_EVIDENCE_TUAN_4.md` mục 2.
 
 ## 10. Việc làm tiếp theo (thứ tự ưu tiên)
 
-1. Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô (phần cuối của N0, cần cho G4).
+1. ~~Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô~~ — **xong 30/09** (`MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`); phần còn lại là **Tâm xác nhận** cột FR/NFR và ngày cho từng ô.
 2. Dựng Playwright + cổng CI frontend (N2-1, N2-3) — trong đó **luồng search** phủ TC1–TC12 của
-   báo cáo lỗi 500, và chạy `npm run build` + `tsc --noEmit` để có số liệu frontend cho baseline.
+   báo cáo lỗi 500. ~~chạy `npm run build` + `tsc --noEmit` để có số liệu frontend cho baseline~~ —
+   **đã chạy 30/09, exit 0** (`logs/baseline_frontend.log`); giờ cần đưa 2 lệnh này vào CI để có số
+   liệu lặp lại mỗi lần merge.
 3. B4 health check + test 503 khi Redis chết (N1-1, N1-2).
 4. Backup/restore script + drill (N1-4).
 5. OTEL collector + Seq + chụp trace thật (N1-3).
