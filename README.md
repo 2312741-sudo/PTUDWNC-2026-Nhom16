@@ -377,6 +377,7 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
 
 ### 7.2. Danh mục đầy đủ
 
+- 🚀 [**Hướng dẫn cài đặt, cấu hình & chạy chương trình chi tiết (Setup & Run Guide)**](docs/HUONG_DAN_CAI_DAT_VA_CHAY_CHUONG_TRINH.md)
 - 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](docs/HUONG_DAN_TEST_APP.md)
 - 🖥️ [Hướng dẫn cài đặt & chạy ứng dụng — riêng TV4 (PowerShell, xử lý sai mật khẩu PostgreSQL)](docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md)
 - ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/report/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
