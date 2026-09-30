@@ -1,11 +1,62 @@
 # Báo cáo nghiệm thu Tuần 4 — TV1 (Nguyễn Thanh Tâm - 2312741)
 
 - **Người thực hiện**: Nguyễn Thanh Tâm (MSSV: 2312741) — Nhóm trưởng (TV1)
-- **Phần việc phụ trách**: Tính năng Đổi mật khẩu (Change Password), gia cố bảo mật xác thực, negative security tests & chuẩn hóa 24/24 ô kỹ năng
+- **Phần việc phụ trách**: Nghiệm thu toàn bộ API Endpoints của hệ thống, Tính năng Đổi mật khẩu (Change Password), gia cố bảo mật xác thực, negative security tests & chuẩn hóa 24/24 ô kỹ năng
 - **Mã task tuần 4**: A6, A7
 - **Nhánh Git**: `main`
 - **Ngày hoàn thành**: 30/09/2026
-- **Trạng thái**: Hoàn thành 100% mục tiêu Tuần 4 (130/130 tests pass)
+- **Trạng thái**: Hoàn thành 100% mục tiêu Tuần 4 (177/177 tests pass)
+- **Quy tắc đặt tên file nộp bài Lab 4**: `Lab4_2312741_NguyenThanhTam.docx` (kèm file dự phòng `Lab04_2312741_NguyenThanhTam.docx`)
+
+---
+
+## 0. Yêu cầu tối thiểu của Lab 4: Hoàn thành việc cài đặt tất cả API endpoints (41/41 Endpoints - 100%)
+
+Toàn bộ hệ thống Backend đã hoàn tất, chuẩn hóa và kiểm thử tự động 100% tất cả 41 API endpoints (vượt xa chỉ tiêu tối thiểu):
+
+| STT | Nhóm chức năng | Phương thức & Tuyến đường (Endpoint) | Quyền hạn / Policy | Trạng thái |
+|:---:|---|---|:---:|:---:|
+| 1 | **Auth & Account** | `POST /api/v1/auth/register` | Public (Rate limit 10/min) | **Hoàn thành** |
+| 2 | Auth & Account | `POST /api/v1/auth/login` | Public (Lockout 5 lần) | **Hoàn thành** |
+| 3 | Auth & Account | `POST /api/v1/auth/refresh` | Public | **Hoàn thành** |
+| 4 | Auth & Account | `GET /api/v1/auth/me` | Bearer Token (Authenticated) | **Hoàn thành** |
+| 5 | Auth & Account | `PATCH /api/v1/auth/me` | Bearer Token (Anti-XSS) | **Hoàn thành** |
+| 6 | Auth & Account | `POST /api/v1/auth/logout` | Bearer Token (Authenticated) | **Hoàn thành** |
+| 7 | Auth & Account | `POST /api/v1/auth/change-password` | Bearer Token (Revoke old tokens) | **Hoàn thành** |
+| 8 | Auth & Account | `POST /api/v1/auth/google` | Public (OAuth2 Google) | **Hoàn thành** |
+| 9 | **Categories** | `GET /api/v1/categories` | Public (Cache) | **Hoàn thành** |
+| 10 | Categories | `GET /api/v1/categories/{slug}` | Public | **Hoàn thành** |
+| 11 | Categories | `POST /api/v1/categories` | AdminPolicy | **Hoàn thành** |
+| 12 | Categories | `PUT /api/v1/categories/{id}` | AdminPolicy | **Hoàn thành** |
+| 13 | Categories | `DELETE /api/v1/categories/{id}` | AdminPolicy | **Hoàn thành** |
+| 14 | **Recipe Discovery** | `GET /api/v1/recipes` | Public (Phân trang, bộ lọc) | **Hoàn thành** |
+| 15 | Recipe Discovery | `GET /api/v1/recipes/search` | Public (FTS unaccent tiếng Việt) | **Hoàn thành** |
+| 16 | Recipe Discovery | `GET /api/v1/recipes/sitemap` | Public (SEO sitemap) | **Hoàn thành** |
+| 17 | Recipe Discovery | `GET /api/v1/recipes/{slug}` | Public | **Hoàn thành** |
+| 18 | **Recipe Authoring** | `POST /api/v1/recipes` | AuthorPolicy | **Hoàn thành** |
+| 19 | Recipe Authoring | `PUT /api/v1/recipes/{id}` | AuthorPolicy (Owner/Admin, OCC) | **Hoàn thành** |
+| 20 | Recipe Authoring | `DELETE /api/v1/recipes/{id}` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 21 | Recipe Authoring | `POST /api/v1/recipes/{id}/ingredients` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 22 | Recipe Authoring | `PUT /api/v1/recipes/{id}/ingredients/{iid}` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 23 | Recipe Authoring | `DELETE /api/v1/recipes/{id}/ingredients/{iid}` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 24 | Recipe Authoring | `POST /api/v1/recipes/{id}/steps` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 25 | Recipe Authoring | `PUT /api/v1/recipes/{id}/steps/{sid}` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 26 | Recipe Authoring | `DELETE /api/v1/recipes/{id}/steps/{sid}` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 27 | Recipe Authoring | `PATCH /api/v1/recipes/{id}/steps/reorder` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 28 | Recipe Authoring | `GET /api/v1/me/recipes` | AuthorPolicy (Owner) | **Hoàn thành** |
+| 29 | Recipe Authoring | `GET /api/v1/me/recipes/counts` | AuthorPolicy (Owner) | **Hoàn thành** |
+| 30 | **Publishing & Media**| `PATCH /api/v1/recipes/{id}/publish` | AuthorPolicy (Validation 8 checks) | **Hoàn thành** |
+| 31 | Publishing & Media | `PATCH /api/v1/recipes/{id}/unpublish` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 32 | Publishing & Media | `PATCH /api/v1/recipes/{id}/archive` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 33 | Publishing & Media | `POST /api/v1/recipes/{id}/images` | AuthorPolicy (Upload max 5MB) | **Hoàn thành** |
+| 34 | Publishing & Media | `PATCH /api/v1/recipes/{id}/images/{imageId}` | AuthorPolicy (Primary cover) | **Hoàn thành** |
+| 35 | Publishing & Media | `DELETE /api/v1/recipes/{id}/images/{imageId}` | AuthorPolicy (Owner/Admin) | **Hoàn thành** |
+| 36 | Publishing & Media | `GET /api/v1/resources/images/{**key}` | Public (Serving static image) | **Hoàn thành** |
+| 37 | **Observability** | `GET /health` | Public (Liveness probe) | **Hoàn thành** |
+| 38 | Observability | `GET /health/live` | Public (Liveness probe) | **Hoàn thành** |
+| 39 | Observability | `GET /health/ready` | Public (Readiness probe DB/Disk) | **Hoàn thành** |
+| 40 | **Documentation** | `GET /openapi/v1.json` | Public (OpenAPI specification) | **Hoàn thành** |
+| 41 | Documentation | `GET /scalar/v1` | Public (Scalar interactive docs) | **Hoàn thành** |
 
 ---
 
@@ -74,11 +125,11 @@
 - **Đầu ra, đường dẫn code/config, PR/commit**:
   - Rà soát toàn bộ 24 nhóm kỹ năng K01–K24 của thành viên TV1 theo phân công `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md`.
   - Tích hợp và nghiệm thu các module của nhóm trên nhánh `main`.
-  - Điều phối và thực hiện kiểm thử tự động toàn bộ giải pháp: Đạt **130/130 tests pass 100% (Green)** (125 tests `CulinaryBlog.Tests` + 5 tests `ConcurrencySpike`).
-  - Kiểm tra Next.js 15 App Router frontend: `npm run build` thành công 100% không phát sinh cảnh báo hay lỗi kiểu dữ liệu.
+  - Điều phối và thực hiện kiểm thử tự động toàn bộ giải pháp: Đạt **177/177 tests pass 100% (Green)** (172 tests `CulinaryBlog.Tests` + 5 tests `ConcurrencySpike`).
+  - Kiểm tra Next.js 15 App Router frontend: `npm run build` thành công 100% với 15/15 trang tĩnh và động không phát sinh lỗi.
 - **Test / Lệnh chạy, môi trường, kết quả thực tế**:
-  - `dotnet test CulinaryBlog.sln`: 130/130 Passed.
-  - `npm run build` trong `src/frontend`: Compiled successfully (11/11 pages).
+  - `dotnet test CulinaryBlog.sln`: 177/177 Passed.
+  - `npm run build` trong `src/frontend`: Compiled successfully (15/15 pages).
   - `dotnet format CulinaryBlog.sln --verify-no-changes`: Passed không vi phạm quy chuẩn mã nguồn.
 - **Reviewer xác nhận**: Nguyễn Thanh Tâm (Nhóm trưởng) — Ngày: 30/09/2026.
 
@@ -88,14 +139,16 @@
 
 | Nhóm nội dung | Kế hoạch tuần 4 | Thực tế hoàn thành | Đánh giá |
 |---|---|---|:---:|
+| **Yêu cầu tối thiểu Lab 4: Cài đặt tất cả API endpoints** | Hoàn thành 100% tất cả API endpoints theo đặc tả | Hoàn thành toàn diện 41/41 API endpoints trên 7 nhóm nghiệp vụ | **100%** |
 | **Bảo mật & Đổi mật khẩu (Task A6)** | Triển khai API đổi mật khẩu, mã hóa PBKDF2, thu hồi refresh tokens cũ | Hoàn thiện API, CSDL, giao diện Dashboard và 5 automated tests | **100%** |
 | **Kiểm thử Concurrency & Lockout (Task A6/K07)** | Concurrency spike, RowVersion, Lost Update prevention | 5 tests concurrency spike pass 100%, middleware HTTP 422 | **100%** |
 | **Negative Security & Rate Limiting (Task A7/K10)** | Chống XSS, rate limiting 10 req/min, lockout 5 lần, CORS/Policy | Hoàn tất cấu hình, middleware và kiểm thử bảo mật tự động | **100%** |
-| **Chuẩn hóa 24 Kỹ năng & Điều phối (Task A7/K24)** | Đạt 24/24 K kỹ năng, build sạch, 130 tests green | Hoàn tất nghiệm thu, build frontend và backend 100% thành công | **100%** |
+| **Chuẩn hóa 24 Kỹ năng & Điều phối (Task A7/K24)** | Đạt 24/24 K kỹ năng, build sạch, 177 tests green | Hoàn tất nghiệm thu, build frontend và backend 100% thành công | **100%** |
 
 ---
 
 ## 3. Xác nhận hoàn thành
 
 - Toàn bộ nội dung công việc của **Tuần 4 (Lab 04)** của thành viên **Nguyễn Thanh Tâm (TV1 - 2312741)** đã hoàn thành 100%.
+- File báo cáo nộp bài theo chuẩn: `Lab4_2312741_NguyenThanhTam.docx` đã được tạo sẵn sàng nộp tại `~/Downloads/Lab4_2312741_NguyenThanhTam.docx`.
 - Báo cáo Word nộp bài: `Lab04_2312741_NguyenThanhTam.docx` đã được sinh và lưu tại `docs/evidence/TV1/` và `~/Downloads/`.
