@@ -13,7 +13,7 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 /// </summary>
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AuthDbContext db, CancellationToken ct = default)
+    public static async Task SeedAsync(AuthDbContext db, bool forceUpdate = false, CancellationToken ct = default)
     {
         try { await db.Database.MigrateAsync(ct); } catch { /* Ignore migration errors if tables already exist */ }
 
@@ -39,11 +39,14 @@ public static class DbSeeder
             await db.SaveChangesAsync(ct);
         }
 
-        // Cập nhật các công thức cũ nếu còn mang nguyên liệu mẫu chung ("Thịt chính / Hải sản" hoặc "Nguyên liệu chính")
-        var hasGenericIngredients = await db.RecipeIngredients
-            .AnyAsync(i => i.Name.Contains("Thịt chính") || i.Name.Contains("Nguyên liệu chính"), ct);
+        // Cập nhật các công thức cũ nếu còn mang nguyên liệu mẫu chung ("Thịt chính", "Nguyên liệu chính", "Thịt tươi ngon...") hoặc chưa có dữ liệu chuẩn xác từ RecipeSeedData
+        var isFullyUpdated = !forceUpdate
+            && await db.RecipeIngredients.AnyAsync(i => i.Name == "Lạp xưởng Mai Quế Lộ", ct)
+            && await db.RecipeIngredients.AnyAsync(i => i.Name == "Nạm bò hoa", ct)
+            && await db.RecipeIngredients.AnyAsync(i => i.Name == "Mắm ruốc Huế", ct)
+            && !await db.RecipeIngredients.AnyAsync(i => i.Name.Contains("Thịt tươi ngon") || i.Name.Contains("Thịt chính") || i.Name.Contains("Nguyên liệu chính"), ct);
 
-        if (hasGenericIngredients)
+        if (!isFullyUpdated)
         {
             if (db.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
             {
@@ -54,11 +57,12 @@ public static class DbSeeder
                 await db.Database.ExecuteSqlRawAsync("DELETE FROM \"RecipeIngredients\"; DELETE FROM \"RecipeSteps\";", ct);
             }
 
-            var existingRecipes = await db.Recipes.ToListAsync(ct);
+            var existingRecipes = await db.Recipes.IgnoreQueryFilters().ToListAsync(ct);
             var seedLookup = RecipeSeedData.All.ToDictionary(r => r.Slug, r => r);
 
-            foreach (var recipe in existingRecipes)
+            for (int i = 0; i < existingRecipes.Count; i++)
             {
+                var recipe = existingRecipes[i];
                 if (!seedLookup.TryGetValue(recipe.Slug, out var seed)) continue;
 
                 recipe.ResetIngredientsAndSteps();
@@ -91,6 +95,12 @@ public static class DbSeeder
                 foreach (var step in seed.Steps)
                 {
                     recipe.AddStep(step.Title, step.Description, step.TimerMinutes, step.Tip);
+                }
+
+                // Xuất bản (Publish) tất cả các món trừ một số món mẫu ở cuối để test trạng thái Draft
+                if (recipe.Status == RecipeStatus.Draft && (i < 88 || recipe.Slug == "pho-bo-tai-nam-ha-noi"))
+                {
+                    recipe.Publish();
                 }
             }
 
@@ -230,8 +240,8 @@ public static class DbSeeder
             // Ảnh đại diện chất lượng cao chuẩn từng món
             recipe.AddImage(GetDishImage(seed.Slug), $"Ảnh món {seed.Title}");
 
-            // 85% món được xuất bản (Published), 15% để Draft
-            if (i % 7 != 0)
+            // 88% món được xuất bản (Published), 12% để Draft (chỉ các món cuối làm Draft để test phân quyền)
+            if (i < 88 || seed.Slug == "pho-bo-tai-nam-ha-noi")
             {
                 recipe.Publish();
             }
