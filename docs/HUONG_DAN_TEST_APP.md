@@ -135,17 +135,23 @@ dotnet test CulinaryBlog.sln --no-build --configuration Release --collect:"XPlat
 
 ## 4. Kiểm thử Giao diện Frontend (Next.js 15 App Router)
 
-### 4.1. Kiểm tra Typecheck & Build Tĩnh
+### 4.1. Kiểm tra Typecheck & Build Tĩnh (Khớp Quy trình CI `.github/workflows/frontend.yml`)
 ```bash
 cd src/frontend
 
-# Cài đặt thư viện phụ thuộc
-npm install
+# Cài đặt thư viện phụ thuộc (CI dùng locked package-lock.json)
+npm ci
 
-# Kiểm tra kiểu TypeScript và build tối ưu hóa
+# Kiểm tra kiểu TypeScript nghiêm ngặt
+npx tsc --noEmit
+
+# Chạy kiểm thử tự động (nếu có)
+npm test --if-present
+
+# Biên dịch tối ưu hóa Next.js cho toàn bộ routes
 npm run build
 ```
-**Kết quả mong đợi**: Biên dịch thành công 100%, 7/7 routes được tạo (`/`, `/_not-found`, `/categories`, `/categories/[slug]`, `/dashboard/categories`, `/dashboard/profile`).
+**Kết quả mong đợi**: Type check sạch sẽ không lỗi, biên dịch thành công 100% với 15/15 routes tĩnh và động.
 
 ### 4.2. Khởi chạy Server Frontend
 ```bash
