@@ -12,10 +12,15 @@
 | Hạng mục | Kết quả |
 |---|---|
 | `dotnet build -c Release` | ✅ 0 warning / 0 error |
-| `dotnet test -c Release` (toàn bộ) | ✅ **205/205 pass** (200 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`), Failed 0, Skipped 0 |
+| `dotnet test -c Release` (toàn bộ) | ✅ **210/210 pass** (205 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`), Failed 0, Skipped 0 |
+| `dotnet format --verify-no-changes` | ✅ exit 0 (CI cũng chạy bước này) |
 | `npx tsc --noEmit` (frontend) | ✅ exit 0 |
 | `npm run build` (frontend) | ✅ exit 0, 17 route build xong |
 | Secret scan (`deploy/scan-secrets.sh`) | ✅ pass; đã thử cố ý chèn JWT hardcode → bị bắt, exit 1 |
+| CI GitHub Actions | ✅ cả `Backend week 1` và `Frontend CI` xanh trên commit `ee5e78b` |
+
+Đã merge `origin/main` (`3d0695d`, TV2 discovery lab) trước khi push, không có conflict. Số test
+tăng từ 205 lên 210 vì TV2 thêm `Week4DiscoveryAndPerformanceLabTests`.
 
 Lưu ý: các test E2E storage/Redis/DB chạy thật với service local. Nếu máy khác không bật
 `docker compose -f docker-compose.dev.yml up -d postgres redis s3 mailhog seq otel-collector` thì các
@@ -59,9 +64,13 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
    (RustFS/S3/NAS).
 4. **Google OAuth (K09) còn chờ credentials** — không tính hoàn thành.
 5. **Chưa có k6 / Playwright / Lighthouse** (K21, K22) — thuộc N2.
-6. **Secret cũ còn trong git history.** Đã bỏ khỏi `render.yaml` nhưng **phải rotate khoá JWT thật**;
+6. **Bẫy CI đã vấp: `redis-cli` không có trên ubuntu runner.** Bước "chờ Redis sẵn sàng" dùng
+   `redis-cli` làm job backend đỏ trong khi toàn bộ test đều xanh — `redis-cli` chỉ nằm bên trong
+   service container. Đã đổi sang `/dev/tcp` của bash. Khi thêm bước chờ dịch vụ mới, nhớ runner
+   GitHub có rất ít binary; cứ dùng `bash /dev/tcp` hoặc `docker exec` vào service container.
+7. **Secret cũ còn trong git history.** Đã bỏ khỏi `render.yaml` nhưng **phải rotate khoá JWT thật**;
    việc này cần làm ngoài repo.
-7. **Bucket `culinary-blog` phải tồn tại trước khi app báo khoẻ.** `HealthTests` tự bootstrap bucket qua
+8. **Bucket `culinary-blog` phải tồn tại trước khi app báo khoẻ.** `HealthTests` tự bootstrap bucket qua
    `IObjectStorageWriter`, nhưng ứng dụng thật thì không — production cần bucket có sẵn hoặc bước khởi tạo
    khi deploy (ADR D27 nói bucket private).
 
@@ -83,5 +92,6 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
 ## 6. Bước tiếp theo đề xuất
 
 1. Reviewer duyệt mapping + B1/B2/B4, rồi cập nhật issue `#20`, `#21`, `#22`.
-2. Dựng 2 tiến trình API sau Nginx + đặt lịch backup thật → đóng nốt K23.
+2. Hoàn thiện nốt K23 ở mức triển khai: đóng gói 2 API vào profile docker-compose dùng chung, và
+   chốt nơi đặt lịch backup 03:00 ICT cùng kho lưu 30 ngày.
 3. Sang N2: Playwright 5 luồng, k6 đo p95/p99 và tỉ lệ cache hit, CI frontend, EXPLAIN lại.

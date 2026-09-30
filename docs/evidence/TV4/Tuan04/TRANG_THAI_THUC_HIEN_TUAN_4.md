@@ -52,14 +52,14 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 
 | # | Việc | Trạng thái | Bằng chứng | Ghi chú |
 |---|---|---|---|---|
-| 1 | `ObjectStorageHealthCheck` xác thực credential (B4) | ⬜ Chưa làm | — | Có đề xuất sẵn; có thể tự làm |
-| 2 | Test `/health/ready` → 503 khi Redis chết (thay dòng "200 hoặc 503" ở `HealthTests.cs:41`) | ⬜ Chưa làm | — | |
-| 3 | OTEL collector + Serilog→Seq + **trace HTTP→DB thật** | ⬜ Chưa làm | — | Tuần 3 đã tự ghi nhận thiếu bằng chứng trace |
-| 4 | Script backup `pg_dump` 03:00 giữ 30 ngày + backup file + **drill restore** | ⬜ Chưa làm | — | Timezone backup cần nhóm chốt |
-| 5 | 2 API instance dùng chung cache/queue (hoặc ADR ghi giới hạn) | ⬜ Chưa làm | — | Cache hiện là in-process |
-| 6 | Sitemap cron 02:00 UTC + distributed lock (CR-7) | ⬜ Chưa làm | — | |
-| 7 | B1/B2 (500 → 503; fail-fast) | ⛔ Chờ quyết định nhóm | — | Không tự sửa trước khi duyệt |
-| 8 | Bỏ secret hardcode khỏi `render.yaml` + secret scan CI | ⬜ Chưa làm | — | |
+| 1 | `ObjectStorageHealthCheck` xác thực credential (B4) | 🟢 Xong 30/09 | `ObjectStorageCredentialProbe.cs`, `HealthTests` 18/18 | Probe `StatObject` phân biệt `AccessDenied` / `BucketNotFound` / `ObjectNotFound` |
+| 2 | Test `/health/ready` → 503 khi Redis chết (thay dòng "200 hoặc 503" ở `HealthTests.cs:41`) | 🟢 Xong 30/09 | `HealthTests` 5/5 | Viết lại để kỳ vọng **dứt khoát** thay vì chấp nhận cả 200 lẫn 503 |
+| 3 | OTEL collector + Serilog→Seq + **trace HTTP→DB thật** | 🟢 Xong 30/09 | `logs/seq_trace_recipes.log`, `TracingObservabilityTests` 2/2 | Sửa 2 lỗi làm app không khởi động được (xem handoff mục 5) |
+| 4 | Script backup `pg_dump` 03:00 giữ 30 ngày + backup file + **drill restore** | 🟢 Xong 30/09 | `deploy/backup.sh`, `deploy/restore.sh`, drill 14 bảng | Lịch `0 20 * * *` UTC trong `.github/workflows/backup.yml`; cần secret `DATABASE_URL` |
+| 5 | 2 API instance dùng chung cache/queue (hoặc ADR ghi giới hạn) | 🟢 Xong 30/09 | `logs/multi_instance_two_api.log` | 2 process thật sau nginx: 5/5 mỗi instance, cache dùng chung qua Redis |
+| 6 | Sitemap cron 02:00 UTC + distributed lock (CR-7) | 🟢 Xong 30/09 | `SitemapLockTests` 3/3, `/sitemap.xml` 200 | Lock Redis chặn sinh trùng; phải đăng lịch **sau** `builder.Build()` |
+| 7 | B1/B2 (500 → 503; fail-fast) | 🟢 Xong 30/09 — **chờ duyệt** | `StorageFailureContractTests` | B1: `503 storage.unavailable`, không retry. B2: `ValidateOnStart()` bỏ qua `Testing` |
+| 8 | Bỏ secret hardcode khỏi `render.yaml` + secret scan CI | 🟢 Xong 30/09 | `deploy/scan-secrets.sh` pass | **Khoá JWT cũ còn trong git history, phải rotate ngoài repo** |
 
 ---
 
