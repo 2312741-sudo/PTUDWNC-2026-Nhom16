@@ -152,6 +152,12 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         for (var i = 0; i < ordered.Count; i++) ordered[i].SetNumber(i + 1);
     }
 
+    public void ResetIngredientsAndSteps()
+    {
+        _ingredients.Clear();
+        _steps.Clear();
+    }
+
     // ----- Images (đúng 1 primary khi có ảnh) -----
     public RecipeImage AddImage(string originalUrl, string? altText)
     {
