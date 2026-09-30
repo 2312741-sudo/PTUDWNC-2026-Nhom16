@@ -168,6 +168,32 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         }
     }
 
+    public async Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(userId) ?? throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản.");
+        if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
+
+        var result = await users.ChangePasswordAsync(user, command.CurrentPassword, command.NewPassword);
+        if (!result.Succeeded)
+        {
+            if (result.Errors.Any(e => e.Code == "PasswordMismatch"))
+                throw new AppException(400, "auth.wrong_current_password", "Mật khẩu hiện tại không chính xác.");
+
+            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new AppException(400, "auth.invalid_password", msg);
+        }
+
+        await users.UpdateSecurityStampAsync(user);
+        var activeTokens = await db.RefreshTokens
+            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .ToListAsync(ct);
+        foreach (var t in activeTokens)
+        {
+            t.Revoke(DateTime.UtcNow);
+        }
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(id) ?? throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản.");

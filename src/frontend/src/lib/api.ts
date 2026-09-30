@@ -181,6 +181,32 @@ export async function logout(token: string): Promise<{ success: boolean; error?:
   }
 }
 
+export async function changePassword(
+  data: { currentPassword: string; newPassword: string },
+  token: string
+): Promise<{ success: boolean; error?: string; validationErrors?: Record<string, string[]> }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (res.status === 204 || res.ok) return { success: true };
+    const err = await res.json().catch(() => ({}));
+    return {
+      success: false,
+      error: err.title || err.detail || 'Đổi mật khẩu thất bại.',
+      validationErrors: err.errors,
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
+
 // ----------------------------------------------------------------------
 // Recipe Discovery & Search Endpoints (TV2 - Tuần 2)
 // ----------------------------------------------------------------------
