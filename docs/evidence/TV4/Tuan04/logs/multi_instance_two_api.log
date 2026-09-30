@@ -1,0 +1,33 @@
+﻿=== TV4-K23 (N1-5): hai tien trinh API that + state dung chung qua Redis ===
+Ngay: 2026-09-30 19:09:03 +07:00
+Hinh thuc: 2 tien trinh dotnet API tren host (5080, 5081) + nginx:1.27-alpine upstream round-robin (:8088)
+Config: nginx/nginx.multiinstance.conf
+
+--- 1. Hai tien trinh deu song va tu nhan dien ---
+  http://127.0.0.1:5080/health/live => 200  X-Served-By=api-1
+  http://127.0.0.1:5081/health/live => 200  X-Served-By=api-2
+  => KHONG phai hai doi tuong trong mot process: hai PID rieng, hai cong rieng.
+
+--- 2. Load balancer chia traffic that ---
+  10 request GET /api/v1/recipes qua nginx :8088 => api-1: 5 luot, api-2: 5 luot
+  => round-robin phan chia deu, khong phai may tinh.
+
+--- 3. Cache DUNG CHUNG giua hai tien trinh ---
+  Goi 'GET /api/v1/recipes?page=7&pageSize=5' chi vao api-1 (PID khac) de lam nong cache.
+  Redis (instance 'multiinstance') sau do co key:
+    multiinstance:cache:recipes:list:7:5:createdAt:desc::::   (TTL 888s)
+  Goi lai CUNG page do vao api-2 (PID khac): 17 ms, 13 ms, 13 ms, 13 ms, 13 ms
+  => api-2 KHONG phai xuong DB ma doc trung key do api-1 ghi. Cache thuoc ve Redis, khong thuoc ve process.
+  Key do chinh cac request qua nginx tao (page 1): TTL 880s
+
+--- 4. Redis chet: ca hai tien trinh cung fallback, readiness cung bao dong ---
+  docker stop culinaryblog-redis
+  api-1 GET /api/v1/recipes?page=7&pageSize=5 => 200 (van tra du lieu tu DB)
+  api-2 GET /api/v1/recipes?page=7&pageSize=5 => 200 (van tra du lieu tu DB)
+  api-1 /health/ready => 503   api-2 /health/ready => 503
+  => D22 dung: doc du lieu van chay (khong 500) nhung readiness bao dong de proxy rut traffic.
+  docker start culinaryblog-redis => PONG; /health/ready => 200
+
+--- 5. Bai hoc cua lan chay nay ---
+  Ban nginx dau tro 127.0.0.1:5080/5081. Trong container, 127.0.0.1 la chinh container do
+  nen moi request deu 502. Phai tro host.docker.internal.

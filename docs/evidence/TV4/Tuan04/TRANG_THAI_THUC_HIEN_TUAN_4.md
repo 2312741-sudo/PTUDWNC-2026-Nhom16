@@ -12,11 +12,11 @@
 | Nhóm | Task | Kế hoạch | Đã xong | Đang làm | Còn lại | Tỷ lệ |
 |---|---|---|---|---|---|---|
 | N0 | Mở đầu tuần 4 (baseline, bằng chứng 500, merge main, mapping K01) | 6 | 6 | 0 | 0 | 100% |
-| N1 | D5 — Health/observability/backup/multi-instance | 8 | 0 | 0 | 8 | 0% |
-| N2 | D7 — E2E, tấn công file, CI, số đo | 8 | 0 | 0 | 8 | 0% |
-| N3 | D6 — Lab L5 + bù mục 2 L4 | 4 | 0 | 0 | 4 | 0% |
+| N1 | D5 - Health/observability/backup/multi-instance | 8 | 8 | 0 | 0 | 100% |
+| N2 | D7 - E2E, tinh công file, CI, sơ đồ | 8 | 0 | 0 | 8 | 0% |
+| N3 | D6 - Lab L5 + bản mẫu 2 L4 | 4 | 0 | 0 | 4 | 0% |
 | N4 | Runbook, release, bàn giao | 4 | 0 | 0 | 4 | 0% |
-| **Tổng** | | **30** | **6** | **0** | **24** | **20%** |
+| **Tổng** | | **30** | **14** | **0** | **16** | **47%** |
 
 > Tỷ lệ tính theo **số việc đã có bằng chứng**, không tính "đã lên kế hoạch".
 
