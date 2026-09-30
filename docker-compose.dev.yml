@@ -83,6 +83,22 @@ services:
       - seqdata:/data
     restart: unless-stopped
 
+  otel-collector:
+    # N1-3 (tuần 4): nhận OTLP từ API rồi in span ra log để kiểm chứng được "trace HTTP -> DB
+    # thật". Trước đây chỉ cấu hình AddOtlpExporter trong code mà không có nơi nhận, nên trace
+    # được gửi đi và rơi vào hư không — không ai xác minh được.
+    image: otel/opentelemetry-collector-contrib:0.116.1
+    container_name: culinaryblog-otel
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./deploy/otel-collector-config.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC (AddOtlpExporter mặc định dùng gRPC)
+      - "4318:4318"   # OTLP HTTP
+    depends_on:
+      - seq
+    restart: unless-stopped
+
   nginx:
     image: nginx:1.27-alpine
     container_name: culinaryblog-nginx

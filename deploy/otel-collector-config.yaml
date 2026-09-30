@@ -1,0 +1,43 @@
+# N1-3 (tuần 4): cấu hình OpenTelemetry Collector cho stack dev.
+#
+# Collector nhận OTLP/gRPC từ API (AddOtlpExporter trong Program.cs) rồi chuyển tiếp span sang
+# Seq bằng exporter "otlphttp" — Seq nói đúng OTLP nên không cần đường vòng.
+#
+# Vì sao có cả exporter "debug": để CÓ THỂ KIỂM CHỨNG bằng mắt. `docker logs culinaryblog-otel`
+# in ra từng span (tên, thời gian, parent), nên khi báo cáo "trace HTTP xuống DB" thì có bằng
+# chứng cụ thể thay vì chỉ khẳng định. Ở production nên bỏ hoặc hạ mức debug.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+  # Bỏ các thuộc tính chứa dữ liệu nhạy cảm trước khi span rời khỏi máy dev.
+  attributes/redact:
+    actions:
+      - key: db.statement
+        action: delete
+      - key: http.request.header.authorization
+        action: delete
+
+exporters:
+  otlphttp/seq:
+    # "seq" là tên service trong docker-compose.dev.yml; nội bộ mạng compose nên không cần
+    # publish cổng ra host.
+    endpoint: http://seq:80/ingest/otlp
+    tls:
+      insecure: true
+  debug:
+    verbosity: normal
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [attributes/redact, batch]
+      exporters: [otlphttp/seq, debug]
