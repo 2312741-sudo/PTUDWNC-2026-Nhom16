@@ -221,13 +221,11 @@ public static class DbSeeder
             ("Gà Lắc Phô Mai Cay", "ga-lac-pho-mai-cay", 24, "Miếng gà rút xương chiên vàng giòn rụm lắc đẫm bột phô mai cay kích thích mọi giác quan."),
         };
 
-        // Kiểm tra nếu các món ăn hiện tại đang có nguyên liệu generic cũ, xóa để seed lại chuẩn vị từng món
+        // Kiểm tra nếu các món ăn hiện tại đang có nguyên liệu generic cũ, xóa sạch recipes để seed lại chuẩn vị từng món
         var hasOldGeneric = await db.RecipeIngredients.AnyAsync(ri => ri.Name.StartsWith("Nguyên liệu chính") || ri.Name.Contains("Thịt chính / Hải sản"), ct);
         if (hasOldGeneric)
         {
-            var oldRecipes = await db.Recipes.Include(r => r.Ingredients).Include(r => r.Steps).Include(r => r.Images).ToListAsync(ct);
-            db.Recipes.RemoveRange(oldRecipes);
-            await db.SaveChangesAsync(ct);
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM \"Recipes\";", ct);
         }
 
         for (int i = 0; i < recipeDefs.Length; i++)
