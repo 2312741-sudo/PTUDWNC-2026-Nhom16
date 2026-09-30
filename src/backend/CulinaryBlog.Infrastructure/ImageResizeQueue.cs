@@ -12,7 +12,7 @@ public sealed class HangfireImageResizeQueue : IImageResizeQueue
     public Task EnqueueAsync(Guid recipeId, Guid imageId, string originalKey, CancellationToken ct)
     {
         BackgroundJob.Enqueue<ResizeImageJob>(job =>
-            job.ExecuteAsync(recipeId, imageId, originalKey));
+            job.ExecuteAsync(recipeId, imageId, originalKey, CancellationToken.None));
         return Task.CompletedTask;
     }
 }

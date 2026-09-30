@@ -269,12 +269,12 @@ if (args.Contains("--migrate"))
     Console.WriteLine("Database migrations applied successfully.");
     return;
 }
-if (args.Contains("--seed"))
+if (args.Contains("--seed") || args.Contains("--reseed") || args.Contains("--force-seed"))
 {
     using var scope = app.Services.CreateScope();
     var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    await DbSeeder.SeedAsync(authDb);
-    Console.WriteLine("Database seeded successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
+    await DbSeeder.SeedAsync(authDb, forceUpdate: args.Contains("--reseed") || args.Contains("--force-seed"));
+    Console.WriteLine("Database seeded and synchronized successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
 }
 

@@ -381,9 +381,10 @@ export async function getRecipeBySlug(
   token?: string
 ): Promise<import('@/types/recipe').RecipeDetail | null> {
   try {
+    const isDev = process.env.NODE_ENV === 'development';
     const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, {
-      ...(token
-        ? { cache: 'no-store' as const, headers: { Authorization: `Bearer ${token}` } }
+      ...(token || isDev
+        ? { cache: 'no-store' as const, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) }
         : { next: { revalidate: 300 } }),
     });
     if (res.status === 404) return null;

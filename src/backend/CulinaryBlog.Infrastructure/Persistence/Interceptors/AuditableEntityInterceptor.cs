@@ -1,4 +1,5 @@
 using CulinaryBlog.Domain.Common;
+using CulinaryBlog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -40,6 +41,7 @@ public sealed class AuditableEntityInterceptor(TimeProvider timeProvider) : Save
             // rỗng (chưa từng nạp từ DB) chứng minh nó là entity mới trong bộ nhớ -> phải Added để INSERT
             // (nếu không, UPDATE WHERE RowVersion=empty => 0 rows => DbUpdateConcurrencyException).
             if (entry.State == EntityState.Modified
+                && entry.Entity is RecipeIngredient or RecipeStep or RecipeImage
                 && entry.Property(nameof(BaseEntity.RowVersion)).OriginalValue is byte[] { Length: 0 })
             {
                 entry.State = EntityState.Added;
