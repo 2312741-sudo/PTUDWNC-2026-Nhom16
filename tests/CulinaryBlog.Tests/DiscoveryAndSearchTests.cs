@@ -1,5 +1,7 @@
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
+using CulinaryBlog.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using FluentValidation;
 using MediatR;
 using Xunit;
@@ -302,6 +304,34 @@ public sealed class DiscoveryAndSearchTests
         fakeAuth.EmailVerified = false;
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(new GoogleLoginCommand("valid-token"), CancellationToken.None));
         Assert.Equal(401, ex.Status);
+    }
+
+    [Fact]
+    public async Task RealGoogleAuthService_validates_dev_and_demo_tokens_properly()
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Google:DefaultDevEmail"] = "dev.chef@culinaryblog.vn"
+            })
+            .Build();
+        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance);
+
+        // 1. Dev token with email and name
+        var payload1 = await service.ValidateIdTokenAsync("dev_google:chef.vietnam@gmail.com:B%E1%BA%BFp%20Tr%C6%B0%E1%BB%9Fng%20Vi%E1%BB%87t", CancellationToken.None);
+        Assert.Equal("chef.vietnam@gmail.com", payload1.Email);
+        Assert.Equal("Bếp Trưởng Việt", payload1.Name);
+        Assert.True(payload1.EmailVerified);
+        Assert.StartsWith("google-", payload1.Subject);
+
+        // 2. Demo token fallback
+        var payload2 = await service.ValidateIdTokenAsync("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token", CancellationToken.None);
+        Assert.Equal("dev.chef@culinaryblog.vn", payload2.Email);
+        Assert.True(payload2.EmailVerified);
+
+        // 3. Empty/whitespace token throws 400
+        var exEmpty = await Assert.ThrowsAsync<AppException>(() => service.ValidateIdTokenAsync("", CancellationToken.None));
+        Assert.Equal(400, exEmpty.Status);
     }
 
     [Fact]

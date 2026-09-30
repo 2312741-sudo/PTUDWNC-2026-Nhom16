@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UtensilsCrossed, Mail, Lock, User, AtSign, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { register } from '@/lib/api';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function RegisterPage() {
           localStorage.setItem('refreshToken', res.data.refreshToken);
         }
         localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('lastRegisteredEmail', email.toLowerCase().trim());
       }
       router.push('/dashboard/profile');
     } else {
@@ -55,6 +57,20 @@ export default function RegisterPage() {
         setValidationErrors(res.validationErrors);
       }
     }
+  };
+
+  const handleGoogleSuccess = (auth: any) => {
+    if (typeof window !== 'undefined' && auth?.accessToken) {
+      localStorage.setItem('accessToken', auth.accessToken);
+      if (auth.refreshToken) {
+        localStorage.setItem('refreshToken', auth.refreshToken);
+      }
+      localStorage.setItem('user', JSON.stringify(auth.user));
+      if (auth.user?.email) {
+        localStorage.setItem('lastRegisteredEmail', auth.user.email);
+      }
+    }
+    router.push('/dashboard/profile');
   };
 
   return (
@@ -214,6 +230,24 @@ export default function RegisterPage() {
             )}
           </button>
         </form>
+
+        {/* Separator */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-gray-400 font-medium">Hoặc đăng ký nhanh bằng</span>
+          </div>
+        </div>
+
+        {/* Google OAuth Button */}
+        <GoogleSignInButton
+          initialEmail={email}
+          buttonText="Đăng ký nhanh bằng Google"
+          onSuccess={handleGoogleSuccess}
+          onError={(err) => setErrorMessage(err)}
+        />
 
         {/* Footer Link */}
         <p className="text-center text-sm text-gray-500">

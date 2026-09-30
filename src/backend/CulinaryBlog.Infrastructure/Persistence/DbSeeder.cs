@@ -221,22 +221,14 @@ public static class DbSeeder
             ("Gà Lắc Phô Mai Cay", "ga-lac-pho-mai-cay", 24, "Miếng gà rút xương chiên vàng giòn rụm lắc đẫm bột phô mai cay kích thích mọi giác quan."),
         };
 
-        var random = new Random(42);
-        var ingredientPool = new[]
+        // Kiểm tra nếu các món ăn hiện tại đang có nguyên liệu generic cũ, xóa để seed lại chuẩn vị từng món
+        var hasOldGeneric = await db.RecipeIngredients.AnyAsync(ri => ri.Name.StartsWith("Nguyên liệu chính") || ri.Name.Contains("Thịt chính / Hải sản"), ct);
+        if (hasOldGeneric)
         {
-            ("Thịt chính / Hải sản", 400m, "g", "Thái lát hoặc cắt khối vừa ăn"),
-            ("Hành tây", 2m, "củ", "Thái múi cau"),
-            ("Hành lá & Ngò rí", 50m, "g", "Rửa sạch, cắt khúc nhỏ"),
-            ("Tỏi khô", 1m, "củ", "Bóc vỏ, băm nhuyễn"),
-            ("Gừng tươi", 30m, "g", "Gọt vỏ, đập dập hoặc thái sợi"),
-            ("Ớt sừng", 2m, "quả", "Bỏ hạt, thái lát chéo"),
-            ("Nước mắm truyền thống", 3m, "muỗng canh", "Nêm theo khẩu vị"),
-            ("Hạt nêm thịt thăn", 2m, "muỗng cà phê", "Nêm đậm đà"),
-            ("Tiêu đen xay", 1m, "muỗng cà phê", "Rắc thơm khi hoàn thiện"),
-            ("Đường thốt nốt", 1.5m, "muỗng canh", "Tạo vị ngọt thanh tự nhiên"),
-            ("Dầu ăn thực vật", 2m, "muỗng canh", "Dùng để phi thơm và chiên xào"),
-            ("Nước dùng hầm xương", 500m, "ml", "Nấu sôi liu riu lấy vị ngọt")
-        };
+            var oldRecipes = await db.Recipes.Include(r => r.Ingredients).Include(r => r.Steps).Include(r => r.Images).ToListAsync(ct);
+            db.Recipes.RemoveRange(oldRecipes);
+            await db.SaveChangesAsync(ct);
+        }
 
         for (int i = 0; i < recipeDefs.Length; i++)
         {
@@ -272,26 +264,18 @@ public static class DbSeeder
             decimal sodium = 450m + (i * 9) % 500;
             recipe.SetNutrition(RecipeNutrition.Create(calories, protein, carbs, fat, fiber, sodium));
 
-            // Thêm 10-12 nguyên liệu (đảm bảo >= 10 nguyên liệu)
-            int numIngredients = 10 + (i % 3); // 10, 11 hoặc 12
-            for (int ingIdx = 0; ingIdx < numIngredients; ingIdx++)
+            // Thêm các nguyên liệu chuẩn xác phù hợp với từng món ăn (đảm bảo >= 10 nguyên liệu)
+            var ingredients = GetTailoredIngredients(def.Title, def.Slug);
+            foreach (var ing in ingredients)
             {
-                var baseIng = ingredientPool[ingIdx % ingredientPool.Length];
-                string ingName = ingIdx == 0 ? $"Nguyên liệu chính ({def.Title.Split(' ')[0]})" : baseIng.Item1;
-                decimal qty = baseIng.Item2 * (1m + (i % 3) * 0.2m);
-                recipe.AddIngredient(ingName, Math.Round(qty, 1), baseIng.Item3, baseIng.Item4);
+                recipe.AddIngredient(ing.Name, ing.Quantity, ing.Unit, ing.Notes);
             }
 
-            // Thêm 5-6 bước chế biến (đảm bảo >= 5 bước)
-            int numSteps = 5 + (i % 2); // 5 hoặc 6 bước
-            recipe.AddStep("Sơ chế nguyên liệu", $"Rửa sạch các nguyên liệu tươi cho món {def.Title}, để ráo nước và cắt thái vừa ăn.", 15, "Rửa qua nước muối loãng để khử mùi tanh.");
-            recipe.AddStep("Tẩm ướp gia vị", "Cho hành, tỏi, nước mắm, tiêu, hạt nêm và đường vào trộn đều cùng nguyên liệu chính trong 20 phút.", 20, "Ướp trong ngăn mát tủ lạnh để thấm vị nhanh hơn.");
-            recipe.AddStep("Phi thơm và tao sơ", "Bắc chảo lên bếp, cho dầu ăn vào phi thơm hành tỏi băm, sau đó cho nguyên liệu vào đảo săn trên lửa lớn.", 10, "Đảo nhanh tay để nguyên liệu giữ được độ ngọt tự nhiên.");
-            recipe.AddStep("Nấu chính và gia nhiệt", "Hạ nhỏ lửa, đậy nắp ninh liu riu hoặc đun sôi cho đến khi các nguyên liệu chín mềm và nước sốt sánh lại.", cookTime > 30 ? cookTime - 15 : 20, "Hớt bọt thường xuyên để nước dùng luôn trong và đẹp mắt.");
-            recipe.AddStep("Cân chỉnh gia vị", "Nếm lại nước sốt và điều chỉnh thêm chút tiêu, ớt và nước mắm cho thật hài hòa, chuẩn vị.", 5, null);
-            if (numSteps >= 6)
+            // Thêm các bước chế biến thực tế cho từng món ăn (đảm bảo >= 5 bước)
+            var steps = GetTailoredSteps(def.Title, def.Slug, cookTime);
+            foreach (var s in steps)
             {
-                recipe.AddStep("Hoàn thiện và thưởng thức", $"Trình bày món {def.Title} ra đĩa hoặc tô nóng, rắc hành ngò thái nhỏ và thưởng thức cùng cơm hoặc bún.", 5, "Ngon nhất khi thưởng thức ngay lúc còn nóng sốt.");
+                recipe.AddStep(s.Title, s.Instruction, s.DurationMinutes, s.Tip);
             }
 
             // Ảnh đại diện chất lượng cao chuẩn từng món
@@ -310,6 +294,340 @@ public static class DbSeeder
     }
 
     public static string GetDishImage(string slug) => $"/images/recipes/{slug}.jpg";
+
+    private static List<(string Name, decimal Quantity, string Unit, string? Notes)> GetTailoredIngredients(string title, string slug)
+    {
+        if (slug.Contains("pancake") || slug.Contains("waffle") || slug.Contains("tiramisu") || slug.Contains("mousse") || slug.Contains("crepe") || slug.Contains("flan"))
+        {
+            var specialty = slug switch
+            {
+                var s when s.Contains("pancake") => ("Chuối tiêu chín & Mật ong rừng", 2m, "quả", "Chuối thái lát mỏng, mật ong rưới đều"),
+                var s when s.Contains("tiramisu") => ("Phô mai Mascarpone & Espresso", 200m, "g", "Đánh bông mịn cùng cà phê đậm đặc"),
+                var s when s.Contains("mousse") => ("Nước cốt chanh leo tươi", 80m, "ml", "Lọc bỏ hạt lấy nước cốt thơm dịu"),
+                var s when s.Contains("crepe") => ("Cơm sầu riêng Ri6 tươi", 150m, "g", "Dầm nhuyễn làm nhân bánh béo ngậy"),
+                var s when s.Contains("waffle") => ("Dâu tây tươi & Mật ong", 100m, "g", "Rửa sạch, cắt đôi trang trí mặt bánh"),
+                _ => ("Sốt Caramel cà phê đắng nhẹ", 50m, "ml", "Thắng đường màu cánh gián thơm ngậy")
+            };
+
+            return
+            [
+                ("Bột mì đa dụng cao cấp", 250m, "g", "Rây mịn qua rây lọc"),
+                ("Trứng gà tươi", 3m, "quả", "Để ở nhiệt độ phòng"),
+                ("Sữa tươi không đường", 200m, "ml", "Sữa thanh trùng béo ngậy"),
+                ("Bơ lạt Anchor", 40m, "g", "Đun chảy để nguội"),
+                specialty,
+                ("Bột nở Baking Powder", 8m, "g", "Giúp bánh nở phồng xốp mềm"),
+                ("Đường cát trắng", 45m, "g", "Tạo vị ngọt dịu nhẹ"),
+                ("Tinh chất vani Pháp", 5m, "ml", "Khử mùi tanh trứng và tạo hương thơm"),
+                ("Muối tinh", 2m, "g", "Cân bằng vị ngọt bánh"),
+                ("Kem whipping cream", 100m, "ml", "Đánh bông mềm mịn"),
+                ("Đường bột làm bánh", 15m, "g", "Rây nhẹ phủ đều mặt bánh")
+            ];
+        }
+
+        if (slug.StartsWith("che-") || slug.Contains("sua-chua-nep-cam") || slug.Contains("rau-cau-dua"))
+        {
+            var specialty = slug switch
+            {
+                var s when s.Contains("sau-rieng") => ("Cơm sầu riêng chín vàng", 150m, "g", "Xay mịn cùng nước cốt dừa"),
+                var s when s.Contains("buoi") => ("Cùi bưởi Năm Roi giòn ngọt", 150m, "g", "Khử đắng kỹ, luộc áo bột năng"),
+                var s when s.Contains("khuc-bach") => ("Khúc bạch phô mai tươi", 150m, "g", "Cắt khối vuông quân cờ mềm dẻo"),
+                var s when s.Contains("nep-cam") => ("Nếp cẩm than ủ men rượu", 150m, "g", "Nấu dẻo bùi thơm mùi men nếp"),
+                var s when s.Contains("dua") => ("Cơm dừa non nạo sợi", 100m, "g", "Rửa sạch, cắt sợi giòn mát"),
+                _ => ("Hạt sen tươi Huế", 100m, "g", "Thông tâm sen, ninh nhừ bùi bở")
+            };
+
+            return
+            [
+                ("Nước cốt dừa nguyên chất", 350m, "ml", "Vắt từ cơm dừa tươi béo ngậy"),
+                ("Đường phèn Quảng Ngãi", 120m, "g", "Vị ngọt thanh mát tự nhiên"),
+                specialty,
+                ("Đậu xanh xát vỏ", 120m, "g", "Ngâm nở mềm, hấp chín bùi"),
+                ("Bột năng hảo hạng", 50m, "g", "Tạo độ sánh và làm trân châu giòn"),
+                ("Bột rau câu giòn Agar", 10m, "g", "Nấu thạch đông giòn sần sật"),
+                ("Lá dứa tươi nếp thơm", 5m, "nhánh", "Rửa sạch, bó gọn tạo mùi thơm mát"),
+                ("Đậu phộng rang vàng", 40m, "g", "Bóc vỏ, giã dập thơm giòn"),
+                ("Dừa non nạo sợi", 50m, "g", "Rắc lên mặt bát chè"),
+                ("Sữa đặc Ông Thọ", 40m, "ml", "Tăng vị béo ngậy đậm đà"),
+                ("Hạt lựu củ năng", 80m, "g", "Nhuộm màu tự nhiên giòn rụm")
+            ];
+        }
+
+        if (slug.StartsWith("tra-") || slug.StartsWith("sinh-to-") || slug.StartsWith("nuoc-ep-"))
+        {
+            var specialty = slug switch
+            {
+                var s when s.Contains("bo") => ("Bơ sáp Đắk Lắk chín dẻo", 250m, "g", "Gọt vỏ bỏ hạt, thịt dẻo vàng óng"),
+                var s when s.Contains("mang-cau") => ("Thịt mãng cầu xiêm tươi", 200m, "g", "Tách hạt, giữ thịt chua ngọt"),
+                var s when s.Contains("can-tay") => ("Cần tây Đà Lạt tươi giòn", 150m, "g", "Rửa sạch, ngâm nước muối loãng"),
+                var s when s.Contains("dao") => ("Miếng đào ngâm giòn ngọt", 100m, "g", "Thái lát dày vừa ăn"),
+                var s when s.Contains("vai") => ("Trái vải thiều mọng nước", 100m, "g", "Bóc vỏ bỏ hạt ướp siro hoa hồng"),
+                _ => ("Trà đen / Olong thượng hạng", 30m, "g", "Lá trà sấy khô ủ hương thơm sâu")
+            };
+
+            return
+            [
+                specialty,
+                ("Trà Olong / Trà lài hảo hạng", 25m, "g", "Hãm lấy nước cốt trà đậm vị"),
+                ("Sữa tươi thanh trùng", 150m, "ml", "Bảo quản lạnh giữ vị thơm ngon"),
+                ("Sữa đặc có đường", 35m, "ml", "Tạo độ ngọt béo sánh quyện"),
+                ("Trân châu đen đường đen", 60m, "g", "Luộc dẻo mềm dai giòn"),
+                ("Mật ong hoa nhãn", 25m, "ml", "Vị ngọt thanh tự nhiên thanh mát"),
+                ("Nước cốt chanh tươi", 10m, "ml", "Cân bằng độ ngọt dịu"),
+                ("Siro đường phèn", 30m, "ml", "Nấu sánh không gắt cổ"),
+                ("Lá bạc hà tươi", 5m, "g", "Trang trí và tạo hương sảng khoái"),
+                ("Đá viên tinh khiết", 200m, "g", "Dùng để lắc và giữ lạnh sâu"),
+                ("Cam tươi cắt lát", 1m, "quả", "Thả vào ly tạo hương tinh dầu cam")
+            ];
+        }
+
+        if (slug.StartsWith("pho-") || slug.StartsWith("bun-") || slug.StartsWith("hu-tieu") || slug.StartsWith("banh-canh") || slug.StartsWith("mi-quang") || slug.StartsWith("cao-lau"))
+        {
+            var specialty = slug switch
+            {
+                var s when s.Contains("bo") => ("Thịt bắp bò hoa & Nạm bò", 400m, "g", "Thái mỏng ngang thớ thịt mềm ngọt"),
+                var s when s.Contains("cua") => ("Thịt cua biển & Gạch cua đồng", 250m, "g", "Gạch phi thơm vàng ươm béo ngậy"),
+                var s when s.Contains("cha") => ("Thịt nạc vai băm & Thịt ba chỉ", 350m, "g", "Ướp sả ớt nướng than hoa thơm lừng"),
+                _ => ("Thịt heo ba rọi & Tôm tươi", 350m, "g", "Thịt mềm ngọt tôm tươi chắc thịt")
+            };
+
+            return
+            [
+                ("Bánh phở / Bún sợi tươi truyền thống", 500m, "g", "Sợi mềm dai, trụng nước sôi"),
+                specialty,
+                ("Xương ống hầm nước dùng", 800m, "g", "Ninh lấy nước ngọt tự nhiên"),
+                ("Hoa hồi, quế chi & Thảo quả", 15m, "g", "Nướng thơm bỏ túi lọc"),
+                ("Gừng tươi & Hành tím nướng", 60m, "g", "Đập dập thả vào nước dùng"),
+                ("Hành tây thái mỏng", 1m, "củ", "Ngâm đá giòn ngọt thơm"),
+                ("Nước mắm cốt cá cơm nhĩ", 40m, "ml", "Nêm đậm đà thơm ngát"),
+                ("Hành lá & Ngò gai tươi", 60m, "g", "Rửa sạch, cắt nhỏ rắc mặt tô"),
+                ("Giá đỗ sống & Rau húng quế", 150m, "g", "Rau thơm ăn kèm thanh mát"),
+                ("Chanh tươi & Ớt hiểm đỏ", 2m, "quả", "Vắt chanh thêm ớt cay nồng"),
+                ("Tiêu đen Phú Quốc xay", 5m, "g", "Rắc thơm khi chan nước"),
+                ("Đường phèn", 15m, "g", "Tạo vị ngọt hậu thanh tao")
+            ];
+        }
+
+        if (slug.StartsWith("ga-") || slug.Contains("-ga-") || slug.EndsWith("-ga") || slug.Contains("chao-ga") || slug.Contains("xoi-xeo-ga"))
+        {
+            return
+            [
+                ("Thịt gà ta thả vườn giòn ngọt", 700m, "g", "Làm sạch, xát muối gừng khử mùi"),
+                ("Lá chanh bánh tẻ non", 30m, "g", "Thái chỉ mỏng thơm nức"),
+                ("Lá é tươi / Mắc khén Tây Bắc", 30m, "g", "Tạo hương vị cay thơm đặc trưng"),
+                ("Ớt hiểm xiêm rừng", 3m, "quả", "Băm nhỏ tạo vị cay the"),
+                ("Muối hạt tinh khiết", 25m, "g", "Giã nhuyễn làm muối ớt ướp"),
+                ("Nước mắm truyền thống cốt nhĩ", 35m, "ml", "Nêm đậm đà bóng đẹp da gà"),
+                ("Tỏi khô & Hành tím băm", 40m, "g", "Phi thơm hoặc ướp ngấm sâu"),
+                ("Gừng củ tươi", 30m, "g", "Gọt vỏ, đập dập thơm lừng"),
+                ("Hạt tiêu sọ đập dập", 8m, "g", "Rắc thơm nồng vị"),
+                ("Dầu màu điều tự nhiên", 15m, "ml", "Tạo màu vàng ruộm hấp dẫn"),
+                ("Mật ong rừng nguyên chất", 20m, "ml", "Quét đều khi nướng tạo độ bóng"),
+                ("Gạo nếp nương / Hạt sen", 150m, "g", "Nấu xôi hoặc hầm cháo bổ dưỡng")
+            ];
+        }
+
+        if (slug.StartsWith("ca-") || slug.StartsWith("tom-") || slug.StartsWith("muc-") || slug.StartsWith("oc-") || slug.Contains("ghe") || slug.Contains("ngheu") || slug.Contains("so-") || slug.Contains("hau-") || slug.Contains("cha-ca") || slug.Contains("lau-thai"))
+        {
+            var specialty = slug switch
+            {
+                var s when s.Contains("ca-hoi") => ("Cá hồi Na Uy phi lê tươi", 400m, "g", "Thấm khô, khía nhẹ mặt da cá"),
+                var s when s.Contains("ca-loc") || s.Contains("ca-kho") => ("Cá lóc đồng tươi sống", 600m, "g", "Cắt khúc dày, làm sạch vảy mang"),
+                var s when s.Contains("tom") => ("Tôm sú biển tươi rói", 400m, "g", "Cắt râu rửa sạch, giữ nguyên vỏ ngọt"),
+                var s when s.Contains("muc") => ("Mực ống câu tươi giòn", 400m, "g", "Làm sạch ruột, khía vảy rồng"),
+                var s when s.Contains("hau") => ("Hàu sữa đại dương béo múp", 800m, "g", "Cọ sạch vỏ, tách miệng lấy thịt"),
+                var s when s.Contains("oc") => ("Ốc hương tươi sống", 500m, "g", "Ngâm nước vo gạo ớt khử bùn"),
+                _ => ("Hải sản tươi sống tổng hợp", 500m, "g", "Sơ chế sạch sẽ khử tanh")
+            };
+
+            return
+            [
+                specialty,
+                ("Sả cây tươi đập dập", 5m, "cây", "Cắt khúc hoặc băm nhuyễn thơm nức"),
+                ("Bơ lạt Anchor / Nước cốt dừa", 40m, "g", "Tạo vị béo ngậy thơm nồng"),
+                ("Phô mai Mozzarella kéo sợi", 80m, "g", "Dùng cho món nướng phô mai"),
+                ("Gừng tươi cạo vỏ", 30m, "g", "Thái sợi khử tanh hải sản"),
+                ("Tỏi khô băm nhuyễn", 30m, "g", "Phi vàng thơm lừng"),
+                ("Ớt sừng đỏ & Ớt hiểm cay", 3m, "quả", "Tạo vị cay ấm nồng"),
+                ("Nước mắm cá cơm Phú Quốc", 35m, "ml", "Ướp kho hoặc pha sốt đậm đà"),
+                ("Thì là tươi & Rau răm", 40m, "g", "Rửa sạch, cắt khúc thơm lừng"),
+                ("Cà chua chín & Thơm ngọt", 150m, "g", "Cắt múi cau nấu canh/lẩu"),
+                ("Tiêu sọ xay thơm nồng", 8m, "g", "Rắc hoàn thiện món ăn"),
+                ("Rượu trắng khử tanh", 20m, "ml", "Rửa hải sản sạch bong không tanh")
+            ];
+        }
+
+        if (slug.Contains("chay") || slug.StartsWith("nam-") || slug.StartsWith("dau-hu") || slug.StartsWith("ca-tim") || slug.StartsWith("rau-muong") || slug.StartsWith("bong-bi") || slug.Contains("rong-bien") || slug.StartsWith("canh-"))
+        {
+            return
+            [
+                ("Nấm đùi gà & Nấm đông cô tươi", 350m, "g", "Rửa nước muối loãng, cắt miếng vừa ăn"),
+                ("Đậu hũ non mềm mượt", 300m, "g", "Trần sơ nước sôi, cắt khối vuông"),
+                ("Hành Boaro (tỏi tây) tươi", 50m, "g", "Rửa sạch, thái mỏng phi thơm"),
+                ("Cà tím tươi / Rau muống ngọn non", 250m, "g", "Ngâm nước muối không bị thâm"),
+                ("Nước tương đậu nành lên men", 40m, "ml", "Kho hoặc xào đậm đà thanh ngọt"),
+                ("Dầu mè nguyên chất", 20m, "ml", "Dậy mùi thơm thanh tao"),
+                ("Hạt tiêu sọ Phú Quốc", 10m, "g", "Đập dập thơm lừng"),
+                ("Hạt nêm nấm thanh đạm", 15m, "g", "Nêm vị ngọt tự nhiên"),
+                ("Đường mía thô tự nhiên", 15m, "g", "Cân bằng vị đậm đà"),
+                ("Tỏi khô băm nhỏ", 25m, "g", "Phi thơm vàng ruộm"),
+                ("Cà rốt & Củ cải trắng ngọt nước", 150m, "g", "Hầm nước dùng rau củ ngọt thanh"),
+                ("Nước dùng rau củ quả", 500m, "ml", "Ninh từ bắp ngọt, củ cải, cà rốt")
+            ];
+        }
+
+        if (slug.Contains("banh-trang") || slug.Contains("cut-lon") || slug.Contains("bap-xao") || slug.Contains("khoai-lang") || slug.Contains("banh-cuon") || slug.Contains("banh-beo") || slug.Contains("banh-nam") || slug.Contains("banh-bot-loc") || slug.Contains("banh-khot") || slug.Contains("banh-can") || slug.Contains("banh-gio") || slug.Contains("banh-bao"))
+        {
+            return
+            [
+                ("Bánh tráng phơi sương / Bột gạo tẻ", 300m, "g", "Bột gạo thơm hoặc bánh tráng dẻo dai"),
+                ("Trứng cút tươi / Trứng cút lộn", 8m, "quả", "Luộc chín hoặc đập nướng"),
+                ("Tép khô sấy giòn / Ruốc tôm", 60m, "g", "Vị ngọt mặn mà màu đỏ au"),
+                ("Thịt nạc vai băm nhuyễn", 150m, "g", "Xào làm nhân bánh thơm lừng"),
+                ("Mộc nhĩ & Nấm hương ngâm nở", 30m, "g", "Rửa sạch băm nhỏ"),
+                ("Bơ thực vật béo ngậy", 30m, "g", "Phết thơm khi nướng hoặc xào"),
+                ("Nước sốt me chua ngọt", 45m, "ml", "Nấu sánh kẹo vị đậm đà"),
+                ("Hành tím phi giòn rụm", 35m, "g", "Tự phi thơm vàng óng"),
+                ("Xoài xanh bào sợi & Rau răm", 60m, "g", "Tạo vị chua giòn chống ngấy"),
+                ("Bột phô mai lắc thượng hạng", 30m, "g", "Lắc đều khoai lang giòn tan"),
+                ("Đậu phộng rang vàng", 35m, "g", "Giã dập bùi béo"),
+                ("Muối tôm Tây Ninh", 15m, "g", "Trộn đậm đà chuẩn vị")
+            ];
+        }
+
+        return
+        [
+            ("Thịt sườn non / Ba chỉ heo / Bò thăn", 500m, "g", "Rửa sạch, thái lát hoặc cắt khúc"),
+            ("Gạo tấm thơm / Gạo nếp ngon", 300m, "g", "Vo sạch, nấu dẻo tơi hạt"),
+            ("Trứng gà / Trứng vịt tươi", 3m, "quả", "Làm chả trứng hoặc ốp la"),
+            ("Nước dừa xiêm ngọt thanh", 300m, "ml", "Nấu kho rục thịt mềm tan"),
+            ("Dưa cải muối chua / Dưa leo", 150m, "g", "Ăn kèm giải ngấy tuyệt hảo"),
+            ("Tỏi khô & Hành tím băm nhuyễn", 40m, "g", "Ướp ngấm sâu vào từng thớ thịt"),
+            ("Nước mắm cá cơm truyền thống", 40m, "ml", "Nêm đậm vị dậy mùi thơm"),
+            ("Dầu hào Maggi hảo hạng", 20m, "ml", "Tạo màu nâu bóng và vị ngọt umami"),
+            ("Tiêu đen xay thơm nồng", 8m, "g", "Rắc thơm khi hoàn thiện"),
+            ("Hành lá tươi làm mỡ hành", 50m, "g", "Xối dầu sôi bóng bẩy thơm lừng"),
+            ("Đường thốt nốt nguyên chất", 25m, "g", "Tạo vị ngọt đậm tự nhiên"),
+            ("Ớt sừng tươi & Chanh", 2m, "quả", "Pha nước mắm tỏi ớt chua ngọt")
+        ];
+    }
+
+    private static List<(string Title, string Instruction, int DurationMinutes, string? Tip)> GetTailoredSteps(string title, string slug, int cookTime)
+    {
+        if (slug.Contains("pancake") || slug.Contains("waffle") || slug.Contains("tiramisu") || slug.Contains("mousse") || slug.Contains("crepe") || slug.Contains("flan"))
+        {
+            return
+            [
+                ("Rây mịn nguyên liệu khô", $"Rây đều bột mì, bột nở, đường và một nhúm muối nhỏ vào âu lớn cho món {title} để bột tơi xốp, không bị vón cục.", 10, "Rây bột 2 lần giúp bánh nở bông xốp và mềm mịn hơn."),
+                ("Đánh tan nguyên liệu ướt", "Đập trứng gà vào âu riêng, thêm sữa tươi, bơ lạt đun chảy để nguội và tinh chất vani, dùng phới lồng khuấy nhẹ cho hòa quyện.", 10, "Nên để trứng và sữa ở nhiệt độ phòng trước khi làm."),
+                ("Trộn hỗn hợp bột mịn", "Đổ từ từ hỗn hợp ướt vào âu bột khô, dùng phới lồng trộn nhẹ nhàng theo một chiều đến khi hỗn hợp sánh mịn, nghỉ bột 15 phút.", 15, "Không nên trộn bột quá kỹ làm bánh bị chai cứng."),
+                ("Gia nhiệt và chế biến", "Làm nóng chảo chống dính hoặc khuôn nướng, quét một lớp bơ lạt mỏng, múc từng vá bột bánh vào rán vàng đều hai mặt hoặc nướng chín.", cookTime > 15 ? cookTime - 10 : 15, "Lật bánh khi mặt trên bắt đầu nổi các bọt khí nhỏ li ti."),
+                ("Cân chỉnh và hoàn thiện", "Kiểm tra bánh chín đều, màu vàng ươm thơm nức, lấy ra đĩa và để nguội bớt.", 5, null),
+                ("Trình bày và thưởng thức", $"Xếp bánh {title} ra đĩa, trang trí cùng trái cây thái lát, rưới mật ong nguyên chất hoặc sốt kem và thưởng thức.", 5, "Ngon nhất khi thưởng thức ngay khi bánh còn ấm xốp.")
+            ];
+        }
+
+        if (slug.StartsWith("che-") || slug.Contains("sua-chua-nep-cam") || slug.Contains("rau-cau-dua"))
+        {
+            return
+            [
+                ("Sơ chế nguyên liệu và ngâm đậu", $"Ngâm nở đậu và sơ chế sạch các nguyên liệu tươi cho món {title}, để ráo nước hoàn toàn.", 20, "Ngâm đậu trong nước ấm 2 tiếng giúp đậu nhanh nhừ và bở tơi."),
+                ("Ninh nhừ và sên ngọt", "Cho đậu xanh hoặc hạt sen vào nồi cùng lá dứa và đường phèn, ninh liu riu cho hạt đậu chín mềm ngấm vị ngọt thanh.", 25, "Hớt bọt thường xuyên để nước chè trong và thơm ngát hương lá dứa."),
+                ("Chế biến topping và thạch", "Nấu bột rau câu cùng nước lá dứa, đổ khuôn để nguội rồi cắt quân cờ; hoặc luộc củ năng áo bột năng trong nước sôi đến khi nổi lên vớt ra nước đá.", 15, "Ngâm thạch vào âu nước đá lạnh giúp topping giòn sần sật."),
+                ("Nấu nước cốt dừa sánh béo", "Đun nước cốt dừa với một chút muối, sữa đặc và bột năng hòa tan, khuấy đều tay đến khi sánh mịn và sôi nhẹ thì tắt bếp.", 10, "Thêm một chút muối giúp nước cốt dừa đậm đà, không bị ngấy."),
+                ("Múc chè và sắp xếp tầng", "Múc chè ra bát hoặc ly cao, sắp xếp các tầng màu sắc bắt mắt từ đậu, thạch, trân châu.", 5, null),
+                ("Thưởng thức mát lạnh", $"Chan nước cốt dừa béo ngậy lên trên món {title}, rắc đậu phộng rang và dừa nạo, thêm đá bào và thưởng thức.", 5, "Món chè ngon nhất khi ăn mát lạnh giải nhiệt mùa hè.")
+            ];
+        }
+
+        if (slug.StartsWith("tra-") || slug.StartsWith("sinh-to-") || slug.StartsWith("nuoc-ep-"))
+        {
+            return
+            [
+                ("Ủ cốt trà hoặc sơ chế trái cây", $"Ủ trà với nước sôi 90°C trong 10-15 phút để lấy cốt trà đậm đà; hoặc gọt vỏ và cắt miếng trái cây tươi cho món {title}.", 15, "Không ủ trà với nước sôi 100°C để tránh làm trà bị chát đắng."),
+                ("Nấu trân châu và sên đường", "Luộc trân châu trong nước sôi 20 phút, ủ tiếp 20 phút rồi vớt ra ngâm cùng siro đường đen dẻo quánh.", 20, "Trộn trân châu với siro ấm giúp hạt luôn mềm dẻo không bị sượng."),
+                ("Pha chế và xay nhuyễn", "Cho cốt trà hoặc trái cây tươi cùng sữa tươi, sữa đặc và mật ong vào bình lắc hoặc máy xay sinh tố công suất cao.", 5, "Xay ở tốc độ vừa đến cao để sinh tố đạt độ sánh mịn nhung mượt."),
+                ("Lắc đều cùng đá lạnh", "Thêm đá viên vào bình lắc shaker, lắc đều tay trong 15 giây cho đồ uống hòa quyện và lạnh sâu.", 5, "Lắc đều tay giúp tạo bọt sữa mịn màng và cân bằng nhiệt độ."),
+                ("Chuẩn bị ly và xếp topping", "Cho trân châu đường đen hoặc miếng trái cây tươi vào đáy ly thủy tinh cao.", 5, null),
+                ("Hoàn thiện và thưởng thức", $"Rót đồ uống {title} vào ly, trang trí nhánh bạc hà tươi và lát trái cây, thưởng thức ngay khi mát lạnh.", 5, "Thưởng thức ngay để cảm nhận trọn vẹn hương vị tươi mới.")
+            ];
+        }
+
+        if (slug.StartsWith("pho-") || slug.StartsWith("bun-") || slug.StartsWith("hu-tieu") || slug.StartsWith("banh-canh") || slug.StartsWith("mi-quang") || slug.StartsWith("cao-lau"))
+        {
+            return
+            [
+                ("Sơ chế và chần xương hầm", "Rửa sạch xương ống qua nước muối loãng, chần nhanh trong nồi nước sôi có gừng đập dập rồi vớt ra rửa sạch bọt bẩn.", 15, "Chần xương kỹ giúp nước dùng trong veo và không có mùi tanh."),
+                ("Hầm nước dùng thanh ngọt", "Ninh xương trên lửa nhỏ liu riu trong 2-3 tiếng, thả túi hoa hồi, quế, thảo quả, gừng và hành tây nướng vào nồi nước dùng.", cookTime > 30 ? cookTime - 15 : 30, "Mở hé nắp vung và hớt bọt liên tục để nước hầm đạt độ ngọt trong vắt."),
+                ("Sơ chế và tẩm ướp thịt", "Thịt bò hoặc thịt heo thái lát mỏng vừa ăn, ướp cùng chút tiêu, gừng băm và nước mắm ngon.", 15, "Thái thịt ngang thớ để miếng thịt mềm tan không bị dai."),
+                ("Nêm nếm nước cốt đậm đà", "Nêm vào nồi nước dùng nước mắm nhĩ, đường phèn và chút gia vị thảo mộc cho vị thanh ngọt đậm đà tròn vị.", 10, "Nêm mắm sau cùng để giữ trọn vẹn hương thơm tự nhiên của nước mắm cốt."),
+                ("Trần bánh và sắp xếp tô", "Chần sợi bánh phở/bún qua nước sôi cho nóng, xếp vào tô cùng thịt bò tái, nạm hoặc giò chả thơm lừng.", 5, null),
+                ("Chan nước dùng và thưởng thức", $"Chan nước dùng sôi sùng sục ngập mặt tô {title}, rắc hành ngò thái nhỏ và ăn kèm đĩa rau sống tươi mát chanh ớt.", 5, "Ngon nhất khi húp xì xụp ngay lúc nước dùng còn bốc khói nghi ngút.")
+            ];
+        }
+
+        if (slug.StartsWith("ga-") || slug.Contains("-ga-") || slug.EndsWith("-ga") || slug.Contains("chao-ga") || slug.Contains("xoi-xeo-ga"))
+        {
+            return
+            [
+                ("Sơ chế và khử mùi thịt gà", "Xát muối hột và gừng tươi giã nhuyễn khắp thân gà để khử sạch mùi tanh, rửa lại bằng nước lạnh rồi thấm thật khô.", 15, "Thấm khô da gà giúp khi nướng hoặc chiên da sẽ giòn rụm và bóng đẹp."),
+                ("Pha sốt ướp đặc trưng", "Giã nhuyễn muối hạt cùng ớt xiêm, tiêu sọ, tỏi băm, nước mắm ngon và chút mật ong hoặc mắc khén thơm nồng.", 10, "Mật ong giúp gà lên màu vàng cánh gián bắt mắt khi gia nhiệt."),
+                ("Tẩm ướp ngấm vị thịt", $"Thoa đều hỗn hợp sốt ướp lên từng thớ thịt gà cho món {title}, mát-xa nhẹ nhàng và để thấm 30 phút trong ngăn mát.", 30, "Dùng nĩa xăm nhẹ mặt trong miếng thịt để gia vị ngấm sâu vào từng thớ thịt."),
+                ("Gia nhiệt và chế biến", "Nướng gà trên than hoa rực hồng / Hấp cách thủy cùng lá chanh / Chiên vàng giòn rồi đảo đều sốt mắm tỏi kẹo dẻo.", cookTime > 20 ? cookTime - 10 : 20, "Quét thêm một lớp sốt ướp trong quá trình nướng để thịt không bị khô."),
+                ("Kiểm tra độ chín", "Dùng tăm xiên thử vào phần dày nhất của miếng gà, nếu không còn nước hồng chảy ra là gà đã chín tới mọng nước.", 5, null),
+                ("Chặt miếng và dọn đĩa", $"Chặt gà thành từng miếng vừa ăn hoặc xé phay, xếp lên mẹt lót lá chuối, rắc lá chanh thái chỉ và chấm muối tiêu chanh ớt cay xé.", 5, "Ăn kèm dưa chuột giòn mát hoặc xôi nếp thơm dẻo.")
+            ];
+        }
+
+        if (slug.StartsWith("ca-") || slug.StartsWith("tom-") || slug.StartsWith("muc-") || slug.StartsWith("oc-") || slug.Contains("ghe") || slug.Contains("ngheu") || slug.Contains("so-") || slug.Contains("hau-") || slug.Contains("cha-ca") || slug.Contains("lau-thai"))
+        {
+            return
+            [
+                ("Sơ chế và khử tanh hải sản", "Rửa sạch hải sản với nước muối pha chút rượu trắng và gừng đập dập, để ráo nước hoàn toàn.", 15, "Rượu gừng là bí quyết loại bỏ triệt để mùi tanh và giữ trọn vị ngọt tự nhiên của hải sản."),
+                ("Tẩm ướp gia vị đậm đà", "Ướp hải sản cùng sả băm, tiêu sọ, hạt nêm, chút nước mắm ngon và dầu màu điều trong 15-20 phút.", 15, "Không nên ướp hải sản quá lâu với muối để tránh làm thịt bị ra nước mất độ giòn."),
+                ("Phi thơm hương liệu sả tỏi", "Đun nóng chảo, cho bơ lạt hoặc dầu ăn vào phi thơm tỏi băm, sả và ớt hiểm đến khi vàng ruộm dậy hương thơm nức.", 5, "Phi tỏi vàng tới tránh để cháy sém làm mất hương vị thanh khiết."),
+                ("Chế biến lửa lớn", $"Cho hải sản vào đảo nhanh trên lửa lớn / Kho tộ liu riu với nước dừa / Nướng than hoa phủ ngập sốt phô mai cho món {title}.", cookTime > 15 ? cookTime - 10 : 15, "Hải sản chín rất nhanh, chỉ nên nấu vừa chín tới để giữ được độ giòn ngọt mọng nước."),
+                ("Nêm nếm sốt và hoàn thiện", "Thêm thì là, rau răm thái nhỏ hoặc sốt bơ tỏi sánh kẹo, cân chỉnh lại vị chua ngọt mặn mà cho thật hài hòa.", 5, null),
+                ("Trình bày và thưởng thức", $"Dọn món {title} ra đĩa nóng hoặc nồi đất sôi lục bục, ăn kèm muối ớt xanh hoặc nước mắm me chua cay.", 5, "Ngon nhất khi thưởng thức ngay khi vừa ra lò còn nóng sốt.")
+            ];
+        }
+
+        if (slug.Contains("chay") || slug.StartsWith("nam-") || slug.StartsWith("dau-hu") || slug.StartsWith("ca-tim") || slug.StartsWith("rau-muong") || slug.StartsWith("bong-bi") || slug.Contains("rong-bien") || slug.StartsWith("canh-"))
+        {
+            return
+            [
+                ("Sơ chế nấm và rau củ tươi", "Ngâm nấm trong nước muối loãng 10 phút, rửa nhẹ tay và cắt miếng vừa ăn; gọt vỏ các loại rau củ.", 15, "Không ngâm nấm quá lâu trong nước để nấm không bị nhũn úng."),
+                ("Chần sơ đậu hũ và rau củ", "Trần nhẹ đậu hũ non qua nước sôi pha chút muối hạt để miếng đậu săn chắc và thơm ngậy hơn.", 10, "Chần nước muối giúp đậu hũ mềm mướt không bị nát khi xào nấu."),
+                ("Phi thơm hành Boaro", "Bắc chảo lên bếp cùng dầu mè nguyên chất, phi thơm hành boaro thái nhỏ cho dậy mùi thơm ngọt dịu dàng.", 5, "Dầu mè kết hợp hành boaro tạo nên mùi thơm thanh tịnh đặc trưng của ẩm thực chay."),
+                ("Xào nấu và om thấm vị", $"Cho nấm và rau củ vào đảo trên lửa lớn / Kho tộ liu riu cùng nước tương và hạt tiêu thơm nồng cho món {title}.", cookTime > 15 ? cookTime - 10 : 15, "Đảo nhanh tay để nấm giữ được độ dai giòn tự nhiên."),
+                ("Cân chỉnh gia vị thanh đạm", "Nêm thêm chút hạt nêm nấm, đường mía và tiêu đen xay, đun nhỏ lửa thêm 5 phút cho nước sốt sánh mịn bao quanh nguyên liệu.", 5, null),
+                ("Trình bày món chay thanh tao", $"Múc món {title} ra đĩa sâu lòng, rắc tiêu xay và hành boaro tươi lên trên, dùng nóng cùng cơm trắng hoặc bún thanh đạm.", 5, "Món ăn thanh nhẹ, giàu dưỡng chất và tốt cho sức khỏe.")
+            ];
+        }
+
+        if (slug.Contains("banh-trang") || slug.Contains("cut-lon") || slug.Contains("bap-xao") || slug.Contains("khoai-lang") || slug.Contains("banh-cuon") || slug.Contains("banh-beo") || slug.Contains("banh-nam") || slug.Contains("banh-bot-loc") || slug.Contains("banh-khot") || slug.Contains("banh-can") || slug.Contains("banh-gio") || slug.Contains("banh-bao"))
+        {
+            return
+            [
+                ("Chuẩn bị nguyên liệu và nhân", "Ngâm mộc nhĩ nấm hương băm nhỏ, trộn cùng thịt nạc vai xay, hành tím và tiêu để làm nhân bánh thơm lừng.", 15, "Ướp thịt cùng chút dầu mè giúp nhân bánh béo mềm không bị khô xác."),
+                ("Chế biến sốt hoặc pha bột", "Pha bột gạo đổ khuôn hấp chín trong / Nấu sốt me chua ngọt với đường thốt nốt và nước mắm sánh đặc.", 15, "Khuấy đều sốt me trên lửa nhỏ đến khi sốt keo lại óng ánh như gương."),
+                ("Tạo hình và gia nhiệt", "Đổ bánh bèo vào chén đem hấp cách thủy / Nướng bánh tráng than hoa với bơ, trứng cút và mỡ hành xanh mướt.", cookTime > 15 ? cookTime - 10 : 15, "Quay tròn bánh tráng trên vỉ than để bánh chín đều giòn tan không bị cháy góc."),
+                ("Kết hợp topping thơm béo", "Rắc ruốc tôm đỏ au, xúc xích lát mỏng, tép sấy, hành phi giòn tan và rưới sốt mayonnaise tương ớt.", 5, "Rắc hành phi sau cùng để giữ nguyên độ giòn rụm thơm nức."),
+                ("Hoàn thiện đĩa ăn vặt", "Gấp đôi chiếc bánh hoặc trộn đều các nguyên liệu với nước sốt me chua cay mặn ngọt đậm đà khó cưỡng.", 5, null),
+                ("Thưởng thức chuẩn vị đường phố", $"Dọn món {title} ra mẹt tre lót giấy nến, thưởng thức ngay khi bánh còn giòn rụm nóng hổi.", 5, "Món ăn vặt thơm nức kích thích mọi giác quan.")
+            ];
+        }
+
+        return
+        [
+            ("Sơ chế và thái miếng vừa ăn", "Rửa sạch thịt với nước muối loãng, cắt miếng dày hoặc thái mỏng tùy món ăn, thấm khô bề mặt.", 15, "Khía nhẹ viền sườn hoặc thịt để khi nướng hay kho miếng thịt không bị co rút cong queo."),
+            ("Tẩm ướp gia vị đậm đà", "Cho hành tỏi băm, nước mắm ngon, tiêu, dầu hào và chút mật ong vào bóp đều với thịt, ướp tối thiểu 30 phút.", 30, "Ướp thịt cùng chút dầu ăn giúp thớ thịt giữ ẩm mềm tan không bị khô."),
+            ("Nấu cơm thơm và làm đồ chua", "Nấu cơm tấm chín dẻo bằng xửng hấp / Ngâm cà rốt củ cải với giấm đường làm đồ chua ăn kèm chống ngấy.", 20, "Xới đều cơm tấm khi chín để từng hạt cơm tơi xốp bóng đẹp."),
+            ("Gia nhiệt chín vàng thơm lừng", $"Nướng thịt trên than hoa đỏ rực / Kho rục thịt ba chỉ trong nước dừa xiêm / Xào bò lửa lớn với bơ tỏi cho món {title}.", cookTime > 20 ? cookTime - 10 : 20, "Quét mỡ hành lên mặt thịt trong những phút cuối để món ăn bóng bẩy bắt mắt."),
+            ("Làm nước mắm chua ngọt và mỡ hành", "Pha nước mắm tỏi ớt chua cay kẹo sệt, đun dầu sôi xối vào bát hành lá thái nhỏ cùng xíu muối đường.", 5, null),
+            ("Bày đĩa và thưởng thức", $"Xới cơm ra đĩa, xếp thịt {title}, chả trứng, dưa leo cà chua và rưới mỡ hành thơm nức lên trên, dọn kèm chén mắm chua ngọt.", 5, "Ngon chuẩn vị khi thưởng thức cùng gia đình trong bữa cơm sum vầy.")
+        ];
+    }
 
     private static ApplicationUser NewUser(string email, string displayName)
     {
