@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import { getRecipes, getCategories } from '@/lib/api';
+import { getRecipes, searchRecipes, getCategories } from '@/lib/api';
 import RecipeCard from '@/components/RecipeCard';
+import RecipeSearchBar from '@/components/RecipeSearchBar';
 import { RecipeFilters } from '@/types/recipe';
-import { Filter, SlidersHorizontal, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Filter, SlidersHorizontal, BookOpen, ChevronLeft, ChevronRight, Search, Sparkles } from 'lucide-react';
 
 interface RecipesPageProps {
   searchParams: Promise<{
+    q?: string;
     page?: string;
     pageSize?: string;
     sortBy?: string;
@@ -19,6 +21,7 @@ interface RecipesPageProps {
 
 export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   const params = await searchParams;
+  const query = params.q?.trim() || '';
 
   const filters: RecipeFilters = {
     page: params.page ? parseInt(params.page, 10) : 1,
@@ -32,7 +35,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   };
 
   const [recipesResult, categories] = await Promise.all([
-    getRecipes(filters),
+    query ? searchRecipes(query, filters) : getRecipes(filters),
     getCategories(),
   ]);
 
@@ -41,6 +44,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   const buildUrl = (newParams: Partial<Record<string, string | number | undefined>>) => {
     const search = new URLSearchParams();
     const merged = {
+      q: query || undefined,
       page: filters.page,
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
@@ -61,7 +65,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-100 pb-8">
         <div>
@@ -73,7 +77,13 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             Khám phá công thức nấu ăn
           </h1>
           <p className="text-gray-500 text-sm mt-2">
-            Tìm thấy {meta.total} công thức đã được xuất bản và kiểm duyệt chất lượng.
+            {query ? (
+              <span>
+                Tìm thấy <strong>{meta.total}</strong> công thức cho từ khóa "<strong>{query}</strong>".
+              </span>
+            ) : (
+              <span>Tìm thấy {meta.total} công thức đã được xuất bản và kiểm duyệt chất lượng.</span>
+            )}
           </p>
         </div>
 
@@ -108,6 +118,32 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
               Tên A-Z
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Ô tìm kiếm công thức món ăn ngay tại phần Khám phá công thức nấu ăn */}
+      <div className="bg-gradient-to-r from-emerald-50 via-teal-50/40 to-amber-50/30 p-5 sm:p-6 rounded-3xl border border-emerald-100 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <Search className="w-4 h-4 text-emerald-600" />
+              Tìm kiếm công thức món ăn
+            </h2>
+            <p className="text-xs text-gray-500">
+              Nhập từ khóa theo tên món ăn, nguyên liệu hoặc hương vị để lọc công thức
+            </p>
+          </div>
+          {query && (
+            <Link
+              href={buildUrl({ q: undefined, page: 1 })}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition-colors shrink-0"
+            >
+              <span>Xóa tìm kiếm "{query}"</span>
+            </Link>
+          )}
+        </div>
+        <div className="max-w-2xl">
+          <RecipeSearchBar initialQuery={query} />
         </div>
       </div>
 
@@ -203,7 +239,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
-                  $\le$ {mins} phút
+                  ≤ {mins} phút
                 </Link>
               ))}
             </div>
