@@ -95,11 +95,18 @@ jobs:
       # (Healthy). Runner này khởi động RustFS với volume rỗng nên chưa có bucket, và HealthTests
       # tự bootstrap bucket qua IObjectStorageWriter. Bước này chỉ để log CI nói rõ dịch vụ nào
       # đã sẵn sàng, tránh mất thời gian debug khi test đỏ.
+      #
+      # Dùng /dev/tcp của bash thay vì redis-cli: runner ubuntu không cài redis-cli, chỉ có
+      # nó BÊN TRONG service container. /dev/tcp vừa ping thật vừa không cần cài thêm gì.
       - name: Wait for Redis
         run: |
           for i in $(seq 1 30); do
-            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
-              echo "Redis is ready"; exit 0
+            if exec 3<>/dev/tcp/127.0.0.1/6379 2>/dev/null; then
+              printf 'PING\r\n' >&3
+              if head -n 1 <&3 | grep -q PONG; then
+                echo "Redis is ready"; exec 3<&-; exit 0
+              fi
+              exec 3<&-
             fi
             sleep 1
           done
