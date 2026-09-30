@@ -45,8 +45,11 @@
 | K23 | SP Compose/Nginx; tự deploy/restore/test 2 API | NFR-REL-003, NFR-SCALE-001, NFR-SCALE-003, NFR-REL-001 | ADR-TV4-002 | 🟡 Có Compose + Nginx; thiếu backup/restore drill và 2 API instance |
 | K24 | PR cá nhân + Tâm review + ADR/runbook + CI | NFR-MAINT-001, NFR-MAINT-003, NFR-SEC-007 | — | 🟡 Có PR #16/#19 + 2 ADR + CI backend; thiếu runbook, secret scan, cổng CI frontend |
 
-**Tỷ lệ**: ✅ 0 · 🟡 12 · 🔴 4 · ⬜ 8 → **0/24 ô đủ bằng chứng** (khớp với `SO_EVIDENCE_TUAN_4.md` mục 2 và
-`KE_HOACH_TUAN_4_TV4.md` mục 5: 9 ô đã có nền, 15 ô còn thiếu, **chưa ô nào được nghiệm thu**).
+**Tỷ lệ**: ✅ 0 · 🟡 12 · 🔴 4 · ⬜ 8 → **0/24 ô đủ bằng chứng** (khớp với `Tuan04/SO_EVIDENCE_TUAN_4.md` mục 2 và
+`Tuan04/KE_HOACH_TUAN_4_TV4.md` mục 5: 9 ô đã có nền, 15 ô còn thiếu, **chưa ô nào được nghiệm thu**).
+
+> **Vị trí file**: đặt ở gốc `docs/evidence/TV4/` (cạnh `TUAN_4.md`, `BAO_CAO_LAB_04.md`) vì phục vụ
+> **cả 4 tuần** của TV4, không chỉ tuần 4. Tài liệu tuần 4 nằm ở `docs/evidence/TV4/Tuan04/`.
 
 ---
 
@@ -121,8 +124,8 @@
 
 1. Chọn ô K → xem hàng tương ứng ở **bảng A** (yêu cầu + FR/NFR) và **bảng B** (bằng chứng + lệnh).
 2. Tự chạy lại **cột "Lệnh kiểm chứng"** và đối chiếu **cột "Kết quả đo được"**.
-3. Với ô 🟡/🔴/⬜: kiểm tra xem phần thiếu có đúng là đã ghi ở `KE_HOACH_TUAN_4_TV4.md` mục 5 và
-   `SO_EVIDENCE_TUAN_4.md` mục 2 không — nếu thiếu mà không được ghi, đó là lỗi tài liệu, sửa ngay.
+3. Với ô 🟡/🔴/⬜: kiểm tra xem phần thiếu có đúng là đã ghi ở `Tuan04/KE_HOACH_TUAN_4_TV4.md` mục 5 và
+   `Tuan04/SO_EVIDENCE_TUAN_4.md` mục 2 không — nếu thiếu mà không được ghi, đó là lỗi tài liệu, sửa ngay.
 4. Ghi **ngày xác nhận** vào cột cuối bảng B khi chấp nhận; ô chỉ chuyển ✅ khi **cả** các kỹ thuật con
    trong cột "Kỹ thuật con" đều có bằng chứng (mục 9.2: *thiếu một phần thì ô chưa hoàn thành*).
 5. Nếu cột "FR/NFR liên quan" của TV4 gán sai, sửa cột đó và ghi lại — đây là điểm cần Tâm chốt,

@@ -70,12 +70,13 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 > Cột **Đã có (trước tuần 4)** = 9 ô đã được `PHAN_CHIA_CONG_VIEC_6_TUAN.md` ghi nhận.
 > Cột **Tuần 4** = việc sẽ bù; chi tiết ở `KE_HOACH_TUAN_4_TV4.md` mục 5.
 > Bản **mapping đầy đủ 24 dòng** (FR/NFR ↔ ADR ↔ đường dẫn evidence ↔ lệnh kiểm chứng ↔ kết quả đo
-> ↔ reviewer) nằm ở **`MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`** — lập 30/09, chờ Tâm xác nhận.
+> ↔ reviewer) nằm ở **`docs/evidence/TV4/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`** (đặt ở gốc `TV4/` vì
+> phục vụ cả 4 tuần) — lập 30/09, chờ Tâm xác nhận.
 > Bảng dưới đây là bản rút gọn theo nhóm người làm, **không** tự nâng trạng thái ô lên ✅.
 
 | K | Kỹ thuật con cần chứng minh | Đã có (trước tuần 4) | Việc tuần 4 | Evidence key | Trạng thái |
 |---|---|---|---|---|---|
-| K01 | SRS/FR-NFR/ADR/API contract | ✅ (ADR media/vận hành) | Bảng mapping FR ↔ ADR ↔ evidence 24 dòng (N0-5) | `MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` | 🟡 **Mapping xong 30/09** · 24 dòng K01–K24 · chờ Tâm xác nhận |
+| K01 | SRS/FR-NFR/ADR/API contract | ✅ (ADR media/vận hành) | Bảng mapping FR ↔ ADR ↔ evidence 24 dòng (N0-5) | `../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` | 🟡 **Mapping xong 30/09** · 24 dòng K01–K24 · chờ Tâm xác nhận |
 | K02 | .NET 10 Minimal APIs, REST/version, Scalar/RFC7807 | ❌ | Health check mới, mã lỗi `storage.unavailable` (B1 nếu duyệt), mã lỗi từ chối file (N1-1, N1-7, N2-4) | TV4-K02 | ⬜ Chưa làm |
 | K03 | Clean Architecture, interface, DI, value object | ❌ | `ObjectStorageHealthCheck` đúng tầng; dùng lại `IObjectStorageReader` (N1-1) | TV4-K03 | ⬜ Chưa làm |
 | K04 | CQRS/MediatR + behavior logging/validation/caching | ❌ | Lab L5 tự viết behavior tối thiểu (N3-2) | TV4-K04 | ⬜ Chưa làm |

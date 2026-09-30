@@ -32,7 +32,7 @@
 | 4 | Chạy lại baseline (build / format / test / coverage) và ghi số liệu thật | ✅ Xong 30/09 | **Build 0 warning/0 error** · **format exit 0** · **Test 178/178** (173 + 5, `Skipped=0`) · **Coverage `Application` line 83.37%**. Log: `Tuan04/logs/baseline_{build,format,test,coverage}.log` |
 | 5 | Xác nhận lỗi `500` `/search` đã có bản sửa trên `main` (**không tự gỡ lỗi**) | ✅ Xong 30/09 | `e523579` đã là ancestor của `origin/main`; `page.tsx` còn **0** `onChange`; `SearchFilterSelect.tsx` có `'use client'`. Frontend build xanh: `npx tsc --noEmit` **exit 0**, `npm run build` **exit 0**. Log: `Tuan04/logs/baseline_frontend.log`. Chi tiết: `SO_EVIDENCE_TUAN_4.md` §1.1 |
 | 6 | Merge `main` vào nhánh tuần 4 | ✅ Xong 30/09 | Merge `4770602` — kéo `1492b39` (TV2: sửa hiển thị ảnh + ô tìm kiếm ở `/recipes`) |
-| 7 | Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô | ✅ Xong 30/09 | `Tuan04/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` — 24 dòng K01–K24, mỗi dòng có FR/NFR · ADR · đường dẫn evidence · commit · lệnh kiểm chứng · kết quả đo · reviewer. Kết luận: **0/24 ô đủ bằng chứng**, 9 ô có nền, 15 ô còn thiếu. **Chờ Tâm xác nhận** cột FR/NFR và ngày |
+| 7 | Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô | ✅ Xong 30/09 | `docs/evidence/TV4/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` (đặt ở gốc `TV4/`) — 24 dòng K01–K24, mỗi dòng có FR/NFR · ADR · đường dẫn evidence · commit · lệnh kiểm chứng · kết quả đo · reviewer. Kết luận: **0/24 ô đủ bằng chứng**, 9 ô có nền, 15 ô còn thiếu. **Chờ Tâm xác nhận** cột FR/NFR và ngày |
 
 **N0 đã xong 6/6.** Phần chạy thật TC1–TC4 để lấy bằng chứng `/search` đã được chuyển sang làm cùng
 **N2-2 (E2E luồng "tìm kiếm")** — vì bản sửa đã có trên `main`, chạy tay một lần không tạo ra bằng chứng
@@ -142,7 +142,7 @@ Chi tiết theo ô: `SO_EVIDENCE_TUAN_4.md` mục 2.
 
 ## 10. Việc làm tiếp theo (thứ tự ưu tiên)
 
-1. ~~Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô~~ — **xong 30/09** (`MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`); phần còn lại là **Tâm xác nhận** cột FR/NFR và ngày cho từng ô.
+1. ~~Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô~~ — **xong 30/09** (`docs/evidence/TV4/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`); phần còn lại là **Tâm xác nhận** cột FR/NFR và ngày cho từng ô.
 2. Dựng Playwright + cổng CI frontend (N2-1, N2-3) — trong đó **luồng search** phủ TC1–TC12 của
    báo cáo lỗi 500. ~~chạy `npm run build` + `tsc --noEmit` để có số liệu frontend cho baseline~~ —
    **đã chạy 30/09, exit 0** (`logs/baseline_frontend.log`); giờ cần đưa 2 lệnh này vào CI để có số
