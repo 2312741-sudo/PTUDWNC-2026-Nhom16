@@ -16,18 +16,46 @@
 
 ---
 
-## 1. Baseline đầu tuần 4 (điền sau khi chạy, không dùng số của tuần 3)
+## 1. Baseline đầu tuần 4 — **đã đo thật 30/09/2026**
+
+> Môi trường đo: Windows, **SDK .NET 10.0.401** (khớp `global.json` và CI), Docker Desktop 29.6.2 /
+> Compose v5.3.1, hạ tầng lấy từ `docker-compose.dev.yml` (`postgres` 16-alpine, `redis` 7-alpine,
+> `s3` RustFS 1.0.0, `mailhog`) với cấu hình thật trong `.env` cục bộ (`.env` **không** commit).
+> Đo tại commit `a4fc8d8` (bằm `origin/main` = `7fe8fc2` + bộ tài liệu Tuan04), **trước** khi merge
+> `1492b39` — commit đó chỉ đụng frontend nên **không làm thay đổi** kết quả build/test backend.
+> Log gốc: `Tuan04/logs/baseline_build.log`, `baseline_format.log`, `baseline_test.log`,
+> `baseline_coverage.log`.
 
 | Hạng mục | Lệnh | Kết quả | Ngày |
 |---|---|---|---|
-| Build backend | `dotnet build CulinaryBlog.sln -c Release` | ⬜ (mục tiêu: 0 warning / 0 error) | |
-| Format | `dotnet format CulinaryBlog.sln --verify-no-changes` | ⬜ | |
-| Test | `dotnet test CulinaryBlog.sln -c Release` | ⬜ — *tuần 3 ghi 172/172 tại `80b2c0e`; `main` đã có thêm 4 commit nên **phải đo lại*** | |
-| Coverage `CulinaryBlog.Application` | đọc `coverage.cobertura.xml` | ⬜ — *mục tiêu G5: line ≥ 80%* | |
-| Frontend typecheck | `npx tsc --noEmit` | ⬜ | |
-| Frontend build | `npm run build` (`src/frontend`) | ⬜ | |
-| Compose hợp lệ | `docker compose -f docker-compose.dev.yml config --quiet` | ⬜ | |
-| Verify `/search` hết lỗi 500 | TC1–TC3 của `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` | ⬜ — *đã có fix `e523579` trên `main`, cần xác nhận lại bằng log* | |
+| Build backend | `dotnet build CulinaryBlog.sln --no-restore -c Release` | ✅ **0 warning / 0 error** (11.66 s) | 30/09 |
+| Format | `dotnet format CulinaryBlog.sln --verify-no-changes --no-restore` | ✅ **exit 0** (không có diff) | 30/09 |
+| Test | `dotnet test CulinaryBlog.sln --no-build -c Release --collect "XPlat Code Coverage"` | ✅ **178/178 pass** — `CulinaryBlog.Tests` **173/173** (2 m 39 s) + `ConcurrencySpike` **5/5**; Failed 0, **Skipped 0** | 30/09 |
+| Coverage `CulinaryBlog.Application` | đọc `coverage.cobertura.xml` | ✅ **line 83.37%** / branch 67.44% — **đã vượt ngưỡng G5 80%** | 30/09 |
+| Coverage tổng | cùng trên | 31.29% (2446/7817 dòng) — thấp vì `Infrastructure` chỉ 11.29% | 30/09 |
+| Hạ tầng test | `docker compose -f docker-compose.dev.yml up -d postgres redis s3 mailhog` | ✅ 4 container lên; test E2E storage **thật** (không skip — `Skipped=0`) | 30/09 |
+| Frontend typecheck | `npx tsc --noEmit` | ⬜ Chưa chạy | — |
+| Frontend build | `npm run build` (`src/frontend`) | ⬜ Chưa chạy (nằm ở N2-3 khi dựng cổng CI) | — |
+| Verify `/search` hết lỗi 500 | TC1–TC3 của `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` | 🟡 **Xác nhận bằng tĩnh, chưa chạy runtime** — xem mục 1.1 | 30/09 |
+
+> So với tuần 3 (`80b2c0e`: 172/172) ⇒ **178/178, +6 test**, không có test nào bị skip.
+
+### 1.1 Xác nhận lỗi `500` ở `/search` — không tự sửa, lấy bản sửa từ `main`
+
+Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có trên `main`. Đã xác nhận:
+
+| # | Kiểm tra | Kết quả |
+|---|---|---|
+| 1 | Commit sửa trên `main` | ✅ `e523579` *"fix(frontend): extract SearchFilterSelect to client component for search page SSR"* (TV2, 30/09 11:22) — **Phương án B** trong báo cáo |
+| 2 | `e523579` đã nằm trong lịch sử nhánh tuần 4 | ✅ `git merge-base --is-ancestor e523579 origin/main` ⇒ có (nên không cần merge thêm cho lỗi này) |
+| 3 | `src/frontend/src/app/search/page.tsx` còn `onChange` không | ✅ **0 kết quả**; file vẫn là Server Component (đúng — không thêm `'use client'`) |
+| 4 | File mới `src/frontend/src/components/SearchFilterSelect.tsx` | ✅ có `'use client'`; `onChange` nằm trong Client Component; props truyền vào (`name`, `defaultValue`, `options`) **đều serialize được** |
+| 5 | Đã merge `main` vào nhánh tuần 4 | ✅ merge `4770602`, kéo thêm `1492b39` (TV2: sửa hiển thị ảnh + thêm ô tìm kiếm ở trang `/recipes`) |
+| 6 | Chạy thật TC1–TC4 (`/search`, `?q=a`, `?q=gà`, `?q=pho`) | ⬜ **Chưa chạy** — dừng theo chỉ đạo, không tự dựng app để test vì việc sửa đã ở trên `main`; chuyển sang làm cùng **N2-2 (E2E luồng search)** để có bằng chứng lặp lại được |
+
+> Báo cáo `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` **giữ nguyên 100%** (không sửa, không xoá)
+> theo quyết định trước đó; trạng thái "đã có bản sửa trên `main`" được ghi ở đây và ở
+> `TRANG_THAI_THUC_HIEN_TUAN_4.md` thay vì sửa báo cáo gốc.
 
 ---
 

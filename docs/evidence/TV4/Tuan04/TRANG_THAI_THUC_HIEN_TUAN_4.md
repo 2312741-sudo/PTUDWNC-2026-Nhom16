@@ -11,12 +11,12 @@
 
 | Nhóm | Task | Kế hoạch | Đã xong | Đang làm | Còn lại | Tỷ lệ |
 |---|---|---|---|---|---|---|
-| N0 | Mở đầu tuần 4 (baseline, bằng chứng 500, mapping K01) | 5 | 3 | 0 | 2 | 60% |
+| N0 | Mở đầu tuần 4 (baseline, bằng chứng 500, merge main, mapping K01) | 6 | 4 | 0 | 2 | 67% |
 | N1 | D5 — Health/observability/backup/multi-instance | 8 | 0 | 0 | 8 | 0% |
 | N2 | D7 — E2E, tấn công file, CI, số đo | 8 | 0 | 0 | 8 | 0% |
 | N3 | D6 — Lab L5 + bù mục 2 L4 | 4 | 0 | 0 | 4 | 0% |
 | N4 | Runbook, release, bàn giao | 4 | 0 | 0 | 4 | 0% |
-| **Tổng** | | **29** | **3** | **0** | **26** | **≈10%** |
+| **Tổng** | | **30** | **4** | **0** | **26** | **≈13%** |
 
 > Tỷ lệ tính theo **số việc đã có bằng chứng**, không tính "đã lên kế hoạch".
 
@@ -26,18 +26,25 @@
 
 | # | Việc | Trạng thái | Bằng chứng / commit |
 |---|---|---|---|
-| 1 | Tạo nhánh `2312739_NHTSon_D5-D6-D7` từ `origin/main` (`7fe8fc2`) | ✅ Xong | Nhánh có trên remote, HEAD `7fe8fc2` |
+| 1 | Tạo nhánh `2312739_NHTSon_D5-D6-D7` từ `origin/main` (`7fe8fc2`) | ✅ Xong | Nhánh có trên remote; commit `a4fc8d8` |
 | 2 | Tạo `docs/evidence/TV4/Tuan04/` với 4 tài liệu | ✅ Xong | `KE_HOACH_TUAN_4_TV4.md`, `MO_TA_CONG_VIEC_TUAN_4.md`, `SO_EVIDENCE_TUAN_4.md`, `TRANG_THAI_THUC_HIEN_TUAN_4.md` |
-| 3 | Commit `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` vào nhánh này | ✅ Xong | Commit trong nhánh tuần 4 (nội dung **không sửa**) |
-| 4 | Chạy lại baseline trên `7fe8fc2` (build / format / test) và ghi số liệu thật | ⬜ Chưa làm | Số của tuần 3 là 172/172 tại `80b2c0e` — **không dùng lại**, vì `main` đã có thêm 4 commit |
-| 5 | Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô | ⬜ Chưa làm | Tuần 3 ghi "Chưa làm" |
+| 3 | Commit `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` vào nhánh này | ✅ Xong | `a4fc8d8` (nội dung **không sửa**) |
+| 4 | Chạy lại baseline (build / format / test / coverage) và ghi số liệu thật | ✅ Xong 30/09 | **Build 0 warning/0 error** · **format exit 0** · **Test 178/178** (173 + 5, `Skipped=0`) · **Coverage `Application` line 83.37%**. Log: `Tuan04/logs/baseline_{build,format,test,coverage}.log` |
+| 5 | Xác nhận lỗi `500` `/search` đã có bản sửa trên `main` (**không tự gỡ lỗi**) | ✅ Xong 30/09 | `e523579` đã là ancestor của `origin/main`; `page.tsx` còn **0** `onChange`; `SearchFilterSelect.tsx` có `'use client'`. Chi tiết: `SO_EVIDENCE_TUAN_4.md` §1.1 |
+| 6 | Merge `main` vào nhánh tuần 4 | ✅ Xong 30/09 | Merge `4770602` — kéo `1492b39` (TV2: sửa hiển thị ảnh + ô tìm kiếm ở `/recipes`) |
+| 7 | Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô | ⬜ Chưa làm | Tuần 3 ghi "Chưa làm" — cần cho G4 |
+
+**Còn lại của N0**: bảng mapping K01 (mục 7). Phần chạy thật TC1–TC4 để lấy bằng chứng `/search`
+đã được chuyển sang làm cùng **N2-2 (E2E luồng "tìm kiếm")** — vì bản sửa đã có trên `main`, chạy
+tay một lần không tạo ra bằng chứng lặp lại được cho cổng CI.
 
 **Ghi chú bổ sung (30/09)** — nằm ở **tài liệu trạng thái này**, không sửa báo cáo gốc: lỗi
 `/search` đã được **TV2 sửa trên `main`** bằng commit `e523579` *"fix(frontend): extract
 SearchFilterSelect to client component"* (đúng **Phương án B** trong báo cáo). File
 `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` được **giữ nguyên 100%** như quyết định nhóm, để
-giữ nguyên giá trị làm bằng chứng; việc xác nhận lại bằng test (TC1–TC3) thuộc N0 và cần chạy
-trước khi đóng báo cáo.
+giữ nguyên giá trị làm bằng chứng. Theo chỉ đạo 30/09, **không tự gỡ lỗi và không dựng app để
+test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/search` sẽ làm bằng E2E ở **N2-2**
+để có kết quả lặp lại được trên CI.
 
 ---
 
@@ -135,14 +142,14 @@ Chi tiết theo ô: `SO_EVIDENCE_TUAN_4.md` mục 2.
 
 ## 10. Việc làm tiếp theo (thứ tự ưu tiên)
 
-1. Chạy lại baseline trên `7fe8fc2` → điền số liệu thật vào `SO_EVIDENCE_TUAN_4.md` mục 1.
-2. Verify `/search` (TC1–TC3) + `next build` → đóng nốt báo cáo lỗi 500.
-3. Dựng Playwright + cổng CI frontend (N2-1, N2-3).
-4. B4 health check + test 503 khi Redis chết (N1-1, N1-2).
-5. Backup/restore script + drill (N1-4).
-6. OTEL collector + Seq + chụp trace thật (N1-3).
-7. Sitemap cron 02:00 UTC + distributed lock (N1-6).
-8. Lab L5 + bù mục 2 L4; mở PR cho nhánh lab (N3).
-9. Kịch bản tấn công file + resilience + k6 script (N2-4, N2-5, N2-6).
-10. Ngưỡng coverage CI + D4-UI còn treo (N2-7, N2-8).
-11. Runbook + release + chốt sổ 24/24 K, nộp review Tâm (N4).
+1. Bảng mapping K01: FR/NFR ↔ ADR ↔ đường dẫn evidence cho 24 ô (phần cuối của N0, cần cho G4).
+2. Dựng Playwright + cổng CI frontend (N2-1, N2-3) — trong đó **luồng search** phủ TC1–TC12 của
+   báo cáo lỗi 500, và chạy `npm run build` + `tsc --noEmit` để có số liệu frontend cho baseline.
+3. B4 health check + test 503 khi Redis chết (N1-1, N1-2).
+4. Backup/restore script + drill (N1-4).
+5. OTEL collector + Seq + chụp trace thật (N1-3).
+6. Sitemap cron 02:00 UTC + distributed lock (N1-6).
+7. Lab L5 + bù mục 2 L4; mở PR cho nhánh lab (N3).
+8. Kịch bản tấn công file + resilience + k6 script (N2-4, N2-5, N2-6).
+9. Ngưỡng coverage CI + D4-UI còn treo (N2-7, N2-8).
+10. Runbook + release + chốt sổ 24/24 K, nộp review Tâm (N4).
