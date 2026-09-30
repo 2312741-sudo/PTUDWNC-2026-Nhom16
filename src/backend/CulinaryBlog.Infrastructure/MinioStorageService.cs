@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using CulinaryBlog.Application;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -39,8 +40,16 @@ public interface IObjectStorageWriter
 /// Key theo FR-RCP-008: {folder}/{uuid}.{ext} — ví dụ recipes/{recipeId}/{uuid}.{ext}.
 /// Bucket private mặc định (D27); Url trả về là key (path tương đối), việc phục vụ ảnh
 /// qua presigned/proxy được làm rõ trong IMAGE_CONTRACT.md theo quyết định D27.
-/// Không nuốt lỗi im lặng: exception MinIO lan ra để handler ánh xạ 5xx/4xx phù hợp.
 /// </summary>
+/// <remarks>
+/// B1 (issue #20, N1-7): lỗi hạ tầng của object storage KHÔNG được trả về 500 server.error.
+/// Mọi <see cref="MinioException"/> (kể cả AccessDenied / BucketNotFound) đi qua
+/// <see cref="GuardAsync"/> để thành <see cref="AppException"/> 503 + code <c>storage.unavailable</c>
+/// ⇒ người dùng biết đây là lỗi tạm thời và retry được.
+/// Cố ý KHÔNG bọc <see cref="OperationCanceledException"/> (storage chậm nhưng vẫn ghi được —
+/// báo 503 nhầm sẽ khiến client retry một thao tác đang chạy dở).
+/// <see cref="ObjectNotFoundException"/> giữ nguyên ngữ nghĩa cũ: object không tồn tại ⇒ null (404).
+/// </remarks>
 public sealed class MinioStorageService : IFileStorageService, IObjectStorageReader, IObjectStorageWriter
 {
     private readonly IMinioClient _client;
@@ -71,33 +80,36 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
 
         var key = $"{folder.Trim('/').TrimEnd('/')}/{Guid.NewGuid():N}{extension}";
 
-        var bucketExists = await _client.BucketExistsAsync(
-            new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
-        if (!bucketExists)
+        await GuardAsync("upload", ct, async () =>
         {
-            await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
-            _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
-        }
+            var bucketExists = await _client.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+            if (!bucketExists)
+            {
+                await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+                _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
+            }
 
-        await _client.PutObjectAsync(
-            new PutObjectArgs()
-                .WithBucket(_options.Bucket)
-                .WithObject(key)
-                .WithStreamData(content)
-                .WithObjectSize(content.Length)
-                .WithContentType(contentType),
-            ct).ConfigureAwait(false);
+            await _client.PutObjectAsync(
+                new PutObjectArgs()
+                    .WithBucket(_options.Bucket)
+                    .WithObject(key)
+                    .WithStreamData(content)
+                    .WithObjectSize(content.Length)
+                    .WithContentType(contentType),
+                ct).ConfigureAwait(false);
+        }).ConfigureAwait(false);
 
         return new StoredFile(key, key, contentType, content.Length);
     }
 
     public async Task DeleteAsync(string key, CancellationToken ct = default)
     {
-        await _client.RemoveObjectAsync(
-            new RemoveObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct).ConfigureAwait(false);
+        await GuardAsync("delete", ct, () => _client.RemoveObjectAsync(
+            new RemoveObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct)).ConfigureAwait(false);
     }
 
-    /// <summary>D27 proxy: stat rồi đọc object về MemoryStream. Object missing → null (404); MinIO down → exception lan ra (5xx).</summary>
+    /// <summary>D27 proxy: stat rồi đọc object về MemoryStream. Object missing → null (404); MinIO down → 503 storage.unavailable.</summary>
     public async Task<MediaContent?> ReadAsync(string key, CancellationToken ct = default)
     {
         ObjectStat stat;
@@ -109,6 +121,10 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         catch (ObjectNotFoundException)
         {
             return null;
+        }
+        catch (Exception ex) when (IsStorageFailure(ex, ct))
+        {
+            throw StorageUnavailable(ex, "stat");
         }
 
         var buffer = new MemoryStream();
@@ -129,6 +145,11 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         {
             buffer.Dispose();
             return null;
+        }
+        catch (Exception ex) when (IsStorageFailure(ex, ct))
+        {
+            buffer.Dispose();
+            throw StorageUnavailable(ex, "read");
         }
 
         if (buffer.Length != stat.Size)
@@ -168,26 +189,79 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         {
             return false;
         }
+        catch (Exception ex) when (IsStorageFailure(ex, ct))
+        {
+            throw StorageUnavailable(ex, "exists");
+        }
     }
 
     /// <summary>D23: ghi object với key chỉ định (resize job), tạo bucket nếu thiếu.</summary>
     public async Task UploadAsync(string key, Stream content, string contentType, long length, CancellationToken ct = default)
     {
-        var bucketExists = await _client.BucketExistsAsync(
-            new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
-        if (!bucketExists)
+        await GuardAsync("resize-upload", ct, async () =>
         {
-            await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
-            _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
-        }
+            var bucketExists = await _client.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+            if (!bucketExists)
+            {
+                await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+                _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
+            }
 
-        await _client.PutObjectAsync(
-            new PutObjectArgs()
-                .WithBucket(_options.Bucket)
-                .WithObject(key)
-                .WithStreamData(content)
-                .WithObjectSize(length)
-                .WithContentType(contentType),
-            ct).ConfigureAwait(false);
+            await _client.PutObjectAsync(
+                new PutObjectArgs()
+                    .WithBucket(_options.Bucket)
+                    .WithObject(key)
+                    .WithStreamData(content)
+                    .WithObjectSize(length)
+                    .WithContentType(contentType),
+                ct).ConfigureAwait(false);
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// B1 (issue #20): chạy một lệnh MinIO và bọc lỗi hạ tầng thành 503 storage.unavailable.
+    /// Bọc cả MinioException lẫn lỗi I/O của SDK (HttpRequestException / SocketException / IOException /
+    /// TimeoutException / TaskCanceledException do SDK hết thời gian chờ) vì "storage down" và
+    /// "credential sai" có thể biểu hiện bằng những loại khác nhau — tất cả đều là lỗi tạm thời, retry được.
+    /// KHÔNG bọc OperationCanceledException khi cancellation token của lời gọi đã bị huỷ
+    /// (client ngắt kết nối / shutdown) — đó không phải lỗi hạ tầng.
+    /// ObjectNotFoundException để lọt: caller tự ánh xạ thành 404.
+    /// </summary>
+    private async Task GuardAsync(string op, CancellationToken ct, Func<Task> action)
+    {
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (IsStorageFailure(ex, ct))
+        {
+            throw StorageUnavailable(ex, op);
+        }
+    }
+
+    private static bool IsStorageFailure(Exception ex, CancellationToken ct)
+    {
+        if (ex is ObjectNotFoundException)
+            return false;
+
+        if (ex is OperationCanceledException)
+            return !ct.IsCancellationRequested;
+
+        return ex is MinioException
+            or HttpRequestException
+            or IOException
+            or TimeoutException
+            or SocketException;
+    }
+
+    private AppException StorageUnavailable(Exception ex, string op)
+    {
+        _logger.LogError(ex, "Object storage thao tac that bai: {Op} {Bucket} ({ErrorType})",
+            op, _options.Bucket, ex.GetType().Name);
+        return new AppException(
+            503,
+            "storage.unavailable",
+            "Dịch vụ lưu trữ ảnh tạm thời không khả dụng. Vui lòng thử lại sau.");
     }
 }

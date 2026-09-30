@@ -58,12 +58,22 @@ export class ApiError extends Error {
 }
 export class UnauthorizedError extends ApiError {}
 
+// B1 (issue #20): API đã trả 503 + code "storage.unavailable" thay vì 500 server.error.
+// Thông điệp tiếng Việt đặt ở API, nhưng map lại ở FE để không phụ thuộc vào Title/Detail của API
+// (nếu gặp API cũ hoặc reverse proxy nuốt body, người dùng vẫn thấy đúng câu).
+// Quyết định 30/09: KHÔNG retry tự động — chỉ thông báo rõ lỗi tạm thời.
+const CODE_MESSAGES: Record<string, string> = {
+  "storage.unavailable": "Dịch vụ lưu trữ ảnh tạm thời không khả dụng. Vui lòng thử lại sau.",
+};
+
 function errorMessage(body: any, status: number): string {
   // ValidationProblemDetails: { errors: { Title: ["..."] } }
   if (body?.errors && typeof body.errors === "object") {
     const msgs = Object.values(body.errors).flat().filter(Boolean) as string[];
     if (msgs.length) return msgs.join(" • ");
   }
+  const code = body?.code ?? body?.error?.code;
+  if (code && CODE_MESSAGES[code]) return CODE_MESSAGES[code];
   return body?.message ?? body?.error?.message ?? body?.detail ?? body?.title ?? `Lỗi ${status}`;
 }
 
