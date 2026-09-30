@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getRecipeBySlug } from '@/lib/api';
 import { mediaUrl } from '@/lib/recipe-editor';
+import { getRecipeImage } from '@/lib/recipeImages';
 import OwnerEditButton from '@/components/OwnerEditButton';
+import RecipeDetailImage from '@/components/RecipeDetailImage';
 import {
   ArrowLeft,
   ChefHat,
@@ -30,6 +32,27 @@ function primaryImageKey(recipe: any): string | null {
   return primary?.originalUrl ?? primary?.url ?? null;
 }
 
+function getRecipeDetailImage(recipe: any, slug: string, categoryName?: string): string {
+  const rawKey = primaryImageKey(recipe);
+  if (rawKey) {
+    if (rawKey.startsWith('http://') || rawKey.startsWith('https://')) {
+      return rawKey;
+    }
+    if (rawKey.startsWith('/images/') || rawKey.startsWith('images/')) {
+      return rawKey.startsWith('/') ? rawKey : `/${rawKey}`;
+    }
+    if (rawKey.startsWith('recipes/')) {
+      return mediaUrl(rawKey) ?? `/images/recipes/${slug}.jpg`;
+    }
+  }
+  return getRecipeImage({
+    slug,
+    title: recipe?.title,
+    categoryName,
+    primaryImageUrl: rawKey,
+  });
+}
+
 // D4/TV4: canonical + OpenGraph (JSON-LD do recipes/[slug]/layout.tsx nhúng qua lib/recipe-jsonld.ts)
 export async function generateMetadata({ params }: RecipeDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -37,7 +60,7 @@ export async function generateMetadata({ params }: RecipeDetailPageProps): Promi
   if (!recipe) return {};
 
   const url = `${SITE_URL}/recipes/${encodeURIComponent(slug)}`;
-  const image = mediaUrl(primaryImageKey(recipe));
+  const image = getRecipeDetailImage(recipe, slug, (recipe as any).categoryName);
   return {
     title: recipe.title,
     description: recipe.description,
@@ -90,7 +113,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
   const extra = recipe as unknown as { id?: string; authorId?: string; categoryName?: string };
   // Chỉ hiện mục dinh dưỡng khi có ít nhất một giá trị
   const hasNutrition = !!recipe.nutrition && Object.values(recipe.nutrition).some((v) => v !== null && v !== undefined);
-  const imageUrl = mediaUrl(primaryImageKey(recipe));
+  const imageUrl = getRecipeDetailImage(recipe, slug, extra.categoryName);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
@@ -160,10 +183,10 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
 
       {/* Ảnh chính của công thức (D1.3) */}
       {imageUrl && (
-        <img
+        <RecipeDetailImage
           src={imageUrl}
           alt={recipe.title}
-          className="w-full h-72 sm:h-96 object-cover rounded-3xl shadow-lg shadow-orange-50 border border-gray-100"
+          categoryName={extra.categoryName}
         />
       )}
 
