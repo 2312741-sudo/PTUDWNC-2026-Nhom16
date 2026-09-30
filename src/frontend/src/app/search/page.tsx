@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { searchRecipes, getCategories } from '@/lib/api';
 import RecipeCard from '@/components/RecipeCard';
+import { SearchFilterSelect } from '@/components/SearchFilterSelect';
 import { Search, Sparkles, AlertCircle, Filter, ArrowUpDown } from 'lucide-react';
 
 interface SearchPageProps {
@@ -155,22 +156,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <form action="/search" method="GET" className="inline">
                   <input type="hidden" name="q" value={q} />
                   {difficulty && <input type="hidden" name="difficulty" value={difficulty} />}
-                  <select
+                  <SearchFilterSelect
                     name="categoryId"
                     defaultValue={categoryId}
-                    onChange={(e) => {
-                      const form = e.target.form;
-                      if (form) form.requestSubmit();
-                    }}
-                    className="py-1.5 px-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    <option value="">Tất cả danh mục</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: '', label: 'Tất cả danh mục' },
+                      ...categories.map((c) => ({ value: c.id, label: c.name })),
+                    ]}
+                  />
                 </form>
               </div>
 
@@ -178,21 +171,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <form action="/search" method="GET" className="inline">
                 <input type="hidden" name="q" value={q} />
                 {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
-                <select
+                <SearchFilterSelect
                   name="difficulty"
                   defaultValue={difficulty}
-                  onChange={(e) => {
-                    const form = e.target.form;
-                    if (form) form.requestSubmit();
-                  }}
-                  className="py-1.5 px-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-                  <option value="">Độ khó</option>
-                  <option value="Easy">Dễ</option>
-                  <option value="Medium">Trung bình</option>
-                  <option value="Hard">Khó</option>
-                  <option value="Expert">Chuyên gia</option>
-                </select>
+                  options={[
+                    { value: '', label: 'Độ khó' },
+                    { value: 'Easy', label: 'Dễ' },
+                    { value: 'Medium', label: 'Trung bình' },
+                    { value: 'Hard', label: 'Khó' },
+                    { value: 'Expert', label: 'Chuyên gia' },
+                  ]}
+                />
               </form>
 
               {/* Sort Order */}
@@ -202,19 +191,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   <input type="hidden" name="q" value={q} />
                   {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
                   {difficulty && <input type="hidden" name="difficulty" value={difficulty} />}
-                  <select
+                  <SearchFilterSelect
                     name="sortBy"
                     defaultValue={sortBy}
-                    onChange={(e) => {
-                      const form = e.target.form;
-                      if (form) form.requestSubmit();
-                    }}
-                    className="py-1.5 px-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    <option value="createdAt">Mới nhất</option>
-                    <option value="cookTimeMinutes">Nấu nhanh nhất</option>
-                    <option value="title">Tên món A-Z</option>
-                  </select>
+                    options={[
+                      { value: 'createdAt', label: 'Mới nhất' },
+                      { value: 'cookTimeMinutes', label: 'Nấu nhanh nhất' },
+                      { value: 'title', label: 'Tên món A-Z' },
+                    ]}
+                  />
                 </form>
               </div>
             </div>
