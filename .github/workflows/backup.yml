@@ -1,0 +1,84 @@
+name: Backup PostgreSQL
+
+# N1-4 (tuần 4): sao lưu CSDL lúc 03:00 Asia/Ho_Chi_Minh.
+#
+# cron của GitHub Actions LUÔN dùng giờ UTC. 03:00 Asia/Ho_Chi_Minh = UTC+7 ⇒ 20:00 UTC
+# của HÔM TRƯỚC. Đây là điểm dễ sai nhất của toàn bộ hạng mục backup: ghi "0 3 * * *"
+# sẽ chạy lúc 10:00 giờ Việt Nam, tức lệch 7 giờ so với nghị quyết.
+on:
+  schedule:
+    # 20:00 UTC = 03:00 ngày hôm sau theo giờ Việt Nam.
+    - cron: '0 20 * * *'
+  # Cho phép chạy tay khi cần kiểm tra lịch mà không phải chờ tới 20:00 UTC.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    # Bản sao lưu là việc định kỳ, không phụ thuộc trạng thái nhánh. Job theo lịch sẽ chạy
+    # trên default branch; workflow_dispatch thì chạy trên nhánh được chọn.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Chống hai lần backup chồng nhau: nếu lần trước còn treo (mạng chậm, DB lớn) thì
+    # lần sau bị bỏ qua thay vì ghi đè vùng đang ghi.
+    concurrency:
+      group: culinary-db-backup
+      cancel-in-progress: false
+    env:
+      # Secret của repository, KHÔNG ghi trực tiếp vào workflow. Cần đặt trong
+      # Settings → Secrets and variables → Actions: DATABASE_URL
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BACKUP_DIR: $home/culinary-backups
+      BACKUP_KEEP_DAYS: '30'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cài PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client
+          pg_dump --version
+
+      - name: Kiểm tra cấu hình kết nối
+        # Fail sớm với thông báo rõ ràng thay vì để pg_dump báo lỗi mập mờ 20 phút sau.
+        # Chỉ kiểm tra có thiếu hay không, KHÔNG in giá trị DATABASE_URL ra log.
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::Thiếu secret DATABASE_URL trong repository settings."
+            exit 1
+          fi
+          echo "Đã có DATABASE_URL (không in nội dung)."
+
+      - name: Chạy sao lưu
+        run: bash deploy/backup.sh
+
+      - name: Kiểm tra bản sao lưu vừa tạo
+        # Backup rỗng hoặc script lỗi vẫn phải làm job đỏ, nếu không ta sẽ tưởng có
+        # bản sao lưu cho tới lúc thật sự cần khôi phụng.
+        run: |
+          latest="$(ls -1t "$BACKUP_DIR"/culinary_*.dump 2>/dev/null | head -n 1 || true)"
+          if [ -z "$latest" ]; then
+            echo "::error::Không tìm thấy file .dump nào sau khi chạy backup."
+            exit 1
+          fi
+          bytes="$(wc -c < "$latest" | tr -d ' ')"
+          echo "Bản sao lưu mới nhất: $latest ($bytes bytes)"
+          if [ "$bytes" -lt 1024 ]; then
+            echo "::error::Bản sao lưu nhỏ bất thường ($bytes bytes) — có thể hỏng."
+            exit 1
+          fi
+          # Liệt kê các bảng trong file để chứng minh dump đọc được, không phải file rác.
+          pg_restore --list "$latest" | head -n 15
+
+      - name: Lưu artifact
+        # Dung lượng artifact có hạn; 30 ngày bản sao lưu không thể nằm hết trong Actions.
+        # Vì vậy workflow này là bằng chứng lịch chạy, còn bản sao lưu lâu dài phải đẩy
+        # sang kho riêng (S3/RustFS/NAS) — xem mục giới hạn trong HANDOFF_TV4_TUAN4_N1.md.
+        uses: actions/upload-artifact@v4
+        with:
+          name: culinary-db-backup-${{ github.run_number }}
+          path: ${{ env.BACKUP_DIR }}/culinary_*.dump
+          retention-days: 7
+          if-no-files-found: error

@@ -9,6 +9,18 @@ concurrency:
   group: backend-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  # N1-8 (tuần 4): chặn secret ngay khi commit, không đợi tới review.
+  # Tuần 3 đã lộ Jwt__SigningKey nằm trong render.yaml; job này làm lỗi đó tự báo đỏ.
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 vì git grep cần lịch sử/thư mục làm việc đầy đủ.
+          fetch-depth: 0
+      - name: Quét secret
+        run: bash deploy/scan-secrets.sh
   build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -40,12 +52,26 @@ jobs:
         options: >-
           --health-cmd "curl -f http://localhost:9000/health"
           --health-interval 5s --health-timeout 5s --health-retries 12
+      # Redis (N1-5/N1-6, tuần 4): cache dùng chung giữa nhiều API instance và distributed lock
+      # cho sitemap phải chạy trên đúng stack thật, không mock. Trước đó CI không có Redis nên
+      # /health/ready luôn 503 ⇒ test health không thể kỳ vọng dứt khoát được.
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       TEST_DATABASE: Host=localhost;Port=5432;Database=culinary_test;Username=culinary_test;Password=ci-ephemeral-only
       MINIO_ENDPOINT: 127.0.0.1:9000
       MINIO_ACCESS: minioadmin
       MINIO_SECRET: minioadmin
       MINIO_BUCKET: culinary-blog
+      # Dùng đúng tên biến chuẩn của ASP.NET Core (dấu __ phân tách section) để cấu hình thật sự
+      # tới app, không chỉ tới script. Instance riêng cho CI để cache không đụng dữ liệu dev.
+      Redis__Host: 127.0.0.1
+      Redis__Port: '6379'
+      Redis__Instance: ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -65,6 +91,19 @@ jobs:
             sleep 1
           done
           echo "Object storage did not become ready in time"; exit 1
+      # N1-2: probe credential storage phân biệt BucketNotFound (Unhealthy) với ObjectNotFound
+      # (Healthy). Runner này khởi động RustFS với volume rỗng nên chưa có bucket, và HealthTests
+      # tự bootstrap bucket qua IObjectStorageWriter. Bước này chỉ để log CI nói rõ dịch vụ nào
+      # đã sẵn sàng, tránh mất thời gian debug khi test đỏ.
+      - name: Wait for Redis
+        run: |
+          for i in $(seq 1 30); do
+            if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+              echo "Redis is ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "Redis did not become ready in time"; exit 1
       # --blame-hang-timeout: test treo sẽ bị bắt và dump thay vì để job treo tới hết 30 phút.
       - run: dotnet test CulinaryBlog.sln --no-build --configuration Release --blame-hang-timeout 10m --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
       - uses: actions/upload-artifact@v4

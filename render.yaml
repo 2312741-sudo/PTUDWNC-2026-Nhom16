@@ -15,12 +15,47 @@ services:
         value: "*"
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      # N1-8 (tuần 4): KHÔNG ghi secret vào repo. `sync: false` nghĩa là Render hỏi giá trị lúc
+      # deploy và lưu trong secret store của Render; file này chỉ chứa tên biến.
+      # Trước đây Jwt__SigningKey nằm thẳng trong file — ai đọc repo cũng ký được token admin.
       - key: Jwt__SigningKey
-        value: "production-secret-signing-key-culinary-blog-advanced-web-development-nhom16-2026-very-secure-key-at-least-64-bytes"
+        sync: false
       - key: Jwt__Issuer
         value: culinary-blog
       - key: Jwt__Audience
         value: culinary-blog-client
+      # B2 (issue #21) bắt buộc có Minio AccessKey/SecretKey mới khởi động được ở Production,
+      # nên khai báo tại đây (giá trị do Render quản lý) thay vì để trống rồi fail lúc deploy.
+      - key: Minio__Endpoint
+        sync: false
+      - key: Minio__AccessKey
+        sync: false
+      - key: Minio__SecretKey
+        sync: false
+      - key: Minio__Bucket
+        sync: false
+      - key: Minio__UseSsl
+        value: "true"
+      # N1-5: cache và sitemap lock dùng chung qua Redis nên lấy thông tin từ Redis của Render.
+      - key: Redis__Host
+        fromService:
+          type: redis
+          name: culinary-redis
+          property: host
+      - key: Redis__Port
+        fromService:
+          type: redis
+          name: culinary-redis
+          property: port
+      - key: Redis__Password
+        fromService:
+          type: redis
+          name: culinary-redis
+          property: password
+      - key: Redis__Instance
+        value: prod
+      - key: Sitemap__BaseUrl
+        sync: false
 
 databases:
   - name: culinary-db
@@ -29,3 +64,10 @@ databases:
     user: culinary_user
     region: singapore
     postgresMajorVersion: "16"
+  # N1-5/N1-6: Redis dùng chung cho cache và khoá sitemap. ipAllowList rỗng nghĩa là chỉ
+  # truy cập được từ trong mạng Render, không mở ra Internet.
+  - name: culinary-redis
+    type: redis
+    plan: free
+    region: singapore
+    ipAllowList: []

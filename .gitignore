@@ -7,6 +7,11 @@
 .local/
 .DS_Store
 
+# Bản sao lưu DB (deploy/backup.sh) — KHÔNG được commit: dump chứa toàn bộ dữ liệu người dùng
+# và tài khoản. Chỉ tạo ở máy/CI, nếu cần lưu lâu dài thì đẩy lên kho lưu trữ riêng có mã hoá.
+/backups/
+*.dump
+
 env.ps1
 .vscode/
 .vs/
