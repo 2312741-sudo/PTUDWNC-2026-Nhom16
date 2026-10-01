@@ -54,7 +54,7 @@ export const stepSchema = z.object({
 export const imageUploadSchema = z.object({
   file: z.file({ error: "Vui lòng chọn ảnh" })
     .refine(f => IMAGE_TYPES.includes(f.type), "Chỉ nhận ảnh JPEG, PNG, WebP hoặc AVIF")
-    .max(IMAGE_MAX_BYTES, `Ảnh tối đa ${IMAGE_MAX_BYTES / 1024 / 1024} MB`),
+    .max(IMAGE_MAX_BYTES, `Ảnh tối đa ${IMAGE_MAX_BYTES / 1024 / 1024} MiB`),
   altText: optionalText(200, "Mô tả ảnh tối đa 200 ký tự"),
 });
 

@@ -1,33 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  IMAGE_MAX_BYTES, IMAGE_TYPES, RecipeDetail, RecipeImage, deleteImage, imageSrc, updateImage, uploadImage,
+  IMAGE_TYPES, RecipeDetail, RecipeImage, deleteImage, imageSrc, updateImage, uploadImage,
 } from "@/lib/recipe-editor";
+import { ImageUploadInput, ImageUploadOutput, imageUploadSchema } from "@/lib/recipe-schemas";
+import { ariaOf, ErrorText } from "./FieldError";
 import type { RunFn } from "./RecipeWizard";
 
 interface Props { recipe: RecipeDetail; busy: boolean; run: RunFn; onError: (msg: string) => void }
 
-export default function ImagesStep({ recipe, busy, run, onError }: Props) {
+// onError không còn dùng: lỗi chọn tệp/alt hiện dưới từng ô; lỗi server do run() đưa lên banner
+export default function ImagesStep({ recipe, busy, run }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [alt, setAlt] = useState("");
+  // Kiểm tra sớm ở client (MIME, 5 MiB, alt); backend vẫn kiểm tra magic bytes (không tin Content-Type)
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<ImageUploadInput, unknown, ImageUploadOutput>({
+    resolver: zodResolver(imageUploadSchema),
+    mode: "onChange",
+    defaultValues: { altText: "" },
+  });
   const images: RecipeImage[] = [...(recipe.images ?? [])].sort((a, b) =>
     Number(b.isPrimary) - Number(a.isPrimary) || a.orderIndex - b.orderIndex);
 
-  function pick(f: File | null) {
-    if (!f) return setFile(null);
-    // Kiểm tra sớm ở client; backend vẫn kiểm tra magic bytes (không tin Content-Type)
-    if (!IMAGE_TYPES.includes(f.type)) { onError("Chỉ nhận ảnh JPEG, PNG, WebP hoặc AVIF"); return; }
-    if (f.size > IMAGE_MAX_BYTES) { onError("Ảnh tối đa 5 MiB"); return; }
-    setFile(f);
-  }
-
-  async function upload() {
-    if (!file) return onError("Chọn một ảnh trước");
-    if (alt.length > 200) return onError("Mô tả ảnh tối đa 200 ký tự");
-    const ok = await run(() => uploadImage(recipe.id, file, alt.trim() || null));
-    if (ok) { setFile(null); setAlt(""); if (fileRef.current) fileRef.current.value = ""; }
+  // file/altText là output đã parse (alt trim, rỗng -> null)
+  async function upload({ file, altText }: ImageUploadOutput) {
+    const ok = await run(() => uploadImage(recipe.id, file, altText));
+    if (ok) { reset({ altText: "" }); if (fileRef.current) fileRef.current.value = ""; }
   }
 
   const setPrimary = (img: RecipeImage) =>
@@ -73,12 +73,24 @@ export default function ImagesStep({ recipe, busy, run, onError }: Props) {
 
       <div className="space-y-2 rounded border p-3">
         <p className="text-sm font-semibold">Tải ảnh lên</p>
-        <input ref={fileRef} type="file" accept={IMAGE_TYPES.join(",")} aria-label="Chọn ảnh"
-          onChange={e => pick(e.target.files?.[0] ?? null)} className="block text-sm" />
-        <input aria-label="Mô tả ảnh" className="w-full rounded border p-2 text-sm" placeholder="Mô tả ảnh (alt, không bắt buộc)" maxLength={200}
-          value={alt} onChange={e => setAlt(e.target.value)} />
+        <div>
+          {/* input file không điều khiển được giá trị -> Controller chỉ nhận File qua onChange */}
+          <Controller control={control} name="file" render={({ field }) => (
+            <input type="file" accept={IMAGE_TYPES.join(",")} aria-label="Chọn ảnh" className="block text-sm"
+              name={field.name} onBlur={field.onBlur}
+              ref={el => { field.ref(el); fileRef.current = el; }}
+              onChange={e => field.onChange(e.target.files?.[0])}
+              {...ariaOf("err-image-file", errors.file)} />
+          )} />
+          <ErrorText id="err-image-file" error={errors.file} />
+        </div>
+        <div>
+          <input aria-label="Mô tả ảnh" className="w-full rounded border p-2 text-sm" placeholder="Mô tả ảnh (alt, không bắt buộc)" maxLength={200}
+            {...register("altText")} {...ariaOf("err-image-alt", errors.altText)} />
+          <ErrorText id="err-image-alt" error={errors.altText} />
+        </div>
         <p className="text-xs text-gray-500">JPEG, PNG, WebP, AVIF — tối đa 5 MiB.</p>
-        <button disabled={busy || !file} onClick={upload}
+        <button disabled={busy} onClick={handleSubmit(upload)}
           className="rounded bg-emerald-600 px-3 py-1 text-sm text-white disabled:opacity-50">
           {busy ? "Đang tải lên..." : "Tải lên"}
         </button>
