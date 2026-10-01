@@ -80,8 +80,8 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
   const description = useWatch({ control, name: "description" });
   const nutrition = useWatch({ control, name: "nutrition" });
   const [categories, setCategories] = useState<Category[]>([]);
-  // Số dòng nháp nguyên liệu có nội dung chưa lưu; rời bước 2 sẽ mất chúng nên chặn chuyển bước
-  const [pendingIngredients, setPendingIngredients] = useState(0);
+  // Số dòng nháp có nội dung chưa lưu ở bước đang mở (nguyên liệu hoặc các bước); rời bước sẽ mất chúng nên chặn chuyển bước
+  const [pendingDrafts, setPendingDrafts] = useState(0);
 
   useEffect(() => {
     if (!localStorage.getItem("accessToken")) { router.replace("/auth/login"); return; }
@@ -164,8 +164,8 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
 
   const canGo = (i: number) => i === 0 || !!s.detail;
   function goto(step: number) {
-    if (s.step === 1 && step !== 1 && pendingIngredients > 0)
-      return dispatch({ type: "error", message: `Còn ${pendingIngredients} dòng nguyên liệu chưa lưu. Bấm Lưu hoặc Bỏ từng dòng trước khi chuyển bước.` });
+    if ((s.step === 1 || s.step === 2) && step !== s.step && pendingDrafts > 0)
+      return dispatch({ type: "error", message: `Còn ${pendingDrafts} dòng ${s.step === 1 ? "nguyên liệu" : "bước"} chưa lưu. Bấm Lưu hoặc Bỏ từng dòng trước khi chuyển bước.` });
     dispatch({ type: "goto", step });
   }
   const hasNutrition = !!nutrition && Object.values(nutrition).some(v => v !== null);
@@ -252,8 +252,8 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
         </div>
       )}
 
-      {s.step === 1 && s.detail && <IngredientsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingIngredients} />}
-      {s.step === 2 && s.detail && <StepsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
+      {s.step === 1 && s.detail && <IngredientsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
+      {s.step === 2 && s.detail && <StepsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
       {s.step === 3 && s.detail && <ImagesStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
       {s.step === 4 && s.detail && <ReviewStep recipe={s.detail} categories={categories} busy={s.saving} run={run} />}
 
