@@ -1,0 +1,11 @@
+﻿LAB K10 - test DO (truoc khi viet code) - 2026-10-01 21:11
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter FullyQualifiedName~L10 -m:1 (LAB_PG, DB lab_tv3_test)
+[xUnit.net 00:00:01.26]     Lab.TV3.Tests.L10AuthorizationTests.Vuot_gioi_han_binh_luan_tra_429_kem_RetryAfter_va_khong_anh_huong_user_khac [FAIL]
+[xUnit.net 00:00:01.39]     Lab.TV3.Tests.L10AuthorizationTests.Publish_can_VerifiedAuthor_va_phai_la_chu_bai [FAIL]
+POST http://localhost/lab/l10/posts -> 404:
+[xUnit.net 00:00:01.53]     Lab.TV3.Tests.L10AuthorizationTests.Policy_Admin_chi_cho_role_Admin [FAIL]
+[xUnit.net 00:00:01.71]     Lab.TV3.Tests.L10AuthorizationTests.Owner_sua_duoc_nonOwner_403_Admin_sua_duoc_bai_nguoi_khac [FAIL]
+[xUnit.net 00:00:01.79]     Lab.TV3.Tests.L10AuthorizationTests.Admin_qua_policy_VerifiedAuthor_va_publish_bai_nguoi_khac [FAIL]
+[xUnit.net 00:00:01.85]     Lab.TV3.Tests.L10AuthorizationTests.Guest_khong_co_token_bi_401 [FAIL]
+POST http://localhost/lab/l10/posts -> 404:
+Failed!  - Failed:     6, Passed:     0, Skipped:     0, Total:     6, Duration: 1 s - Lab.TV3.Tests.dll (net10.0)
