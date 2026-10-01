@@ -1,0 +1,136 @@
+# LAB K04 - ket qua DO (stub NotImplementedException)
+# Ngay: 2026-10-01 20:01
+# Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L5"
+# Nhanh: practice/TV3/labs @ d34f18b (chua commit)
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Lab.TV3.Api -> D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\bin\Debug\net10.0\Lab.TV3.Api.dll
+  Lab.TV3.Tests -> D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:02.03]     Lab.TV3.Tests.L5PerformanceBehaviorTests.Vuot_nguong_thi_ghi_Warning_kem_ten_request_va_so_ms [FAIL]
+At line:2 char:1
++ dotnet test D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests --filter "Full ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...va_so_ms [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:02.03]     Lab.TV3.Tests.L5ValidationBehaviorTests.Nhieu_validator_cung_loi_thi_exception_chua_du_loi_cua_ca_hai [FAIL]
+[xUnit.net 00:00:02.05]     Lab.TV3.Tests.L5PerformanceBehaviorTests.Tra_nguyen_response_cua_handler [FAIL]
+[xUnit.net 00:00:02.05]     Lab.TV3.Tests.L5ValidationBehaviorTests.Co_loi_thi_nem_LabValidationException_va_khong_goi_next [FAIL]
+[xUnit.net 00:00:02.05]     Lab.TV3.Tests.L5PerformanceBehaviorTests.Dung_bang_nguong_thi_khong_ghi_Warning [FAIL]
+[xUnit.net 00:00:02.05]     Lab.TV3.Tests.L5PerformanceBehaviorTests.Duoi_nguong_thi_khong_ghi_Warning [FAIL]
+[xUnit.net 00:00:02.05]     Lab.TV3.Tests.L5ValidationBehaviorTests.Exception_cua_handler_khong_bi_nuot [FAIL]
+  Failed Lab.TV3.Tests.L5ValidationBehaviorTests.Nhieu_validator_cung_loi_thi_exception_chua_du_loi_cua_ca_hai [43 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(Lab.TV3.Api.L5.LabValidationException)
+Actual:   typeof(System.NotImplementedException)
+---- System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Tests.L5ValidationBehaviorTests.Nhieu_validator_cung_loi_thi_exception_chua_du_loi_cua_ca_hai() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 63
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Lab.TV3.Api.L5.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\ValidationBehavior.cs:line 14
+   at Lab.TV3.Tests.L5ValidationBehaviorTests.<>c__DisplayClass6_0.<Nhieu_validator_cung_loi_thi_exception_chua_du_loi_cua_ca_hai>b__1() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 64
+  Failed Lab.TV3.Tests.L5PerformanceBehaviorTests.Vuot_nguong_thi_ghi_Warning_kem_ten_request_va_so_ms [42 ms]
+  Error Message:
+   System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Api.L5.PerformanceBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\PerformanceBehavior.cs:line 18
+   at Lab.TV3.Tests.L5PerformanceBehaviorTests.Vuot_nguong_thi_ghi_Warning_kem_ten_request_va_so_ms() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PerformanceBehaviorTests.cs:line 30
+--- End of stack trace from previous location ---
+  Failed Lab.TV3.Tests.L5PerformanceBehaviorTests.Tra_nguyen_response_cua_handler [1 ms]
+  Error Message:
+   System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Api.L5.PerformanceBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\PerformanceBehavior.cs:line 18
+   at Lab.TV3.Tests.L5PerformanceBehaviorTests.Tra_nguyen_response_cua_handler() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PerformanceBehaviorTests.cs:line 61
+--- End of stack trace from previous location ---
+  Failed Lab.TV3.Tests.L5ValidationBehaviorTests.Co_loi_thi_nem_LabValidationException_va_khong_goi_next [1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(Lab.TV3.Api.L5.LabValidationException)
+Actual:   typeof(System.NotImplementedException)
+---- System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Tests.L5ValidationBehaviorTests.Co_loi_thi_nem_LabValidationException_va_khong_goi_next() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 51
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Lab.TV3.Api.L5.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\ValidationBehavior.cs:line 14
+   at Lab.TV3.Tests.L5ValidationBehaviorTests.<>c__DisplayClass5_0.<Co_loi_thi_nem_LabValidationException_va_khong_goi_next>b__0() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 52
+  Failed Lab.TV3.Tests.L5PerformanceBehaviorTests.Dung_bang_nguong_thi_khong_ghi_Warning [< 1 ms]
+  Error Message:
+   System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Api.L5.PerformanceBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\PerformanceBehavior.cs:line 18
+   at Lab.TV3.Tests.L5PerformanceBehaviorTests.Dung_bang_nguong_thi_khong_ghi_Warning() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PerformanceBehaviorTests.cs:line 53
+--- End of stack trace from previous location ---
+  Failed Lab.TV3.Tests.L5PerformanceBehaviorTests.Duoi_nguong_thi_khong_ghi_Warning [< 1 ms]
+  Error Message:
+   System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Api.L5.PerformanceBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\PerformanceBehavior.cs:line 18
+   at Lab.TV3.Tests.L5PerformanceBehaviorTests.Duoi_nguong_thi_khong_ghi_Warning() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PerformanceBehaviorTests.cs:line 40
+--- End of stack trace from previous location ---
+  Failed Lab.TV3.Tests.L5ValidationBehaviorTests.Exception_cua_handler_khong_bi_nuot [1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(System.NotImplementedException)
+---- System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Tests.L5ValidationBehaviorTests.Exception_cua_handler_khong_bi_nuot() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 75
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Lab.TV3.Api.L5.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\ValidationBehavior.cs:line 14
+   at Lab.TV3.Tests.L5ValidationBehaviorTests.<>c__DisplayClass7_0.<Exception_cua_handler_khong_bi_nuot>b__1() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 76
+[xUnit.net 00:00:02.06]     Lab.TV3.Tests.L5PerformanceBehaviorTests.Handler_nem_loi_thi_loi_van_lan_ra_va_van_do_Warning_neu_cham [FAIL]
+[xUnit.net 00:00:02.06]     Lab.TV3.Tests.L5ValidationBehaviorTests.Validator_hop_le_thi_goi_next_dung_1_lan [FAIL]
+[xUnit.net 00:00:02.06]     Lab.TV3.Tests.L5ValidationBehaviorTests.Khong_co_validator_thi_goi_next_va_tra_response [FAIL]
+[xUnit.net 00:00:02.07]     Lab.TV3.Tests.L5PipelineTests.Hai_behavior_chay_trong_pipeline_MediatR [FAIL]
+  Failed Lab.TV3.Tests.L5PerformanceBehaviorTests.Handler_nem_loi_thi_loi_van_lan_ra_va_van_do_Warning_neu_cham [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(System.NotImplementedException)
+---- System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Tests.L5PerformanceBehaviorTests.Handler_nem_loi_thi_loi_van_lan_ra_va_van_do_Warning_neu_cham() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PerformanceBehaviorTests.cs:line 71
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Lab.TV3.Api.L5.PerformanceBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\PerformanceBehavior.cs:line 18
+   at Lab.TV3.Tests.L5PerformanceBehaviorTests.<>c__DisplayClass12_0.<Handler_nem_loi_thi_loi_van_lan_ra_va_van_do_Warning_neu_cham>b__1() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PerformanceBehaviorTests.cs:line 71
+  Failed Lab.TV3.Tests.L5ValidationBehaviorTests.Validator_hop_le_thi_goi_next_dung_1_lan [< 1 ms]
+  Error Message:
+   System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Api.L5.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\ValidationBehavior.cs:line 14
+   at Lab.TV3.Tests.L5ValidationBehaviorTests.Validator_hop_le_thi_goi_next_dung_1_lan() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 40
+--- End of stack trace from previous location ---
+  Failed Lab.TV3.Tests.L5ValidationBehaviorTests.Khong_co_validator_thi_goi_next_va_tra_response [< 1 ms]
+  Error Message:
+   System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Api.L5.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\ValidationBehavior.cs:line 14
+   at Lab.TV3.Tests.L5ValidationBehaviorTests.Khong_co_validator_thi_goi_next_va_tra_response() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5ValidationBehaviorTests.cs:line 29
+--- End of stack trace from previous location ---
+  Failed Lab.TV3.Tests.L5PipelineTests.Hai_behavior_chay_trong_pipeline_MediatR [82 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(Lab.TV3.Api.L5.LabValidationException)
+Actual:   typeof(System.NotImplementedException)
+---- System.NotImplementedException : The method or operation is not implemented.
+  Stack Trace:
+     at Lab.TV3.Tests.L5PipelineTests.Hai_behavior_chay_trong_pipeline_MediatR() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PipelineTests.cs:line 40
+   at Lab.TV3.Tests.L5PipelineTests.Hai_behavior_chay_trong_pipeline_MediatR() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PipelineTests.cs:line 48
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Lab.TV3.Api.L5.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Api\L5\ValidationBehavior.cs:line 14
+   at MediatR.Wrappers.RequestHandlerWrapperImpl`2.<>c__DisplayClass1_1.<Handle>b__2(CancellationToken t)
+   at MediatR.Wrappers.RequestHandlerWrapperImpl`2.Handle(IRequest`1 request, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+   at MediatR.Mediator.Send[TResponse](IRequest`1 request, CancellationToken cancellationToken)
+   at Lab.TV3.Tests.L5PipelineTests.<>c__DisplayClass0_0.<Hai_behavior_chay_trong_pipeline_MediatR>b__2() in D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\L5PipelineTests.cs:line 40
+
+Failed!  - Failed:    11, Passed:     0, Skipped:     0, Total:    11, Duration: 87 ms - Lab.TV3.Tests.dll (net10.0)
