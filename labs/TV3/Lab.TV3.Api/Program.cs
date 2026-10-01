@@ -80,6 +80,15 @@ var app = builder.Build();
 await LabDb.EnsureDatabaseAsync(app.Configuration.GetConnectionString("Lab")!);
 await app.Services.GetRequiredService<LabDb>().EnsureSchemaAsync();
 
+// ---------------- L23: cho biết instance nào trả lời khi chạy 2 API sau Nginx (K23).
+// Trong Docker không đặt Instance:Name thì dùng hostname container (lab-tv3-api1/lab-tv3-api2).
+var instance = app.Configuration["Instance:Name"] ?? Environment.MachineName;
+app.Use((ctx, next) =>
+{
+    ctx.Response.Headers["X-Instance"] = instance;
+    return next(ctx);
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter(); // sau Authentication để phân vùng theo claim sub; Guest bị 401 trước khi tốn lượt

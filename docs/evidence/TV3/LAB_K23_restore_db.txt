@@ -1,0 +1,17 @@
+﻿LAB K23 - backup/restore DB (labs/TV3/deploy/backup-restore-db.ps1) - 2026-10-01 - output that
+Mat khau qua $env:PGPASSWORD (khong ghi file). pg_dump -Fc -> dropdb/createdb DB tam -> pg_restore --no-owner -> so count(*).
+
+Lan 1 (phat hien loi script): lab_posts chua co o lab_tv3 -> psql loi nhung script van in "KHOP" (so null = null).
+  -> Sua: chi dem bang ton tai o nguon (to_regclass), null hoac psql loi = LECH.
+
+Lan 2: .\backup-restore-db.ps1   (lab_tv3 -> lab_tv3_restore)
+Backup: lab_tv3-20261001-212337.dump (44 KB)
+Bang chua co o lab_tv3 (bo qua): lab_posts, lab_comments
+lab_users 2/2 OK | lab_refresh_tokens 2/2 OK | lab_recipes 3/3 OK | lab_images 0/0 OK | lab_sitemaps 3/3 OK | lab_tv3_hangfire.job 7/7 OK
+KET QUA: restore KHOP so dong tat ca bang (exit 0); da xoa DB tam lab_tv3_restore
+
+Lan 3: .\backup-restore-db.ps1 -Source lab_tv3_test -Target lab_tv3_test_restore   (DB nhieu du lieu hon, co bang K10)
+Backup: lab_tv3_test-20261001-212556.dump (128 KB)
+lab_users 273/273 OK | lab_refresh_tokens 371/371 OK | lab_recipes 109/109 OK | lab_images 0/0 OK
+lab_sitemaps 12/12 OK | lab_posts 36/36 OK | lab_comments 36/36 OK | lab_tv3_hangfire.job 14/14 OK
+KET QUA: restore KHOP so dong tat ca bang (exit 0); da xoa DB tam lab_tv3_test_restore

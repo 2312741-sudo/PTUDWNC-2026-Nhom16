@@ -1,0 +1,7 @@
+# Chi dua vao build context nhung gi Dockerfile can (context = goc repo)
+*
+!global.json
+!Directory.Build.props
+!labs/TV3/Lab.TV3.Api/
+labs/TV3/Lab.TV3.Api/bin/
+labs/TV3/Lab.TV3.Api/obj/

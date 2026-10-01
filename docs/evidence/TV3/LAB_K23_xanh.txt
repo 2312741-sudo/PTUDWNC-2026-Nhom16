@@ -1,0 +1,7 @@
+﻿LAB K23 - test XANH (muc app) - 2026-10-01 21:20
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter FullyQualifiedName~L23 -m:1 (LAB_PG, DB lab_tv3_test)
+Passed Lab.TV3.Tests.L23ScalingTests.Moi_response_co_header_X_Instance_dung_ten_instance [1 s]
+Passed Lab.TV3.Tests.L23ScalingTests.Token_va_refresh_phat_o_instance_A_dung_duoc_o_instance_B [644 ms]
+
+Ca bo lab (Infra!=docker), sau khi them K23: Passed!  - Failed: 0, Passed: 61, Skipped: 0, Total: 61 (1 m 6 s)
+dotnet format --verify-no-changes --severity error: Api exit=0, Tests exit=0

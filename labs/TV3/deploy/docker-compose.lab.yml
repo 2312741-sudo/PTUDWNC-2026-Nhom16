@@ -1,0 +1,62 @@
+# LAB K23 - TV3: 2 instance API lab + Nginx + Redis rieng. PostgreSQL dung ban cai tren may host (DB lab_tv3).
+# Chay: xem labs/TV3/deploy/lab-up.ps1 (can $env:LAB_PG_PASSWORD; $env:LAB_JWT_KEY tu sinh neu trong).
+name: lab-tv3
+
+x-api: &api
+  image: lab-tv3-api:dev
+  pull_policy: never
+  restart: "no"
+  depends_on: [lab-tv3-redis]
+  networks: [lab-tv3-net]
+  extra_hosts: ["host.docker.internal:host-gateway"]
+  mem_limit: 300m
+  environment:
+    ASPNETCORE_ENVIRONMENT: Production
+    # Ca 2 instance dung CHUNG: DB lab_tv3 (ca schema Hangfire lab_tv3_hangfire), Redis, khoa ky JWT
+    ConnectionStrings__Lab: "Host=host.docker.internal;Port=5432;Database=lab_tv3;Username=postgres;Password=${LAB_PG_PASSWORD:?dat LAB_PG_PASSWORD}"
+    Redis__Configuration: "lab-tv3-redis:6379"
+    Jwt__SigningKey: "${LAB_JWT_KEY:?dat LAB_JWT_KEY}"
+  volumes:
+    - lab-tv3-files:/app/files
+
+services:
+  lab-tv3-redis:
+    image: redis:7-alpine
+    container_name: lab-tv3-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb"]
+    networks: [lab-tv3-net]
+    mem_limit: 96m
+
+  lab-tv3-api1:
+    <<: *api
+    build:
+      context: ../../..
+      dockerfile: labs/TV3/deploy/Dockerfile
+    container_name: lab-tv3-api1
+    hostname: lab-tv3-api1 # -> header X-Instance
+    ports: ["5090:8080"]
+
+  lab-tv3-api2:
+    <<: *api
+    container_name: lab-tv3-api2
+    hostname: lab-tv3-api2
+    ports: ["5091:8080"]
+    depends_on: [lab-tv3-redis, lab-tv3-api1]
+
+  lab-tv3-nginx:
+    image: nginx:1.27-alpine
+    container_name: lab-tv3-nginx
+    ports: ["8090:80"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [lab-tv3-api1, lab-tv3-api2]
+    networks: [lab-tv3-net]
+    mem_limit: 64m
+
+volumes:
+  lab-tv3-files:
+    name: lab-tv3-files
+
+networks:
+  lab-tv3-net:
+    name: lab-tv3-net
