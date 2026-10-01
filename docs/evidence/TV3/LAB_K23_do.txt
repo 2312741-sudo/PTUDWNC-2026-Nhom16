@@ -1,0 +1,7 @@
+﻿LAB K23 - test DO (truoc khi viet code) - 2026-10-01 21:19
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter FullyQualifiedName~L23 -m:1 (LAB_PG, DB lab_tv3_test)
+[xUnit.net 00:00:02.98]     Lab.TV3.Tests.L23ScalingTests.Moi_response_co_header_X_Instance_dung_ten_instance [FAIL]
+System.InvalidOperationException : The given header was not found.
+[xUnit.net 00:00:03.45]     Lab.TV3.Tests.L23ScalingTests.Token_va_refresh_phat_o_instance_A_dung_duoc_o_instance_B [FAIL]
+System.InvalidOperationException : The given header was not found.
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 1 s - Lab.TV3.Tests.dll (net10.0)
