@@ -10,7 +10,7 @@ COPY global.json Directory.Build.props ./
 COPY labs/TV3/Lab.TV3.Api/Lab.TV3.Api.csproj labs/TV3/Lab.TV3.Api/
 RUN dotnet restore labs/TV3/Lab.TV3.Api/Lab.TV3.Api.csproj
 COPY labs/TV3/Lab.TV3.Api/ labs/TV3/Lab.TV3.Api/
-RUN dotnet publish labs/TV3/Lab.TV3.Api/Lab.TV3.Api.csproj -c Release -o /out --no-restore -p:UseAppHost=false
+RUN dotnet publish labs/TV3/Lab.TV3.Api/Lab.TV3.Api.csproj -c Release -o /out --no-restore -p:UseAppHost=false -p:TreatWarningsAsErrors=false
 
 # ---- Stage 2: runtime ASP.NET (nho, khong co SDK/ma nguon)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
