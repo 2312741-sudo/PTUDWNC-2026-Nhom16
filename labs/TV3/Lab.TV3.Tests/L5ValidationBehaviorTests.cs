@@ -1,4 +1,4 @@
-﻿using Lab.TV3.Api.L5;
+using Lab.TV3.Api.L5;
 using MediatR;
 using Xunit;
 

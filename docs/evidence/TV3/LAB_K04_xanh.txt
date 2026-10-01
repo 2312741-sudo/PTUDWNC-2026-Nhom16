@@ -1,0 +1,6 @@
+# LAB K04 - ket qua XANH (ValidationBehavior + PerformanceBehavior da cai dat)
+# Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L5" -m:1
+# Nhanh: practice/TV3/labs @ 93687cf (+ thay doi chua commit: ValidationBehavior.cs, PerformanceBehavior.cs)
+# Ngay: 2026-10-01 20:52
+
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 100 ms - Lab.TV3.Tests.dll (net10.0)
