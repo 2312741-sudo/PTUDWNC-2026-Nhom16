@@ -125,6 +125,23 @@ public sealed partial class LabDb(NpgsqlDataSource source)
             generated_at timestamptz NOT NULL DEFAULT now(),
             url_count int NOT NULL,
             xml text NOT NULL);
+
+        -- ===== L10: phân quyền (K10)
+        ALTER TABLE lab_users ADD COLUMN IF NOT EXISTS verified_author boolean NOT NULL DEFAULT false;
+
+        CREATE TABLE IF NOT EXISTS lab_posts (
+            id uuid PRIMARY KEY,
+            owner_id uuid NOT NULL REFERENCES lab_users(id) ON DELETE CASCADE,
+            title text NOT NULL,
+            status text NOT NULL DEFAULT 'Draft',
+            updated_at timestamptz NOT NULL DEFAULT now());
+
+        CREATE TABLE IF NOT EXISTS lab_comments (
+            id uuid PRIMARY KEY,
+            post_id uuid NOT NULL REFERENCES lab_posts(id) ON DELETE CASCADE,
+            user_id uuid NOT NULL REFERENCES lab_users(id) ON DELETE CASCADE,
+            body text NOT NULL,
+            created_at timestamptz NOT NULL DEFAULT now());
         """;
 }
 

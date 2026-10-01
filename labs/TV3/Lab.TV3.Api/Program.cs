@@ -5,6 +5,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Lab.TV3.Api;
 using Lab.TV3.Api.L1;
+using Lab.TV3.Api.L10;
 using Lab.TV3.Api.L3;
 using Lab.TV3.Api.L4;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -36,6 +37,9 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         o.TokenValidationParameters = TokenService.ValidationParameters(cfg);
     });
 builder.Services.AddAuthorization();
+
+// ---------------- L10: policy Admin/VerifiedAuthor, chủ sở hữu, rate limit (K10)
+builder.Services.AddL10Authorization();
 
 // ---------------- L3: FTS + Redis cache-aside + OutputCache + fallback (K11, K12)
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
@@ -78,6 +82,7 @@ await app.Services.GetRequiredService<LabDb>().EnsureSchemaAsync();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter(); // sau Authentication để phân vùng theo claim sub; Guest bị 401 trước khi tốn lượt
 app.UseOutputCache();
 app.UseHangfireDashboard("/lab/hangfire"); // mặc định chỉ cho truy cập từ localhost
 
@@ -85,6 +90,7 @@ app.MapGet("/lab/health", () => Results.Ok(new { data = "ok" }));
 app.MapL1Auth();
 app.MapL3Search();
 app.MapL4Media();
+app.MapL10Authorization();
 
 // Recurring: sinh sitemap mỗi giờ (K14)
 app.Services.GetRequiredService<IRecurringJobManager>()

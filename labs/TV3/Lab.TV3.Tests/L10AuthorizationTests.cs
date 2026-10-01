@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Dapper;
 using Npgsql;
 using Xunit;
 using static Lab.TV3.Tests.LabHttp;
@@ -22,15 +21,24 @@ public sealed class L10AuthorizationTests(LabFactory f)
         var (client, _, email) = await AuthorAsync(f);
         if (role == "Author" && !verified) return client;
 
-        await using (var c = new NpgsqlConnection($"{LabFactory.Pg};Database=lab_tv3_test"))
-            await c.ExecuteAsync("UPDATE lab_users SET role = @role, verified_author = @verified WHERE email = @email",
-                new { role, verified, email });
+        await Sql("UPDATE lab_users SET role = @role, verified_author = @verified WHERE email = @email",
+            ("role", role), ("verified", verified), ("email", email));
 
         var res = await client.PostAsJsonAsync("/lab/l1/login", new { email, password = Password });
         await Expect(HttpStatusCode.OK, res);
         var token = (await Data(res)).GetProperty("accessToken").GetString();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
+    }
+
+    /// <summary>Chạy SQL thẳng vào DB test lab (không qua API) để chuẩn bị/kiểm dữ liệu.</summary>
+    private static async Task<object?> Sql(string sql, params (string Name, object Value)[] args)
+    {
+        await using var c = new NpgsqlConnection($"{LabFactory.Pg};Database=lab_tv3_test");
+        await c.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, c);
+        foreach (var (name, value) in args) cmd.Parameters.AddWithValue(name, value);
+        return await cmd.ExecuteScalarAsync();
     }
 
     private static async Task<JsonElement> NewPost(HttpClient c, string title = "Phở bò Nam Định")
@@ -86,9 +94,7 @@ public sealed class L10AuthorizationTests(LabFactory f)
         Assert.Equal(HttpStatusCode.Forbidden, stranger.StatusCode);
 
         // Request bị 403 không được ghi DB
-        await using (var c = new NpgsqlConnection($"{LabFactory.Pg};Database=lab_tv3_test"))
-            Assert.Equal("Phở bò (chủ sửa)", await c.ExecuteScalarAsync<string>(
-                "SELECT title FROM lab_posts WHERE id = @id", new { id = Guid.Parse(Id(post)) }));
+        Assert.Equal("Phở bò (chủ sửa)", await Sql("SELECT title FROM lab_posts WHERE id = @id", ("id", Guid.Parse(Id(post)))));
 
         var byAdmin = await admin.PutAsJsonAsync($"/lab/l10/posts/{Id(post)}", new { title = "Phở bò (admin sửa)" });
         await Expect(HttpStatusCode.OK, byAdmin);
@@ -150,8 +156,6 @@ public sealed class L10AuthorizationTests(LabFactory f)
         await Expect(HttpStatusCode.Created, await other.PostAsJsonAsync(url, new { body = "Tôi chưa bị chặn" }));
 
         // Request bị chặn không được ghi vào DB
-        await using var c = new NpgsqlConnection($"{LabFactory.Pg};Database=lab_tv3_test");
-        var saved = await c.ExecuteScalarAsync<long>("SELECT count(*) FROM lab_comments WHERE post_id = @id", new { id = Guid.Parse(Id(post)) });
-        Assert.Equal(6, saved);
+        Assert.Equal(6L, await Sql("SELECT count(*) FROM lab_comments WHERE post_id = @id", ("id", Guid.Parse(Id(post)))));
     }
 }

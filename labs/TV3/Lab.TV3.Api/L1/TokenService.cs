@@ -39,6 +39,7 @@ public sealed class TokenService(IConfiguration cfg, LabDb db)
                 new Claim("sub", u.Id.ToString()),
                 new Claim("email", u.Email),
                 new Claim("role", u.Role),
+                new Claim("verified_author", u.VerifiedAuthor ? "true" : "false"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             ],
             now, now.AddMinutes(AccessMinutes),

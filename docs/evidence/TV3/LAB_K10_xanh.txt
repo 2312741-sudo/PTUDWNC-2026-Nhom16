@@ -1,0 +1,10 @@
+﻿LAB K10 - test XANH - 2026-10-01 21:13
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter FullyQualifiedName~L10 -m:1 (LAB_PG, DB lab_tv3_test)
+Passed Lab.TV3.Tests.L10AuthorizationTests.Vuot_gioi_han_binh_luan_tra_429_kem_RetryAfter_va_khong_anh_huong_user_khac [1 s]
+Passed Lab.TV3.Tests.L10AuthorizationTests.Publish_can_VerifiedAuthor_va_phai_la_chu_bai [309 ms]
+Passed Lab.TV3.Tests.L10AuthorizationTests.Policy_Admin_chi_cho_role_Admin [351 ms]
+Passed Lab.TV3.Tests.L10AuthorizationTests.Owner_sua_duoc_nonOwner_403_Admin_sua_duoc_bai_nguoi_khac [239 ms]
+Passed Lab.TV3.Tests.L10AuthorizationTests.Admin_qua_policy_VerifiedAuthor_va_publish_bai_nguoi_khac [234 ms]
+Passed Lab.TV3.Tests.L10AuthorizationTests.Guest_khong_co_token_bi_401 [68 ms]
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 2 s - Lab.TV3.Tests.dll (net10.0)
+Ca bo lab (Infra!=docker): Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59

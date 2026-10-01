@@ -17,6 +17,7 @@ public sealed class LabUser
     public string Role { get; set; } = "Author";
     public string? GoogleSub { get; set; }
     public bool EmailConfirmed { get; set; }
+    public bool VerifiedAuthor { get; set; } // L10: tác giả đã được Admin xác minh
 }
 
 public sealed class RefreshRow
