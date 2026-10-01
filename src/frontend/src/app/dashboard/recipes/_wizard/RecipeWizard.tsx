@@ -2,13 +2,14 @@
 
 import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, FieldError, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, RecipeDetail, UnauthorizedError,
   createRecipe, getCategories, getRecipeDetail, isConflict, toBasicInfo, updateRecipe,
 } from "@/lib/recipe-editor";
 import { BasicInfoInput, BasicInfoOutput, basicInfoSchema, emptyToNull } from "@/lib/recipe-schemas";
+import { ariaOf, ErrorText } from "./FieldError";
 import IngredientsStep from "./IngredientsStep";
 import StepsStep from "./StepsStep";
 import ImagesStep from "./ImagesStep";
@@ -62,14 +63,6 @@ function reducer(s: ReducerState, a: Action): ReducerState {
   }
 }
 
-/** Thông báo lỗi dưới từng trường; id dùng cho aria-describedby của ô nhập */
-function ErrorText({ id, error }: { id: string; error?: FieldError }) {
-  return error?.message ? <p id={id} className="mt-1 text-xs text-red-600">{error.message}</p> : null;
-}
-
-const ariaOf = (id: string, error?: FieldError) =>
-  ({ "aria-invalid": error ? true : undefined, "aria-describedby": error ? id : undefined });
-
 const CONFLICT_MSG = "Công thức vừa được thay đổi ở nơi khác (tab hoặc thiết bị khác). Tải dữ liệu mới nhất rồi sửa lại.";
 
 export default function RecipeWizard({ initial }: { initial?: Partial<WizardState> }) {
@@ -87,6 +80,8 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
   const description = useWatch({ control, name: "description" });
   const nutrition = useWatch({ control, name: "nutrition" });
   const [categories, setCategories] = useState<Category[]>([]);
+  // Số dòng nháp nguyên liệu có nội dung chưa lưu; rời bước 2 sẽ mất chúng nên chặn chuyển bước
+  const [pendingIngredients, setPendingIngredients] = useState(0);
 
   useEffect(() => {
     if (!localStorage.getItem("accessToken")) { router.replace("/auth/login"); return; }
@@ -168,6 +163,11 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
   }
 
   const canGo = (i: number) => i === 0 || !!s.detail;
+  function goto(step: number) {
+    if (s.step === 1 && step !== 1 && pendingIngredients > 0)
+      return dispatch({ type: "error", message: `Còn ${pendingIngredients} dòng nguyên liệu chưa lưu. Bấm Lưu hoặc Bỏ từng dòng trước khi chuyển bước.` });
+    dispatch({ type: "goto", step });
+  }
   const hasNutrition = !!nutrition && Object.values(nutrition).some(v => v !== null);
   const onError = (m: string) => dispatch({ type: "error", message: m });
   const last = STEPS.length - 1;
@@ -183,7 +183,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
               <button
                 disabled={!canGo(i) || s.saving}
                 aria-current={i === s.step ? "step" : undefined}
-                onClick={() => dispatch({ type: "goto", step: i })}
+                onClick={() => goto(i)}
                 className={`rounded px-3 py-1 text-sm ${i === s.step ? "bg-orange-500 text-white" : "bg-gray-100"} disabled:opacity-40`}
               >
                 {i + 1}. {label}
@@ -252,7 +252,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
         </div>
       )}
 
-      {s.step === 1 && s.detail && <IngredientsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
+      {s.step === 1 && s.detail && <IngredientsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingIngredients} />}
       {s.step === 2 && s.detail && <StepsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
       {s.step === 3 && s.detail && <ImagesStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
       {s.step === 4 && s.detail && <ReviewStep recipe={s.detail} categories={categories} busy={s.saving} run={run} />}
@@ -270,7 +270,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
       )}
 
       <div className="mt-6 flex justify-between">
-        <button disabled={s.step === 0 || s.saving} onClick={() => dispatch({ type: "goto", step: s.step - 1 })}
+        <button disabled={s.step === 0 || s.saving} onClick={() => goto(s.step - 1)}
           className="rounded border px-4 py-2 disabled:opacity-40">← Quay lại</button>
         {s.step === 0 ? (
           <button onClick={handleSubmit(saveBasic)} disabled={s.saving}
@@ -278,7 +278,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
             {s.saving ? "Đang lưu..." : "Lưu & tiếp →"}
           </button>
         ) : s.step < last ? (
-          <button onClick={() => dispatch({ type: "goto", step: s.step + 1 })} disabled={s.saving}
+          <button onClick={() => goto(s.step + 1)} disabled={s.saving}
             className="rounded bg-orange-500 px-4 py-2 text-white disabled:opacity-50">Tiếp →</button>
         ) : (
           <button onClick={() => router.push("/dashboard/recipes")}
