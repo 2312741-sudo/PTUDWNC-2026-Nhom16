@@ -245,6 +245,7 @@ public sealed class CreateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
 
         repo.Add(recipe);
         await repo.SaveChangesAsync(ct);   // unique index slug là chốt chặn cuối khi race
+        RecipeMetrics.Created.Add(1);
         return recipe.ToDto();
     }
 }
@@ -299,6 +300,7 @@ public sealed class UpdateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
                 n.Calories, n.Protein, n.Carbohydrates, n.Fat, n.Fiber, n.Sodium));
 
         await repo.SaveChangesAsync(ct);
+        RecipeMetrics.Updated.Add(1);
         return recipe.ToDto();
     }
 }
