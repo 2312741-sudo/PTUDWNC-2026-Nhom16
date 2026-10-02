@@ -149,3 +149,26 @@ Kiểm tra cuối (SP, HEAD `68c9109`): `dotnet format CulinaryBlog.sln --verify
 
 Ghi chú vận hành (trung thực): khi dọn RAM cho K23 đã dừng 4 tiến trình `node.exe` mà **chưa kiểm dòng lệnh từng cái** (đoán là worker Jest/Next còn sót);
 nếu một công cụ của Trung chạy bằng node bị tắt theo thì mở lại. `FindForWriteAsync` (nạp để ghi) vẫn JOIN nguyên liệu × bước — đề xuất tách tiếp nếu công thức lớn.
+
+## 10. Cập nhật 02/10 tối (lần 2) — merge main, K20, K22 nạp để ghi, jest-axe, K23 (SP: nhánh `2312786_HuynhQuocTrung_C7-frontend-tests`)
+
+| Việc | Trạng thái | Commit (SP) | Số thật / bằng chứng |
+|---|---|---|---|
+| Rà soát `origin/main` | **XONG** | `5ce0f18` | `docs/evidence/TV3/RA_SOAT_MAIN.md`: main `3d0695d` (CI success) có OTel ở `Program.cs` (TV4, OTLP), đã chứa `4bf775b`; lệch 45/43 commit; `git merge-tree` sạch |
+| Merge `origin/main` vào C7 (không rebase) | **XONG**, không xung đột | `5b16601` | restore `--locked-mode` exit 0; build Release 0 warning/0 lỗi; format như CI exit 0; test 270/270 + 5/5 ngay sau merge |
+| Sửa JSON-LD sau merge (mediaUrl của TV2 đổi hành vi) | **XONG** | `eee223d` | Jest 46/46; handoff `TV2_mediaUrl_fallback_duong_dan_tuong_doi.md` (không sửa hàm của TV2) |
+| K20 AddMeter + exporter thật | **XONG** | đỏ `d7a7c30` → xanh `c8b7c64`, docs `a075b72` | OpenTelemetry Collector (OTLP 4317, exporter debug) nhận `culinary.recipes.created` = 1, `culinary.recipes.updated` = 1 — `Tuan04/K20_metric_otel_chay_that.md` |
+| K22 tách `FindForWriteAsync` | **XONG** | đỏ `7c7d545` → xanh `5681133`, docs `b39757e` | nạp để ghi 17 dòng thay vì 60 (10 × 6), 3 câu + lệnh ghi; EXPLAIN 0.185 ms (trước 0.177 ms); 51/51 test nhóm recipe (RowVersion, rollback, đánh lại số) |
+| K18 jest-axe | **XONG phần tự động**; NVDA **CHƯA** (tay) | `98f2c5f` | 9 test axe (5 bước wizard, 2 trạng thái lỗi, dashboard có/không dữ liệu): **0 vi phạm** → không có lỗi để sửa; đột biến bỏ `alt` → `image-alt` đỏ (test có hiệu lực). axe trên jsdom không đo tương phản/bố cục và không thay NVDA |
+| K23 build image / Nginx 2 instance / backup file | **BLOCKED (RAM)** | — | dọn build server của phiên; RAM trống 628 / 607 / 589 MB lúc 20:11 (ngưỡng 1.5 GB); container `culinaryblog-*` đang chạy không do phiên bật nên không tắt |
+| ADR-0002 hạn chế RowVersion dòng con | **XONG** | `f691d31` | 5 hạn chế, ghi rõ cái nào có test, cái nào đoán |
+| Dọn handoff TV1 về CI | **XONG** | — (file chưa từng commit) | đã xoá `TV1_CI_lab_ApiFactory_khong_dung_TEST_DATABASE.md`, `TV1_patch_lab_ApiFactory_UseSetting.diff` |
+
+Kiểm tra cuối (HEAD SP `f691d31`): `dotnet format --verify-no-changes` (như CI) exit 0, `--severity error` exit 0; build Release 0/0;
+`dotnet test CulinaryBlog.sln -c Release` (TEST_DATABASE = `culinary_test`): **CulinaryBlog.Tests 272/272, ConcurrencySpike 5/5**;
+coverage Application **96.09% (1058/1101)**; `npx jest` **55/55** (9 suite); `npx tsc --noEmit` exit 0.
+Chưa chạy lại sau merge: Playwright E2E và `npm run build` (workflow frontend mới của main có bước build) — RAM không đủ để chạy `next build` cùng lúc.
+
+Ghi chú vận hành: lúc build có tiến trình API cổng 5080 (PID 27628, khởi chạy 19:33 bằng `dotnet run ... --urls http://localhost:5080`, không phải phiên này) khoá thư mục `bin/Debug`
+→ phiên này build/test bằng Release, không tắt tiến trình đó (đến 20:00 nó đã tự dừng, không do phiên này). Phiên này chỉ tắt API cổng 5081 và container collector do chính nó tạo.
+Handoff cũ `TV4_K20_otel_meter_chan.md` có thể đã hết tác dụng sau `c8b7c64` — chưa xoá vì không nằm trong yêu cầu.
