@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Lab.TV3.Api.L20;
 using Lab.TV3.Api.L3;
 
 namespace Lab.TV3.Api.L16;
@@ -23,6 +24,7 @@ public static class SsrSearchEndpoints
             var p = Math.Max(1, page ?? 1);
             var size = Math.Clamp(pageSize ?? 10, 1, 50);
 
+            if (query.Length > 0) LabMetrics.SearchRequests.Add(1, new KeyValuePair<string, object?>("page", "ssr"));
             SearchPage? result = query.Length == 0 ? null : await SearchEndpoints.SearchDb(db, query, null, p, size, ct);
             return Results.Content(Render(query, result), "text/html; charset=utf-8");
         });

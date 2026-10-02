@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Dapper;
+using Lab.TV3.Api.L20;
 using Microsoft.AspNetCore.OutputCaching;
 
 namespace Lab.TV3.Api.L3;
@@ -80,6 +81,7 @@ public static class SearchEndpoints
             HttpContext http, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(q)) return Http.Err(400, "VALIDATION", "Thiếu từ khoá q");
+            LabMetrics.SearchRequests.Add(1, new KeyValuePair<string, object?>("page", "api"));
             var p = Math.Max(1, page ?? 1);
             var size = Math.Clamp(pageSize ?? 10, 1, 50);
             var key = await cache.SearchKeyAsync(q.Trim().ToLowerInvariant(), category, p, size);

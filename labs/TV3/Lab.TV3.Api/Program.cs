@@ -8,6 +8,7 @@ using Lab.TV3.Api.L1;
 using Lab.TV3.Api.L10;
 using Lab.TV3.Api.L16;
 using Lab.TV3.Api.L19;
+using Lab.TV3.Api.L20;
 using Lab.TV3.Api.L3;
 using Lab.TV3.Api.L4;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +20,9 @@ using StackExchange.Redis;
 DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ---------------- L20: Serilog + correlation id + OpenTelemetry + health (K20)
+builder.AddL20Observability();
 
 // Đọc cấu hình lười (qua IServiceProvider) để WebApplicationFactory ghi đè được trong test
 static string Cs(IServiceProvider sp) => sp.GetRequiredService<IConfiguration>().GetConnectionString("Lab")
@@ -78,6 +82,7 @@ builder.Services.AddHangfire((sp, h) => h
 builder.Services.AddHangfireServer(o => { o.WorkerCount = 2; o.ServerName = "lab-tv3"; });
 
 var app = builder.Build();
+app.UseL20Observability(); // đầu pipeline: mọi log của request đều có CorrelationId
 
 await LabDb.EnsureDatabaseAsync(app.Configuration.GetConnectionString("Lab")!);
 await app.Services.GetRequiredService<LabDb>().EnsureSchemaAsync();
@@ -104,6 +109,7 @@ app.MapL4Media();
 app.MapL10Authorization();
 app.MapL16SsrSearch();
 app.MapL19Seo();
+app.MapL20Health();
 
 // Recurring: sinh sitemap mỗi giờ (K14)
 app.Services.GetRequiredService<IRecurringJobManager>()

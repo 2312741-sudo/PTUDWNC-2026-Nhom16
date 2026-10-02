@@ -29,15 +29,16 @@ public sealed class ObservabilityFactory : LabFactory
     public CollectingSink Sink { get; } = new();
     public string LogFile { get; } = Path.Combine(Path.GetTempPath(), $"lab-tv3-k20-{Guid.NewGuid():N}.log");
 
+    /// <summary>Sink File cuộn theo ngày -> tên thật có hậu tố yyyyMMdd.</summary>
+    public string? ActualLogFile => Directory.GetFiles(Path.GetDirectoryName(LogFile)!, Path.GetFileNameWithoutExtension(LogFile) + "*.log").FirstOrDefault();
+
     protected override string Redis => "localhost:6398";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
         // Thêm sink File bằng cấu hình (giống cách bật Seq/File ở môi trường thật) -> chứng minh sink "cấu hình được"
-        builder.UseSetting("Serilog:WriteTo:9:Name", "File");
-        builder.UseSetting("Serilog:WriteTo:9:Args:path", LogFile);
-        builder.UseSetting("Serilog:WriteTo:9:Args:outputTemplate", "{Timestamp:o} [{Level:u3}] cid={CorrelationId} {Message:lj}{NewLine}");
+        builder.UseSetting("LabLog:FilePath", LogFile);
         builder.ConfigureTestServices(s => s.AddSingleton<ILogEventSink>(Sink));
     }
 }
@@ -122,8 +123,9 @@ public sealed class L20ObservabilityTests(ObservabilityFactory f) : IClassFixtur
         client.DefaultRequestHeaders.Add("X-Correlation-ID", cid);
         await Expect(HttpStatusCode.OK, await client.GetAsync("/lab/health"));
 
-        Assert.True(File.Exists(f.LogFile), "Chưa có file log: " + f.LogFile);
-        using var stream = new FileStream(f.LogFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var file = f.ActualLogFile;
+        Assert.True(file is not null, "Chưa có file log: " + f.LogFile);
+        using var stream = new FileStream(file!, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var text = await new StreamReader(stream).ReadToEndAsync();
         Assert.Contains($"cid={cid}", text);
     }

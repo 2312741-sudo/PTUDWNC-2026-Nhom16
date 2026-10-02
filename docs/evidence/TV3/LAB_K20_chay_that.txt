@@ -1,0 +1,48 @@
+﻿LAB K20 - chay that app lab (dotnet run, http://localhost:5090, DB lab_tv3, Redis localhost:6379 dang chay, LabLog__FilePath + Otel__ConsoleExporter=true) - 2026-10-02 10:45
+> curl.exe -s -i http://localhost:5090/health/live
+HTTP/1.1 200 OK
+X-Correlation-ID: 3518044fe7fa4662b662ef3c5e3f9646
+X-Trace-Id: 1e97e9999d72265e7c88c23ef94a6ec9
+{"status":"Healthy","totalMs":0,"entries":{}}
+> curl.exe -s -i http://localhost:5090/health/ready
+HTTP/1.1 200 OK
+X-Correlation-ID: 0d54f1bfd411446e8c5f6552e7c6cb9f
+X-Trace-Id: 72b3daa713d11cf88221d4ad33ae35d9
+{"status":"Healthy","totalMs":3.8,"entries":{"db":{"status":"Healthy","description":"***QL OK","ms":3.5},"redis":{"status":"Healthy","description":"Redis ping 1.1 ms","ms":1.3}}}
+> curl.exe -s -i -H "X-Correlation-ID: tv3-demo-001" -H "traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01" "http://localhost:5090/lab/l16/search?q=pho"
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+X-Correlation-ID: tv3-demo-001
+X-Trace-Id: 4bf92f3577b34da6a3ce929d0e0e4736
+> File log (LabLog__FilePath) - cac dong co tv3-demo-001:
+2026-10-02T10:44:47.7187699+07:00 [INF] cid=tv3-demo-001 trace=4bf92f3577b34da6a3ce929d0e0e4736 HTTP GET /lab/l16/search responded 200 in 39.3124 ms
+2026-10-02T10:45:07.9494572+07:00 [INF] cid=tv3-demo-001 trace=4bf92f3577b34da6a3ce929d0e0e4736 HTTP GET /lab/l16/search responded 200 in 4.3391 ms
+> stdout app (Serilog Console + OTel ConsoleExporter) - trich dong lien quan trace 4bf92f35...:
+Activity.TraceId:            4bf92f3577b34da6a3ce929d0e0e4736
+Activity.SpanId:             fc932aa18d95d2a9
+Activity.TraceFlags:         Recorded
+Activity.ParentSpanId:       f7e27b0aa4d6c7a0
+Activity.DisplayName:        ***ql
+Activity.Kind:               Client
+Activity.StartTime:          2026-10-02T03:44:47.6869472Z
+Activity.Duration:           00:00:00.0247772
+Activity.Tags:
+    db.query.text: SELECT r.id, r.slug, r.title, r.category, ts_rank(r.search_vector, query) AS rank, count(*) OVER () AS total
+FROM lab_recipes r, plainto_tsquery('simple', lab_unaccent(@q)) AS query
+WHERE r.status = 'Published' AND r.search_vector @@ query AND (@cat::text IS NULL OR r.category = @cat)
+ORDER BY rank DESC, r.created_at DESC, r.id
+Activity.TraceId:            4bf92f3577b34da6a3ce929d0e0e4736
+Activity.SpanId:             f7e27b0aa4d6c7a0
+Activity.TraceFlags:         Recorded
+Activity.ParentSpanId:       00f067aa0ba902b7
+Activity.DisplayName:        GET /lab/l16/search
+Activity.Kind:               Server
+Activity.StartTime:          2026-10-02T03:44:47.6765658Z
+Activity.Duration:           00:00:00.0428647
+Activity.Tags:
+    http.request.method: GET
+    server.address: localhost
+    server.port: 5090
+    user_agent.original: curl/8.21.0
+[10:44:47 INF] tv3-demo-001 HTTP GET /lab/l16/search responded 200 in 39.3124 ms
+[10:45:07 INF] tv3-demo-001 HTTP GET /lab/l16/search responded 200 in 4.3391 ms

@@ -1,0 +1,16 @@
+﻿LAB K20 - test XANH - 2026-10-02 10:41
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L20" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 0
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+Passed Lab.TV3.Tests.L20ObservabilityTests.Khong_gui_hoac_gui_id_xau_thi_server_tu_sinh_id_moi [993 ms]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Log_request_khong_chua_mat_khau_va_query_string [267 ms]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Sink_File_bat_bang_cau_hinh_ghi_log_co_correlation_id [8 ms]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Correlation_id_tu_client_duoc_tra_lai_va_gan_vao_log [6 ms]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Live_tra_200_khong_phu_thuoc_DB_Redis [5 ms]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Metric_tuy_bien_dem_so_lan_tim_kiem_SSR [25 ms]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Ready_tra_503_khi_Redis_chet_va_bao_tung_thanh_phan [2 s]
+Passed Lab.TV3.Tests.L20ObservabilityTests.Traceparent_W3C_duoc_noi_tiep_vao_trace_va_log [5 ms]
+Test Run Successful.
+Total tests: 8
+Passed: 8
+Ca bo lab (FullyQualifiedName!~L3SearchTests, Redis tat): Total tests: 77, Passed: 77
