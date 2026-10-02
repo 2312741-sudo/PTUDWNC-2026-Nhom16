@@ -4,6 +4,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, RecipeDetail, UnauthorizedError,
   createRecipe, getCategories, getRecipeDetail, isConflict, toBasicInfo, updateRecipe,
@@ -65,7 +66,22 @@ function reducer(s: ReducerState, a: Action): ReducerState {
 
 const CONFLICT_MSG = "Công thức vừa được thay đổi ở nơi khác (tab hoặc thiết bị khác). Tải dữ liệu mới nhất rồi sửa lại.";
 
-export default function RecipeWizard({ initial }: { initial?: Partial<WizardState> }) {
+/**
+ * K17: TanStack Query quản lý dữ liệu công thức đang soạn. QueryClient riêng cho mỗi phiên wizard (không đặt ở
+ * app/layout dùng chung): chỉ refetch khi chính wizard yêu cầu (sau mỗi lần lưu), không tự refetch khi focus/retry
+ * để giữ đúng hành vi cũ và không ghi đè trạng thái optimistic.
+ */
+export default function RecipeWizard(props: { initial?: Partial<WizardState> }) {
+  const [client] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: { staleTime: Infinity, refetchOnWindowFocus: false, refetchOnReconnect: false, retry: false },
+      mutations: { retry: false },
+    },
+  }));
+  return <QueryClientProvider client={client}><WizardInner {...props} /></QueryClientProvider>;
+}
+
+function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
   const router = useRouter();
   const { info: initialInfo, ...initialState } = initial ?? {};
   const [s, dispatch] = useReducer(reducer, {
