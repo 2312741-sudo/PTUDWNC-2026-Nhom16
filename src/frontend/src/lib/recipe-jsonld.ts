@@ -49,7 +49,7 @@ export function buildRecipeJsonLd(r: any, slug?: string) {
     cookTime: duration(r.cookTimeMinutes),
     totalTime: duration((r.prepTimeMinutes ?? 0) + (r.cookTimeMinutes ?? 0)),
     recipeYield: r.servings ? `${r.servings} khẩu phần` : undefined,
-    recipeCategory: r.categoryName ?? undefined,
+    recipeCategory: r.categoryName || undefined, // "" cũng bỏ, không xuất thuộc tính rỗng
     recipeIngredient: [...(r.ingredients ?? [])]
       .sort((a, b) => a.orderIndex - b.orderIndex)
       .map(i => [i.quantity, i.unit, i.name].filter(x => has(x) && x !== "").join(" ")),
