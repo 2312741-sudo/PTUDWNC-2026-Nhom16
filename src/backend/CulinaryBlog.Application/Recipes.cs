@@ -316,7 +316,7 @@ public sealed record GetRecipeBySlugQuery(string Slug) : IRequest<RecipeDetailDt
 /// <summary>K19: tên công khai (tên hiển thị tác giả, tên danh mục) cho trang chi tiết và JSON-LD Recipe (NFR-SEO-001).</summary>
 public interface IRecipeDisplayNameReader
 {
-    Task<(string? AuthorName, string? CategoryName)> GetAsync(string authorId, Guid categoryId, CancellationToken ct);
+    Task<(string? AuthorName, string? CategoryName)> GetAsync(Guid recipeId, CancellationToken ct);
 }
 
 // names tuỳ chọn: test đơn vị dựng handler bằng tay không cần reader; DI luôn truyền bản thật
@@ -339,7 +339,7 @@ public sealed class GetRecipeBySlugHandler(
 
         var (authorName, categoryName) = names is null
             ? (null, null)
-            : await names.GetAsync(recipe.AuthorId, recipe.CategoryId, ct);
+            : await names.GetAsync(recipe.Id, ct);
         return recipe.ToDetailDto(authorName, categoryName);
     }
 }
