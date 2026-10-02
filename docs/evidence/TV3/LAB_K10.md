@@ -5,7 +5,7 @@
   L1/TokenService.cs (claim verified_author), Program.cs (AddL10Authorization, UseRateLimiter, MapL10Authorization)
 - Commit do: 4837af2 (6/6 FAIL, POST /lab/l10/posts -> 404) - LAB_K10_do.txt
 - Commit xanh: f7da99f (6/6 PASS) - LAB_K10_xanh.txt
-- Lenh: $env:LAB_PG="Host=localhost;Port=5432;Username=postgres;Password=..."; dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L10" -m:1
+- Lenh: $env:LAB_PG="Host=localhost;Port=5432;Username=postgres;Password=$env:LAB_PG_PASSWORD"; dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L10" -m:1
 - Ket qua that: L10 6/6 Passed; ca bo lab (Infra!=docker) 59/59 sau K10, 61/61 sau K23; format verify (--severity error) exit 0.
 - Test phu: Guest 401 (4 endpoint); Author/VerifiedAuthor vao /admin/stats 403, Admin 200; owner sua 200, non-owner 403 (DB khong doi),
   Admin sua bai nguoi khac 200, bai khong ton tai 404; Author thuong publish 403, VerifiedAuthor non-owner 403, VerifiedAuthor owner 200;
