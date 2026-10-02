@@ -1,0 +1,40 @@
+﻿LAB K20 - test DO (truoc khi viet code; da them package Serilog/OTel vao csproj) - 2026-10-02 10:38
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L20" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 1
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+[xUnit.net 00:00:00.99]     Lab.TV3.Tests.L20ObservabilityTests.Khong_gui_hoac_gui_id_xau_thi_server_tu_sinh_id_moi [FAIL]
+[xUnit.net 00:00:01.19]     Lab.TV3.Tests.L20ObservabilityTests.Log_request_khong_chua_mat_khau_va_query_string [FAIL]
+[xUnit.net 00:00:01.19]       Assert.NotEmpty() Failure: Collection was empty
+[xUnit.net 00:00:01.20]     Lab.TV3.Tests.L20ObservabilityTests.Sink_File_bat_bang_cau_hinh_ghi_log_co_correlation_id [FAIL]
+[xUnit.net 00:00:01.20]       Chưa có file log: C:\Users\trung\AppData\Local\Temp\lab-tv3-k20-084db407f6a54957bb7ed1222227d36b.log
+[xUnit.net 00:00:01.20]     Lab.TV3.Tests.L20ObservabilityTests.Correlation_id_tu_client_duoc_tra_lai_va_gan_vao_log [FAIL]
+[xUnit.net 00:00:01.20]     Lab.TV3.Tests.L20ObservabilityTests.Live_tra_200_khong_phu_thuoc_DB_Redis [FAIL]
+[xUnit.net 00:00:01.20]       GET http://localhost/health/live -> 404:
+[xUnit.net 00:00:01.22]     Lab.TV3.Tests.L20ObservabilityTests.Metric_tuy_bien_dem_so_lan_tim_kiem_SSR [FAIL]
+[xUnit.net 00:00:01.22]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:01.23]     Lab.TV3.Tests.L20ObservabilityTests.Ready_tra_503_khi_Redis_chet_va_bao_tung_thanh_phan [FAIL]
+[xUnit.net 00:00:01.23]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:01.23]       Expected: ServiceUnavailable
+[xUnit.net 00:00:01.23]       Actual:   NotFound
+[xUnit.net 00:00:01.23]     Lab.TV3.Tests.L20ObservabilityTests.Traceparent_W3C_duoc_noi_tiep_vao_trace_va_log [FAIL]
+Failed Lab.TV3.Tests.L20ObservabilityTests.Khong_gui_hoac_gui_id_xau_thi_server_tu_sinh_id_moi [780 ms]
+System.InvalidOperationException : The given header was not found.
+Failed Lab.TV3.Tests.L20ObservabilityTests.Log_request_khong_chua_mat_khau_va_query_string [200 ms]
+Assert.NotEmpty() Failure: Collection was empty
+Failed Lab.TV3.Tests.L20ObservabilityTests.Sink_File_bat_bang_cau_hinh_ghi_log_co_correlation_id [4 ms]
+Chưa có file log: C:\Users\trung\AppData\Local\Temp\lab-tv3-k20-084db407f6a54957bb7ed1222227d36b.log
+Failed Lab.TV3.Tests.L20ObservabilityTests.Correlation_id_tu_client_duoc_tra_lai_va_gan_vao_log [1 ms]
+System.InvalidOperationException : The given header was not found.
+Failed Lab.TV3.Tests.L20ObservabilityTests.Live_tra_200_khong_phu_thuoc_DB_Redis [2 ms]
+GET http://localhost/health/live -> 404:
+Failed Lab.TV3.Tests.L20ObservabilityTests.Metric_tuy_bien_dem_so_lan_tim_kiem_SSR [18 ms]
+Assert.Contains() Failure: Filter not matched in collection
+Failed Lab.TV3.Tests.L20ObservabilityTests.Ready_tra_503_khi_Redis_chet_va_bao_tung_thanh_phan [7 ms]
+Assert.Equal() Failure: Values differ
+Expected: ServiceUnavailable
+Actual:   NotFound
+Failed Lab.TV3.Tests.L20ObservabilityTests.Traceparent_W3C_duoc_noi_tiep_vao_trace_va_log [2 ms]
+System.InvalidOperationException : The given header was not found.
+Test Run Failed.
+Total tests: 8
+Failed: 8
