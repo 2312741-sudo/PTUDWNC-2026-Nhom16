@@ -1,0 +1,45 @@
+﻿LAB K19 - test DO (truoc khi viet code) - 2026-10-02 10:31
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L19" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 1
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+[xUnit.net 00:00:09.89]     Lab.TV3.Tests.L19SeoTests.Sau_khi_Published_doi_tieu_de_khong_doi_slug [FAIL]
+[xUnit.net 00:00:09.90]       PUT http://localhost/lab/l19/recipes/665a0d18-9e99-41e4-95f5-34bede4cc62a/title -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Sau_khi_Published_doi_tieu_de_khong_doi_slug [7 s]
+PUT http://localhost/lab/l19/recipes/665a0d18-9e99-41e4-95f5-34bede4cc62a/title -> 404:
+[xUnit.net 00:00:15.84]     Lab.TV3.Tests.L19SeoTests.Trang_chi_tiet_co_canonical_va_Draft_tra_404 [FAIL]
+[xUnit.net 00:00:15.84]       GET http://localhost/lab/l19/recipes/bun-bo-hue-seoad6a5013f1-41b5bd -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Trang_chi_tiet_co_canonical_va_Draft_tra_404 [5 s]
+GET http://localhost/lab/l19/recipes/bun-bo-hue-seoad6a5013f1-41b5bd -> 404:
+[xUnit.net 00:00:15.84]     Lab.TV3.Tests.L19SeoTests.Robots_cho_phep_trang_cong_khai_va_tro_Sitemap [FAIL]
+[xUnit.net 00:00:15.84]       GET http://localhost/robots.txt -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Robots_cho_phep_trang_cong_khai_va_tro_Sitemap [2 ms]
+GET http://localhost/robots.txt -> 404:
+Passed Lab.TV3.Tests.L19SeoTests.Slug_khong_dau_chu_thuong_noi_gach_ngang [3 s]
+[xUnit.net 00:00:22.83]     Lab.TV3.Tests.L19SeoTests.Doi_tieu_de_khi_Draft_tao_slug_moi_va_slug_cu_tra_301 [FAIL]
+[xUnit.net 00:00:22.83]       PUT http://localhost/lab/l19/recipes/54ab68f5-ff68-48a1-8e99-0a68bdc0c643/title -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Doi_tieu_de_khi_Draft_tao_slug_moi_va_slug_cu_tra_301 [3 s]
+PUT http://localhost/lab/l19/recipes/54ab68f5-ff68-48a1-8e99-0a68bdc0c643/title -> 404:
+[xUnit.net 00:00:25.84]     Lab.TV3.Tests.L19SeoTests.Doi_slug_hai_lan_slug_dau_tien_301_thang_toi_slug_hien_tai [FAIL]
+[xUnit.net 00:00:25.84]       PUT http://localhost/lab/l19/recipes/c33a93a9-6aaa-4b1c-b1d0-778c839de2a8/title -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Doi_slug_hai_lan_slug_dau_tien_301_thang_toi_slug_hien_tai [3 s]
+PUT http://localhost/lab/l19/recipes/c33a93a9-6aaa-4b1c-b1d0-778c839de2a8/title -> 404:
+[xUnit.net 00:00:28.84]     Lab.TV3.Tests.L19SeoTests.Url_cu_dang_so_it_301_ve_url_chuan [FAIL]
+[xUnit.net 00:00:28.84]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:28.84]       Expected: MovedPermanently
+[xUnit.net 00:00:28.84]       Actual:   NotFound
+Failed Lab.TV3.Tests.L19SeoTests.Url_cu_dang_so_it_301_ve_url_chuan [2 s]
+Assert.Equal() Failure: Values differ
+Expected: MovedPermanently
+Actual:   NotFound
+[xUnit.net 00:00:34.84]     Lab.TV3.Tests.L19SeoTests.Sitemap_chi_chua_cong_thuc_Published [FAIL]
+[xUnit.net 00:00:34.84]       GET http://localhost/sitemap.xml -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Sitemap_chi_chua_cong_thuc_Published [6 s]
+GET http://localhost/sitemap.xml -> 404:
+[xUnit.net 00:00:34.84]     Lab.TV3.Tests.L19SeoTests.Doi_tieu_de_can_dang_nhap [FAIL]
+[xUnit.net 00:00:34.84]       PUT http://localhost/lab/l19/recipes/163e1b4c-2f02-47e0-97e4-bb7e7037c13e/title -> 404:
+Failed Lab.TV3.Tests.L19SeoTests.Doi_tieu_de_can_dang_nhap [2 ms]
+PUT http://localhost/lab/l19/recipes/163e1b4c-2f02-47e0-97e4-bb7e7037c13e/title -> 404:
+Test Run Failed.
+Total tests: 9
+Passed: 1
+Failed: 8
