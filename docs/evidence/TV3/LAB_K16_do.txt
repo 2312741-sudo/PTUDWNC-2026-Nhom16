@@ -1,0 +1,27 @@
+﻿LAB K16 - test DO (truoc khi viet code) - 2026-10-02 10:25
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L16" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 1
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+[xUnit.net 00:00:07.48]     Lab.TV3.Tests.L16SsrSearchTests.Ban_nhap_khong_xuat_hien_trong_trang [FAIL]
+[xUnit.net 00:00:07.48]       GET http://localhost/lab/l16/search?q=ssrb9a1beef57 -> 404:
+Failed Lab.TV3.Tests.L16SsrSearchTests.Ban_nhap_khong_xuat_hien_trong_trang [7 s]
+GET http://localhost/lab/l16/search?q=ssrb9a1beef57 -> 404:
+[xUnit.net 00:00:10.42]       GET http://localhost/lab/l16/search?q=goi ssr91b94652ca -> 404:
+[xUnit.net 00:00:10.42]     Lab.TV3.Tests.L16SsrSearchTests.Tieu_de_va_tu_khoa_duoc_HTML_encode_chong_XSS [FAIL]
+Failed Lab.TV3.Tests.L16SsrSearchTests.Tieu_de_va_tu_khoa_duoc_HTML_encode_chong_XSS [2 s]
+GET http://localhost/lab/l16/search?q=goi ssr91b94652ca -> 404:
+[xUnit.net 00:00:10.43]     Lab.TV3.Tests.L16SsrSearchTests.Khong_co_tu_khoa_chi_hien_form_va_trang_tim_kiem_noindex [FAIL]
+[xUnit.net 00:00:10.43]       GET http://localhost/lab/l16/search -> 404:
+Failed Lab.TV3.Tests.L16SsrSearchTests.Khong_co_tu_khoa_chi_hien_form_va_trang_tim_kiem_noindex [5 ms]
+GET http://localhost/lab/l16/search -> 404:
+[xUnit.net 00:00:13.41]     Lab.TV3.Tests.L16SsrSearchTests.Html_tra_ve_da_chua_ket_qua_khong_can_JavaScript [FAIL]
+[xUnit.net 00:00:13.41]       GET http://localhost/lab/l16/search?q=pho bo ssr33699ab529 -> 404:
+Failed Lab.TV3.Tests.L16SsrSearchTests.Html_tra_ve_da_chua_ket_qua_khong_can_JavaScript [2 s]
+GET http://localhost/lab/l16/search?q=pho bo ssr33699ab529 -> 404:
+[xUnit.net 00:00:21.42]     Lab.TV3.Tests.L16SsrSearchTests.Phan_trang_bang_link_thuong [FAIL]
+[xUnit.net 00:00:21.42]       GET http://localhost/lab/l16/search?q=ssrd795b77e60&pageSize=2 -> 404:
+Failed Lab.TV3.Tests.L16SsrSearchTests.Phan_trang_bang_link_thuong [8 s]
+GET http://localhost/lab/l16/search?q=ssrd795b77e60&pageSize=2 -> 404:
+Test Run Failed.
+Total tests: 5
+Failed: 5
