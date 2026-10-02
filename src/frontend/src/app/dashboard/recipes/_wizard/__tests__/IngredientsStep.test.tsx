@@ -41,7 +41,7 @@ describe("IngredientsStep: sua nguyen lieu", () => {
     m.getRecipeDetail.mockResolvedValue(detail([{ ...caLoc, name: "Ca loc dong", quantity: 600 }]));
     start();
 
-    await user.click(within(table()).getByRole("button", { name: "Sửa" }));
+    await user.click(within(table()).getByRole("button", { name: /^Sửa/ }));
     const name = screen.getByLabelText("Tên nguyên liệu (dòng 2)");
     expect(name).toHaveValue("Ca loc");
     await user.clear(name);
@@ -62,7 +62,7 @@ describe("IngredientsStep: sua nguyen lieu", () => {
     const user = userEvent.setup();
     start();
 
-    await user.click(within(table()).getByRole("button", { name: "Sửa" }));
+    await user.click(within(table()).getByRole("button", { name: /^Sửa/ }));
     await user.click(screen.getByRole("button", { name: /^Ti.p/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/1 dòng nguyên liệu chưa lưu/);
     expect(screen.getByLabelText("Tên nguyên liệu (dòng 2)")).toBeInTheDocument(); // vẫn ở bước 2
@@ -79,7 +79,7 @@ describe("IngredientsStep: sua nguyen lieu", () => {
     m.updateIngredient.mockRejectedValue(new api.ApiError(400, "validation", "Ten khong hop le"));
     start();
 
-    await user.click(within(table()).getByRole("button", { name: "Sửa" }));
+    await user.click(within(table()).getByRole("button", { name: /^Sửa/ }));
     const name = screen.getByLabelText("Tên nguyên liệu (dòng 2)");
     await user.clear(name);
     await user.type(name, "Ten moi");
@@ -99,7 +99,7 @@ describe("IngredientsStep: xoa nguyen lieu", () => {
     const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
     start();
 
-    await user.click(within(table()).getByRole("button", { name: "Xoá" }));
+    await user.click(within(table()).getByRole("button", { name: /^Xoá/ }));
     expect(confirm).toHaveBeenCalledWith('Xoá nguyên liệu "Ca loc"?');
     expect(m.deleteIngredient).not.toHaveBeenCalled();
     expect(within(table()).getByText("Ca loc")).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe("IngredientsStep: xoa nguyen lieu", () => {
     m.getRecipeDetail.mockResolvedValue(detail([]));
     start();
 
-    await user.click(within(table()).getByRole("button", { name: "Xoá" }));
+    await user.click(within(table()).getByRole("button", { name: /^Xoá/ }));
     await waitFor(() => expect(m.deleteIngredient).toHaveBeenCalledWith("r1", "i1"));
     expect(await screen.findByText("Chưa có nguyên liệu nào.")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("IngredientsStep: xoa nguyen lieu", () => {
     m.deleteIngredient.mockRejectedValue(new api.ApiError(500, undefined, "Loi may chu"));
     start();
 
-    await user.click(within(table()).getByRole("button", { name: "Xoá" }));
+    await user.click(within(table()).getByRole("button", { name: /^Xoá/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Loi may chu — đã hoàn tác thay đổi.");
     expect(within(table()).getByText("Ca loc")).toBeInTheDocument();
   });

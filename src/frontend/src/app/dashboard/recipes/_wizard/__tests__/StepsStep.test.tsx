@@ -57,7 +57,7 @@ describe("StepsStep", () => {
     m.updateStep.mockResolvedValue(undefined);
     start();
 
-    await user.click(itemOf("So che ca").getByRole("button", { name: "Sửa" }));
+    await user.click(itemOf("So che ca").getByRole("button", { name: /^Sửa/ }));
     expect(screen.getByText("Đang sửa bước 1")).toBeInTheDocument();
     const title = screen.getByLabelText("Tiêu đề bước (dòng 2)");
     await user.clear(title);
@@ -76,12 +76,12 @@ describe("StepsStep", () => {
     m.getRecipeDetail.mockResolvedValue(detail([{ ...s2, stepNumber: 1 }]));
     start();
 
-    await user.click(itemOf("So che ca").getByRole("button", { name: "Xoá" }));
+    await user.click(itemOf("So che ca").getByRole("button", { name: /^Xoá/ }));
     expect(confirm).toHaveBeenLastCalledWith('Xoá bước "So che ca"?');
     expect(m.deleteStep).not.toHaveBeenCalled();
     expect(screen.getByText("So che ca")).toBeInTheDocument();
 
-    await user.click(itemOf("So che ca").getByRole("button", { name: "Xoá" }));
+    await user.click(itemOf("So che ca").getByRole("button", { name: /^Xoá/ }));
     await waitFor(() => expect(m.deleteStep).toHaveBeenCalledWith("r1", "s1"));
     await waitFor(() => expect(screen.queryByText("So che ca")).not.toBeInTheDocument());
     expect(titles()).toEqual(["Nau canh"]);

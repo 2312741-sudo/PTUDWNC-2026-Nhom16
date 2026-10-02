@@ -45,7 +45,7 @@ export default function ImagesStep({ recipe, busy, run }: Props) {
         <p className="text-gray-500">Chưa có ảnh. Ảnh đầu tiên sẽ tự thành ảnh chính.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          {images.map(img => {
+          {images.map((img, idx) => {
             const src = imageSrc(img);
             return (
               <li key={img.id} className={`overflow-hidden rounded border ${img.isPrimary ? "ring-2 ring-emerald-500" : ""}`}>
@@ -60,9 +60,9 @@ export default function ImagesStep({ recipe, busy, run }: Props) {
                   {img.altText && <p className="truncate text-gray-600">{img.altText}</p>}
                   <div className="flex gap-2">
                     {!img.isPrimary && (
-                      <button disabled={busy} onClick={() => setPrimary(img)} className="text-blue-600 disabled:opacity-40">Đặt làm ảnh chính</button>
+                      <button disabled={busy} onClick={() => setPrimary(img)} className="text-blue-600 disabled:opacity-40">Đặt làm ảnh chính<span className="sr-only"> (ảnh {idx + 1})</span></button>
                     )}
-                    <button disabled={busy} onClick={() => remove(img)} className="text-red-600 disabled:opacity-40">Xoá</button>
+                    <button disabled={busy} onClick={() => remove(img)} className="text-red-600 disabled:opacity-40">Xoá<span className="sr-only"> ảnh {idx + 1}{img.altText ? `: ${img.altText}` : ""}</span></button>
                   </div>
                 </div>
               </li>

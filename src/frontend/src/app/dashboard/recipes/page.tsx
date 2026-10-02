@@ -129,6 +129,9 @@ export default function DashboardRecipesPage() {
   const statuses = counts ? Object.keys(counts.byStatus) : [];
   const sortMark = (f: MyRecipesParams["sortBy"]) =>
     params.sortBy === f ? (params.sortOrder === "desc" ? " ↓" : " ↑") : "";
+  // K18: mũi tên chỉ là hình; aria-sort cho trình đọc màn hình biết cột nào đang sắp xếp, chiều nào
+  const ariaSort = (f: MyRecipesParams["sortBy"]) =>
+    params.sortBy === f ? (params.sortOrder === "desc" ? "descending" as const : "ascending" as const) : undefined;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -195,10 +198,10 @@ export default function DashboardRecipesPage() {
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-stone-50 text-stone-600">
                 <tr>
-                  <Th onClick={() => toggleSort("title")}>Công thức{sortMark("title")}</Th>
+                  <Th sort={ariaSort("title")} onClick={() => toggleSort("title")}>Công thức{sortMark("title")}</Th>
                   <th className="px-4 py-3 font-medium">Trạng thái</th>
                   <th className="px-4 py-3 font-medium">Nội dung</th>
-                  <Th onClick={() => toggleSort("updatedAt")}>Cập nhật{sortMark("updatedAt")}</Th>
+                  <Th sort={ariaSort("updatedAt")} onClick={() => toggleSort("updatedAt")}>Cập nhật{sortMark("updatedAt")}</Th>
                   <th className="px-4 py-3 font-medium"><span className="sr-only">Thao tác</span></th>
                 </tr>
               </thead>
@@ -297,9 +300,9 @@ function Count({ n }: { n: number }) {
   return <span className="ml-1 tabular-nums opacity-70">{n}</span>;
 }
 
-function Th({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function Th({ onClick, sort, children }: { onClick: () => void; sort?: "ascending" | "descending"; children: React.ReactNode }) {
   return (
-    <th className="px-4 py-3 font-medium">
+    <th className="px-4 py-3 font-medium" aria-sort={sort}>
       <button onClick={onClick} className="hover:text-stone-900">{children}</button>
     </th>
   );

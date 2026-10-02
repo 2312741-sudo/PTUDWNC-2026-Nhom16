@@ -111,8 +111,8 @@ export default function IngredientsStep({ recipe, busy, run, onPendingChange }: 
                 <td>{i.unit ?? ""}</td>
                 <td className="text-gray-500">{i.notes ?? ""}</td>
                 <td className="whitespace-nowrap text-right">
-                  <button disabled={busy || isTemp(i.id)} onClick={() => edit(i.id)} className="mr-2 text-blue-600 disabled:opacity-40">Sửa</button>
-                  <button disabled={busy || isTemp(i.id)} onClick={() => removeServer(i.id, i.name)} className="text-red-600 disabled:opacity-40">Xoá</button>
+                  <button disabled={busy || isTemp(i.id)} onClick={() => edit(i.id)} className="mr-2 text-blue-600 disabled:opacity-40">Sửa<span className="sr-only"> nguyên liệu {i.name}</span></button>
+                  <button disabled={busy || isTemp(i.id)} onClick={() => removeServer(i.id, i.name)} className="text-red-600 disabled:opacity-40">Xoá<span className="sr-only"> nguyên liệu {i.name}</span></button>
                 </td>
               </tr>
             ))}

@@ -218,9 +218,20 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
   const onError = (m: string) => dispatch({ type: "error", message: m });
   const last = STEPS.length - 1;
 
+  // K18 (WCAG 2.4.3, 4.1.3): đổi bước -> dời focus tới tiêu đề bước để trình đọc màn hình đọc bước mới
+  // (so với bước trước thay vì cờ "lần đầu" để StrictMode chạy effect 2 lần cũng không focus lúc mount)
+  const stepHeading = useRef<HTMLHeadingElement>(null);
+  const shownStep = useRef(s.step);
+  useEffect(() => {
+    if (shownStep.current === s.step) return;
+    shownStep.current = s.step;
+    stepHeading.current?.focus();
+  }, [s.step]);
+
   return (
     <div className="mx-auto max-w-3xl p-6">
       <h1 className="mb-4 text-2xl font-bold">{s.recipeId ? "Sửa công thức" : "Tạo công thức mới"}</h1>
+      <p role="status" className="sr-only">{s.saving ? "Đang lưu…" : ""}</p>
 
       <nav aria-label="Các bước soạn công thức">
         <ol className="mb-6 flex flex-wrap gap-2">
@@ -238,6 +249,7 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
           ))}
         </ol>
       </nav>
+      <h2 ref={stepHeading} tabIndex={-1} className="sr-only">Bước {s.step + 1}/{STEPS.length}: {STEPS[s.step]}</h2>
 
       {s.step === 0 && (
         <div className="space-y-3">

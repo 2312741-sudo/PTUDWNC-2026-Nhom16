@@ -129,8 +129,8 @@ export default function StepsStep({ recipe, busy, run, onPendingChange }: Props)
                   <button disabled={busy || idx === 0 || isTemp(s.id)} onClick={() => move(idx, -1)} className="px-1 disabled:opacity-30" aria-label={`Đưa bước ${idx + 1} lên`}>▲</button>
                   <button disabled={busy || idx === items.length - 1 || isTemp(s.id)} onClick={() => move(idx, 1)} className="px-1 disabled:opacity-30" aria-label={`Đưa bước ${idx + 1} xuống`}>▼</button>
                 </div>
-                <button disabled={busy || isTemp(s.id)} onClick={() => edit(s.id)} className="text-blue-600 disabled:opacity-40">Sửa</button>
-                <button disabled={busy || isTemp(s.id)} onClick={() => remove(s.id, s.title)} className="text-red-600 disabled:opacity-40">Xoá</button>
+                <button disabled={busy || isTemp(s.id)} onClick={() => edit(s.id)} className="text-blue-600 disabled:opacity-40">Sửa<span className="sr-only"> bước {idx + 1}: {s.title}</span></button>
+                <button disabled={busy || isTemp(s.id)} onClick={() => remove(s.id, s.title)} className="text-red-600 disabled:opacity-40">Xoá<span className="sr-only"> bước {idx + 1}: {s.title}</span></button>
               </div>
             </li>
           ))}
