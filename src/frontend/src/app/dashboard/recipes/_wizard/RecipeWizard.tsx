@@ -4,7 +4,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, RecipeDetail, UnauthorizedError,
   createRecipe, getCategories, getRecipeDetail, isConflict, toBasicInfo, updateRecipe,
@@ -28,20 +28,20 @@ export interface WizardState {
   rowVersion: string | null;
   /** Chỉ dùng làm defaultValues cho form bước 1; sau đó React Hook Form giữ giá trị */
   info: BasicInfo;
+  /** Chỉ dùng làm initialData cho cache TanStack Query; sau đó cache giữ dữ liệu */
   detail: RecipeDetail | null;
   saving: boolean;
   error: string | null;
   conflict: boolean;
 }
 
-type ReducerState = Omit<WizardState, "info">;
+type ReducerState = Omit<WizardState, "info" | "detail">;
 
 type Action =
   | { type: "goto"; step: number }
   | { type: "saving" }
-  | { type: "optimistic"; detail: RecipeDetail }
-  | { type: "detail"; detail: RecipeDetail }
-  | { type: "rollback"; detail: RecipeDetail | null; message: string }
+  | { type: "loaded"; detail: RecipeDetail }
+  | { type: "rollback"; message: string }
   | { type: "error"; message: string; conflict?: boolean };
 
 export const emptyInfo: BasicInfo = {
@@ -54,17 +54,18 @@ function reducer(s: ReducerState, a: Action): ReducerState {
   switch (a.type) {
     case "goto": return { ...s, step: a.step, error: null, conflict: false };
     case "saving": return { ...s, saving: true, error: null, conflict: false };
-    case "optimistic": return { ...s, detail: a.detail };
-    case "detail": return {
-      ...s, saving: false, detail: a.detail,
-      recipeId: a.detail.id, slug: a.detail.slug, rowVersion: a.detail.rowVersion,
+    case "loaded": return {
+      ...s, saving: false, recipeId: a.detail.id, slug: a.detail.slug, rowVersion: a.detail.rowVersion,
     };
-    case "rollback": return { ...s, saving: false, detail: a.detail, error: a.message };
+    case "rollback": return { ...s, saving: false, error: a.message };
     case "error": return { ...s, saving: false, error: a.message, conflict: !!a.conflict };
   }
 }
 
 const CONFLICT_MSG = "Công thức vừa được thay đổi ở nơi khác (tab hoặc thiết bị khác). Tải dữ liệu mới nhất rồi sửa lại.";
+
+/** Khoá cache theo id (slug có thể đổi khi sửa tiêu đề bản nháp) */
+const detailKey = (id: string | null) => ["recipe-detail", id] as const;
 
 /**
  * K17: TanStack Query quản lý dữ liệu công thức đang soạn. QueryClient riêng cho mỗi phiên wizard (không đặt ở
@@ -83,10 +84,18 @@ export default function RecipeWizard(props: { initial?: Partial<WizardState> }) 
 
 function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
   const router = useRouter();
-  const { info: initialInfo, ...initialState } = initial ?? {};
+  const { info: initialInfo, detail: initialDetail, ...initialState } = initial ?? {};
   const [s, dispatch] = useReducer(reducer, {
-    step: 0, recipeId: null, slug: null, rowVersion: null, detail: null,
+    step: 0, recipeId: null, slug: null, rowVersion: null,
     saving: false, error: null, conflict: false, ...initialState,
+  });
+  const queryClient = useQueryClient();
+  // enabled: false -> không tự fetch; wizard nạp lại bằng reload() sau mỗi lần lưu, useQuery chỉ đọc/theo dõi cache
+  const { data: detail = null } = useQuery({
+    queryKey: detailKey(s.recipeId),
+    queryFn: () => getRecipeDetail(s.slug!),
+    enabled: false,
+    initialData: initialDetail ?? undefined,
   });
   const form = useForm<BasicInfoInput, unknown, BasicInfoOutput>({
     resolver: zodResolver(basicInfoSchema),
@@ -136,9 +145,12 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
       .finally(() => { if (window.location.pathname === mountedPath.current) router.refresh(); });
   }
 
-  async function reload(slug = s.slug) {
-    if (!slug) return;
-    dispatch({ type: "detail", detail: await getRecipeDetail(slug) });
+  // staleTime: 0 -> luôn gọi server (mặc định Infinity sẽ trả lại bản trong cache)
+  async function reload(slug = s.slug, id = s.recipeId): Promise<RecipeDetail | null> {
+    if (!slug || !id) return null;
+    const d = await queryClient.fetchQuery({ queryKey: detailKey(id), queryFn: () => getRecipeDetail(slug), staleTime: 0 });
+    dispatch({ type: "loaded", detail: d });
+    return d;
   }
 
   // Conflict reload: lấy bản mới nhất từ server, bỏ phần sửa dở ở bước 1
@@ -146,21 +158,22 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
     if (!s.slug) return;
     dispatch({ type: "saving" });
     try {
-      const d = await getRecipeDetail(s.slug);
-      dispatch({ type: "detail", detail: d });
-      form.reset(toBasicInfo(d));
+      const d = await reload();
+      if (d) form.reset(toBasicInfo(d));
     } catch (e) { handleError(e); }
   }
 
   const run: RunFn = async (fn, optimistic) => {
-    const snapshot = s.detail;
+    const key = detailKey(s.recipeId);
+    const snapshot = queryClient.getQueryData<RecipeDetail>(key);
     dispatch({ type: "saving" });
-    if (optimistic && snapshot) dispatch({ type: "optimistic", detail: optimistic(snapshot) });
+    if (optimistic && snapshot) queryClient.setQueryData(key, optimistic(snapshot));
     try { await fn(); await reload(); refreshPublic(s.slug); return true; }
     catch (e) {
       if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return false; }
       if (optimistic) {
-        dispatch({ type: "rollback", detail: snapshot, message: `${messageOf(e)} — đã hoàn tác thay đổi.` });
+        queryClient.setQueryData(key, snapshot);
+        dispatch({ type: "rollback", message: `${messageOf(e)} — đã hoàn tác thay đổi.` });
         if (isConflict(e)) dispatch({ type: "error", message: CONFLICT_MSG, conflict: true });
       } else handleError(e);
       return false;
@@ -174,7 +187,7 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
       const saved = s.recipeId
         ? await updateRecipe(s.recipeId, info, s.rowVersion!)
         : await createRecipe(info);
-      await reload(saved.slug);
+      await reload(saved.slug, saved.id);
       refreshPublic(saved.slug, s.slug); // đổi tiêu đề có thể đổi slug -> làm mới cả slug cũ
       // Đổi URL sang trang edit: F5 hay bấm lại không tạo thêm bản nháp trùng
       const url = `/dashboard/recipes/${saved.id}/edit?slug=${encodeURIComponent(saved.slug)}`;
@@ -183,7 +196,7 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
     } catch (e) { handleError(e); }
   }
 
-  const canGo = (i: number) => i === 0 || !!s.detail;
+  const canGo = (i: number) => i === 0 || !!detail;
   function goto(step: number) {
     if ((s.step === 1 || s.step === 2) && step !== s.step && pendingDrafts > 0)
       return dispatch({ type: "error", message: `Còn ${pendingDrafts} dòng ${s.step === 1 ? "nguyên liệu" : "bước"} chưa lưu. Bấm Lưu hoặc Bỏ từng dòng trước khi chuyển bước.` });
@@ -273,10 +286,10 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
         </div>
       )}
 
-      {s.step === 1 && s.detail && <IngredientsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
-      {s.step === 2 && s.detail && <StepsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
-      {s.step === 3 && s.detail && <ImagesStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
-      {s.step === 4 && s.detail && <ReviewStep recipe={s.detail} categories={categories} busy={s.saving} run={run} />}
+      {s.step === 1 && detail && <IngredientsStep recipe={detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
+      {s.step === 2 && detail && <StepsStep recipe={detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
+      {s.step === 3 && detail && <ImagesStep recipe={detail} busy={s.saving} run={run} onError={onError} />}
+      {s.step === 4 && detail && <ReviewStep recipe={detail} categories={categories} busy={s.saving} run={run} />}
 
       {s.error && (
         <div role="alert" className="mt-4 rounded bg-red-50 p-3 text-red-700">
