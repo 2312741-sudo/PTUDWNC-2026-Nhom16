@@ -7,6 +7,7 @@ using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Enums;
 using CulinaryBlog.Infrastructure;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -84,6 +85,77 @@ public sealed class RecipeDetailSeoTests : IClassFixture<ApiFactory>
         await AssertStatus(HttpStatusCode.Created, created);
         var data = await DataOf(created);
         return (data.GetProperty("id").GetGuid(), data.GetProperty("name").GetString()!);
+    }
+
+    /// <summary>Danh mục riêng cho test (tạo thẳng trong DB) để có thể xoá mềm mà không ảnh hưởng test khác.</summary>
+    private async Task<(Guid Id, string Name)> OwnCategory()
+    {
+        var name = $"SEO riêng {Guid.NewGuid():N}"[..24];
+        var category = new Category(name, $"seo-rieng-{Guid.NewGuid():N}");
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        db.Categories.Add(category);
+        await db.SaveChangesAsync();
+        return (category.Id, name);
+    }
+
+    private static async Task<string> PublishedRecipe(HttpClient author, Guid categoryId)
+    {
+        var create = await author.PostAsJsonAsync("/api/v1/recipes", new CreateRecipeCommand(
+            $"Canh chua SEO {Guid.NewGuid():N}"[..30], "Canh chua.", null, 10, 20, 2, RecipeDifficulty.Easy, categoryId, null));
+        await AssertStatus(HttpStatusCode.Created, create);
+        var recipe = await DataOf(create);
+        var id = recipe.GetProperty("id").GetGuid();
+        await AssertStatus(HttpStatusCode.Created, await author.PostAsJsonAsync($"/api/v1/recipes/{id}/ingredients", new IngredientBody("Cá lóc", 500m, "g", null)));
+        await AssertStatus(HttpStatusCode.Created, await author.PostAsJsonAsync($"/api/v1/recipes/{id}/steps", new StepBody("Sơ chế", "Làm sạch cá.", null, null)));
+        await AssertStatus(HttpStatusCode.OK, await author.PatchAsync($"/api/v1/recipes/{id}/publish", null));
+        return recipe.GetProperty("slug").GetString()!;
+    }
+
+    private async Task<JsonElement> AnonymousDetail(string slug)
+    {
+        var res = await _factory.CreateClient().GetAsync($"/api/v1/recipes/{slug}");
+        await AssertStatus(HttpStatusCode.OK, res);
+        return await DataOf(res);
+    }
+
+    [Fact]
+    public async Task Blank_display_name_gives_null_authorName_so_json_ld_omits_author()
+    {
+        var (categoryId, _) = await OwnCategory();
+        var (author, email, _) = await NewAuthorClient("Tên tạm");
+        var slug = await PublishedRecipe(author, categoryId);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = (await users.FindByEmailAsync(email))!;
+            user.DisplayName = "   ";
+            Assert.True((await users.UpdateAsync(user)).Succeeded);
+        }
+
+        var detail = await AnonymousDetail(slug);
+
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("authorName").ValueKind);
+    }
+
+    [Fact]
+    public async Task Soft_deleted_category_still_returns_author_name_and_null_category_name()
+    {
+        var (categoryId, _) = await OwnCategory();
+        var (author, _, _) = await NewAuthorClient("Bếp Danh Mục Xoá");
+        var slug = await PublishedRecipe(author, categoryId);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var category = await db.Categories.SingleAsync(c => c.Id == categoryId);
+            category.MarkDeleted();
+            await db.SaveChangesAsync();
+        }
+
+        var detail = await AnonymousDetail(slug);
+
+        Assert.Equal("Bếp Danh Mục Xoá", detail.GetProperty("authorName").GetString());
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("categoryName").ValueKind);
     }
 
     [Fact]
