@@ -6,3 +6,12 @@
 **/.next
 **/out
 **/TestResults
+
+# Secret: .env chứa credential thật của máy, KHÔNG được đóng gói vào image.
+# Giữ .env.example vì đó là mẫu, không có giá trị thật.
+**/.env
+**/.env.*
+!.env.example
+
+# Log local
+run.log

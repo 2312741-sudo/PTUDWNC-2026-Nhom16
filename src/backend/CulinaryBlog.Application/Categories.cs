@@ -48,7 +48,7 @@ public interface ICategoryRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
-public sealed class CreateCategoryHandler(ICategoryRepository repository) : IRequestHandler<CreateCategoryCommand, CategoryDto>
+public sealed class CreateCategoryHandler(ICategoryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<CreateCategoryCommand, CategoryDto>
 {
     public async Task<CategoryDto> Handle(CreateCategoryCommand request, CancellationToken ct)
     {
@@ -81,6 +81,12 @@ public sealed class CreateCategoryHandler(ICategoryRepository repository) : IReq
         await repository.AddAsync(category, ct);
         await repository.SaveChangesAsync(ct);
 
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("categories:", ct);
+            await cache.InvalidatePrefixAsync("category:slug:", ct);
+        }
+
         return ToDto(category, 0);
     }
 
@@ -96,7 +102,7 @@ public sealed class CreateCategoryHandler(ICategoryRepository repository) : IReq
         c.UpdatedAt);
 }
 
-public sealed class UpdateCategoryHandler(ICategoryRepository repository) : IRequestHandler<UpdateCategoryCommand, CategoryDto>
+public sealed class UpdateCategoryHandler(ICategoryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<UpdateCategoryCommand, CategoryDto>
 {
     public async Task<CategoryDto> Handle(UpdateCategoryCommand request, CancellationToken ct)
     {
@@ -119,6 +125,12 @@ public sealed class UpdateCategoryHandler(ICategoryRepository repository) : IReq
         await repository.UpdateAsync(category, ct);
         await repository.SaveChangesAsync(ct);
 
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("categories:", ct);
+            await cache.InvalidatePrefixAsync("category:slug:", ct);
+        }
+
         var recipesCount = await repository.CountRecipesAsync(category.Id, ct);
         return new(
             category.Id,
@@ -133,7 +145,7 @@ public sealed class UpdateCategoryHandler(ICategoryRepository repository) : IReq
     }
 }
 
-public sealed class DeleteCategoryHandler(ICategoryRepository repository) : IRequestHandler<DeleteCategoryCommand, Unit>
+public sealed class DeleteCategoryHandler(ICategoryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<DeleteCategoryCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteCategoryCommand request, CancellationToken ct)
     {
@@ -150,21 +162,83 @@ public sealed class DeleteCategoryHandler(ICategoryRepository repository) : IReq
         await repository.DeleteAsync(category, ct);
         await repository.SaveChangesAsync(ct);
 
+        if (cache is not null)
+        {
+            await cache.InvalidatePrefixAsync("categories:", ct);
+            await cache.InvalidatePrefixAsync("category:slug:", ct);
+        }
+
         return Unit.Value;
     }
 }
 
-public sealed class GetCategoriesHandler(ICategoryRepository repository) : IRequestHandler<GetCategoriesQuery, IReadOnlyList<CategoryDto>>
+public sealed class GetCategoriesHandler(ICategoryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<GetCategoriesQuery, IReadOnlyList<CategoryDto>>
 {
     public async Task<IReadOnlyList<CategoryDto>> Handle(GetCategoriesQuery request, CancellationToken ct)
     {
-        var categories = await repository.GetAllAsync(request.OnlyWithRecipes, ct);
-        var dtos = new List<CategoryDto>(categories.Count);
+        var cacheKey = $"categories:all:{request.OnlyWithRecipes}";
 
-        foreach (var category in categories)
+        if (cache is null)
         {
-            var count = await repository.CountRecipesAsync(category.Id, ct);
-            dtos.Add(new(
+            return await FetchAsync(ct);
+        }
+
+        return await cache.GetOrSetAsync(
+            cacheKey,
+            () => FetchAsync(ct),
+            TimeSpan.FromMinutes(60),
+            ct);
+
+        async Task<IReadOnlyList<CategoryDto>> FetchAsync(CancellationToken cancellationToken)
+        {
+            var categories = await repository.GetAllAsync(request.OnlyWithRecipes, cancellationToken);
+            var dtos = new List<CategoryDto>(categories.Count);
+
+            foreach (var category in categories)
+            {
+                var count = await repository.CountRecipesAsync(category.Id, cancellationToken);
+                dtos.Add(new(
+                    category.Id,
+                    category.Name,
+                    category.Slug,
+                    category.Description,
+                    category.ImageUrl,
+                    category.OrderIndex,
+                    count,
+                    category.CreatedAt,
+                    category.UpdatedAt));
+            }
+
+            return dtos;
+        }
+    }
+}
+
+public sealed class GetCategoryBySlugHandler(ICategoryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<GetCategoryBySlugQuery, CategoryDto>
+{
+    public async Task<CategoryDto> Handle(GetCategoryBySlugQuery request, CancellationToken ct)
+    {
+        var normalizedSlug = request.Slug.Trim().ToLowerInvariant();
+        var cacheKey = $"category:slug:{normalizedSlug}";
+
+        if (cache is null)
+        {
+            return await FetchAsync(ct);
+        }
+
+        return await cache.GetOrSetAsync(
+            cacheKey,
+            () => FetchAsync(ct),
+            TimeSpan.FromMinutes(60),
+            ct);
+
+        async Task<CategoryDto> FetchAsync(CancellationToken cancellationToken)
+        {
+            var category = await repository.GetBySlugAsync(normalizedSlug, cancellationToken)
+                ?? throw new AppException(404, "category.not_found", "Không tìm thấy danh mục.");
+
+            var count = await repository.CountRecipesAsync(category.Id, cancellationToken);
+            return new(
                 category.Id,
                 category.Name,
                 category.Slug,
@@ -173,31 +247,8 @@ public sealed class GetCategoriesHandler(ICategoryRepository repository) : IRequ
                 category.OrderIndex,
                 count,
                 category.CreatedAt,
-                category.UpdatedAt));
+                category.UpdatedAt);
         }
-
-        return dtos;
-    }
-}
-
-public sealed class GetCategoryBySlugHandler(ICategoryRepository repository) : IRequestHandler<GetCategoryBySlugQuery, CategoryDto>
-{
-    public async Task<CategoryDto> Handle(GetCategoryBySlugQuery request, CancellationToken ct)
-    {
-        var category = await repository.GetBySlugAsync(request.Slug.Trim().ToLowerInvariant(), ct)
-            ?? throw new AppException(404, "category.not_found", "Không tìm thấy danh mục.");
-
-        var count = await repository.CountRecipesAsync(category.Id, ct);
-        return new(
-            category.Id,
-            category.Name,
-            category.Slug,
-            category.Description,
-            category.ImageUrl,
-            category.OrderIndex,
-            count,
-            category.CreatedAt,
-            category.UpdatedAt);
     }
 }
 

@@ -56,16 +56,25 @@ Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tu�
 - ✅ **Cổng G0 (Giữa Tuần 1 - Hạ tầng Dev & Skeletons)**: **ĐẠT 100%**. Đã khởi dựng thành công trọn bộ stack container hóa (PostgreSQL 16, Redis 7, MinIO, MailHog, Seq, Nginx) và khung mã nguồn Clean Architecture + Next.js App Router.
 - ✅ **Cổng G1 (Cuối Tuần 1 - Tích hợp Đăng ký, Đăng nhập, Danh mục & Schema Recipe)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PR của 4 thành viên vào nhánh chính `main`.
 - ✅ **Cổng G2 (Cuối Tuần 2 - Hồ sơ người dùng, Khám phá & FTS, CSDL hạt giống 25 categories & 100 recipes)**: **ĐẠT 100%**. Hoàn thành tạo CSDL với 25 Categories, 100 Recipes (mỗi recipe ≥ 10 nguyên liệu, ≥ 5 bước), Lockout 5 lần, Rate limiting, giao diện Profile Dashboard và FTS tiếng Việt ban đầu.
-- ✅ **Cổng G3 (Cuối Tuần 3 - Tích hợp Toàn diện 34 FR, Refresh Token Rotation, Google OAuth, Cache & SEO)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PRs của nhóm (PR #11 TV2, PR #12 TV4, các tính năng Tuần 3 TV1). Đạt **90 / 90 tests tự động pass 100% (Green)**, `dotnet format` sạch sẽ không vi phạm.
+- ✅ **Cổng G3 (Cuối Tuần 3 - Tích hợp Toàn diện 34 FR, Refresh Token Rotation, Google OAuth, Cache & SEO)**: **ĐẠT 100%**. Đã tích hợp thành công toàn bộ PRs của nhóm (PR #11 TV2, PR #12 TV4, các tính năng Tuần 3 TV1). Đạt **90 / 90 tests tự động pass 100% (Green)** tại thời điểm chốt G3, `dotnet format` sạch sẽ không vi phạm.
+- ✅ **Cổng G4 (Cuối Tuần 4 — Nghiệm thu Toàn bộ 41/41 API Endpoints, Đổi Mật Khẩu, QA Tích hợp & Đạt Chuẩn Lab 4)**: **ĐẠT 100% — cập nhật 30/09/2026**.
+  - **Yêu cầu tối thiểu Lab 4**: Cài đặt và tích hợp hoàn chỉnh **41 / 41 API endpoints** trên toàn bộ 7 phân hệ nghiệp vụ.
+  - **Bộ test tự động**: Đạt **177 / 177 tests PASSED 100% (Green)** (172 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Skipped=0`).
+  - **QA tích hợp Frontend–Backend**: Nghiệm thu **41 / 41 trường hợp PASS** (tài liệu `TEST_CASE_TICH_HOP_FE_BE.md`).
+  - **Pull Requests**: Đã merge 100% các PR vào `main` (PR #16 TV4 Hangfire/Media Proxy, PR #18 TV2 Search FTS/Cache-Aside, PR #19 TV4 sửa lỗi upload ảnh 500, nạp `.env` tự động & `DevConfigParityTests`).
+  - **Biên dịch Frontend**: Next.js 15 App Router `npm run build` thành công **15/15 routes tĩnh và động** không phát sinh cảnh báo.
+  - **Báo cáo Lab 4**: Cả 4 thành viên đã hoàn tất báo cáo cá nhân chuẩn quy tắc `Lab4_MSSV_HoVaTen.docx` và lưu trữ minh chứng đầy đủ tại `docs/evidence/`.
 
-### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 23/09/2026 - Tuần 3)
+### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 30/09/2026 - Tuần 4)
 
-| Thành viên | Tiến độ Tuần 1 | Tiến độ Tuần 2 | Tiến độ Tuần 3 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
-|---|:---:|:---:|:---:|:---:|---|
-| **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** (A1, A2, A5, CI) | **100%** (A2, A3, A4, A7, Seed CSDL, Lab 2) | **100%** (A5, A6, A7, Refresh Token, Family Revocation, Cache/SEO Lab, Lab 3) | **18 / 24** (K01, K02, K04, K05, K06, K08, K10, K11, K12, K14, K15, K16, K17, K19, K20, K21, K23, K24) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đạt 90/90 tests tự động toàn hệ thống, CI Green, giải quyết xung đột merge, báo cáo Lab 03 đầy đủ. |
-| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1, B2 nền, B6) | **100%** (B2, B3, B4, B7) | **100%** (Khám phá, FTS, Google OAuth) | **16 / 24** (K01, K02, K03, K04, K05, K06, K07, K08, K09, K11, K16, K17, K18, K21) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đã merge PR #11, hoàn thành Khám phá công thức `/recipes`, FTS tiếng Việt `/search`, Đăng nhập Google OAuth2. |
-| **TV3 — Huỳnh Quốc Trung** | **100%** (C1, C6 nền) | **100%** (C2, C3, C5 nền) | **100%** (Recipe Aggregate, RowVersion, RefreshTokens) | **12 / 24** (K01, K02, K03, K05, K06, K07, K08, K21) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đã đóng góp mô hình Recipe Aggregate, Concurrency spike 5/5 pass, cấu trúc bảng RefreshTokens. |
-| **TV4 — Nguyễn Hữu Trung Sơn** | **100%** (D1, D3, D5, D6) | **100%** (D1, D2, D3) | **100%** (Compose, Nginx, Health, Storage, Logout) | **12 / 24** (K01, K05, K08, K11, K12, K13, K20, K23, K24) | ✅ **Hoàn thành Tuần 1, 2 & 3**. Đã merge PR #12, hoàn thiện Docker stack, Nginx, Health Probes, Storage contract và Logout endpoint. |
+| Thành viên | Tiến độ Tuần 1 | Tiến độ Tuần 2 | Tiến độ Tuần 3 | Tiến độ Tuần 4 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
+|---|:---:|:---:|:---:|:---:|:---:|---|
+| **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** (A1, A2, A5, CI) | **100%** (A2, A3, A4, A7, Seed CSDL, Lab 2) | **100%** (A5, A6, A7, Refresh Token, Family Revocation, Cache/SEO Lab, Lab 3) | **100%** (A6, A7: Đổi mật khẩu, PBKDF2 HMAC-SHA512, thu hồi phiên cũ, UI Profile, 5 tests bảo mật, Lab 4) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1, 2, 3 & 4**. Đạt 177/177 tests tự động, CI Green, giải quyết toàn bộ xung đột merge, ban hành báo cáo Lab 4 đầy đủ. |
+| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1, B2 nền, B6) | **100%** (B2, B3, B4, B7) | **100%** (B3, B5, B6, B7: FTS GIN Index, SSR Search, Cache-Aside/Invalidation, Fallback, Lab K07/K08/K13) | **100%** (B3, B4, B5, B7: GIN Trigram Index tiếng Việt, SSR Search, Caching phân tầng Redis, Robots noindex, PR #18 merged, Lab 4) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1, 2, 3 & 4**. PR #18 đã merge vào `main`, hoàn thiện Search SSR + FTS GIN Index, Cache-Aside TTL phân tầng, 10/10 tests pass, báo cáo Lab 4 đầy đủ. |
+| **TV3 — Huỳnh Quốc Trung** | **100%** (C1, C6 nền) | **100%** (C2, C3, C5 nền) | **100%** (Recipe Aggregate, RowVersion, RefreshTokens) | **100%** (C4, C5, C7: Wizard 5 bước, Dashboard quản lý công thức, OCC RowVersion/xmin, Reorder 2-pha, RecipeAuthoringFlowTests, Lab 4) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1, 2, 3 & 4**. Hoàn thiện Wizard soạn thảo 5 bước, OCC chống Lost Update, 5/5 concurrency tests pass, build 15/15 trang Next.js sạch, báo cáo Lab 4 đầy đủ. |
+| **TV4 — Nguyễn Hữu Trung Sơn** | **100%** (D1, D3, D5, D6) | **100%** (D1, D2, D3) | **100%** (D23 Hangfire queue + dashboard, D27 media proxy theo PA-2, D2 resize 300×300/800×600, D4 sitemap/robots/OG/JSON-LD, D5 EXPLAIN + k6, D6 Lab L4 39/39, gỡ sự cố CI 5 run đỏ) | **100%** (D2, D4, D5, D6, D23, D27: Fix lỗi 500 upload ảnh, EnvFileLoader .env, DevConfigParityTests, QA tích hợp 41/41 endpoints, PR #16 & #19 merged, Lab 4) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1, 2, 3 & 4**. PR #16 & PR #19 đã merge vào `main`. Khắc phục triệt để lỗi upload ảnh, nạp `.env` tự động, nghiệm thu QA 41/41 test cases pass, báo cáo Lab 4 đầy đủ. |
+
+> **Ghi chú nghiệm thu**: Toàn bộ 4 thành viên nhóm 16 đã hoàn tất 100% khối lượng công việc của Tuần 4 và đạt đầy đủ yêu cầu tối thiểu của Lab 4 (41/41 API endpoints hoàn chỉnh). File báo cáo cá nhân của từng thành viên đã được chuẩn hóa theo đúng quy tắc `Lab4_MSSV_HoVaTen.docx`.
 
 ---
 
@@ -78,8 +87,9 @@ Hệ thống được thiết kế theo **Clean Architecture** kết hợp mô h
 1. **Phân hệ Xác thực, Hồ sơ & Bảo mật Token (TV1 - Nguyễn Thanh Tâm)**:
    - **Đăng ký tài khoản (`POST /api/v1/auth/register`)**: Chuẩn hóa theo SRS v1.1.1 §8.1 (`fullName`, `userName`, `email`, `password`), tự động cấp quyền `Author`, mã hóa mật khẩu PBKDF2 100.000 iterations, kiểm tra trùng lặp email bất kể hoa thường, cấp ngay Access Token JWT (15 phút) và Refresh Token 512-bit (7 ngày) kèm `expiresAt` (ISO 8601).
    - **Đăng nhập (`POST /api/v1/auth/login`)**: Xác thực tài khoản với `SignInManager`. Trả thông báo lỗi mờ chung khi sai thông tin để chống user enumeration. Cấp phát cặp Access Token và Refresh Token mới. Toàn bộ response bọc chuẩn `{ "data": ... }`.
+   - **Đổi mật khẩu bảo mật (`POST /api/v1/auth/change-password`)**: Yêu cầu Bearer Token xác thực. Xác minh mật khẩu cũ bằng PBKDF2 HMAC-SHA512. Áp dụng quy tắc mật khẩu mạnh qua FluentValidation (tối thiểu 8 ký tự, chữ hoa, chữ thường, số, ký tự đặc biệt, không trùng mật khẩu cũ). Tự động cập nhật `SecurityStamp` và **thu hồi toàn bộ Refresh Tokens phiên cũ** của người dùng, trả HTTP `204 NoContent`.
    - **Cơ chế Khóa tài khoản (Account Lockout)**: Tự động khóa tạm thời tài khoản 15 phút khi người dùng đăng nhập sai 5 lần liên tiếp. Trả về mã lỗi HTTP `423 Locked` kèm mã lỗi `auth.locked`.
-   - **Giới hạn tần suất gọi API (Rate Limiting)**: Áp dụng thuật toán Fixed Window giới hạn **10 requests/phút/IP** trên các endpoint nhạy cảm (`register`, `login`, `refresh`). Khi vượt ngưỡng, hệ thống trả về HTTP `429 Too Many Requests` kèm header chuẩn `Retry-After: 60`.
+   - **Giới hạn tần suất gọi API (Rate Limiting)**: Áp dụng thuật toán Fixed Window giới hạn **10 requests/phút/IP** trên các endpoint nhạy cảm (`register`, `login`, `refresh`, `change-password`). Khi vượt ngưỡng, hệ thống trả về HTTP `429 Too Many Requests` kèm header chuẩn `Retry-After: 60`.
    - **Nền tảng Refresh Token & Token Rotation (`POST /api/v1/auth/refresh`)**:
      - Cấp phát Refresh Token ngẫu nhiên mật mã 512-bit (`RandomNumberGenerator`), chỉ lưu bản băm SHA-256 (64 hex characters) trong CSDL, không lưu raw token.
      - **Token Rotation**: Mỗi lần gọi endpoint `/refresh`, token cũ lập tức bị thu hồi và một token mới được sinh ra, liên kết vết qua `ReplacedByTokenHash`.
@@ -202,26 +212,28 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 |---|---|:---:|---|
 | **PostgreSQL 16** | `postgres:16-alpine` | `5432` | Cơ sở dữ liệu quan hệ chính & test DB |
 | **Redis 7** | `redis:7-alpine` | `6379` | Cache-aside, Rate Limiting & Blacklist |
-| **MinIO Object Storage** | `minio/minio` | `9000` (API) / `9001` (Console) | Lưu trữ ảnh món ăn và avatar người dùng |
+| **S3 Object Storage (RustFS)** | `rustfs/rustfs` | `9000` (API) / `9001` (Console) | Lưu trữ ảnh món ăn và avatar người dùng (thay image MinIO đã bị gỡ khỏi registry) |
 | **MailHog** | `mailhog/mailhog` | `1025` (SMTP) / `8025` (Web UI) | Máy chủ thử nghiệm gửi email chào mừng và thông báo |
-| **Seq** | `datalust/seq:latest` | `5341` | Máy chủ thu thập log tập trung có cấu trúc (Structured Logging) |
-| **Nginx** | `nginx:alpine` | `80` | Reverse proxy môi trường dev |
+| **Seq** | `datalust/seq:2026.1` | `5341` | Máy chủ thu thập log tập trung có cấu trúc (Structured Logging) |
+| **Nginx** | `nginx:1.27-alpine` | `8080` | Reverse proxy môi trường dev (publish `8080` → cổng `80` trong container) |
 
 ---
 
 ### 4.5. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
 
-Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (90 / 90 tests pass)**:
+Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (172 / 172 tests pass)**:
 
 ```text
 Test run for ConcurrencySpike.dll (net10.0)
 Passed!  - Failed: 0, Passed:  5, Skipped: 0, Total:  5, Duration: 535 ms
 
 Test run for CulinaryBlog.Tests.dll (net10.0)
-Passed!  - Failed: 0, Passed: 85, Skipped: 0, Total: 85, Duration: 2 s
+Passed!  - Failed: 0, Passed: 167, Skipped: 0, Total: 167, Duration: 2 s
 
-Total: 90/90 tests passed (100% Green).
+Total: 172/172 tests passed (100% Green).
 ```
+
+> Cập nhật 30/09/2026 (sau khi đồng bộ `origin/main`): `CulinaryBlog.Tests` **167/167** = 154 test nền + 3 `DevConfigParityTests` (TV4, chống hồi quy cấu hình storage/DB) + 10 test Search & Cache Tuần 3 (TV2). QA tích hợp Frontend–Backend bổ sung **41/41 PASS** — xem [`docs/evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md`](docs/evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md).
 
 - **Kiểm định Kiến trúc (18 Architecture Tests)**: Bảo vệ ranh giới Clean Architecture, kiểm thử toàn bộ trường hợp biên của validator (XSS, ký tự điều khiển, độ dài chuỗi, URL scheme).
 - **Kiểm thử Xác thực & Bảo mật (18 Auth Tests)**: Kiểm tra luồng đăng ký/đăng nhập, ngăn chặn đăng ký email trùng, chặn client tự cấp role Admin, kiểm tra khóa tài khoản HTTP 423, cập nhật hồ sơ HTTP 200/400/401, và đăng xuất HTTP 204.
@@ -229,8 +241,11 @@ Total: 90/90 tests passed (100% Green).
 - **Kiểm thử Tuần 3: Refresh Token Rotation, Family Revocation, Cache & JSON-LD (7 Tests)**: Kiểm tra cấp phát token 512-bit, Token Rotation, Token Reuse Detection thu hồi toàn bộ token của phiên, Logout thu hồi token, Schema.org Recipe JSON-LD generator và Fallback Resilience khi Cache server down.
 - **Kiểm thử Phân hệ Danh mục (12 Category Tests)**: Kiểm tra trọn vẹn nghiệp vụ Domain, thuật toán sinh slug tiếng Việt, CRUD CQRS Handlers, và phân trang.
 - **Kiểm thử Hạ tầng & Giám sát (2 Health Tests)**: Xác minh hoạt động của liveness và readiness probes.
+- **Kiểm thử Cấu hình Phát triển (3 DevConfigParityTests)**: Chống hồi quy cấu hình — đối chiếu `appsettings.Development.json`, biến môi trường và nội dung `.env` cho chuỗi kết nối PostgreSQL và object storage, phát hiện hồi quy gây lỗi `500` khi thiếu cấu hình (PR #19).
 - **Kiểm thử Concurrency Spike (5 Tests)**: Đảm bảo kiểm soát xung đột dữ liệu đồng thời và tính toàn vẹn của transaction khi 2 writer cùng ghi hoặc cập nhật ảnh primary.
 - **Định dạng mã nguồn**: `dotnet format CulinaryBlog.sln --verify-no-changes` đạt 100% không phát sinh lỗi.
+
+> Các nhóm kiểm thử liệt kê ở trên là mô tả theo phân hệ và được ghi nhận tại các mốc Tuần 1–3, nên tổng của chúng không cộng lại bằng `172`; con số authoritative để nghiệm thu là tổng `dotnet test` ở khối trên.
 
 ---
 
@@ -256,10 +271,8 @@ docker compose -f docker-compose.dev.yml ps
 # 1. Khôi phục dependencies theo locked-mode
 dotnet restore CulinaryBlog.sln --locked-mode
 
-# 2. Thiết lập biến môi trường kết nối (password admin123 khớp container compose)
-export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=admin123"
-export Jwt__SigningKey="super_secret_jwt_signing_key_for_culinary_blog_min_64_bytes_long_string_12345"
-export ASPNETCORE_ENVIRONMENT=Development
+# 2. Tạo .env cho máy này (giá trị thật, KHÔNG commit)
+cp .env.example .env
 
 # 3. Áp dụng migration cơ sở dữ liệu
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
@@ -270,6 +283,10 @@ dotnet run --project src/backend/CulinaryBlog.API -- --seed
 # 5. Chạy Backend API server
 dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
 ```
+> Không cần `export` gì thêm: `EnvFileLoader` nạp `.env` tự động (bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`).
+> Không có `.env` thì app dùng default trong `appsettings.Development.json` (`Password=postgres`) — khớp default của `docker-compose.dev.yml`.
+> Muốn dùng JWT key riêng thì sửa `Jwt__SigningKey` trong `.env` (≥ 64 bytes).
+
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
 
 ### 5.4. Khởi động Frontend (Next.js 15)
@@ -293,23 +310,28 @@ npm run dev
 
 ### 5.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
-# Thiết lập chuỗi kết nối database test chuyên biệt (password admin123 khớp container compose)
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=admin123"
+# Chuỗi kết nối database test đọc từ TEST_DATABASE trong .env (đã tạo ở bước 2 mục 5.3).
+# Không có .env thì test tự dùng default khớp docker-compose.dev.yml (Password=postgres).
 
-# Chạy toàn bộ 90 tests trong solution
+# Chạy toàn bộ test trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
 ```
 
 ### 5.6. Dành cho thành viên dùng PostgreSQL native
-Nếu máy đã có sẵn PostgreSQL cài trực tiếp (password khác `admin123`), **không sửa file cấu hình đã commit** — chỉ cần override bằng biến môi trường cục bộ:
+Mô hình cấu hình: **default trong repo, giá trị thật trong `.env`**. Nếu máy đã có sẵn PostgreSQL
+cài trực tiếp (hoặc đổi mật khẩu), **không sửa file cấu hình đã commit** — sửa `.env` của bạn:
 
 ```bash
-# API: trỏ về DB native của bạn
-export ConnectionStrings__Database="Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+# Sửa .env: trỏ API về DB native của bạn
+ConnectionStrings__Database=Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=<MAT_KHAU_CUA_BAN>
 
-# Test: trỏ về DB test của bạn
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>"
+# Sửa .env: trỏ test về DB test của bạn
+TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=<MAT_KHAU_CUA_BAN>
 ```
+
+> `docker compose` **tự** đọc `.env`; API và test đọc qua `EnvFileLoader`. Biến môi trường đã được
+> export sẵn trong shell/CI vẫn thắng `.env`.
+> Đổi `POSTGRES_PASSWORD` sau khi volume đã tạo **không** có tác dụng — xem ghi chú cuối `.env.example`.
 
 ---
 
@@ -327,6 +349,8 @@ export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=p
    - Hoàn thiện giao diện Wizard tạo và chỉnh sửa công thức đa bước trên frontend.
    - Viết các bài test kiểm thử tích hợp giao dịch phân tán, kiểm tra rollback transaction khi xảy ra lỗi ở child entities (nguyên liệu, bước làm).
 4. **TV4 (Trung Sơn)**:
+   - ✅ **Đã xong 30/09 (PR #19, chờ review)**: gỡ bug upload ảnh trả `500` do thiếu cấu hình object storage; chuẩn hóa nạp `.env` cho local dev (B3 — gỡ block); thêm 3 test `DevConfigParityTests`; QA tích hợp 41/41; 172/172 test toàn hệ thống xanh sau khi sync `origin/main`.
+   - 🔄 Đang thực hiện: đề xuất B1 (đổi lỗi storage `500` → `503 storage.unavailable`) và B2 (fail-fast khi thiếu cấu hình) để tránh lỗi khó chẩn đoán như trên.
    - Hoàn tất kiểm thử tải upload ảnh, xử lý kịch bản file-size attack và MIME spoofing attack.
    - Kiểm tra khả năng tự động khôi phục dữ liệu (Backup & Restore) trên môi trường multi-container.
 
@@ -334,9 +358,30 @@ export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=p
 
 ## 📚 7. Danh Mục Tài Liệu Kỹ Thuật Tham Chiếu
 
+### 7.1. Bảng Quyết Định Kiến trúc & ADR (đọc tóm tắt ở đây, chi tiết ở link)
+
+| Mã | Vấn đề / Quyết định | Chọn gì | Áp dụng ở đâu | Tài liệu chi tiết |
+|---|---|---|---|---|
+| **ADR-TV4-002** | ⚠️ **Image MinIO đã bị gỡ khỏi registry** (quay.io 401, Docker Hub 404) → CI đỏ 5 run, mọi test bị skip, dev stack không dựng được | **RustFS** (S3-compatible, Apache-2.0, ghim tag + digest) cho dev + CI; `MinioStorageService` **không đổi dòng nào** | `docker-compose.dev.yml`, `.github/workflows/backend.yml`, `.env.example` | **[ADR-TV4-002 — đổi MinIO sang RustFS](docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md)** ⚠️ *đọc trước khi chạy dev* |
+| **ADR-TV4-001 / D27** | Ảnh recipe Draft/Archived có bị lộ ra public không | Bucket **private**, ảnh phục vụ qua **proxy có auth** (`/api/v1/resources/images/{key}`); Published được cache công khai | `Program.cs`, `MinioStorageService`, FE `NEXT_PUBLIC_MEDIA_URL` | [ADR-TV4-001](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) · [IMAGE_CONTRACT §5](docs/IMAGE_CONTRACT.md) |
+| **D27 / PA-2** | Ảnh upload hiển thị trên FE bằng URL nào | **Proxy có auth** thay vì presigned URL (bucket giữ private) | `Program.cs`, `ImagesStep.tsx` | [Đề xuất giải quyết D23/D27](docs/proposal/DE_XUAT_GIAI_QUYET_D23_D27.md) |
+| **D23 / PA-1** | Resize ảnh chạy nền bằng gì | **Hangfire + PostgreSQL** (queue persistent, retry, dashboard `/hangfire` chỉ Admin) — không dùng `BackgroundService` | `ResizeImageJob`, `ImageResizeQueue` | [Đề xuất giải quyết D23/D27](docs/proposal/DE_XUAT_GIAI_QUYET_D23_D27.md) |
+| **D22** | Redis chết thì `/health` trả gì | `/health/live` luôn 200 · `/health/ready` cần DB + Redis → **503** khi thiếu · API vẫn fallback đọc DB | `Health.cs` | [ADR-TV4-001](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) |
+| **D06 / D05** | Logout thu hồi token ra sao | `POST /auth/logout` cần Bearer, trả **204**, thu hồi refresh token **+ toàn bộ family** | `IdentityService.cs` | [ADR-TV4-001](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) |
+| **C01–C09** | 9 mâu thuẫn nội tại SRS (soft/hard delete, điều kiện publish, TTL cache, pageSize, tên field, response wrapper) | Chuẩn hóa theo **SRS v1.1.1** (bảng đối chiếu ở README §4.2) | Toàn hệ thống | [Báo cáo mâu thuẫn SRS](docs/report/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md) |
+| **ImageSharp** | Ảnh resize bằng thư viện nào | **3.1.11** — bản 4.x **bắt buộc license key thương mại** → build fail | `ResizeImageJob` | [SO_EVIDENCE tuần 3 §TV4-K14](docs/evidence/TV4/Tuan03/SO_EVIDENCE_TUAN_3.md) |
+
+> ⚠️ **Lưu ý quan trọng cho thành viên mới**: môi trường dev/CI **không dùng MinIO nữa** (MinIO đã gỡ toàn bộ image public).
+> Lệnh dựng hạ tầng: `docker compose -f docker-compose.dev.yml up -d` — service tên là **`s3`**, console ở http://localhost:9001,
+> và **không còn** container `minio-init` (app tự tạo bucket). Chi tiết đầy đủ ở [ADR-TV4-002](docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md).
+
+### 7.2. Danh mục đầy đủ
+
+- 🚀 [**Hướng dẫn cài đặt, cấu hình & chạy chương trình chi tiết (Setup & Run Guide)**](docs/HUONG_DAN_CAI_DAT_VA_CHAY_CHUONG_TRINH.md)
 - 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](docs/HUONG_DAN_TEST_APP.md)
-- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
-- 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)
+- 🖥️ [Hướng dẫn cài đặt & chạy ứng dụng — riêng TV4 (PowerShell, xử lý sai mật khẩu PostgreSQL)](docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md)
+- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/report/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
+- 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/report/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)
 - 📋 [Kế hoạch phân chia công việc 6 tuần](docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md)
 - 📖 [Kế hoạch tổng thể & Giải quyết xung đột SRS](docs/KE_HOACH_DU_AN.md)
 - 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm chính thức (SRS v1.1.1)](docs/root/SRS_Culinary_Blog_v1.1.1.md)
@@ -349,7 +394,7 @@ export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=p
 - 🔍 [Hợp đồng Tìm kiếm & Khám phá (Search & Discovery Contract)](docs/SEARCH_AND_DISCOVERY_CONTRACT.md)
 - 🌐 [Hợp đồng Google OAuth (Google Auth Contract)](docs/GOOGLE_AUTH_CONTRACT.md)
 - 🖼️ [Hợp đồng API Tải lên & Xử lý Ảnh (Image Contract)](docs/IMAGE_CONTRACT.md)
-- 🤝 [Biên bản Chuyển giao Kỹ thuật (Handoff TV4)](docs/HANDOFF_TV4_TUAN2_BLOCKED.md)
+- 🤝 [Biên bản Chuyển giao Kỹ thuật (Handoff TV4)](docs/evidence/TV4/Tuan02/HANDOFF_TV4_TUAN2_BLOCKED.md)
 - 📑 **Báo cáo nghiệm thu cá nhân & Báo cáo Lab môn học**:
   - **TV1 (Nguyễn Thanh Tâm — Leader)**:
     - [Báo cáo Tổng hợp Lab 01 - 02 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_01_02.md)

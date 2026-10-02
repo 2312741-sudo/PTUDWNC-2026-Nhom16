@@ -51,12 +51,21 @@ Dự án áp dụng mô hình Kim tự tháp kiểm thử (Testing Pyramid) vớ
 
 ### 2.2. Thiết lập Biến Môi trường Test Database
 ```bash
-# Thiết lập connection string tới database kiểm thử
-export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=culinary;Password=culinary_dev_secret"
+# Cách 1 (khuyến nghị): ghi vào .env — API và test đều đọc qua EnvFileLoader
+TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=postgres
 
-# Nếu chạy PostgreSQL trên cổng khác hoặc tài khoản test riêng:
-# export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=postgres"
+# Cách 2: truyền bằng biến môi trường (thắng .env)
+export TEST_DATABASE="Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=postgres"
 ```
+
+> Mặc định test tự dùng `Username=postgres;Password=postgres` — khớp default `POSTGRES_PASSWORD`
+> trong `docker-compose.dev.yml`. Nếu `.env` của bạn đặt mật khẩu khác thì sửa `TEST_DATABASE` trong `.env` cho khớp.
+> Tài khoản `culinary` / `culinary_dev_secret` ở phiên bản cũ của tài liệu này **không tồn tại** trong compose.
+
+> ⚠️ **Trên Windows PowerShell dùng `$env:` chứ không dùng `export`:**
+> `$env:TEST_DATABASE = "Host=localhost;Port=5432;Database=culinary_test;Username=postgres;Password=postgres"`
+> Nếu gặp `28P01 password authentication failed` mặc dù đã khai báo mật khẩu,
+> xem `docs/HUONG_DAN_CHAY_TV4.md` mục 3 và 5 (volume `pgdata` cũ giữ mật khẩu cũ).
 
 ### 2.3. Chạy Toàn bộ 54 Tests
 ```bash
@@ -126,17 +135,23 @@ dotnet test CulinaryBlog.sln --no-build --configuration Release --collect:"XPlat
 
 ## 4. Kiểm thử Giao diện Frontend (Next.js 15 App Router)
 
-### 4.1. Kiểm tra Typecheck & Build Tĩnh
+### 4.1. Kiểm tra Typecheck & Build Tĩnh (Khớp Quy trình CI `.github/workflows/frontend.yml`)
 ```bash
 cd src/frontend
 
-# Cài đặt thư viện phụ thuộc
-npm install
+# Cài đặt thư viện phụ thuộc (CI dùng locked package-lock.json)
+npm ci
 
-# Kiểm tra kiểu TypeScript và build tối ưu hóa
+# Kiểm tra kiểu TypeScript nghiêm ngặt
+npx tsc --noEmit
+
+# Chạy kiểm thử tự động (nếu có)
+npm test --if-present
+
+# Biên dịch tối ưu hóa Next.js cho toàn bộ routes
 npm run build
 ```
-**Kết quả mong đợi**: Biên dịch thành công 100%, 7/7 routes được tạo (`/`, `/_not-found`, `/categories`, `/categories/[slug]`, `/dashboard/categories`, `/dashboard/profile`).
+**Kết quả mong đợi**: Type check sạch sẽ không lỗi, biên dịch thành công 100% với 15/15 routes tĩnh và động.
 
 ### 4.2. Khởi chạy Server Frontend
 ```bash
@@ -183,12 +198,12 @@ docker compose -f docker-compose.dev.yml ps
 
 | Dịch vụ | Cổng Host | Địa chỉ Kiểm tra / Console | Tài khoản mặc định |
 |---|:---:|---|---|
-| **PostgreSQL 16** | `5432` | `localhost:5432` | `culinary / culinary_dev_secret` |
+| **PostgreSQL 16** | `5432` | `localhost:5432` | `postgres / postgres` (default) — hoặc theo `POSTGRES_PASSWORD` trong `.env` |
 | **Redis 7** | `6379` | `localhost:6379` | Không mật khẩu (dev) |
-| **MinIO Storage** | `9000` / `9001` | Console: **http://localhost:9001** | `minioadmin / minioadmin` |
+| **S3 Storage (RustFS)** | `9000` / `9001` | Console: **http://localhost:9001** | `minioadmin / minioadmin` |
 | **MailHog Web UI** | `8025` | Web: **http://localhost:8025** | Không cần mật khẩu |
 | **Seq Log Server** | `5341` | Web: **http://localhost:5341** | Không cần mật khẩu |
-| **Nginx Reverse Proxy**| `80` | Web: **http://localhost:80** | Điều hướng API & Web |
+| **Nginx Reverse Proxy**| `8080` | Web: **http://localhost:8080** | Điều hướng API & Web |
 
 ### 5.1. Khởi động Backend API
 ```bash

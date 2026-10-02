@@ -1,3 +1,4 @@
+using CulinaryBlog.API;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
 using CulinaryBlog.Infrastructure.Persistence.Interceptors;
@@ -28,6 +29,7 @@ public sealed class SpikeDbFixture : IAsyncLifetime
 
     private static string ResolveConnectionString()
     {
+        EnvFileLoader.Load();
         var spike = Environment.GetEnvironmentVariable("SPIKE_DB");
         if (!string.IsNullOrWhiteSpace(spike))
         {
@@ -44,6 +46,7 @@ public sealed class SpikeDbFixture : IAsyncLifetime
             return builder.ConnectionString;
         }
 
+        // Mặc định khớp POSTGRES_PASSWORD của docker-compose.dev.yml (postgres); .env/CI override bằng TEST_DATABASE/SPIKE_DB
         return "Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=postgres";
     }
 

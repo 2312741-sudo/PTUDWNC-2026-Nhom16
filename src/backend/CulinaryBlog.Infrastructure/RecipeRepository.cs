@@ -72,10 +72,53 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
 
         baseQuery = ApplyFilters(baseQuery, query.CategoryId, query.Difficulty, query.MaxCookTime, query.MinServings);
 
-        baseQuery = baseQuery.Where(r =>
-            EF.Functions.ILike(r.Title, $"%{normalizedQuery}%") ||
-            EF.Functions.ILike(r.Description, $"%{normalizedQuery}%") ||
-            EF.Functions.ILike(r.Slug, $"%{slugSearch}%"));
+        // Whole-word / token-based search logic to prevent false positives (e.g. 'gà' matching 'ngọt ngào')
+        var slugExact = slugSearch;
+        var slugPrefix = $"{slugSearch}-%";
+        var slugMiddle = $"%-{slugSearch}-%";
+        var slugSuffix = $"%-{slugSearch}";
+
+        bool isMultiWord = normalizedQuery.Contains(' ');
+
+        if (isMultiWord)
+        {
+            baseQuery = baseQuery.Where(r =>
+                EF.Functions.ILike(r.Title, $"%{normalizedQuery}%") ||
+                r.Slug == slugExact ||
+                EF.Functions.ILike(r.Slug, slugPrefix) ||
+                EF.Functions.ILike(r.Slug, slugMiddle) ||
+                EF.Functions.ILike(r.Slug, slugSuffix) ||
+                EF.Functions.ILike(r.Description, $"%{normalizedQuery}%"));
+        }
+        else
+        {
+            // Single word keyword: match exact word boundaries to avoid false positives
+            var titleExact = normalizedQuery;
+            var titlePrefix = $"{normalizedQuery} %";
+            var titleMiddle = $"% {normalizedQuery} %";
+            var titleSuffix = $"% {normalizedQuery}";
+
+            var descPrefix = $"{normalizedQuery} %";
+            var descMiddle = $"% {normalizedQuery} %";
+            var descSuffix = $"% {normalizedQuery}";
+            var descComma = $"% {normalizedQuery},%";
+            var descDot = $"% {normalizedQuery}.%";
+
+            baseQuery = baseQuery.Where(r =>
+                r.Slug == slugExact ||
+                EF.Functions.ILike(r.Slug, slugPrefix) ||
+                EF.Functions.ILike(r.Slug, slugMiddle) ||
+                EF.Functions.ILike(r.Slug, slugSuffix) ||
+                EF.Functions.ILike(r.Title, titleExact) ||
+                EF.Functions.ILike(r.Title, titlePrefix) ||
+                EF.Functions.ILike(r.Title, titleMiddle) ||
+                EF.Functions.ILike(r.Title, titleSuffix) ||
+                EF.Functions.ILike(r.Description, descPrefix) ||
+                EF.Functions.ILike(r.Description, descMiddle) ||
+                EF.Functions.ILike(r.Description, descSuffix) ||
+                EF.Functions.ILike(r.Description, descComma) ||
+                EF.Functions.ILike(r.Description, descDot));
+        }
 
         var total = await baseQuery.CountAsync(ct);
 
@@ -200,5 +243,17 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
                 ? query.OrderBy(r => r.PublishedAt ?? r.CreatedAt)
                 : query.OrderByDescending(r => r.PublishedAt ?? r.CreatedAt)
         };
+    }
+
+    public async Task<List<SitemapRecipeDto>> GetPublishedForSitemapAsync(CancellationToken ct)
+    {
+        return await db.Recipes
+            .AsNoTracking()
+            .Where(r => r.Status == RecipeStatus.Published && !r.IsDeleted)
+            .Select(r => new SitemapRecipeDto(
+                r.Id,
+                r.Slug,
+                r.PublishedAt.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(r.PublishedAt.Value, DateTimeKind.Utc)) : null))
+            .ToListAsync(ct);
     }
 }

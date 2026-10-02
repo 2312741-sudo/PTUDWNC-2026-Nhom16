@@ -79,6 +79,7 @@ public interface IIdentityService
     Task<AuthResponse> LoginWithGoogleAsync(GoogleUserPayload payload, CancellationToken ct);
     Task<AuthResponse> RefreshTokenAsync(string refreshToken, string? ipAddress, CancellationToken ct);
     Task LogoutAsync(string? userId, string? refreshToken, CancellationToken ct);
+    Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct);
 }
 
 public sealed class AppException(int status, string code, string message) : Exception(message)
@@ -194,3 +195,31 @@ public sealed class LoginValidator : AbstractValidator<LoginCommand>
         RuleFor(x => x.Password).NotEmpty().MaximumLength(128);
     }
 }
+
+public sealed record ChangePasswordCommand(string CurrentPassword, string NewPassword) : IRequest;
+
+public sealed class ChangePasswordHandler(IIdentityService identity, ICurrentUser currentUser) : IRequestHandler<ChangePasswordCommand>
+{
+    public Task Handle(ChangePasswordCommand request, CancellationToken ct) =>
+        identity.ChangePasswordAsync(currentUser.UserId ?? throw new AppException(401, "auth.unauthorized", "Vui lòng đăng nhập."), request, ct);
+}
+
+public sealed class ChangePasswordValidator : AbstractValidator<ChangePasswordCommand>
+{
+    public ChangePasswordValidator()
+    {
+        RuleFor(x => x.CurrentPassword)
+            .NotEmpty().WithMessage("Mật khẩu hiện tại không được để trống.");
+
+        RuleFor(x => x.NewPassword)
+            .NotEmpty().WithMessage("Mật khẩu mới không được để trống.")
+            .MinimumLength(8).WithMessage("Mật khẩu mới phải có ít nhất 8 ký tự.")
+            .MaximumLength(128).WithMessage("Mật khẩu mới tối đa 128 ký tự.")
+            .Matches("[A-Z]").WithMessage("Mật khẩu mới phải chứa ít nhất một chữ hoa.")
+            .Matches("[a-z]").WithMessage("Mật khẩu mới phải chứa ít nhất một chữ thường.")
+            .Matches("[0-9]").WithMessage("Mật khẩu mới phải chứa ít nhất một chữ số.")
+            .Matches("[^a-zA-Z0-9]").WithMessage("Mật khẩu mới phải chứa ít nhất một ký tự đặc biệt.")
+            .NotEqual(x => x.CurrentPassword).WithMessage("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+    }
+}
+

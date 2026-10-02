@@ -1,0 +1,24 @@
+﻿# Evidence D2 resize anh (D23 PA-1 Hangfire) - API that voi PostgreSQL 127.0.0.1:5432 (DB culinary_test) + MinIO 127.0.0.1:9000
+# Chay: dotnet bin/Release/net10.0/CulinaryBlog.API.dll --no-auto-migrate  (PORT=5099, moi truong khong phai Testing -> Hangfire server + dashboard bat)
+# Upload 1 JPEG that 1200x800 -> Hangfire worker resize 300x300 + 800x600 -> DB cap nhat MediumUrl/ThumbnailUrl
+# Hangfire job id=1 state=Succeeded (xem d2_resize_hangfire_db.txt)
+
+[00:32:04 INF] Start installing Hangfire SQL objects... {"SourceContext": "Hangfire.PostgreSql.PostgreSqlStorage"}
+[00:32:04 INF] Hangfire SQL objects installed. {"SourceContext": "Hangfire.PostgreSql.PostgreSqlStorage"}
+[00:32:04 INF] Starting Hangfire Server using job storage: 'PostgreSQL Server: Host: 127.0.0.1, DB: culinary_test, Schema: hangfire' {"SourceContext": "Hangfire.BackgroundJobServer"}
+[00:32:04 INF] Using the following options for PostgreSQL job storage: {"SourceContext": "Hangfire.BackgroundJobServer"}
+[00:32:04 INF]     Queue poll interval: 00:00:15. {"SourceContext": "Hangfire.BackgroundJobServer"}
+[00:32:04 INF]     Invisibility timeout: 00:30:00. {"SourceContext": "Hangfire.BackgroundJobServer"}
+[00:32:04 INF]     Use sliding invisibility timeout: False. {"SourceContext": "Hangfire.BackgroundJobServer"}
+[00:32:04 INF] Using the following options for Hangfire Server:
+    Schedule polling interval: 00:00:15 {"SourceContext": "Hangfire.BackgroundJobServer"}
+[00:32:04 INF] Server msi:460:46850ba1 successfully announced in 82.0576 ms {"SourceContext": "Hangfire.Server.BackgroundServerProcess"}
+[00:32:04 INF] Server msi:460:46850ba1 is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, Worker, DelayedJobScheduler, RecurringJobScheduler... {"SourceContext": "Hangfire.Server.BackgroundServerProcess"}
+[00:32:04 INF] Server msi:460:46850ba1 all the dispatchers started {"SourceContext": "Hangfire.Server.BackgroundServerProcess"}
+[00:34:16 INF] Handled UploadRecipeImageCommand in 2234.1642 ms {"SourceContext": "CulinaryBlog.Application.LoggingBehavior", "RequestId": "0HNOSNM55ALSJ:00000001", "RequestPath": "/api/v1/recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/images", "ConnectionId": "0HNOSNM55ALSJ", "TraceId": "0121755702d9904e25aab38cd8ff4897", "CorrelationId": "978c0a22b6ca48e880b9226d765f5a1d"}
+[00:34:16 INF] HTTP POST /api/v1/recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/images responded 201 in 2400.2075 ms {"UserId": "f8689902-23a7-47e9-98a3-5045661b9fc3", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "TraceId": "0121755702d9904e25aab38cd8ff4897", "CorrelationId": "978c0a22b6ca48e880b9226d765f5a1d", "RequestId": "0HNOSNM55ALSJ:00000001", "ConnectionId": "0HNOSNM55ALSJ"}
+[00:34:17 INF] Resized recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91.jpg -> recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91_300x300.jpg (300x300). {"SourceContext": "CulinaryBlog.Infrastructure.ResizeImageJob"}
+[00:34:17 INF] Resized recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91.jpg -> recipes/a7bc070a-f6a5-4b94-83db-cb3b765575e4/d81e4bf73e0046b5bd197684e6bfcc91_800x600.jpg (800x600). {"SourceContext": "CulinaryBlog.Infrastructure.ResizeImageJob"}
+[00:34:49 INF] HTTP GET /hangfire responded 401 in 26.7602 ms {"UserId": "anonymous", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "TraceId": "1c290a23814f939e8d6706de2785f827", "CorrelationId": "9db6f4e15d69431887795540f2f679b2", "RequestId": "0HNOSNM55ALSM:00000001", "ConnectionId": "0HNOSNM55ALSM"}
+[00:34:49 INF] HTTP GET /hangfire responded 403 in 0.8409 ms {"UserId": "f8689902-23a7-47e9-98a3-5045661b9fc3", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "TraceId": "c48768ffa2d41762c137bf728529a4bd", "CorrelationId": "cf0644c4efdf411d85eab3593def7b71", "RequestId": "0HNOSNM55ALSN:00000001", "ConnectionId": "0HNOSNM55ALSN"}
+[00:35:07 INF] HTTP GET /hangfire responded 200 in 117.6794 ms {"UserId": "f8689902-23a7-47e9-98a3-5045661b9fc3", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "TraceId": "f0f73431374441b05609ecda53e29ac5", "CorrelationId": "3f08d35863184fd38b0e4a21b5908233", "RequestId": "0HNOSNM55ALSP:00000001", "ConnectionId": "0HNOSNM55ALSP"}

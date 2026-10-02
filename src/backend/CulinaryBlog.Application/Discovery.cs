@@ -47,18 +47,58 @@ public interface IRecipeDiscoveryRepository
 {
     Task<PagedResult<RecipeSummaryDto>> GetPublishedRecipesAsync(GetRecipesQuery query, CancellationToken ct);
     Task<PagedResult<RecipeSummaryDto>> SearchPublishedRecipesAsync(SearchRecipesQuery query, CancellationToken ct);
+
+    /// <summary>
+    /// Danh sách công thức Published (không Draft/Archived/Deleted) phục vụ sitemap SEO (D26).
+    /// </summary>
+    Task<List<SitemapRecipeDto>> GetPublishedForSitemapAsync(CancellationToken ct);
 }
 
-public sealed class GetRecipesHandler(IRecipeDiscoveryRepository repository) : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
+public sealed record SitemapRecipeDto(Guid Id, string Slug, DateTimeOffset? PublishedAt);
+
+public sealed class GetRecipesHandler(IRecipeDiscoveryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
-    public Task<PagedResult<RecipeSummaryDto>> Handle(GetRecipesQuery request, CancellationToken ct) =>
-        repository.GetPublishedRecipesAsync(request, ct);
+    public Task<PagedResult<RecipeSummaryDto>> Handle(GetRecipesQuery request, CancellationToken ct)
+    {
+        if (cache is null)
+        {
+            return repository.GetPublishedRecipesAsync(request, ct);
+        }
+
+        var cacheKey = $"recipes:list:{request.Page}:{request.PageSize}:{request.SortBy}:{request.SortOrder}:{request.CategoryId}:{request.Difficulty}:{request.MaxCookTime}:{request.MinServings}";
+        return cache.GetOrSetAsync(
+            cacheKey,
+            () => repository.GetPublishedRecipesAsync(request, ct),
+            TimeSpan.FromMinutes(15),
+            ct);
+    }
 }
 
-public sealed class SearchRecipesHandler(IRecipeDiscoveryRepository repository) : IRequestHandler<SearchRecipesQuery, PagedResult<RecipeSummaryDto>>
+public sealed class SearchRecipesHandler(IRecipeDiscoveryRepository repository, IRecipeCacheService? cache = null) : IRequestHandler<SearchRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
-    public Task<PagedResult<RecipeSummaryDto>> Handle(SearchRecipesQuery request, CancellationToken ct) =>
-        repository.SearchPublishedRecipesAsync(request, ct);
+    public Task<PagedResult<RecipeSummaryDto>> Handle(SearchRecipesQuery request, CancellationToken ct)
+    {
+        if (cache is null)
+        {
+            return repository.SearchPublishedRecipesAsync(request, ct);
+        }
+
+        var cacheKey = $"recipes:search:{request.Q.Trim().ToLowerInvariant()}:{request.Page}:{request.PageSize}:{request.SortBy}:{request.SortOrder}:{request.CategoryId}:{request.Difficulty}:{request.MaxCookTime}:{request.MinServings}";
+        return cache.GetOrSetAsync(
+            cacheKey,
+            () => repository.SearchPublishedRecipesAsync(request, ct),
+            TimeSpan.FromMinutes(1),
+            ct);
+    }
+}
+
+public sealed record GetSitemapQuery : IRequest<List<SitemapRecipeDto>>;
+
+public sealed class GetSitemapHandler(IRecipeDiscoveryRepository repository)
+    : IRequestHandler<GetSitemapQuery, List<SitemapRecipeDto>>
+{
+    public Task<List<SitemapRecipeDto>> Handle(GetSitemapQuery request, CancellationToken ct) =>
+        repository.GetPublishedForSitemapAsync(ct);
 }
 
 public sealed class GetRecipesValidator : AbstractValidator<GetRecipesQuery>

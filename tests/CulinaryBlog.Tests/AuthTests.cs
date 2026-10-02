@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using CulinaryBlog.API;
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
@@ -28,12 +29,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        EnvFileLoader.Load();
         var testDb = Environment.GetEnvironmentVariable("TEST_DATABASE");
         if (!string.IsNullOrWhiteSpace(testDb))
             builder.UseSetting("ConnectionStrings:Database", testDb);
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:Database"] = Environment.GetEnvironmentVariable("TEST_DATABASE") ?? "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres",
+            // Mặc định khớp POSTGRES_PASSWORD của docker-compose.dev.yml (postgres); .env/CI override bằng TEST_DATABASE
+            ["ConnectionStrings:Database"] = EnvFileLoader.Get("TEST_DATABASE", "Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=postgres"),
             ["Jwt:SigningKey"] = new string('t', 64)
         }));
     }

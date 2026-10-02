@@ -152,6 +152,12 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         for (var i = 0; i < ordered.Count; i++) ordered[i].SetNumber(i + 1);
     }
 
+    public void ResetIngredientsAndSteps()
+    {
+        _ingredients.Clear();
+        _steps.Clear();
+    }
+
     // ----- Images (đúng 1 primary khi có ảnh) -----
     public RecipeImage AddImage(string originalUrl, string? altText)
     {
@@ -274,10 +280,20 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         Status = RecipeStatus.Archived;
     }
 
-    /// <summary>Xoá mềm (ADR-0001): đặt IsDeleted, global query filter tự ẩn bản ghi.</summary>
-    public void SoftDelete()
+    /// <summary>
+    /// Soft delete (D08 / ADR-0001): đánh dấu IsDeleted — global query filter ẩn khỏi mọi truy vấn ngay,
+    /// dữ liệu (kể cả ảnh cần restore) được giữ. Không xoá vật lý.
+    /// </summary>
+    public void MarkDeleted()
     {
         IsDeleted = true;
+        Status = RecipeStatus.Archived;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Tên gọi tương thích với ADR-0001 (main/TV3) — cùng hành vi với <see cref="MarkDeleted"/>.
+    /// Giữ cả hai để không phá vỡ call site đã có trên nhánh khác.
+    /// </summary>
+    public void SoftDelete() => MarkDeleted();
 }

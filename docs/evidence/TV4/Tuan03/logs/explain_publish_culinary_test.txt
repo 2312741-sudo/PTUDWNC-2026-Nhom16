@@ -1,0 +1,51 @@
+﻿=== EXPLAIN ANALYZE: publish list (page 1, size 12) ===
+                                                                            QUERY PLAN                                                                             
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=5.13..241.95 rows=12 width=1181) (actual time=0.129..0.283 rows=12.00 loops=1)
+   Buffers: shared hit=90 dirtied=2
+   ->  Result  (cost=5.13..1149.76 rows=58 width=1181) (actual time=0.128..0.280 rows=12.00 loops=1)
+         Buffers: shared hit=90 dirtied=2
+         ->  Sort  (cost=5.13..5.27 rows=58 width=229) (actual time=0.070..0.071 rows=12.00 loops=1)
+               Sort Key: (COALESCE(r."PublishedAt", r."CreatedAt")) DESC
+               Sort Method: top-N heapsort  Memory: 31kB
+               Buffers: shared hit=6
+               ->  Seq Scan on "Recipes" r  (cost=0.00..3.80 rows=58 width=229) (actual time=0.017..0.032 rows=50.00 loops=1)
+                     Filter: ((NOT "IsDeleted") AND ("Status" = 0))
+                     Rows Removed by Filter: 16
+                     Buffers: shared hit=3
+         SubPlan 1
+           ->  Seq Scan on "Categories" c  (cost=0.00..3.28 rows=1 width=16) (actual time=0.004..0.004 rows=1.00 loops=12)
+                 Filter: ("Id" = r."CategoryId")
+                 Rows Removed by Filter: 82
+                 Buffers: shared hit=24
+         SubPlan 2
+           ->  Index Scan using "PK_AspNetUsers" on "AspNetUsers" u  (cost=0.28..8.29 rows=1 width=17) (actual time=0.005..0.005 rows=1.00 loops=12)
+                 Index Cond: ("Id" = (r."AuthorId")::text)
+                 Index Searches: 12
+                 Buffers: shared hit=36
+         SubPlan 3
+           ->  Index Scan using ux_recipe_images_one_primary on "RecipeImages" i  (cost=0.14..8.15 rows=1 width=516) (actual time=0.003..0.003 rows=1.00 loops=12)
+                 Index Cond: ("RecipeId" = r."Id")
+                 Index Searches: 12
+                 Buffers: shared hit=24 dirtied=2
+ Planning:
+   Buffers: shared hit=465
+ Planning Time: 2.806 ms
+ Execution Time: 0.339 ms
+(31 rows)
+
+=== EXPLAIN ANALYZE: count published ===
+                                                   QUERY PLAN                                                   
+----------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=3.94..3.95 rows=1 width=8) (actual time=0.024..0.025 rows=1.00 loops=1)
+   Buffers: shared hit=3
+   ->  Seq Scan on "Recipes" r  (cost=0.00..3.80 rows=58 width=0) (actual time=0.008..0.017 rows=50.00 loops=1)
+         Filter: ((NOT "IsDeleted") AND ("Status" = 0))
+         Rows Removed by Filter: 16
+         Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=3
+ Planning Time: 0.102 ms
+ Execution Time: 0.044 ms
+(10 rows)
+

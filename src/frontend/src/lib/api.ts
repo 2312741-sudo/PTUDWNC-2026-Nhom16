@@ -181,6 +181,32 @@ export async function logout(token: string): Promise<{ success: boolean; error?:
   }
 }
 
+export async function changePassword(
+  data: { currentPassword: string; newPassword: string },
+  token: string
+): Promise<{ success: boolean; error?: string; validationErrors?: Record<string, string[]> }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (res.status === 204 || res.ok) return { success: true };
+    const err = await res.json().catch(() => ({}));
+    return {
+      success: false,
+      error: err.title || err.detail || 'Đổi mật khẩu thất bại.',
+      validationErrors: err.errors,
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
+
 // ----------------------------------------------------------------------
 // Recipe Discovery & Search Endpoints (TV2 - Tuần 2)
 // ----------------------------------------------------------------------
@@ -322,6 +348,31 @@ export async function register(
 }
 
 // ----------------------------------------------------------------------
+// Sitemap (SEO, D26/TV4): chỉ trả công thức Published (backend đã lọc)
+// ----------------------------------------------------------------------
+
+export interface SitemapRecipe {
+  id: string;
+  slug: string;
+  publishedAt?: string | null;
+}
+
+export async function getSitemapRecipes(): Promise<SitemapRecipe[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/recipes/sitemap`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Không thể tải sitemap.');
+    const json = await res.json();
+    const data = json.data ?? json;
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Error in getSitemapRecipes:', error);
+    return [];
+  }
+}
+
+// ----------------------------------------------------------------------
 // Recipe Detail (TV3 - Tuần 3)
 // ----------------------------------------------------------------------
 
@@ -330,9 +381,10 @@ export async function getRecipeBySlug(
   token?: string
 ): Promise<import('@/types/recipe').RecipeDetail | null> {
   try {
+    const isDev = process.env.NODE_ENV === 'development';
     const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, {
-      ...(token
-        ? { cache: 'no-store' as const, headers: { Authorization: `Bearer ${token}` } }
+      ...(token || isDev
+        ? { cache: 'no-store' as const, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) }
         : { next: { revalidate: 300 } }),
     });
     if (res.status === 404) return null;

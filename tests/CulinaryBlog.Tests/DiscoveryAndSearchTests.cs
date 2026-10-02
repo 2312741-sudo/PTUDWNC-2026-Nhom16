@@ -1,5 +1,7 @@
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
+using CulinaryBlog.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using FluentValidation;
 using MediatR;
 using Xunit;
@@ -138,6 +140,15 @@ public sealed class FakeRecipeRepository : IRecipeDiscoveryRepository
         return Task.CompletedTask;
     }
 
+    public Task<List<SitemapRecipeDto>> GetPublishedForSitemapAsync(CancellationToken ct)
+    {
+        var items = Recipes
+            .Where(r => !r.IsDeleted && r.Status == RecipeStatusValues.Published)
+            .Select(r => new SitemapRecipeDto(r.Id, r.Slug, r.PublishedAt))
+            .ToList();
+        return Task.FromResult(items);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
 }
 
@@ -204,6 +215,9 @@ public sealed class FakeIdentityServiceForGoogle : IIdentityService
         throw new NotImplementedException();
 
     public Task LogoutAsync(string? userId, string? refreshToken, CancellationToken ct) =>
+        Task.CompletedTask;
+
+    public Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct) =>
         Task.CompletedTask;
 }
 
@@ -290,6 +304,60 @@ public sealed class DiscoveryAndSearchTests
         fakeAuth.EmailVerified = false;
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(new GoogleLoginCommand("valid-token"), CancellationToken.None));
         Assert.Equal(401, ex.Status);
+    }
+
+    [Fact]
+    public async Task RealGoogleAuthService_validates_dev_and_demo_tokens_properly()
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Google:DefaultDevEmail"] = "dev.chef@culinaryblog.vn"
+            })
+            .Build();
+        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance);
+
+        // 1. Dev token with email and name
+        var payload1 = await service.ValidateIdTokenAsync("dev_google:chef.vietnam@gmail.com:B%E1%BA%BFp%20Tr%C6%B0%E1%BB%9Fng%20Vi%E1%BB%87t", CancellationToken.None);
+        Assert.Equal("chef.vietnam@gmail.com", payload1.Email);
+        Assert.Equal("Bếp Trưởng Việt", payload1.Name);
+        Assert.True(payload1.EmailVerified);
+        Assert.StartsWith("google-", payload1.Subject);
+
+        // 2. Demo token fallback
+        var payload2 = await service.ValidateIdTokenAsync("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token", CancellationToken.None);
+        Assert.Equal("dev.chef@culinaryblog.vn", payload2.Email);
+        Assert.True(payload2.EmailVerified);
+
+        // 3. Empty/whitespace token throws 400
+        var exEmpty = await Assert.ThrowsAsync<AppException>(() => service.ValidateIdTokenAsync("", CancellationToken.None));
+        Assert.Equal(400, exEmpty.Status);
+    }
+
+    [Fact]
+    public async Task GetSitemap_only_returns_published_recipes_excludes_draft_archived_deleted()
+    {
+        var repo = new FakeRecipeRepository();
+        var handler = new GetSitemapHandler(repo);
+
+        var catA = Guid.NewGuid();
+        repo.Recipes.Add(new Recipe("Phở Bò Hà Nội", "pho-bo-ha-noi", "Nước dùng thơm ngon", "", 20, 30, 4, RecipeDifficultyValues.Medium, catA, "author1", null, RecipeStatusValues.Published));
+        repo.Recipes.Add(new Recipe("Bún Chả Nem Rán", "bun-cha-nem-ran", "Thịt nướng thơm", "", 30, 45, 4, RecipeDifficultyValues.Medium, catA, "author1", null, RecipeStatusValues.Draft));
+        repo.Recipes.Add(new Recipe("Gỏi Cuốn Tôm Thịt", "goi-cuon-tom-thit", "Món cuốn tươi mát", "", 15, 10, 2, RecipeDifficultyValues.Easy, catA, "author1", null, RecipeStatusValues.Archived));
+        repo.Recipes.Add(new Recipe("Salad Bơ Trứng", "salad-bo-trung", "Món khai vị bổ dưỡng", "", 10, 15, 2, RecipeDifficultyValues.Easy, catA, "author2", null, RecipeStatusValues.Published));
+
+        var archived = new Recipe("Cá Kho Bí Mật Đã Xoá", "ca-kho-bi-mat", "Không được lộ", "", 10, 20, 2, RecipeDifficultyValues.Easy, catA, "author3", null, RecipeStatusValues.Published);
+        archived.MarkDeleted();
+        repo.Recipes.Add(archived);
+
+        var sitemap = await handler.Handle(new GetSitemapQuery(), CancellationToken.None);
+
+        Assert.Equal(2, sitemap.Count);
+        Assert.Contains(sitemap, r => r.Slug == "pho-bo-ha-noi");
+        Assert.Contains(sitemap, r => r.Slug == "salad-bo-trung");
+        Assert.DoesNotContain(sitemap, r => r.Slug == "bun-cha-nem-ran");
+        Assert.DoesNotContain(sitemap, r => r.Slug == "goi-cuon-tom-thit");
+        Assert.DoesNotContain(sitemap, r => r.Slug == "ca-kho-bi-mat");
     }
 
     [Fact]

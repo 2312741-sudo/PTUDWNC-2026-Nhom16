@@ -1,4 +1,5 @@
 using CulinaryBlog.Domain.Common;
+using CulinaryBlog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -35,6 +36,17 @@ public sealed class AuditableEntityInterceptor(TimeProvider timeProvider) : Save
 
         foreach (EntityEntry<BaseEntity> entry in context.ChangeTracker.Entries<BaseEntity>())
         {
+            // D19: EF DetectChanges đánh giá entity con MỚI (vừa add qua aggregate: ingredient/step/image)
+            // thành Modified vì BaseEntity.Id = Guid.NewGuid() non-empty đã set key. Nguyên gốc RowVersion
+            // rỗng (chưa từng nạp từ DB) chứng minh nó là entity mới trong bộ nhớ -> phải Added để INSERT
+            // (nếu không, UPDATE WHERE RowVersion=empty => 0 rows => DbUpdateConcurrencyException).
+            if (entry.State == EntityState.Modified
+                && entry.Entity is RecipeIngredient or RecipeStep or RecipeImage
+                && entry.Property(nameof(BaseEntity.RowVersion)).OriginalValue is byte[] { Length: 0 })
+            {
+                entry.State = EntityState.Added;
+            }
+
             switch (entry.State)
             {
                 case EntityState.Added:

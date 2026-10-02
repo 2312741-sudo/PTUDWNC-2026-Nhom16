@@ -60,10 +60,39 @@ public interface IRecipeImageRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+/// <summary>
+/// Queue resize ảnh (D23 PA-1 — Hangfire khi chạy thật; chạy inline trong môi trường Testing).
+/// Application không phụ thuộc Hangfire: chỉ mô tả "enqueue job resize"; triển khai ở Infrastructure.
+/// </summary>
+public interface IImageResizeQueue
+{
+    Task EnqueueAsync(Guid recipeId, Guid imageId, string originalKey, CancellationToken ct);
+}
+
+/// <summary>
+/// Tính key object phái sinh cho resize (D2): {base}_300x300.{ext} (thumbnail) và {base}_800x600.{ext} (medium).
+/// AVIF trả null: bản 3.1.x của ImageSharp không decode AVIF → giữ original (fallback theo FE imageSrc()).
+/// </summary>
+public static class RecipeImageKeys
+{
+    public const string ThumbnailSuffix = "_300x300";
+    public const string MediumSuffix = "_800x600";
+
+    public static (string ThumbnailKey, string MediumKey)? ResizedKeys(string originalKey)
+    {
+        var ext = Path.GetExtension(originalKey);
+        if (string.IsNullOrWhiteSpace(ext) || string.Equals(ext, ".avif", StringComparison.OrdinalIgnoreCase))
+            return null;
+        var baseKey = originalKey[..^ext.Length];
+        return ($"{baseKey}{ThumbnailSuffix}{ext}", $"{baseKey}{MediumSuffix}{ext}");
+    }
+}
+
 public sealed class UploadRecipeImageHandler(
     IRecipeImageRepository repository,
     IFileStorageService storage,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    IImageResizeQueue resizeQueue)
     : IRequestHandler<UploadRecipeImageCommand, RecipeImageDto>
 {
     public async Task<RecipeImageDto> Handle(UploadRecipeImageCommand request, CancellationToken ct)
@@ -85,6 +114,9 @@ public sealed class UploadRecipeImageHandler(
 
         var image = recipe.AddImage(stored.Key, request.AltText);
         await repository.SaveChangesAsync(ct);
+
+        // D23: enqueue resize original -> 300x300 + 800x600 (Hangfire ngoài request / inline trong Testing).
+        await resizeQueue.EnqueueAsync(recipe.Id, image.Id, stored.Key, ct);
 
         return RecipeImageDto.From(image);
     }
@@ -142,6 +174,14 @@ public sealed class DeleteRecipeImageHandler(
         recipe.RemoveImage(request.ImageId);
         await repository.SaveChangesAsync(ct);
         await storage.DeleteAsync(key, ct);
+
+        // D2: xoá luôn object resize phái sinh (nếu job đã chạy hoặc chạy trễ vẫn sạch — idempotent).
+        var resized = RecipeImageKeys.ResizedKeys(key);
+        if (resized is { } keys)
+        {
+            await storage.DeleteAsync(keys.ThumbnailKey, ct);
+            await storage.DeleteAsync(keys.MediumKey, ct);
+        }
 
         return Unit.Value;
     }

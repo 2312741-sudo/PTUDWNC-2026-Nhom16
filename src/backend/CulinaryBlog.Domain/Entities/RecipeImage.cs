@@ -56,9 +56,10 @@ public sealed class RecipeImage : BaseEntity
         OrderIndex = orderIndex;
     }
 
-    internal void SetResizedUrls(string? mediumUrl, string? thumbnailUrl)
+    /// <summary>D2 (TV4): job resize cập nhật URL 300×300/800×600 sau khi đã upload object phái sinh.</summary>
+    public void SetResizedUrls(string? mediumUrl, string? thumbnailUrl)
     {
-        MediumUrl = mediumUrl;
-        ThumbnailUrl = thumbnailUrl;
+        MediumUrl = string.IsNullOrWhiteSpace(mediumUrl) ? null : mediumUrl.Trim();
+        ThumbnailUrl = string.IsNullOrWhiteSpace(thumbnailUrl) ? null : thumbnailUrl.Trim();
     }
 }

@@ -1,8 +1,17 @@
+import type { Metadata } from 'next';
 import { getCategories } from '@/lib/api';
 import CategoryCard from '@/components/CategoryCard';
 import { ChefHat } from 'lucide-react';
 
 export const revalidate = 3600; // ISR 1 hour as required in SRS
+
+export const metadata: Metadata = {
+  title: 'Danh mục ẩm thực | Culinary Blog',
+  description: 'Khám phá công thức nấu ăn được phân loại khoa học theo bữa ăn, phong cách ẩm thực và khẩu vị yêu thích.',
+  alternates: {
+    canonical: '/categories',
+  },
+};
 
 export default async function CategoriesPage() {
   const categories = await getCategories();

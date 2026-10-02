@@ -161,6 +161,7 @@ export default function LoginPage() {
 
         {/* Google OAuth Button (TV2 - Cổng G2) */}
         <GoogleSignInButton
+          initialEmail={email}
           onSuccess={handleGoogleSuccess}
           onError={(err) => setErrorMessage(err)}
         />

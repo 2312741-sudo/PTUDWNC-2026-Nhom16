@@ -153,11 +153,14 @@ export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MiB (FR-FILE-001)
 
 const MEDIA = process.env.NEXT_PUBLIC_MEDIA_URL;
-/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) — ghép với NEXT_PUBLIC_MEDIA_URL để ra URL trình duyệt. */
+/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) hoặc đường dẫn ảnh tĩnh cục bộ (/images/...) — ghép với NEXT_PUBLIC_MEDIA_URL để ra URL trình duyệt nếu là key MinIO. */
 export function mediaUrl(key?: string | null): string | null {
   if (!key) return null;
   if (/^https?:\/\//i.test(key)) return key;
-  return MEDIA ? `${MEDIA.replace(/\/$/, "")}/${key.replace(/^\//, "")}` : null;
+  if (key.startsWith('/images/') || key.startsWith('images/')) {
+    return key.startsWith('/') ? key : `/${key}`;
+  }
+  return MEDIA ? `${MEDIA.replace(/\/$/, "")}/${key.replace(/^\//, "")}` : (key.startsWith('/') ? key : `/${key}`);
 }
 export const imageSrc = (i: RecipeImage) => mediaUrl(i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
 
