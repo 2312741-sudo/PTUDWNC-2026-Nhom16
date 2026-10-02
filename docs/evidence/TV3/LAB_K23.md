@@ -18,3 +18,4 @@
   .\backup-restore-files.ps1 -Seed | Tee-Object ..\..\..\docs\evidence\TV3\LAB_K23_files.txt
   .\lab-down.ps1 -RemoveImage           # xoa sach lab-tv3-*; kiem: docker ps -a | Select-String lab-tv3
 - Luu y: Postgres host phai nhan ket noi tu container (host.docker.internal); neu bi tu choi -> xem pg_hba.conf (chua kiem).
+- Kiem lai 02/10/2026 (TV3): sau khi tat API/next dev va dotnet build-server shutdown, RAM trong do that 1.04 GB -> 1.40 GB (18:2x); sau lan chay k6 do lai 3 lan: 593 / 598 / 559 MB (18:25:43-18:25:53), perf counter Available 532 MB. Nguong 1.5 GB -> VAN BLOCKED (RAM), KHONG chay build image / Nginx 2 instance / backup file. Khong tat app cua nguoi dung (Chrome, VS Code, Zalo).

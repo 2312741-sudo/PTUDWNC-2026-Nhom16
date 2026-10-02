@@ -127,3 +127,25 @@ máy dev có user/DB đó nên xanh (nhưng ghi vào `culinary_blog`), CI không
 
 **Còn là đoán / chưa kiểm:** CI thật đỏ đúng 18 test kể trên (chưa đọc được log job); khác biệt Linux (collation/TZ) chưa kiểm vì không chạy Docker
 (RAM trống 0.8–0.9 GB). Loại trừ có bằng chứng: song song Spike/Tests, migration trên DB rỗng, cấu hình Release.
+
+## 9. Cập nhật tối 02/10 — K19, K22, K24, kiểm lại L1/L3/L4 (SP: nhánh `2312786_HuynhQuocTrung_C7-frontend-tests`)
+
+| Việc | Trạng thái | Commit (SP trừ khi ghi lab) | Số thật / bằng chứng |
+|---|---|---|---|
+| K19 JSON-LD trang chi tiết (NFR-SEO-001) | **XONG** (validator ngoài: Trung chạy tay) | đỏ `5930a41` → xanh `f0cc239`, docs `6050356` | HTML thật trước: thiếu `image`, `author`; sau: 12/12 thuộc tính, không rating — `Tuan04/K19_jsonld_chi_tiet.md` |
+| K19 — tên rỗng / danh mục xoá mềm | **XONG** — lỗi thật của TV3 (danh mục xoá làm mất tên tác giả) | đỏ `2f406f4` → xanh `e46f951`; Jest đỏ `4d1c4b5` → xanh `085a25a` | RecipeDetailSeoTests 3/3; Jest recipe-jsonld 11/11 |
+| K22 SLOW_SQL > 100 ms (NFR-PERF-004) | **XONG** | đỏ `227fcb0` → xanh `cbfdc01` | 3 test; log API thật có `SLOW_SQL` lúc k6 bắt đầu |
+| K22 không N+1 + EXPLAIN + k6 | **XONG** phần đo; Lighthouse **CHƯA** (tay) | `b70f114`, docs `1b5c837` | số lệnh SQL bằng nhau nhỏ/lớn; `Tuan04/K22_hieu_nang_recipe.md` |
+| K22 AsSplitQuery trang chi tiết | **XONG** | đỏ `625b3fd` → xanh `b2789e4`, docs `78b824b` | 5 lệnh cố định; 18 dòng thay vì 60 (10 × 6); EXPLAIN 0.212 ms; k6 API p50 6.54 / p95 11.35 / p99 16.73 ms, 0% lỗi |
+| Coverage Application | **XONG** | — (đo ở `085a25a`) | **92.58% (1012/1093 dòng)**, branch 68.69%; backend 217/217 |
+| K24 ADR-0002 + runbook | **XONG** (chờ Tâm review) | `7ffd290` | `docs/adr/ADR-0002-recipe-version-schema-va-nap-du-lieu.md`, `docs/RUNBOOK_SOAN_THAO_CONG_THUC.md` |
+| K24 secret scan cục bộ | **XONG** | `2b10cdd` | gitleaks 8.30.1: lịch sử git mọi nhánh 205 commit, 8 phát hiện đều dương tính giả; bí mật thật chỉ ở `.secrets.local.ps1`, `.env.local` (bị git bỏ qua) — `Tuan04/K24_secret_scan.md` |
+| K24 sổ minh chứng K01–K24 | **XONG** | `2b32e8c`, cập nhật `68c9109` | `docs/evidence/TV3/BANG_MINH_CHUNG_K01_K24.md`: XONG 19 / CHƯA 5 (K18, K20, K22, K23, K24) |
+| Kiểm lại L1/L3/L4 (K08, K09, K11–K15) | **XONG** | lab `a5425e5` | 42/42 không Docker + 2/2 Redis/MinIO thật; K09 Google thật, không chờ credentials — `LAB_L1_L3_L4_kiem_lai_tuan4.txt` |
+| K23 build image / Nginx 2 instance / backup file | **BLOCKED (RAM)** | lab (ghi số đo vào `LAB_K23.md`) | RAM trống 1.04 → 1.40 GB sau khi dọn; 593 / 598 / 559 MB lúc 18:25 (ngưỡng 1.5 GB) |
+
+Kiểm tra cuối (SP, HEAD `68c9109`): `dotnet format CulinaryBlog.sln --verify-no-changes --severity error` exit 0; `dotnet test tests/CulinaryBlog.Tests` 217/217
+(lần chạy kèm coverage ở `085a25a`, các commit sau chỉ là tài liệu); `npx jest` 46/46; `npx tsc --noEmit` exit 0.
+
+Ghi chú vận hành (trung thực): khi dọn RAM cho K23 đã dừng 4 tiến trình `node.exe` mà **chưa kiểm dòng lệnh từng cái** (đoán là worker Jest/Next còn sót);
+nếu một công cụ của Trung chạy bằng node bị tắt theo thì mở lại. `FindForWriteAsync` (nạp để ghi) vẫn JOIN nguyên liệu × bước — đề xuất tách tiếp nếu công thức lớn.
