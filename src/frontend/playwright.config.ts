@@ -2,10 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * C7 (TV3) — E2E Playwright, tách riêng khỏi Jest (jest.config.mjs đã bỏ qua /e2e/).
- * Cần: Postgres + API http://localhost:5080 (đã --migrate --seed) và frontend http://localhost:3000.
+ * Cần: Postgres + API http://localhost:5080 (đã --migrate, có danh mục) và frontend http://localhost:3000.
+ * Test tự đăng ký user mới qua POST /auth/register (mật khẩu sinh ngẫu nhiên, không cần tài khoản seed).
  *   npx playwright install chromium     (lần đầu)
- *   $env:E2E_PASSWORD = "..."           (mật khẩu tài khoản seed, KHÔNG ghi vào file)
- *   npm run e2e                         (đặt E2E_START_SERVER=1 để Playwright tự chạy `npm run dev`)
+ *   npm run e2e                         (đặt E2E_START_SERVER=1 để Playwright tự chạy `npm run dev`;
+ *                                        E2E_API_URL nếu API không ở http://localhost:5080/api/v1)
  */
 const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
