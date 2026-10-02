@@ -63,6 +63,13 @@ describe("buildRecipeJsonLd", () => {
     expect(ld.nutrition).toMatchObject({ "@type": "NutritionInformation", calories: "543 kcal", sodiumContent: "841 mg" });
   });
 
+  it.each([null, "", undefined])("authorName=%p / categoryName rong: bo author va recipeCategory, khong sinh Person rong", name => {
+    const ld = buildRecipeJsonLd({ ...detail, authorName: name, categoryName: name }) as Record<string, unknown>;
+    expect(ld.author).toBeUndefined();
+    expect(ld.recipeCategory).toBeUndefined();
+    expect(JSON.stringify(ld)).not.toContain("\"author\"");
+  });
+
   it("khong bia danh gia: khong co aggregateRating/review du du lieu vao co truong giong rating", () => {
     const json = JSON.stringify(buildRecipeJsonLd({ ...detail, rating: 5, ratingCount: 10, reviews: [{ text: "ngon" }] }));
     expect(json).not.toMatch(/aggregateRating|"review|ratingValue|ratingCount/);
