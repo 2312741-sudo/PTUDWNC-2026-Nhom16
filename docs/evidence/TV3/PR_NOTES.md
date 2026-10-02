@@ -45,7 +45,7 @@ Tay: `/dashboard/recipes/new` → bỏ trống tiêu đề → lỗi dưới ô;
 
 ## PR 2 — `2312786_HuynhQuocTrung_C7-frontend-tests` → `main` (mở sau khi PR 1 merge)
 
-**Tiêu đề:** `test(C7): Jest/RTL + Playwright E2E wizard; K17 TanStack Query; K18 a11y; fix wizard nhảy về bước 1; metric K20`
+**Tiêu đề:** `test(C7): Jest/RTL + Playwright E2E wizard; K17 TanStack Query; K18 a11y; K19 JSON-LD đủ NFR-SEO-001; K22 SLOW_SQL + không N+1; fix wizard nhảy về bước 1; metric K20`
 
 ### Tóm tắt
 - **Jest + RTL** (`jest.config.mjs`, bỏ qua `/e2e/`): schema Zod, RecipeWizard, IngredientsStep (sửa/xoá + `confirm`, hoàn tác khi lỗi),
@@ -61,12 +61,23 @@ Tay: `/dashboard/recipes/new` → bỏ trống tiêu đề → lỗi dưới ô;
 - **K18 a11y**: focus về tiêu đề bước khi đổi bước, `role="status"` báo đang lưu, nút Sửa/Xoá có ngữ cảnh sr-only, `aria-sort` cột sắp xếp dashboard.
 - **Backend**: `RecipeIngredientHttpTests` (4 test, Postgres thật): thêm/sửa/xoá giữ OrderIndex liên tục, tác giả khác 403, rowVersion sai 422,
   đổi nguyên liệu không đổi RowVersion recipe. Metric `culinary.recipes.created/updated` (`RecipeMetrics`, BCL) + 3 test.
+- **K19 JSON-LD Recipe (NFR-SEO-001)**: HTML thật trang chi tiết thiếu `image` và `author`. Test đỏ `5930a41` → xanh `f0cc239`:
+  DTO chi tiết thêm `authorName`/`categoryName` (`IRecipeDisplayNameReader`, 1 câu SQL, chỉ tên công khai); ảnh đường dẫn tương đối → URL tuyệt đối.
+  Sau sửa HTML thật đủ 12/12 thuộc tính, không có `aggregateRating`/`review` (`Tuan04/K19_jsonld_chi_tiet.md`).
+- **K22 (NFR-PERF-004)**: `SlowQueryInterceptor` cảnh báo `SLOW_SQL` khi lệnh > `Perf:SlowQueryMs` (mặc định 100 ms, không ghi tham số) — đỏ `227fcb0` → xanh `cbfdc01`.
+  `RecipeQueryPerformanceTests` chứng minh số lệnh SQL mỗi request không tăng theo N (chi tiết, dashboard, thêm/xoá nguyên liệu và bước), báo cáo EXPLAIN khi đặt `K22_REPORT`;
+  k6 `tests/k6/recipe-detail.js` (API p95 10.29 ms). Rủi ro ghi nhận: câu chi tiết bùng nổ tích Descartes (đề xuất `AsSplitQuery`, chưa làm).
+- **Sổ minh chứng** `docs/evidence/TV3/BANG_MINH_CHUNG_K01_K24.md` (XONG 19 / CHƯA 5) + `Tuan04/TEST_THEO_LOP_chay_that.txt`.
 
-### Commit (16, tính từ đầu C4)
+### Commit (24, tính từ đầu C4)
 `c2d349a`, `adbf808`, `ce2a057`, `af534c1`, `14022ef`, `b2c83f5`, `34324e0`, `fc34f87`, `64b29c1`, `0d4c368`, `e01c5f8`,
-`b8a480b`, `e82cf0e`, `8f76f06`, `64e8f8b`, `1d64d66`. (`ce2a057` là bản E2E cũ dùng `E2E_PASSWORD`, được `0d4c368` viết lại.)
+`b8a480b`, `e82cf0e`, `8f76f06`, `64e8f8b`, `1d64d66`, `5930a41`, `f0cc239`, `6050356`, `227fcb0`, `cbfdc01`, `b70f114`, `1b5c837`, `2b32e8c`.
+(`ce2a057` là bản E2E cũ dùng `E2E_PASSWORD`, được `0d4c368` viết lại.)
 
 ### Ảnh hưởng / cần reviewer lưu ý
+- `Program.cs` (file dùng chung): **thêm** đăng ký `IRecipeDisplayNameReader` và `SlowQueryInterceptor` (singleton, đọc `Perf:SlowQueryMs`), và gắn interceptor
+  vào dòng `options.AddInterceptors(...)` của TV3; không sửa dòng của người khác.
+- `RecipeDetailDto` thêm 2 trường cuối `authorName`, `categoryName` (mặc định null) — chỉ thêm, client cũ không ảnh hưởng.
 - Thêm dependency `@tanstack/react-query` ^5.104 và devDependency Jest/RTL/Playwright → `package-lock.json` đổi; CI cần `npm ci`.
 - **Chưa `AddMeter(RecipeMetrics.MeterName)`** trong API: chờ cấu hình OTel của TV4 trên `main`; sau khi merge thêm 1 dòng vào chỗ cấu hình metrics.
 - E2E tạo user + 1 công thức Draft mỗi lần chạy trên DB đang dùng (không dọn tự động).
@@ -75,16 +86,19 @@ Tay: `/dashboard/recipes/new` → bỏ trống tiêu đề → lỗi dưới ô;
 ### Cách kiểm
 ```powershell
 $env:TEST_DATABASE="Host=127.0.0.1;Port=5432;Database=culinary_test;Username=postgres;Password=$env:LAB_PG_PASSWORD"
-dotnet format CulinaryBlog.sln --verify-no-changes --severity error; dotnet test CulinaryBlog.sln   # 209/209 + ConcurrencySpike 5/5
-cd src\frontend; npm ci; npx tsc --noEmit; npx jest                                                  # 35/35
+dotnet format CulinaryBlog.sln --verify-no-changes --severity error; dotnet test CulinaryBlog.sln   # CulinaryBlog.Tests 214/214
+cd src\frontend; npm ci; npx tsc --noEmit; npx jest                                                  # 43/43
 # E2E: API (--migrate rồi --urls http://localhost:5080) + npm run dev, lần đầu npx playwright install chromium
 npx playwright test
 ```
-Kết quả đã chạy: DB rỗng `culinary_ci_check` 209/209 + 5/5; coverage Application 90.9% (989/1088 dòng).
-Bằng chứng: `docs/evidence/TV3/Tuan04/C7_E2E_va_loi_wizard.md` (trên nhánh SP).
+Kết quả đã chạy: DB rỗng `culinary_ci_check` 209/209 + 5/5 và coverage Application 90.9% (989/1088 dòng) — đo ở `1d64d66`;
+sau các commit K19/K22 (HEAD `2b32e8c`): backend 214/214, Jest 43/43 (`Tuan04/TEST_THEO_LOP_chay_that.txt`). Chưa đo lại coverage và DB rỗng sau K19/K22.
+Bằng chứng: `docs/evidence/TV3/Tuan04/` (C7_E2E_va_loi_wizard, K19_jsonld_chi_tiet, K22_*) trên nhánh SP.
 
 ### Checklist
 - [x] Không sửa code thành viên khác (lỗi header "Quản trị DM" của TV2 → handoff)
 - [x] Mật khẩu không nằm trong test, log, báo cáo Playwright
 - [x] Jest và Playwright tách riêng
 - [ ] NVDA kiểm tay (checklist `LAB_K18_checklist.md` trên nhánh lab, chưa làm)
+- [ ] Validator ngoài cho JSON-LD (validator.schema.org, Rich Results Test) — Trung chạy tay
+- [ ] Lighthouse trang chi tiết bản build — Trung đo tay
