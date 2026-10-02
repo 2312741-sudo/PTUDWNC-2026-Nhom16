@@ -239,6 +239,33 @@ public sealed class RecipeQueryPerformanceTests : IClassFixture<ApiFactory>, IDi
         Assert.Equal(6, detail.GetProperty("steps").GetArrayLength());
     }
 
+    [Fact]
+    public async Task Write_path_loads_ingredients_and_steps_in_separate_queries_and_still_saves_correctly()
+    {
+        var categoryId = await AnyCategoryId();
+        var (author, _, _) = await NewAuthorClient();
+        var recipe = await SeedRecipe(author, categoryId, ingredients: 10, steps: 6, publish: false);
+
+        // Nạp aggregate để ghi (FindForWriteAsync) rồi INSERT: câu nạp không được JOIN nguyên liệu x bước (10 x 6 = 60 dòng)
+        var (res, sql) = await Measure(() => author.PostAsJsonAsync($"/api/v1/recipes/{recipe.Id}/ingredients", new IngredientBody("Muối", 1m, "g", null)));
+        await AssertStatus(HttpStatusCode.Created, res);
+        var selects = sql.Where(c => c.Text.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase)).Select(c => c.Text).ToList();
+        Assert.DoesNotContain(selects, t => t.Contains("\"RecipeIngredients\"") && t.Contains("\"RecipeSteps\""));
+        Assert.Single(selects, t => t.Contains("\"RecipeIngredients\""));
+        Assert.Single(selects, t => t.Contains("\"RecipeSteps\""));
+        Assert.Equal(10, (await DataOf(res)).GetProperty("orderIndex").GetInt32());
+
+        // Ghi vẫn đúng: xoá bước giữa đánh lại số 1..N, sửa nguyên liệu giữ vị trí
+        await AssertStatus(HttpStatusCode.NoContent, await author.DeleteAsync($"/api/v1/recipes/{recipe.Id}/steps/{recipe.StepIds[2]}"));
+        var put = await author.PutAsJsonAsync($"/api/v1/recipes/{recipe.Id}/ingredients/{recipe.IngredientIds[3]}", new IngredientBody("Đổi tên", 2m, "g", null));
+        await AssertStatus(HttpStatusCode.OK, put);
+        Assert.Equal(3, (await DataOf(put)).GetProperty("orderIndex").GetInt32());
+
+        var detail = await DataOf(await author.GetAsync($"/api/v1/recipes/{recipe.Slug}"));
+        Assert.Equal([1, 2, 3, 4, 5], detail.GetProperty("steps").EnumerateArray().Select(s => s.GetProperty("stepNumber").GetInt32()).ToArray());
+        Assert.Equal(Enumerable.Range(0, 11).ToArray(), detail.GetProperty("ingredients").EnumerateArray().Select(i => i.GetProperty("orderIndex").GetInt32()).ToArray());
+    }
+
     // ------------------------------------------------------------------ báo cáo (chỉ khi đặt K22_REPORT)
 
     private static string Statements(string sql) =>
