@@ -1,0 +1,53 @@
+Kiem lai L1/L3/L4 (K08, K09, K11-K15) - 02/10/2026 - nhanh practice/TV3/labs HEAD 2f1b12c
+
+== Lan 1: dotnet test labs/TV3/Lab.TV3.Tests --filter "(FullyQualifiedName~L1AuthTests|FullyQualifiedName~L3|FullyQualifiedName~L4)&Infra!=docker" -m:1 (Redis tat, LAB_PG tu .secrets.local.ps1)
+Ket qua: 42 passed, 0 failed
+Passed Lab.TV3.Tests.L4MediaJobsTests.Rejects_non_images_and_truncated_headers(header: [37, 80, 68, 70, 45, ···]) [7 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Rejects_non_images_and_truncated_headers(header: [88, 105, 110, 32, 99, ···]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Rejects_non_images_and_truncated_headers(header: [82, 73, 70, 70, 36, ···]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Rejects_non_images_and_truncated_headers(header: [137, 80, 78, 71]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Rejects_non_images_and_truncated_headers(header: []) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Sitemap_xml_lists_only_published_recipes [11 s]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Size_boundary_is_five_mebibytes(size: 5242881, ok: False) [2 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Size_boundary_is_five_mebibytes(size: 0, ok: False) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Size_boundary_is_five_mebibytes(size: 5242880, ok: True) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Size_boundary_is_five_mebibytes(size: 1, ok: True) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Detects_all_four_formats_by_content(mime: "image/jpeg", header: [255, 216, 255, 224, 0, ···]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Detects_all_four_formats_by_content(mime: "image/webp", header: [82, 73, 70, 70, 36, ···]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Detects_all_four_formats_by_content(mime: "image/png", header: [137, 80, 78, 71, 13, ···]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Detects_all_four_formats_by_content(mime: "image/avif", header: [0, 0, 0, 32, 102, ···]) [< 1 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Welcome_email_is_enqueued_and_persisted [23 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Upload_over_5MiB_is_rejected_400 [224 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Delayed_job_is_scheduled_not_run_immediately [11 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Upload_and_delete_require_authentication [5 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Renamed_text_file_with_image_content_type_is_rejected_422 [57 ms]
+Passed Lab.TV3.Tests.L4MediaJobsTests.Sitemap_recurring_job_is_registered [3 ms]
+Passed Lab.TV3.Tests.L3RedisFallbackTests.Redis_down_falls_back_to_database [7 s]
+Passed Lab.TV3.Tests.L3SearchTests.Draft_is_never_returned [5 s]
+Passed Lab.TV3.Tests.L3SearchTests.Paging_returns_total_count_and_correct_slices [12 s]
+Passed Lab.TV3.Tests.L3SearchTests.Explain_shows_GIN_index_is_used [3 s]
+Passed Lab.TV3.Tests.L3SearchTests.Unaccented_query_finds_vietnamese_title [4 s]
+Passed Lab.TV3.Tests.L3SearchTests.Title_match_ranks_above_description_match [7 s]
+Passed Lab.TV3.Tests.L3SearchTests.Multiple_words_use_AND_semantics [4 s]
+Passed Lab.TV3.Tests.L3SearchTests.Create_and_update_require_authentication [1 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Wrong_password_and_unknown_email_give_same_generic_401 [176 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Register_hashes_password_with_PBKDF2_and_login_me_work [126 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Real_google_verifier_requires_client_id_and_rejects_malformed_token [13 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Duplicate_email_is_case_insensitive_409 [146 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Weak_password_rejected_400(password: "short1A") [1 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Weak_password_rejected_400(password: "NoDigitsHere") [1 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Weak_password_rejected_400(password: "alllowercase1") [1 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Google_second_account_cannot_take_over_linked_email_409 [77 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Google_links_existing_password_account_by_verified_email [122 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Logout_revokes_refresh_token [66 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Refresh_rotates_and_old_token_is_rejected [60 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Google_creates_new_user_then_signs_in_same_user [5 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Protected_endpoints_require_token [3 ms]
+Passed Lab.TV3.Tests.L1AuthTests.Google_invalid_token_401_and_unverified_email_403 [2 ms]
+
+== Lan 2: LAB_REDIS=localhost:6379 + MinIO + Mailhog (Docker), --filter "Infra=docker" -m:1
+Ket qua: 2 passed, 0 failed
+Passed Lab.TV3.Tests.L4MediaJobsTests.Png_uploads_to_minio_resizes_and_delete_leaves_no_orphan [2 s]
+Passed Lab.TV3.Tests.L3SearchTests.Search_is_cached_then_invalidated_after_update [298 ms]
+
+Google (K09): test tu dong dung verifier gia (token 'ok|sub|email|true') cho luong tao/lien ket; verifier that (GoogleJsonWebSignature, aud = Google:ClientId) chi duoc test 'thieu ClientId / token hong'. Dang nhap Google THAT da lam tay 1 lan voi OAuth Client rieng: anh lab-tuan3/01-google-created.png (201 created, googleLinked=true). Khong bi cho Google credentials.
