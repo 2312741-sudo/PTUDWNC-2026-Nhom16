@@ -169,6 +169,8 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddMeter("Microsoft.EntityFrameworkCore")
         .AddOtlpExporter());
+// K20 (TV3): metric nghiệp vụ culinary.recipes.created/updated vào cùng MeterProvider (đăng ký riêng, không sửa khối OTel của TV4)
+builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddMeter(RecipeMetrics.MeterName));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<JwtSettings>((options, jwt) =>
