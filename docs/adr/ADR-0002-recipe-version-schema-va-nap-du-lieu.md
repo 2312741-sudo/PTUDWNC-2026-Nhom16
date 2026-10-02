@@ -29,6 +29,15 @@ Cần: (1) không mất cập nhật khi hai người sửa cùng lúc; (2) sche
 - Thứ tự con do server quản lý: `OrderIndex` 0..N-1 và `StepNumber` 1..N liên tục, đánh lại sau xoá; đổi thứ tự bước làm 2 pha trong transaction
   (unique `(RecipeId, StepNumber)` kiểm ngay sau từng UPDATE).
 
+#### Hạn chế đã biết của RowVersion ở dòng con (cập nhật 02/10/2026 tối)
+| # | Hạn chế | Có test? |
+|---|---|---|
+| 1 | `PUT/DELETE /recipes/{id}/ingredients/{ingId}` và `/steps/{stepId}` **không nhận rowVersion** của dòng con, nên khi tab A đang mở bản cũ và tab B đã sửa, lần lưu của A vẫn ghi đè (last-write-wins). Server không có cách biết A đang nhìn bản cũ. | Có — mô tả hành vi trong `RecipeIngredientHttpTests` (rowVersion recipe không đổi khi sửa con) |
+| 2 | Token của dòng con (`IsConcurrencyToken`) **chỉ** bảo vệ cửa sổ đua rất ngắn: hai request cùng nạp và cùng `SaveChanges` một dòng → bên chậm nhận `DbUpdateConcurrencyException` → 422 `recipe.version_conflict`. | Có cho recipe (`Db_two_writers...`); cho dòng con: **chưa có test riêng** |
+| 3 | Xoá một nguyên liệu/bước làm UPDATE `OrderIndex`/`StepNumber` của các dòng sau; nếu song song có request khác cũng đụng các dòng đó, một bên sẽ nhận 422 dù người dùng không sửa cùng dòng. | **Đoán**, chưa tái hiện |
+| 4 | `AsSplitQuery()` (cả đọc lẫn nạp để ghi) chạy các câu riêng, không trong một snapshot: ghi xen giữa các câu có thể cho bản đọc lệch (vd. thiếu một bước vừa thêm). Với nạp để ghi, token từng dòng vẫn chặn ghi đè dữ liệu đã đổi; hậu quả xấu nhất (đoán) là 422 hoặc thứ tự bị đánh lại dựa trên danh sách thiếu. | **Đoán**, chưa có test |
+| 5 | Nếu cần chặn hẳn hạn chế 1: gửi `rowVersion` của dòng con trong body/If-Match (cột đã có) — đổi hợp đồng API, cần thống nhất với frontend; hoặc chạy nạp + ghi trong transaction `REPEATABLE READ` cho hạn chế 4. | Đề xuất, chưa làm |
+
 ### 3. Phiên bản schema = EF Core migrations, không sửa tay DB
 - Mọi thay đổi schema đi qua migration trong `src/backend/CulinaryBlog.Infrastructure/Migrations`, đặt tên theo ý nghĩa
   (`AddRecipeAggregate`, `RecipeChildIdsValueGeneratedNever`, `RecipeStepNumberUniqueIgnoresSoftDeleted`). Snapshot luôn commit cùng migration.
@@ -40,7 +49,8 @@ Cần: (1) không mất cập nhật khi hai người sửa cùng lúc; (2) sche
 ### 4. Nạp aggregate
 - **Đọc chi tiết** (`FindBySlugAsync`): `AsNoTracking` + `Include` 3 collection + **`AsSplitQuery()`** → 1 câu recipe + 1 câu mỗi collection (số câu cố định).
   Trước đó một câu JOIN trả 10 nguyên liệu × 6 bước = 60 dòng; sau: 18 dòng (`docs/evidence/TV3/Tuan04/K22_hieu_nang_recipe.md`).
-- **Nạp để ghi** (`FindForWriteAsync`): có theo dõi thay đổi, `Include` nguyên liệu + bước trong một câu — hiện chưa tách (công thức nhỏ); xem lại nếu công thức lớn.
+- **Nạp để ghi** (`FindForWriteAsync`): có theo dõi thay đổi, `Include` nguyên liệu + bước + **`AsSplitQuery()`** (từ 02/10/2026): 3 câu cố định,
+  công thức 10 × 6 trả 17 dòng thay vì 60; kiểm xung đột/đánh lại số vẫn đúng (51 test nhóm recipe). Xem hạn chế #4 ở mục 2.
 - Tên công khai cho trang chi tiết (tên hiển thị tác giả, tên danh mục) lấy bằng 1 câu neo vào dòng công thức (`RecipeDisplayNameReader`),
   danh mục đã xoá mềm chỉ làm mất tên danh mục.
 
