@@ -103,3 +103,34 @@ SP API `http://localhost:5080`, frontend `http://localhost:3000`, DB dev `culina
 | `TV1_seed_user_khong_co_mat_khau.md` (cập nhật) | TV1 | Không còn chặn Playwright (E2E tự đăng ký) |
 | `TV2_TV1_google_login_demo_token.md` | TV2, TV1 | (đầu ngày) |
 | `TV2_TV1_login_label_khong_gan_input.md` | TV2, TV1 | (đầu ngày) |
+| `TV1_CI_lab_ApiFactory_khong_dung_TEST_DATABASE.md` + `TV1_patch_lab_ApiFactory_UseSetting.diff` **(mới, mục 8)** | TV1 | CI lab đỏ: ApiFactory bỏ qua TEST_DATABASE |
+
+## 8. CI (cập nhật chiều 02/10) — chi tiết ở `CI_TAI_HIEN_tuan4.md`
+
+**Nhánh đỏ thật là `practice/TV3/labs`, không phải `2312786_HuynhQuocTrung_C7-frontend-tests`.** Kiểm qua GitHub REST API công khai (không có `gh`):
+C7-frontend-tests xanh cả 6 lần push (kể cả `1d64d66`); lab đỏ ở mọi lần push từ `9e6622a` (27/09) tới `55b9a57`, cùng một bước
+`dotnet test CulinaryBlog.sln --no-build --configuration Release ...`. Log chi tiết của job cần đăng nhập → không đọc được.
+
+**Nguyên nhân (đã xác nhận bằng thí nghiệm):** `Program.cs` (commit `1881e8c`, TV1) đọc chuỗi kết nối ngay khi dựng builder; `ApiFactory`
+trên nhánh lab chỉ đưa TEST_DATABASE vào bằng `ConfigureAppConfiguration` (áp sau) → test dùng chuỗi `postgres@culinary_blog` trong appsettings.
+CI không có role `postgres` → `28P01 password authentication failed`. `main` đã sửa bằng `4bf775b` (TV3, `UseSetting`), nhưng nhánh lab rẽ từ
+`4515021` trước đó và không đổi gì trong `src/ tests/ .github/` → thừa hưởng lỗi. Lỗi nằm ở hạ tầng test + Program.cs của TV1 → **không sửa**, đã viết handoff + patch.
+Không có test nào của TV3 đọc chuỗi mặc định → **không có commit sửa code TV3**.
+
+| Tái hiện (Release, đúng lệnh CI, DB rỗng `culinary_ci_repro` + user riêng) | Spike | CulinaryBlog.Tests |
+|---|---|---|
+| SP `1d64d66` như CI / `-maxcpucount:1` | 5/5 / 5/5 | 209/209 / 209/209 |
+| lab `55b9a57` như CI (máy dev có user `postgres`) | 5/5 | 120/120 — nhưng DB TEST_DATABASE **0 bảng**: test ghi vào `culinary_blog` |
+| lab `55b9a57`, chuỗi mặc định hỏng giống CI | 5/5 | **102 pass / 18 fail** (AuthTests 13, Week3AuthAndPersonalLabTests 5 — file của TV1) |
+| SP `1d64d66`, chuỗi mặc định hỏng giống CI | 5/5 | **209/209** |
+| lab + patch đề xuất (tạm, đã hoàn nguyên), chuỗi mặc định hỏng | 5/5 | **120/120**, DB TEST_DATABASE có 14 bảng |
+
+**Đính chính:** con số "lab `tests/CulinaryBlog.Tests` 120/120 trên DB rỗng `culinary_lab_check`" ở lần push lab trước (`55b9a57`) là **sai về DB**:
+vì lỗi trên, các test đó đã chạy vào DB dev `culinary_blog` (đếm được 36 user test mới trong `culinary_blog`), không phải `culinary_lab_check`.
+
+**Còn là đoán:** CI thật đỏ đúng 18 test này (chưa đọc được log); khác biệt Linux (collation `en_US.utf8`, TZ `UTC` so với
+`English_United States.1252`, `Asia/Bangkok` ở máy này) **chưa kiểm** — không chạy Docker vì RAM trống chỉ 0.8–0.9 GB và chưa có image.
+Loại trừ có bằng chứng: song song Spike/Tests (spike dùng DB riêng; song song và `-maxcpucount:1` đều xanh), migration trên DB rỗng, cấu hình Release.
+
+**Gỡ chặn (Trung quyết vì đụng file của TV1 trên nhánh của mình):** `git -C D:\CulinaryBlog-lab apply handoff/TV1_patch_lab_ApiFactory_UseSetting.diff`
+(cùng nội dung `4bf775b` đã có trên `main`), hoặc chờ TV1 xử lý theo handoff.
