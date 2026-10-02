@@ -1,0 +1,27 @@
+﻿LAB K22 - test DO (truoc khi viet code) - 2026-10-02 10:48
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L22" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 1
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+[xUnit.net 00:00:10.68]       GET http://localhost/lab/l22/recipes?take=1 -> 404:
+[xUnit.net 00:00:10.68]     Lab.TV3.Tests.L22PerformanceTests.Query_vuot_nguong_bi_ghi_canh_bao_SLOW_SQL [FAIL]
+Failed Lab.TV3.Tests.L22PerformanceTests.Query_vuot_nguong_bi_ghi_canh_bao_SLOW_SQL [7 s]
+GET http://localhost/lab/l22/recipes?take=1 -> 404:
+[xUnit.net 00:00:20.88]     Lab.TV3.Tests.L22PerformanceTests.Anh_duoc_gom_dung_vao_tung_cong_thuc [FAIL]
+[xUnit.net 00:00:20.88]       GET http://localhost/lab/l22/recipes?take=2 -> 404:
+Failed Lab.TV3.Tests.L22PerformanceTests.Anh_duoc_gom_dung_vao_tung_cong_thuc [10 s]
+GET http://localhost/lab/l22/recipes?take=2 -> 404:
+[xUnit.net 00:00:34.88]     Lab.TV3.Tests.L22PerformanceTests.Cach_lam_N_cong_1_co_y_ton_dung_1_cong_N_cau [FAIL]
+[xUnit.net 00:00:34.88]       GET http://localhost/lab/l22/recipes?take=5&mode=naive -> 404:
+Failed Lab.TV3.Tests.L22PerformanceTests.Cach_lam_N_cong_1_co_y_ton_dung_1_cong_N_cau [14 s]
+GET http://localhost/lab/l22/recipes?take=5&mode=naive -> 404:
+[xUnit.net 00:00:34.89]     Lab.TV3.Tests.L22PerformanceTests.Explain_analyze_cau_danh_sach_tra_ve_ke_hoach_co_thoi_gian_thuc_thi [FAIL]
+[xUnit.net 00:00:34.89]       GET http://localhost/lab/l22/explain?take=20 -> 404:
+Failed Lab.TV3.Tests.L22PerformanceTests.Explain_analyze_cau_danh_sach_tra_ve_ke_hoach_co_thoi_gian_thuc_thi [2 ms]
+GET http://localhost/lab/l22/explain?take=20 -> 404:
+[xUnit.net 00:00:47.88]     Lab.TV3.Tests.L22PerformanceTests.Danh_sach_kem_anh_luon_1_cau_SQL_du_lay_5_hay_20_cong_thuc [FAIL]
+[xUnit.net 00:00:47.88]       GET http://localhost/lab/l22/recipes?take=5 -> 404:
+Failed Lab.TV3.Tests.L22PerformanceTests.Danh_sach_kem_anh_luon_1_cau_SQL_du_lay_5_hay_20_cong_thuc [12 s]
+GET http://localhost/lab/l22/recipes?take=5 -> 404:
+Test Run Failed.
+Total tests: 5
+Failed: 5
