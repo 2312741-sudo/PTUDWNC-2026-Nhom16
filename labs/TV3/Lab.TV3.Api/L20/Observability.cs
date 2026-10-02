@@ -82,8 +82,12 @@ public static partial class Observability
         });
 
         // Log 1 dòng/request: method, path (KHÔNG kèm query string), status, thời gian, user
-        app.UseSerilogRequestLogging(o => o.EnrichDiagnosticContext = (d, http) =>
-            d.Set("UserId", http.User.FindFirst("sub")?.Value ?? "anonymous"));
+        app.UseSerilogRequestLogging(o =>
+        {
+            // Dùng logger của CHÍNH app này; mặc định middleware ghi qua Log.Logger tĩnh -> nhiều app trong 1 process sẽ ghi nhầm chỗ
+            o.Logger = app.Services.GetService<Serilog.ILogger>();
+            o.EnrichDiagnosticContext = (d, http) => d.Set("UserId", http.User.FindFirst("sub")?.Value ?? "anonymous");
+        });
     }
 
     public static void MapL20Health(this WebApplication app)
