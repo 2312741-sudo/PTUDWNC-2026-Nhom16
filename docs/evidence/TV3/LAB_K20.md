@@ -38,7 +38,7 @@ dotnet run --project labs/TV3/Lab.TV3.Api ; curl.exe -i http://localhost:5090/he
 
 ## Kết quả thật
 - Commit đỏ `37985e4`: 8/8 FAIL — `LAB_K20_do.txt`.
-- Commit xanh: xem `BAO_CAO_TUAN4.md` — 8/8 PASS — `LAB_K20_xanh.txt`; cả bộ lab (Redis tắt, bỏ L3SearchTests) 77/77; format verify exit 0.
+- Commit xanh: `ac33ac8` (+ fix logger `a3e26a8`) — 8/8 PASS — `LAB_K20_xanh.txt`; cả bộ lab (Redis tắt, bỏ L3SearchTests) 77/77; format verify exit 0.
 - Chạy thật (`LAB_K20_chay_that.txt`): `/health/live` 200; `/health/ready` 200 với db + redis Healthy (Redis container 6379);
   request gửi `traceparent` → `X-Trace-Id` trùng trace id, OTel Console in span Server `GET /lab/l16/search` (ParentSpanId = span client gửi)
   và span con Npgsql chứa câu SQL; file log có `cid=tv3-demo-001 trace=4bf9...`.

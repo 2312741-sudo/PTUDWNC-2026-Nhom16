@@ -32,7 +32,7 @@ curl.exe -s -D - -o NUL "http://localhost:5090/lab/l22/recipes?take=20&mode=naiv
 ```
 
 ## Kết quả thật
-- Commit đỏ `60728f7`: 5/5 FAIL (404) — `LAB_K22_do.txt`. Commit xanh: xem `BAO_CAO_TUAN4.md` — 5/5 PASS — `LAB_K22_xanh.txt`; cả bộ lab 82/82.
+- Commit đỏ `60728f7`: 5/5 FAIL (404) — `LAB_K22_do.txt`. Commit xanh: `c4688b7` (sau fix K20 `a3e26a8`) — 5/5 PASS — `LAB_K22_xanh.txt`; cả bộ lab 82/82.
 - `LAB_K22_explain.txt` (app thật, 203 Published): `X-Sql-Count` = 1 (take 5), 1 (take 20), **21** (naive take 20). EXPLAIN: `GroupAggregate` ←
   `Nested Loop Left Join` ← `Bitmap Index Scan on ix_lab_images_recipe`, **Execution Time 0.239 ms**. Ước lượng rows của planner lệch (2 so với 203)
   vì chưa `ANALYZE` sau khi seed — đoán, chưa kiểm.

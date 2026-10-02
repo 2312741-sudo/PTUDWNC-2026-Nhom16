@@ -8,12 +8,17 @@ database `lab_tv3` / `lab_tv3_test`, bucket `lab-tv3`, schema Hangfire `lab_tv3_
 | L1 | K08 register/login/PBKDF2/JWT/refresh/logout · K09 Google verify/callback/link | `Lab.TV3.Api/L1` | `L1AuthTests` |
 | L3 | K11 FTS trigger/GIN/unaccent/rank/AND/page + EXPLAIN · K12 Redis cache-aside/OutputCache/invalidation/fallback | `Lab.TV3.Api/L3`, `k6/search.js` | `L3SearchTests`, `L3RedisFallbackTests` |
 | L4 | K13 upload/delete 4 MIME + magic bytes + biên 5 MiB · K14 Hangfire fire-and-forget/delayed/recurring/retry · K15 Mailhog/resize/sitemap XML | `Lab.TV3.Api/L4` | `L4MediaJobsTests` |
+| L5/K16 | SSR search: HTML render phía server, encode XSS, noindex, phân trang (`/lab/l16/search`) | `Lab.TV3.Api/L16` | `L16SsrSearchTests` |
+| L5/K19 | `sitemap.xml`, `robots.txt`, trang chi tiết canonical/OG, 301 slug cũ + URL cũ | `Lab.TV3.Api/L19` | `L19SeoTests` |
+| L5/K20 | Serilog (Console/File/Seq theo cấu hình), correlation id, OTel trace/metric, `/health/live` `/health/ready` | `Lab.TV3.Api/L20` | `L20ObservabilityTests` |
+| K22 | Đếm câu SQL/request (`X-Sql-Count`), N+1 vs 1 câu, EXPLAIN, cảnh báo `SLOW_SQL`, k6 p95<500 ms | `Lab.TV3.Api/L22`, `k6/search.js` | `L22PerformanceTests` |
 
 ## Chạy
 
 ```powershell
-# Test không cần Docker (PostgreSQL local):
-dotnet test labs/TV3/Lab.TV3.Tests --filter "Infra!=docker"
+# Test không cần Docker/Redis (PostgreSQL local; mật khẩu nạp từ .secrets.local.ps1, không commit):
+. .\.secrets.local.ps1; $env:LAB_PG = "Host=localhost;Port=5432;Username=postgres;Password=$env:LAB_PG_PASSWORD"
+dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName!~L3SearchTests" -m:1   # 82 test (02/10/2026)
 
 # Khi có Docker: bật Redis + MinIO + Mailhog rồi chạy đủ test
 docker compose -f labs/TV3/docker-compose.lab.yml up -d

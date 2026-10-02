@@ -27,7 +27,7 @@ dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L16" -m:1
 
 ## Kết quả thật
 - Commit đỏ: `a567013` — 5/5 FAIL (`GET /lab/l16/search -> 404`) — `LAB_K16_do.txt`.
-- Commit xanh: xem `BAO_CAO_TUAN4.md` — 5/5 PASS — `LAB_K16_xanh.txt`; cả bộ lab (Redis tắt, bỏ L3SearchTests) 60/60; L3SearchTests với Redis 6399: 8/8.
+- Commit xanh: `192e635` — 5/5 PASS — `LAB_K16_xanh.txt`; cả bộ lab (Redis tắt, bỏ L3SearchTests) 60/60; L3SearchTests với Redis 6399: 8/8.
 - `dotnet format --verify-no-changes --severity error` cho 2 csproj lab: exit 0.
 - Giới hạn: chưa đo TTFB/Lighthouse cho trang này (xem K22); không cache trang SSR (mỗi request đều chạy SQL).
 

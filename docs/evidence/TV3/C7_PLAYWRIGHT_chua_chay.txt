@@ -1,0 +1,18 @@
+﻿C7 Playwright - BLOCKED (chua chay luong that) - 2026-10-02 11:02
+Ly do: DbSeeder.cs tao user seed (trung.huynh@culinary.local) KHONG co mat khau -> khong co E2E_PASSWORD. Khong doan mat khau.
+Repo: D:\CulinaryBlog, nhanh 2312786_HuynhQuocTrung_C7-frontend-tests, thu muc src/frontend
+> npx playwright test --list
+Listing tests:
+  [chromium] › create-recipe.spec.ts:14:7 › Soạn công thức qua wizard › đăng nhập, tạo công thức, thêm nguyên liệu và bước
+Total: 1 test in 1 file
+> npx playwright test --reporter=list   (khong dat E2E_PASSWORD)
+Running 1 test using 1 worker
+  -  1 [chromium] › e2e\create-recipe.spec.ts:14:7 › Soạn công thức qua wizard › đăng nhập, tạo công thức, thêm nguyên liệu và bước
+  1 skipped
+> npx jest
+PASS src/lib/__tests__/recipe-schemas.test.ts
+PASS src/app/dashboard/recipes/_wizard/__tests__/RecipeWizard.test.tsx
+Test Suites: 2 passed, 2 total
+Tests:       16 passed, 16 total
+> npx tsc --noEmit -p tsconfig.json
+exit 0

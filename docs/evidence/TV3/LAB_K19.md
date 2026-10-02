@@ -28,7 +28,7 @@ dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L19" -m:1
 
 ## Kết quả thật
 - Commit đỏ `32db275`: 8 FAIL (404) + 1 PASS (slug, lý do ở trên) — `LAB_K19_do.txt`.
-- Commit xanh: xem `BAO_CAO_TUAN4.md` — 9/9 PASS — `LAB_K19_xanh.txt`; cả bộ lab (Redis tắt, bỏ L3SearchTests) 69/69; format verify exit 0.
+- Commit xanh: `34220c5` — 9/9 PASS — `LAB_K19_xanh.txt`; cả bộ lab (Redis tắt, bỏ L3SearchTests) 69/69; format verify exit 0.
 - Giới hạn: chưa validate sitemap bằng Google Search Console (chạy localhost); robots `Disallow: /lab/` + `Allow` cụ thể dựa vào quy tắc "luật dài nhất thắng" của Google.
 
 ## 4 câu tự kiểm tra
