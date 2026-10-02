@@ -161,10 +161,12 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
         return new PagedResult<RecipeSummaryDto>(items, PaginationMeta.Create(page, pageSize, total));
     }
 
+    // K22: tách câu như FindBySlugAsync — có theo dõi thay đổi, RowVersion vẫn là token của từng entity nên kiểm xung đột không đổi
     public Task<Recipe?> FindForWriteAsync(Guid id, CancellationToken ct) =>
         db.Recipes
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
     // K22: AsSplitQuery -> 1 câu recipe + 1 câu mỗi collection (số câu cố định), tránh JOIN nhân dòng nguyên liệu x bước x ảnh
