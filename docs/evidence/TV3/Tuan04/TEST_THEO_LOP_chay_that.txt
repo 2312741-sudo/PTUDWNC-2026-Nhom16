@@ -1,0 +1,37 @@
+Chay that 02/10/2026 tren nhanh 2312786_HuynhQuocTrung_C7-frontend-tests HEAD 1b5c837
+Lenh: dotnet test tests/CulinaryBlog.Tests (TEST_DATABASE = culinary_test, mat khau tu bien moi truong, khong ghi) ; cd src/frontend; npx jest
+
+== Backend ==
+Passed!  - Failed:     0, Passed:   214, Skipped:     0, Total:   214, Duration: 46 s - CulinaryBlog.Tests.dll (net10.0)
+ArchitectureTests                          passed= 18 failed=0
+AuthTests                                  passed= 18 failed=0
+CategoryTests                              passed= 12 failed=0
+DiscoveryAndSearchTests                    passed=  6 failed=0
+HealthTests                                passed=  2 failed=0
+ImageUploadValidatorTests                  passed= 14 failed=0
+LayerDependencyRulesTests                  passed=  4 failed=0
+MyRecipesValidatorTests                    passed= 32 failed=0
+RecipeAuthoringAndCrudTests                passed=  6 failed=0
+RecipeAuthoringFlowTests                   passed=  3 failed=0
+RecipeConcurrencyAndTransactionTests       passed=  8 failed=0
+RecipeDetailSeoTests                       passed=  1 failed=0
+RecipeErrorBranchTests                     passed= 30 failed=0
+RecipeImageApiTests                        passed= 12 failed=0
+RecipeImageDomainTests                     passed= 12 failed=0
+RecipeIngredientHttpTests                  passed=  4 failed=0
+RecipeLifecycleHandlerTests                passed= 13 failed=0
+RecipeMetricsTests                         passed=  3 failed=0
+RecipeQueryPerformanceTests                passed=  1 failed=0
+RecipeStepDeletionTests                    passed=  3 failed=0
+SlowQueryInterceptorTests                  passed=  3 failed=0
+Week3AuthAndPersonalLabTests               passed=  9 failed=0
+
+== Jest ==
+PASS src/lib/__tests__/recipe-schemas.test.ts
+PASS src/lib/__tests__/recipe-jsonld.test.tsx
+PASS src/app/dashboard/recipes/_wizard/__tests__/RecipeWizard.test.tsx (5.877 s)
+PASS src/app/dashboard/recipes/_wizard/__tests__/WizardRefresh.test.tsx (6.2 s)
+PASS src/app/dashboard/recipes/_wizard/__tests__/WizardA11y.test.tsx (6.285 s)
+PASS src/app/dashboard/recipes/_wizard/__tests__/StepsStep.test.tsx (7.094 s)
+PASS src/app/dashboard/recipes/_wizard/__tests__/IngredientsStep.test.tsx (7.748 s)
+Tests:       43 passed, 43 total
