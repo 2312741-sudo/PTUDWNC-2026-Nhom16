@@ -142,6 +142,12 @@ public sealed partial class LabDb(NpgsqlDataSource source)
             user_id uuid NOT NULL REFERENCES lab_users(id) ON DELETE CASCADE,
             body text NOT NULL,
             created_at timestamptz NOT NULL DEFAULT now());
+
+        -- ===== L19: slug cũ -> recipe (301). Lưu recipe_id thay vì slug đích để luôn ra slug hiện tại.
+        CREATE TABLE IF NOT EXISTS lab_slug_redirects (
+            old_slug text PRIMARY KEY,
+            recipe_id uuid NOT NULL REFERENCES lab_recipes(id) ON DELETE CASCADE,
+            created_at timestamptz NOT NULL DEFAULT now());
         """;
 }
 

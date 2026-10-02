@@ -1,0 +1,17 @@
+﻿LAB K19 - test XANH - 2026-10-02 10:33
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L19" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 0
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+Passed Lab.TV3.Tests.L19SeoTests.Sau_khi_Published_doi_tieu_de_khong_doi_slug [10 s]
+Passed Lab.TV3.Tests.L19SeoTests.Trang_chi_tiet_co_canonical_va_Draft_tra_404 [5 s]
+Passed Lab.TV3.Tests.L19SeoTests.Robots_cho_phep_trang_cong_khai_va_tro_Sitemap [3 ms]
+Passed Lab.TV3.Tests.L19SeoTests.Slug_khong_dau_chu_thuong_noi_gach_ngang [2 s]
+Passed Lab.TV3.Tests.L19SeoTests.Doi_tieu_de_khi_Draft_tao_slug_moi_va_slug_cu_tra_301 [9 s]
+Passed Lab.TV3.Tests.L19SeoTests.Doi_slug_hai_lan_slug_dau_tien_301_thang_toi_slug_hien_tai [10 s]
+Passed Lab.TV3.Tests.L19SeoTests.Url_cu_dang_so_it_301_ve_url_chuan [3 s]
+Passed Lab.TV3.Tests.L19SeoTests.Sitemap_chi_chua_cong_thuc_Published [6 s]
+Passed Lab.TV3.Tests.L19SeoTests.Doi_tieu_de_can_dang_nhap [6 ms]
+Test Run Successful.
+Total tests: 9
+Passed: 9
+Ca bo lab (FullyQualifiedName!~L3SearchTests, Redis tat): Total tests: 69, Passed: 69
