@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -101,6 +101,11 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     dispatch({ type: "error", message: messageOf(e) });
   }
 
+  // Pathname lúc wizard mount. Ở /new, saveBasic đổi URL sang /{id}/edit bằng replaceState; nếu lúc đó router.refresh()
+  // thì Next render route edit -> EditRecipeClient mount lại -> wizard nhảy về bước 1 và mất state
+  const mountedPath = useRef<string | null>(null);
+  useEffect(() => { mountedPath.current = window.location.pathname; }, []);
+
   // Xoá cache ISR phía server + Router Cache phía trình duyệt -> trang công khai thấy thay đổi ngay
   function refreshPublic(...slugs: (string | null | undefined)[]) {
     const list = [...new Set(slugs.filter((x): x is string => !!x))];
@@ -112,7 +117,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
       body: JSON.stringify({ slugs: list }),
     })
       .catch(() => { /* revalidate lỗi không chặn wizard; ISR vẫn tự làm mới sau 5 phút */ })
-      .finally(() => router.refresh());
+      .finally(() => { if (window.location.pathname === mountedPath.current) router.refresh(); });
   }
 
   async function reload(slug = s.slug) {
