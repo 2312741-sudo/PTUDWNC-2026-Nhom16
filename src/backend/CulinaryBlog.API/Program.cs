@@ -43,6 +43,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
     o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuditableEntityInterceptor>();
+// K22 / NFR-PERF-004: cảnh báo SLOW_SQL khi câu lệnh > Perf:SlowQueryMs (mặc định 100 ms)
+builder.Services.AddSingleton(sp => new SlowQueryInterceptor(
+    sp.GetRequiredService<ILogger<SlowQueryInterceptor>>(), sp.GetRequiredService<IConfiguration>().GetValue("Perf:SlowQueryMs", 100)));
 
 var rawConnectionString = builder.Configuration.GetConnectionString("Database")
     ?? builder.Configuration["DATABASE_URL"]
@@ -54,7 +57,7 @@ builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
     options.UseNpgsql(
         connectionString,
         pg => pg.CommandTimeout(30));
-    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
+    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>(), sp.GetRequiredService<SlowQueryInterceptor>());
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
