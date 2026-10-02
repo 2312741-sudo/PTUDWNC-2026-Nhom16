@@ -217,6 +217,28 @@ public sealed class RecipeQueryPerformanceTests : IClassFixture<ApiFactory>, IDi
         Assert.InRange(listMany.Count, 1, 3);
     }
 
+    [Fact]
+    public async Task Detail_loads_each_child_collection_in_its_own_query_so_rows_are_not_ingredients_times_steps()
+    {
+        var categoryId = await AnyCategoryId();
+        var (author, _, _) = await NewAuthorClient();
+        var recipe = await SeedRecipe(author, categoryId, ingredients: 10, steps: 6, publish: true);
+
+        var (res, sql) = await Measure(() => _app.CreateClient().GetAsync($"/api/v1/recipes/{recipe.Slug}"));
+        await AssertStatus(HttpStatusCode.OK, res);
+
+        // Một câu JOIN cả nguyên liệu lẫn bước trả về 10 x 6 = 60 dòng (bùng nổ tích Descartes, K22_sql_explain_chay_that.md)
+        var texts = sql.Select(c => c.Text).ToList();
+        Assert.DoesNotContain(texts, t => t.Contains("\"RecipeIngredients\"") && t.Contains("\"RecipeSteps\""));
+        Assert.Single(texts, t => t.Contains("\"RecipeIngredients\""));
+        Assert.Single(texts, t => t.Contains("\"RecipeSteps\""));
+        Assert.Single(texts, t => t.Contains("\"RecipeImages\""));
+
+        var detail = await DataOf(res);
+        Assert.Equal(10, detail.GetProperty("ingredients").GetArrayLength());
+        Assert.Equal(6, detail.GetProperty("steps").GetArrayLength());
+    }
+
     // ------------------------------------------------------------------ báo cáo (chỉ khi đặt K22_REPORT)
 
     private static string Statements(string sql) =>
