@@ -94,3 +94,17 @@ k6 (cùng kịch bản 5 VU × 20 s, 0% lỗi, 21 918/21 918 check đạt):
 Nhận xét trung thực: với công thức cỡ này độ trễ API **gần như không đổi** (thêm 3 round-trip nhưng bớt dòng); lợi ích chính là số dòng không còn nhân
 theo nguyên liệu × bước × ảnh khi công thức lớn. `SLOW_SQL` lần này: **2 dòng** (1645.4 ms, 157.5 ms) lúc 18:24:34–35 = ngay khi k6 bắt đầu 5 VU đồng thời,
 sau đó không còn — **đoán** do pool mở thêm kết nối lúc tải đồng thời đầu tiên. Số trang Next vẫn là `next dev`, không đại diện production.
+
+## 7. Tách luôn câu nạp để ghi `FindForWriteAsync` (02/10/2026 tối, sau merge main)
+Commit: test đỏ `7c7d545` (`Write_path_loads_ingredients_and_steps_in_separate_queries_and_still_saves_correctly`) → sửa (`AsSplitQuery()`), xem `BAO_CAO_TUAN4.md` mục 10.
+Báo cáo mới: `K22_sql_explain_ghi_split.md` (DB lúc đo: Recipes=668, RecipeIngredients=882, RecipeSteps=1140).
+
+| POST nguyên liệu vào công thức 10 nguyên liệu × 6 bước | Trước (`K22_sql_explain_chay_that.md`) | Sau |
+|---|---|---|
+| Số lệnh SQL của request | 2 (1 câu nạp JOIN + INSERT) | 4 (recipe, nguyên liệu, bước + INSERT) — bằng nhau giữa bản 2×2 và 10×6 |
+| Số dòng câu nạp trả về | **60** | **17** (1 + 10 + 6) |
+| Execution Time câu nạp (EXPLAIN) | 0.177 ms | 0.031 + 0.086 + 0.068 = 0.185 ms |
+| Lệnh > 100 ms | 0 | 0 |
+
+Đúng đắn sau khi tách: nhóm test recipe 51/51 (2 writer cùng RowVersion đúng 1 thắng, rollback transaction kể cả lồng nhau, child của công thức khác bị từ chối,
+xoá bước đánh lại số 1..N, sửa nguyên liệu giữ vị trí). Nhận xét: thêm 2 round-trip, bớt dòng; thời gian gần như không đổi ở cỡ dữ liệu này.
