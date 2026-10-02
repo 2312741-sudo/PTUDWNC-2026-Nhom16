@@ -5,12 +5,23 @@ import { mediaUrl } from "./recipe-editor";
 const duration = (m?: number | null) => (m && m > 0 ? `PT${m}M` : undefined);
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
+/**
+ * Google yêu cầu image là URL tuyệt đối. Ảnh seed là đường dẫn tĩnh của Next ("/images/recipes/x.jpg") -> ghép SITE;
+ * key MinIO ("recipes/{id}/x.webp") -> mediaUrl (cần NEXT_PUBLIC_MEDIA_URL, không có thì bỏ, không xuất đường dẫn tương đối).
+ */
+const absoluteImage = (u?: string | null): string | null => {
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  if (u.startsWith("/")) return `${SITE}${u}`;
+  return mediaUrl(u);
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildRecipeJsonLd(r: any, slug?: string) {
   const has = (v: unknown) => v !== null && v !== undefined;
   const images = [...(r.images ?? [])]
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-    .map(i => mediaUrl(i.originalUrl ?? i.url))
+    .map(i => absoluteImage(i.originalUrl ?? i.url))
     .filter(Boolean);
   const n = r.nutrition;
   const nutrition = n && Object.values(n).some(has) ? {

@@ -37,7 +37,8 @@ public sealed record RecipeDetailDto(
     IReadOnlyList<RecipeIngredientDto> Ingredients,
     IReadOnlyList<RecipeStepDto> Steps,
     IReadOnlyList<RecipeImageSummaryDto> Images,
-    string RowVersion, DateTime CreatedAt, DateTime? UpdatedAt);
+    string RowVersion, DateTime CreatedAt, DateTime? UpdatedAt,
+    string? AuthorName = null, string? CategoryName = null);   // K19: tên công khai cho JSON-LD (NFR-SEO-001)
 
 public sealed record NutritionDto(
     decimal? Calories, decimal? Protein, decimal? Carbohydrates,
@@ -79,7 +80,7 @@ internal static class RecipeMapper
         r.Difficulty.ToString(), r.Status.ToString(), r.PublishedAt, r.CategoryId, r.AuthorId,
         r.Nutrition.ToDto(), Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt);
 
-    public static RecipeDetailDto ToDetailDto(this Recipe r) => new(
+    public static RecipeDetailDto ToDetailDto(this Recipe r, string? authorName = null, string? categoryName = null) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
         r.PrepTimeMinutes + r.CookTimeMinutes,
@@ -91,7 +92,7 @@ internal static class RecipeMapper
             .Select(i => new RecipeImageSummaryDto(
                 i.Id, i.OriginalUrl, i.MediumUrl, i.ThumbnailUrl, i.AltText, i.IsPrimary, i.OrderIndex))
             .ToList(),
-        Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt);
+        Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt, authorName, categoryName);
 
     public static RecipeIngredientDto ToDto(this RecipeIngredient i) =>
         new(i.Id, i.RecipeId, i.Name, i.Quantity, i.Unit, i.Notes, i.OrderIndex);
@@ -312,7 +313,15 @@ public sealed class UpdateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
 /// <summary>Lấy theo slug. Draft/Archived chỉ owner hoặc Admin xem được (D12).</summary>
 public sealed record GetRecipeBySlugQuery(string Slug) : IRequest<RecipeDetailDto>;
 
-public sealed class GetRecipeBySlugHandler(IRecipeRepository repo, ICurrentUser currentUser)
+/// <summary>K19: tên công khai (tên hiển thị tác giả, tên danh mục) cho trang chi tiết và JSON-LD Recipe (NFR-SEO-001).</summary>
+public interface IRecipeDisplayNameReader
+{
+    Task<(string? AuthorName, string? CategoryName)> GetAsync(string authorId, Guid categoryId, CancellationToken ct);
+}
+
+// names tuỳ chọn: test đơn vị dựng handler bằng tay không cần reader; DI luôn truyền bản thật
+public sealed class GetRecipeBySlugHandler(
+    IRecipeRepository repo, ICurrentUser currentUser, IRecipeDisplayNameReader? names = null)
     : IRequestHandler<GetRecipeBySlugQuery, RecipeDetailDto>
 {
     public async Task<RecipeDetailDto> Handle(GetRecipeBySlugQuery q, CancellationToken ct)
@@ -328,7 +337,10 @@ public sealed class GetRecipeBySlugHandler(IRecipeRepository repo, ICurrentUser 
                 throw new AppException(404, "recipe.not_found", "Không tìm thấy công thức.");
         }
 
-        return recipe.ToDetailDto();
+        var (authorName, categoryName) = names is null
+            ? (null, null)
+            : await names.GetAsync(recipe.AuthorId, recipe.CategoryId, ct);
+        return recipe.ToDetailDto(authorName, categoryName);
     }
 }
 

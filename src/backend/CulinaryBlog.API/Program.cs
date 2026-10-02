@@ -77,6 +77,7 @@ builder.Services.AddScoped<RecipeRepository>();
 builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IMyRecipesRepository, MyRecipesRepository>();
+builder.Services.AddScoped<IRecipeDisplayNameReader, RecipeDisplayNameReader>();
 builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
