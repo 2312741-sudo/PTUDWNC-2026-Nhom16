@@ -148,6 +148,9 @@ public sealed partial class LabDb(NpgsqlDataSource source)
             old_slug text PRIMARY KEY,
             recipe_id uuid NOT NULL REFERENCES lab_recipes(id) ON DELETE CASCADE,
             created_at timestamptz NOT NULL DEFAULT now());
+
+        -- ===== L22: JOIN ảnh theo recipe_id (danh sách 1 câu, không N+1)
+        CREATE INDEX IF NOT EXISTS ix_lab_images_recipe ON lab_images (recipe_id);
         """;
 }
 

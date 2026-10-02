@@ -9,6 +9,7 @@ using Lab.TV3.Api.L10;
 using Lab.TV3.Api.L16;
 using Lab.TV3.Api.L19;
 using Lab.TV3.Api.L20;
+using Lab.TV3.Api.L22;
 using Lab.TV3.Api.L3;
 using Lab.TV3.Api.L4;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -83,6 +84,7 @@ builder.Services.AddHangfireServer(o => { o.WorkerCount = 2; o.ServerName = "lab
 
 var app = builder.Build();
 app.UseL20Observability(); // đầu pipeline: mọi log của request đều có CorrelationId
+app.UseL22SqlMonitor();     // đếm câu SQL mỗi request (X-Sql-Count) + cảnh báo SLOW_SQL (K22)
 
 await LabDb.EnsureDatabaseAsync(app.Configuration.GetConnectionString("Lab")!);
 await app.Services.GetRequiredService<LabDb>().EnsureSchemaAsync();
@@ -110,6 +112,7 @@ app.MapL10Authorization();
 app.MapL16SsrSearch();
 app.MapL19Seo();
 app.MapL20Health();
+app.MapL22Performance();
 
 // Recurring: sinh sitemap mỗi giờ (K14)
 app.Services.GetRequiredService<IRecurringJobManager>()

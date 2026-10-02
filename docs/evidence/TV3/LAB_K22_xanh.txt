@@ -1,0 +1,13 @@
+﻿LAB K22 - test XANH - 2026-10-02 10:50
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L22" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 0
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+Passed Lab.TV3.Tests.L22PerformanceTests.Query_vuot_nguong_bi_ghi_canh_bao_SLOW_SQL [2 s]
+Passed Lab.TV3.Tests.L22PerformanceTests.Anh_duoc_gom_dung_vao_tung_cong_thuc [9 s]
+Passed Lab.TV3.Tests.L22PerformanceTests.Cach_lam_N_cong_1_co_y_ton_dung_1_cong_N_cau [14 s]
+Passed Lab.TV3.Tests.L22PerformanceTests.Explain_analyze_cau_danh_sach_tra_ve_ke_hoach_co_thoi_gian_thuc_thi [26 ms]
+Passed Lab.TV3.Tests.L22PerformanceTests.Danh_sach_kem_anh_luon_1_cau_SQL_du_lay_5_hay_20_cong_thuc [13 s]
+Test Run Successful.
+Total tests: 5
+Passed: 5
+Ca bo lab (FullyQualifiedName!~L3SearchTests, Redis tat), sau fix(K20) logger: Total tests: 82, Passed: 82

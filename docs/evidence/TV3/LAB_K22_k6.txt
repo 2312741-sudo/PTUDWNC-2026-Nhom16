@@ -1,0 +1,62 @@
+﻿LAB K22 - k6 (20 VU, 30 s, nguong p95<500 ms = GIA DINH nhom) - 2026-10-02 10:57
+Lenh: Get-Content -Raw labs/TV3/k6/search.js | docker run --rm -i grafana/k6 run --quiet -e BASE=http://host.docker.internal:5090 -
+App: Lab.TV3.Api Release, dotnet run, DB lab_tv3 (203 Published), Redis localhost:6379; may RAM trong ~0.5 GB, k6 chay cung may
+Exit code k6: 0
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=15.8ms
+
+      {page:api}
+      ✓ 'p(95)<500' p(95)=18.68ms
+
+      {page:list}
+      ✓ 'p(95)<500' p(95)=15ms
+
+      {page:ssr}
+      ✓ 'p(95)<500' p(95)=11.94ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 61422   2047.000976/s
+    checks_succeeded...: 100.00% 61422 out of 61422
+    checks_failed......: 0.00%   0 out of 61422
+
+    ✓ api 200
+    ✓ ssr 200
+    ✓ list 200 + 1 SQL
+
+    HTTP
+    http_req_duration..............: avg=9.56ms  min=1.47ms med=7.7ms   p(90)=13.39ms p(95)=15.8ms  p(99)=24.54ms max=960.17ms
+      { expected_response:true }...: avg=9.56ms  min=1.47ms med=7.7ms   p(90)=13.39ms p(95)=15.8ms  p(99)=24.54ms max=960.17ms
+      { page:api }.................: avg=11.63ms min=2.49ms med=9.41ms  p(90)=15.67ms p(95)=18.68ms p(99)=32.3ms  max=799.14ms
+      { page:list }................: avg=10.16ms min=2.26ms med=7.96ms  p(90)=12.86ms p(95)=15ms    p(99)=22.35ms max=960.17ms
+      { page:ssr }.................: avg=6.89ms  min=1.47ms med=5.97ms  p(90)=10.2ms  p(95)=11.94ms p(99)=17.26ms max=412.76ms
+    http_req_failed................: 0.00%  0 out of 61422
+    http_reqs......................: 61422  2047.000976/s
+
+    EXECUTION
+    iteration_duration.............: avg=29.28ms min=9.62ms med=24.77ms p(90)=36.04ms p(95)=41.17ms p(99)=65.1ms  max=1.5s    
+    iterations.....................: 20474  682.333659/s
+    vus............................: 20     min=20         max=20
+    vus_max........................: 20     min=20         max=20
+
+    NETWORK
+    data_received..................: 162 MB 5.4 MB/s
+    data_sent......................: 6.4 MB 213 kB/s
+
+
+
+
+> Dem dong SLOW_SQL (nguong Perf:SlowQueryMs=100) trong file log app sau khi chay k6: 5
+2026-10-02T10:57:20.5491972+07:00 [WRN] cid=4ddb67c830e541abb595c889b33c02c0 trace=9404c9cbb183c4bb8dd5892fce36a35b SLOW_SQL 188.6 ms (ngưỡng 100 ms): SELECT r.id, r.slug, r.title, r.category, ts_rank(r.search_vector, query) AS rank, count(*) OVER () AS total
+2026-10-02T10:57:41.1914104+07:00 [WRN] cid=46af2fa877434288952553bb566da3a4 trace=765fcb8c2cd61647a5add3a85d1407b2 SLOW_SQL 166.6 ms (ngưỡng 100 ms): SELECT r.id, r.slug, r.title, r.category, ts_rank(r.search_vector, query) AS rank, count(*) OVER () AS total
+2026-10-02T10:57:41.2149858+07:00 [WRN] cid=985f428bef2a4453a85151488a469bd9 trace=6a0f1b8ba58d8af8718e3cc89e52aa0a SLOW_SQL 114.5 ms (ngưỡng 100 ms): WITH r AS (
+2026-10-02T10:57:41.2383487+07:00 [WRN] cid=e040ced75d1e441e9dd9ad5790b209e3 trace=0b1417ef6c500262a70fe068502ec48a SLOW_SQL 117.8 ms (ngưỡng 100 ms): WITH r AS (
+2026-10-02T10:57:41.4339793+07:00 [WRN] cid=16b83528ee664d749fb42465576ec4bf trace=4da4b7cc7f509383516166b174258282 SLOW_SQL 108.5 ms (ngưỡng 100 ms): SELECT r.id, r.slug, r.title, r.category, ts_rank(r.search_vector, query) AS rank, count(*) OVER () AS total

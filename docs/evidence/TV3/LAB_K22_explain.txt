@@ -1,0 +1,57 @@
+﻿LAB K22 - chay that app lab Release (http://localhost:5090, DB lab_tv3: 203 Published sau seed) - 2026-10-02 10:56
+> curl.exe -s -D - -o NUL "http://localhost:5090/lab/l22/recipes?take=5"
+HTTP/1.1 200 OK
+X-Sql-Count: 1
+> curl.exe -s -D - -o NUL "http://localhost:5090/lab/l22/recipes?take=20"
+HTTP/1.1 200 OK
+X-Sql-Count: 1
+> curl.exe -s -D - -o NUL "http://localhost:5090/lab/l22/recipes?take=20&mode=naive"
+HTTP/1.1 200 OK
+X-Sql-Count: 21
+> GET /lab/l22/explain?take=20  (EXPLAIN (ANALYZE, BUFFERS) cau danh sach)
+GroupAggregate  (cost=23.62..30.26 rows=2 width=120) (actual time=0.174..0.191 rows=20 loops=1)
+  Group Key: lab_recipes.created_at, lab_recipes.id, lab_recipes.slug, lab_recipes.title
+  Buffers: shared hit=51
+  ->  Incremental Sort  (cost=23.62..30.16 rows=4 width=176) (actual time=0.167..0.168 rows=20 loops=1)
+        Sort Key: lab_recipes.created_at DESC, lab_recipes.id, lab_recipes.slug, lab_recipes.title
+        Presorted Key: lab_recipes.created_at, lab_recipes.id
+        Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 27kB  Peak Memory: 27kB
+        Buffers: shared hit=51
+        ->  Nested Loop Left Join  (cost=17.16..30.05 rows=4 width=176) (actual time=0.111..0.154 rows=20 loops=1)
+              Buffers: shared hit=51
+              ->  Limit  (cost=15.00..15.00 rows=2 width=88) (actual time=0.100..0.102 rows=20 loops=1)
+                    Buffers: shared hit=11
+                    ->  Sort  (cost=15.00..15.00 rows=2 width=88) (actual time=0.099..0.100 rows=20 loops=1)
+                          Sort Key: lab_recipes.created_at DESC, lab_recipes.id
+                          Sort Method: top-N heapsort  Memory: 30kB
+                          Buffers: shared hit=11
+                          ->  Seq Scan on lab_recipes  (cost=0.00..14.99 rows=2 width=88) (actual time=0.011..0.061 rows=203 loops=1)
+                                Filter: (status = 'Published'::text)
+                                Buffers: shared hit=11
+              ->  Bitmap Heap Scan on lab_images x  (cost=2.16..7.50 rows=2 width=104) (actual time=0.001..0.001 rows=0 loops=20)
+                    Recheck Cond: (recipe_id = lab_recipes.id)
+                    Buffers: shared hit=40
+                    ->  Bitmap Index Scan on ix_lab_images_recipe  (cost=0.00..2.16 rows=2 width=0) (actual time=0.001..0.001 rows=0 loops=20)
+                          Index Cond: (recipe_id = lab_recipes.id)
+                          Buffers: shared hit=40
+Planning:
+  Buffers: shared hit=2
+Planning Time: 0.204 ms
+Execution Time: 0.239 ms
+> GET /lab/l3/explain?q=pho  (FTS L3, khong ep index)
+Limit  (cost=15.81..15.81 rows=1 width=132) (actual time=0.101..0.101 rows=10 loops=1)
+  Buffers: shared hit=11
+  ->  Sort  (cost=15.81..15.81 rows=1 width=132) (actual time=0.100..0.100 rows=10 loops=1)
+        Sort Key: (ts_rank(r.search_vector, '''pho'''::tsquery)) DESC, r.created_at DESC, r.id
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=11
+        ->  WindowAgg  (cost=0.00..15.80 rows=1 width=132) (actual time=0.065..0.075 rows=42 loops=1)
+              Buffers: shared hit=11
+              ->  Seq Scan on lab_recipes r  (cost=0.00..15.79 rows=1 width=152) (actual time=0.010..0.053 rows=42 loops=1)
+                    Filter: ((search_vector @@ '''pho'''::tsquery) AND (status = 'Published'::text))
+                    Rows Removed by Filter: 161
+                    Buffers: shared hit=11
+Planning:
+  Buffers: shared hit=1
+Planning Time: 0.160 ms
+Execution Time: 0.117 ms
