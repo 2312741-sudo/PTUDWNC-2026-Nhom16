@@ -124,12 +124,14 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
             .Include(r => r.Steps)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
+    // K22: AsSplitQuery -> 1 câu recipe + 1 câu mỗi collection (số câu cố định), tránh JOIN nhân dòng nguyên liệu x bước x ảnh
     public Task<Recipe?> FindBySlugAsync(string slug, CancellationToken ct) =>
         db.Recipes
             .AsNoTracking()
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
             .Include(r => r.Images)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.Slug == slug, ct);
 
     public async Task<IReadOnlyList<string>> FindUsedSlugsAsync(

@@ -213,7 +213,7 @@ public sealed class RecipeQueryPerformanceTests : IClassFixture<ApiFactory>, IDi
         Assert.Equal(delSmall.Count, delLarge.Count);
         Assert.Equal(stepSmall.Count, stepLarge.Count);
         Assert.Equal(delStepSmall.Count, delStepLarge.Count);
-        Assert.InRange(detailLarge.Count, 1, 3);
+        Assert.InRange(detailLarge.Count, 1, 5);   // split query: recipe + 3 collection + tên tác giả/danh mục
         Assert.InRange(listMany.Count, 1, 3);
     }
 
