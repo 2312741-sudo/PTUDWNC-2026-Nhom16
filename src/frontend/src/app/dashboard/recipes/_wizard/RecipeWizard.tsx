@@ -4,7 +4,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, RecipeDetail, UnauthorizedError,
   createRecipe, getCategories, getRecipeDetail, isConflict, toBasicInfo, updateRecipe,
@@ -20,6 +20,8 @@ export const STEPS = ["Thông tin cơ bản", "Nguyên liệu", "Các bước", 
 
 /** fn gọi API; optimistic (tuỳ chọn) cập nhật UI ngay, lỗi thì hoàn tác về snapshot. */
 export type RunFn = (fn: () => Promise<unknown>, optimistic?: (d: RecipeDetail) => RecipeDetail) => Promise<boolean>;
+type RunVars = { fn: () => Promise<unknown>; optimistic?: (d: RecipeDetail) => RecipeDetail };
+type RunContext = { key: readonly unknown[]; snapshot: RecipeDetail | undefined };
 
 export interface WizardState {
   step: number;
@@ -163,21 +165,31 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
     } catch (e) { handleError(e); }
   }
 
-  const run: RunFn = async (fn, optimistic) => {
-    const key = detailKey(s.recipeId);
-    const snapshot = queryClient.getQueryData<RecipeDetail>(key);
-    dispatch({ type: "saving" });
-    if (optimistic && snapshot) queryClient.setQueryData(key, optimistic(snapshot));
-    try { await fn(); await reload(); refreshPublic(s.slug); return true; }
-    catch (e) {
-      if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return false; }
+  // Mọi thao tác con (nguyên liệu, bước, ảnh, xuất bản) đi qua một useMutation:
+  // onMutate chụp snapshot cache + cập nhật lạc quan, onError hoàn tác về snapshot, thành công thì nạp lại từ server.
+  const mutation = useMutation<void, Error, RunVars, RunContext>({
+    mutationFn: async ({ fn }) => { await fn(); await reload(); },
+    onMutate: async ({ optimistic }) => {
+      const key = detailKey(s.recipeId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const snapshot = queryClient.getQueryData<RecipeDetail>(key);
+      if (optimistic && snapshot) queryClient.setQueryData(key, optimistic(snapshot));
+      return { key, snapshot };
+    },
+    onError: (e, { optimistic }, ctx) => {
+      if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return; }
       if (optimistic) {
-        queryClient.setQueryData(key, snapshot);
+        if (ctx) queryClient.setQueryData(ctx.key, ctx.snapshot);
         dispatch({ type: "rollback", message: `${messageOf(e)} — đã hoàn tác thay đổi.` });
         if (isConflict(e)) dispatch({ type: "error", message: CONFLICT_MSG, conflict: true });
       } else handleError(e);
-      return false;
-    }
+    },
+    onSuccess: () => refreshPublic(s.slug),
+  });
+
+  const run: RunFn = async (fn, optimistic) => {
+    dispatch({ type: "saving" });
+    return mutation.mutateAsync({ fn, optimistic }).then(() => true, () => false);
   };
 
   // info là output đã parse của zodResolver (đã bỏ key thừa) -> gửi thẳng cho backend JSON strict
