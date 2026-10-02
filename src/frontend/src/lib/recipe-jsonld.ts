@@ -13,7 +13,9 @@ const absoluteImage = (u?: string | null): string | null => {
   if (!u) return null;
   if (/^https?:\/\//i.test(u)) return u;
   if (u.startsWith("/")) return `${SITE}${u}`;
-  return mediaUrl(u);
+  // mediaUrl (sau 1492b39) trả đường dẫn tương đối khi thiếu NEXT_PUBLIC_MEDIA_URL -> JSON-LD chỉ nhận URL tuyệt đối
+  const m = mediaUrl(u);
+  return m && /^https?:\/\//i.test(m) ? m : null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
