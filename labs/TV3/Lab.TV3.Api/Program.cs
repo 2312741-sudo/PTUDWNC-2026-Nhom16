@@ -6,6 +6,7 @@ using Hangfire.PostgreSql;
 using Lab.TV3.Api;
 using Lab.TV3.Api.L1;
 using Lab.TV3.Api.L10;
+using Lab.TV3.Api.L16;
 using Lab.TV3.Api.L3;
 using Lab.TV3.Api.L4;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -100,6 +101,7 @@ app.MapL1Auth();
 app.MapL3Search();
 app.MapL4Media();
 app.MapL10Authorization();
+app.MapL16SsrSearch();
 
 // Recurring: sinh sitemap mỗi giờ (K14)
 app.Services.GetRequiredService<IRecurringJobManager>()

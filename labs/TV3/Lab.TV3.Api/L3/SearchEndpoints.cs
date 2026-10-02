@@ -113,7 +113,7 @@ public static class SearchEndpoints
         });
     }
 
-    private static async Task<SearchPage> SearchDb(LabDb db, string q, string? category, int page, int size, CancellationToken ct)
+    internal static async Task<SearchPage> SearchDb(LabDb db, string q, string? category, int page, int size, CancellationToken ct)
     {
         await using var c = await db.OpenAsync(ct);
         var rows = (await c.QueryAsync<SearchRow>(SearchSql,

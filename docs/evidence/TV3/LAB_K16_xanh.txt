@@ -1,0 +1,14 @@
+﻿LAB K16 - test XANH - 2026-10-02 10:26
+Lenh: dotnet test labs/TV3/Lab.TV3.Tests --filter "FullyQualifiedName~L16" -m:1 (LAB_PG, DB lab_tv3_test)
+Exit code: 0
+Test run for D:\CulinaryBlog-lab\labs\TV3\Lab.TV3.Tests\bin\Debug\net10.0\Lab.TV3.Tests.dll (.NETCoreApp,Version=v10.0)
+Passed Lab.TV3.Tests.L16SsrSearchTests.Ban_nhap_khong_xuat_hien_trong_trang [7 s]
+Passed Lab.TV3.Tests.L16SsrSearchTests.Tieu_de_va_tu_khoa_duoc_HTML_encode_chong_XSS [3 s]
+Passed Lab.TV3.Tests.L16SsrSearchTests.Khong_co_tu_khoa_chi_hien_form_va_trang_tim_kiem_noindex [3 ms]
+Passed Lab.TV3.Tests.L16SsrSearchTests.Html_tra_ve_da_chua_ket_qua_khong_can_JavaScript [2 s]
+Passed Lab.TV3.Tests.L16SsrSearchTests.Phan_trang_bang_link_thuong [8 s]
+Test Run Successful.
+Total tests: 5
+Passed: 5
+Ca bo lab (FullyQualifiedName!~L3SearchTests, Redis tat): Total tests: 60, Passed: 60
+L3SearchTests (Redis docker localhost:6399): Total tests: 8, Passed: 8
