@@ -5,9 +5,10 @@ slow query log > 100 ms; EXPLAIN ANALYZE), NFR-PERF-001 (GET p50 ≤ 150 ms). Li
 
 | File | Nội dung |
 |---|---|
-| `K22_sql_explain_chay_that.md` | Báo cáo do test sinh ra: bảng đếm lệnh SQL, nguyên văn câu SQL, EXPLAIN (ANALYZE, BUFFERS) |
+| `K22_sql_explain_chay_that.md` | Báo cáo do test sinh ra (TRƯỚC `AsSplitQuery`): bảng đếm lệnh SQL, nguyên văn câu SQL, EXPLAIN (ANALYZE, BUFFERS) |
+| `K22_sql_explain_sau_split.md` | Như trên, SAU `AsSplitQuery` + reader mới (mục 6) |
 | `K22_index_check.txt` | EXPLAIN lọc trực tiếp theo `RecipeId` + danh sách index các bảng recipe |
-| `K22_k6_chi_tiet.txt` | Đầu ra k6 nguyên văn |
+| `K22_k6_chi_tiet.txt` / `K22_k6_chi_tiet_sau_split.txt` | Đầu ra k6 nguyên văn trước / sau |
 
 ## 1. Không N+1 — đếm lệnh SQL mỗi request (test `RecipeQueryPerformanceTests`, Postgres thật)
 Cách đo: interceptor EF ghi mọi lệnh tới Postgres trong lúc gọi 1 request HTTP (gắn bằng `ConfigureDbContext` qua `WithWebHostBuilder`, không sửa `ApiFactory`).
@@ -44,10 +45,10 @@ Ghi chú trung thực:
 `Bitmap Index Scan on "IX_RecipeIngredients_RecipeId_OrderIndex"` (`K22_index_check.txt`) → index có và dùng được. Với dữ liệu lớn hơn
 planner sẽ đổi kế hoạch — **đoán**, chưa đo trên dữ liệu lớn.
 
-### Rủi ro thấy được (đề xuất, CHƯA sửa)
+### Rủi ro thấy được
 1. **Bùng nổ tích Descartes ở câu chi tiết**: 3 `Include` collection trong một câu JOIN → 10 nguyên liệu × 6 bước = **60 dòng** trả về cho 1 công thức
-   (EXPLAIN: `rows=60`). Không phải N+1 nhưng tăng theo tích. Đề xuất `AsSplitQuery()` cho `FindBySlugAsync`/`FindForWriteAsync` (4 câu cố định, mỗi câu không nhân dòng);
-   cần đo lại trước/sau.
+   (EXPLAIN: `rows=60`). **ĐÃ SỬA cho trang chi tiết** (`FindBySlugAsync` + `AsSplitQuery`, đỏ `625b3fd` → xanh `b2789e4`) — số đo ở mục 6.
+   `FindForWriteAsync` (nạp để ghi, chỉ nguyên liệu × bước) **chưa đổi** — đề xuất làm tiếp nếu công thức lớn.
 2. Dashboard sắp xếp theo `UpdatedAt` không có index riêng; hiện lọc theo `AuthorId` trước nên chỉ sort vài dòng. Nếu một tác giả có rất nhiều công thức: index ghép
    `("AuthorId", "UpdatedAt")` — đề xuất.
 
@@ -69,3 +70,27 @@ Hạn chế: chạy chung máy (RAM trống ~0.8 GB), API bản Debug qua `dotne
 ## 5. Trung đo tay
 - Lighthouse (Performance/LCP/CLS/INP) trang `/recipes/ga-lac-pho-mai-cay` ở bản build (`npm run build; npm run start`), 3 lần lấy trung vị: ____
 - (Tuỳ chọn) k6 lại trên bản build: ____
+
+## 6. Sau `AsSplitQuery` (02/10/2026 18:2x, HEAD `085a25a`) — chạy lại đếm SQL, EXPLAIN, k6
+Commit: test đỏ `625b3fd` (`Detail_loads_each_child_collection_in_its_own_query_so_rows_are_not_ingredients_times_steps`: không câu nào chứa cả
+`RecipeIngredients` và `RecipeSteps`) → sửa `b2789e4`. Reader tên tác giả/danh mục đổi sang neo vào dòng công thức (`e46f951`, vẫn 1 câu).
+Dữ liệu DB lúc đo: Recipes=510, RecipeIngredients=628, RecipeSteps=880, Users=1058.
+
+| Chi tiết (10 nguyên liệu, 6 bước) | Trước | Sau |
+|---|---|---|
+| Số lệnh SQL | 2 (1 câu JOIN + tên) | **5** (recipe, nguyên liệu, bước, ảnh, tên) — vẫn bằng nhau giữa bản 2×2 và 10×6 |
+| Số dòng Postgres trả về cho phần recipe + con | **60** (10 × 6) | **18** (1 + 10 + 6 + 0, + 1 dòng tên) |
+| Truy cập `RecipeIngredients` | `Seq Scan` + Hash Join | `Bitmap Heap Scan` theo `IX_RecipeIngredients_RecipeId_OrderIndex` |
+| Tổng Execution Time (EXPLAIN) | 0.292 ms | 0.050 + 0.048 + 0.040 + 0.026 + 0.048 = **0.212 ms** |
+| Lệnh chậm nhất trong test | 2.4 ms | 0.9 ms; **không lệnh nào > 100 ms** |
+
+k6 (cùng kịch bản 5 VU × 20 s, 0% lỗi, 21 918/21 918 check đạt):
+
+| Kịch bản | p50 trước → sau | p95 trước → sau | p99 trước → sau |
+|---|---|---|---|
+| API `GET /api/v1/recipes/{slug}` | 6.42 → **6.54 ms** | 10.29 → **11.35 ms** | 26.15 → **16.73 ms** |
+| Trang Next `next dev` | 107.74 → 103.18 ms | 821.04 → 829.74 ms | 1.05 → 1.07 s |
+
+Nhận xét trung thực: với công thức cỡ này độ trễ API **gần như không đổi** (thêm 3 round-trip nhưng bớt dòng); lợi ích chính là số dòng không còn nhân
+theo nguyên liệu × bước × ảnh khi công thức lớn. `SLOW_SQL` lần này: **2 dòng** (1645.4 ms, 157.5 ms) lúc 18:24:34–35 = ngay khi k6 bắt đầu 5 VU đồng thời,
+sau đó không còn — **đoán** do pool mở thêm kết nối lúc tải đồng thời đầu tiên. Số trang Next vẫn là `next dev`, không đại diện production.
