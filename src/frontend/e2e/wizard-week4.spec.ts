@@ -159,6 +159,50 @@ test.describe("Wizard soạn công thức — tuần 4", () => {
       .toEqual([["Ảnh thử 1", true], ["Ảnh thử 2", false]]);
   });
 
+  test("(d2) tải ảnh, xoá, tải lại -> không banner xung đột, ảnh mới là ảnh chính và hiện được", async ({ page, request }) => {
+    const s = await newUser(request);
+    const r = await createRecipe(request, s);
+    await signIn(page, s);
+    const errors = trackApiErrors(page);
+    await openEditor(page, r);
+    await stepButton(page, 4).click();
+
+    const file = page.getByLabel("Chọn ảnh");
+    const uploadBtn = page.getByRole("button", { name: "Tải lên", exact: true });
+    const upload = async (alt: string, color: string) => {
+      await file.setInputFiles({ name: `${color.slice(1)}.jpg`, mimeType: "image/jpeg", buffer: await makeJpeg(page, color) });
+      await page.getByLabel("Mô tả ảnh").fill(alt);
+      await uploadBtn.click();
+      await expect(page.getByText(alt, { exact: true })).toBeVisible();
+      await expect(uploadBtn).toBeEnabled();
+    };
+
+    await upload("Ảnh cũ", "#8e44ad");
+    // Chờ job resize (D23) ghi xong ThumbnailUrl: job đổi RowVersion dòng ảnh, xoá trùng đúng lúc đó nhận 422 —
+    // cuộc đua riêng thuộc job resize (đã ghi handoff), không phải lỗi "xoá rồi tải lại" mà ca này kiểm
+    await expect.poll(async () => (await getDetail(request, s, r.id)).images[0]?.thumbnailUrl ?? null,
+      { timeout: 15_000 }).not.toBeNull();
+    page.once("dialog", d => d.accept());
+    await page.getByRole("button", { name: "Xoá ảnh 1: Ảnh cũ" }).click();
+    await expect(page.getByText("Chưa có ảnh. Ảnh đầu tiên sẽ tự thành ảnh chính.")).toBeVisible();
+    await expect(uploadBtn).toBeEnabled();
+
+    await upload("Ảnh mới", "#16a085");
+    await expect(alertWithText(page)).toHaveCount(0);
+    await expect(page.getByText(CONFLICT_MSG)).toHaveCount(0);
+    expect(errors, "không có lỗi API nào (trước đây POST /images -> 422)").toEqual([]);
+
+    const cards = page.locator("ul.grid > li");
+    await expect(cards).toHaveCount(1);
+    await expect(cards.nth(0)).toContainText("Ảnh chính");
+    const img = page.getByRole("img", { name: "Ảnh mới" });
+    await expect(img).toHaveAttribute("src", /^blob:/);
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+
+    const d = await getDetail(request, s, r.id);
+    expect(d.images.map((i: { altText: string; isPrimary: boolean }) => [i.altText, i.isPrimary])).toEqual([["Ảnh mới", true]]);
+  });
+
   test("(e) hai trình duyệt cùng sửa tiêu đề -> bên sau thấy xung đột và nút Tải dữ liệu mới nhất", async ({ browser, request }) => {
     const s = await newUser(request);
     const r = await createRecipe(request, s);
