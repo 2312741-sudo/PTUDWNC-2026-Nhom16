@@ -250,6 +250,8 @@ frontend `tsc`/`lint`/`build` exit `0` ✅ · Playwright **26/26** ✅ ·
 k6 **3/3 lần xanh**, `http_req_failed` **0.00%** ✅.
 **Backend cũng 311/311 khi dựng lại đúng điều kiện CI** (không `Minio__*`, `Redis__Instance=ci`) ✅ —
 đây là cách kiểm chứng lỗi do CI bắt, xem mục "lỗi thứ ba" trong `SO_EVIDENCE_TUAN_4.md` §TV4-K24.
+**CI thật đã xanh** sau commit `8d9d62b`: `Backend week 1` run `37213966752` ✅ (`311/311` + `5/5`,
+coverage gate pass) và `Frontend CI` run `37213966761` ✅.
 
 **Trạng thái build sau N2-B3/B4 (04/10):** backend **299 + 5 = 304/304** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
 `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (2 cảnh báo `<img>` có sẵn từ trước) ·

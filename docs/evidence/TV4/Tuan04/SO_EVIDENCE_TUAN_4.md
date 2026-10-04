@@ -747,6 +747,10 @@ Kết quả:  ✅ C2 — Redis tắt: đọc VẪN 200 (fallback cache in-proces
               ép `Build()` chạy ở constructor thì **2 test đỏ**; bỏ ép thì **9/9 xanh**.
             - Sau khi sửa: **311/311** ở môi trường dev, và **311/311** khi dựng lại đúng điều kiện
               CI (không `Minio__*`, `Redis__Instance=ci`) — tức đã đóng được đúng chỗ CI đỏ.
+            - **Đã xác nhận trên CI thật**: commit `8d9d62b` → run `37213966752` (`Backend week 1`)
+              **thành công**, `311/311` + `ConcurrencySpike 5/5`, coverage gate 80% pass; Frontend run
+              `37213966761` **thành công**. Cả hai job đã xanh trên branch
+              `2312739_NHTSon_D5-D6-D7`.
 
            ⚠️ HAI HÀNH VI ĐÁNG GHI ĐỂ GIẢI THÍCH SỐ ĐO:
            - Khi DB chết mà Redis còn, list(page=1) vẫn **200** vì đọc cache. Đây là
