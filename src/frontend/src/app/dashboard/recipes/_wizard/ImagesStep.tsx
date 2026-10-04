@@ -7,6 +7,7 @@ import {
   IMAGE_TYPES, RecipeDetail, RecipeImage, deleteImage, imageSrc, updateImage, uploadImage,
 } from "@/lib/recipe-editor";
 import { ImageUploadInput, ImageUploadOutput, imageUploadSchema } from "@/lib/recipe-schemas";
+import AuthImage from "./AuthImage";
 import { ariaOf, ErrorText } from "./FieldError";
 import type { RunFn } from "./RecipeWizard";
 
@@ -50,8 +51,7 @@ export default function ImagesStep({ recipe, busy, run }: Props) {
             return (
               <li key={img.id} className={`overflow-hidden rounded border ${img.isPrimary ? "ring-2 ring-emerald-500" : ""}`}>
                 {src
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={src} alt={img.altText ?? recipe.title} className="h-32 w-full object-cover" />
+                  ? <AuthImage src={src} alt={img.altText ?? recipe.title} className="h-32 w-full object-cover" />
                   : <div className="flex h-32 items-center justify-center bg-gray-100 p-2 text-center text-xs text-gray-500">
                       Chưa cấu hình NEXT_PUBLIC_MEDIA_URL<br />{img.originalUrl}
                     </div>}
