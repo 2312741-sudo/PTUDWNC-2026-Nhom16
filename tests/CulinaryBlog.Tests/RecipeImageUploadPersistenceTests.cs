@@ -20,7 +20,11 @@ namespace CulinaryBlog.Tests;
 /// C3 — Tải ảnh vào recipe đã có sẵn trong DB phải INSERT dòng RecipeImages mới.
 /// Lỗi cũ: RecipeImage.Id sinh ở domain nhưng EF coi là ValueGeneratedOnAdd -> ảnh mới trong collection bị coi là
 /// dòng đã tồn tại, phát UPDATE (0 dòng) -> DbUpdateConcurrencyException -> 422 recipe.version_conflict.
-/// Chạy trên Postgres thật (ApiFactory + migration thật); chỉ thay IFileStorageService để loại MinIO.
+/// Main còn lớp chặn thứ hai: AuditableEntityInterceptor (D19, TV4) đổi Modified -> Added khi RowVersion gốc rỗng.
+/// Đột biến đã chạy: bỏ riêng ValueGeneratedNever hoặc riêng luật interceptor -> vẫn xanh; bỏ cả hai -> đỏ 422.
+/// Chạy trên Postgres thật (ApiFactory + migration thật); thay IFileStorageService và IImageResizeQueue để loại MinIO:
+/// ở Testing, InlineImageResizeQueue -> ResizeImageJob -> IObjectStorageReader dựng MinioStorageService, mà ApiFactory
+/// không có section Minio nên MinioClient.Build() ném "User Access Credentials not initialized" -> 500 trước cả khi lưu ảnh.
 /// </summary>
 public sealed class RecipeImageUploadPersistenceTests : IClassFixture<ApiFactory>
 {
@@ -30,6 +34,7 @@ public sealed class RecipeImageUploadPersistenceTests : IClassFixture<ApiFactory
 
     private readonly ApiFactory _factory;
     private readonly WebApplicationFactory<Program> _app;
+    private readonly FakeImageResizeQueue _resizeQueue = new();
 
     public RecipeImageUploadPersistenceTests(ApiFactory factory)
     {
@@ -39,6 +44,8 @@ public sealed class RecipeImageUploadPersistenceTests : IClassFixture<ApiFactory
         {
             services.RemoveAll<IFileStorageService>();
             services.AddScoped<IFileStorageService, InMemoryFileStorage>();
+            services.RemoveAll<IImageResizeQueue>();
+            services.AddSingleton<IImageResizeQueue>(_resizeQueue);
         }));
     }
 
@@ -170,5 +177,8 @@ public sealed class RecipeImageUploadPersistenceTests : IClassFixture<ApiFactory
         Assert.True(afterSecond.Single(r => r.Id == row1.Id).IsPrimary);
         Assert.False(afterSecond.Single(r => r.Id == secondId).IsPrimary, "Ảnh thứ hai không được là ảnh chính.");
         Assert.Equal(1, afterSecond.Count(r => r.IsPrimary));
+
+        // D23: mỗi ảnh vẫn được đưa vào hàng đợi resize sau khi lưu
+        Assert.Equal([row1.Id, secondId], _resizeQueue.Enqueued.Where(e => e.RecipeId == recipeId).Select(e => e.ImageId));
     }
 }
