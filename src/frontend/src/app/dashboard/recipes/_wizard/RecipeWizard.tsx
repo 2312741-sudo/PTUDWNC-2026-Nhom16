@@ -13,6 +13,19 @@ import ReviewStep from "./ReviewStep";
 
 export const STEPS = ["Thông tin cơ bản", "Nguyên liệu", "Các bước", "Ảnh", "Xem lại & Xuất bản"] as const;
 
+/**
+ * Số bước hợp lệ để đọc từ query `?step=` — ngoài khoảng này thì coi như bước 0.
+ *
+ * Vì sao phải kiểm tra: `step` lấy thẳng từ URL do người dùng gõ tay, nên không thể tin là luôn hợp lệ.
+ */
+export function parseStepParam(raw: string | null): number {
+  const n = Number(raw)
+  return Number.isInteger(n) && n >= 0 && n < STEPS.length ? n : 0
+}
+
+/** Sau khi lưu ở bước cơ bản thì sang bước kế tiếp = "Nguyên liệu" (index 1). */
+const STEPS_BASIC_TO_NEXT = 1;
+
 /** fn gọi API; optimistic (tuỳ chọn) cập nhật UI ngay, lỗi thì hoàn tác về snapshot. */
 export type RunFn = (fn: () => Promise<unknown>, optimistic?: (d: RecipeDetail) => RecipeDetail) => Promise<boolean>;
 
@@ -90,6 +103,24 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Ghi bước hiện tại vào URL (`?step=`) để **sống sót qua lần remount**.
+   *
+   * Vì sao cần: lần lưu đầu tiên, `saveBasic` đổi URL từ `/dashboard/recipes/new` sang
+   * `/dashboard/recipes/{id}/edit`. Next.js render lại theo URL mới ⇒ trang `edit` thay thế trang
+   * `new`, `EditRecipeClient` mount và dựng `RecipeWizard` **mới** — state cũ (kể cả bước đang ở)
+   * mất trắng. Trước khi sửa, người dùng bấm "Lưu & tiếp" xong bị **quay lại đúng bước cơ bản**
+   * dù dữ liệu đã lưu thành công. Đọc lại `?step=` khi mount là cách rẻ nhất để không mất tiến độ,
+   * và bonus là F5 hoặc bookmark cũng giữ đúng bước.
+   */
+  useEffect(() => {
+    if (!s.recipeId) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("step") === String(s.step)) return;
+    url.searchParams.set("step", String(s.step));
+    window.history.replaceState(null, "", url.toString());
+  }, [s.step, s.recipeId]);
+
   function messageOf(e: unknown): string {
     if (e instanceof ApiError && e.code === "RECIPE_PUBLISH_INCOMPLETE")
       return "Cần ít nhất 1 nguyên liệu và 1 bước thực hiện trước khi xuất bản.";
@@ -158,9 +189,11 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
       await reload(saved.slug);
       refreshPublic(saved.slug, s.slug); // đổi tiêu đề có thể đổi slug -> làm mới cả slug cũ
       // Đổi URL sang trang edit: F5 hay bấm lại không tạo thêm bản nháp trùng
-      const url = `/dashboard/recipes/${saved.id}/edit?slug=${encodeURIComponent(saved.slug)}`;
+      const url =
+        `/dashboard/recipes/${saved.id}/edit?slug=${encodeURIComponent(saved.slug)}` +
+        `&step=${STEPS_BASIC_TO_NEXT}`;
       if (window.location.pathname + window.location.search !== url) window.history.replaceState(null, "", url);
-      dispatch({ type: "goto", step: 1 });
+      dispatch({ type: "goto", step: STEPS_BASIC_TO_NEXT });
     } catch (e) { handleError(e); }
   }
 

@@ -15,4 +15,7 @@ public sealed class RecipeImageRepository(AuthDbContext db) : IRecipeImageReposi
         db.Recipes.Include(r => r.Images).FirstOrDefaultAsync(r => r.Id == recipeId, ct);
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+
+    /// <summary>N2-E4: xoá tường minh — xem ghi chú trên <c>IRecipeImageRepository.MarkImageDeleted</c>.</summary>
+    public void MarkImageDeleted(RecipeImage image) => db.RecipeImages.Remove(image);
 }

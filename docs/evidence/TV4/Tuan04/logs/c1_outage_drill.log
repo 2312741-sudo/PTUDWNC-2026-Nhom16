@@ -1,0 +1,59 @@
+18:33:01.819  N2-C1/C2 outage drill. 500 = BUG (loi chua duoc phan loai). 503 = DUNG (da bao loi tam thoi).
+18:33:01.825  ---
+18:33:01.877    don process cu tren port 5080 (pid 23776)
+18:33:04.936  --- PHASE -1 - KHOI DONG API ---
+18:33:04.969    pid = 20424
+18:33:07.314    RECOVER  api.ready                 2.3s -> 200
+18:33:07.316  == PHASE 0 - BASELINE (Redis + Postgres + S3 deu up) ==
+18:33:07.583    recipes.list(cached)     200
+18:33:07.631    recipes.list(uncached)   200
+18:33:07.731    recipes.detail           200
+18:33:07.771    media.image(S3)          404
+18:33:07.794    health/ready             200
+18:33:07.795  --- PHASE 1 - DUNG REDIS ---
+18:33:11.225  == PHASE 1 - REDIS DOWN ==
+18:33:14.452    recipes.list(cached)     200
+18:33:18.450    recipes.list(uncached)   200
+18:33:18.486    recipes.detail           200
+18:33:18.502    media.image(S3)          404
+18:33:21.519    health/ready             503
+18:33:21.519    Y nghia: doc van 200 nho fallback in-process cache; /health/ready 503 vi mat Redis.
+18:33:21.520  --- PHASE 2 - BAT LAI REDIS ---
+18:33:21.984    RECOVER  redis.list                0.2s -> 200
+18:33:22.022    RECOVER  redis.ready               0.0s -> 200
+18:33:22.024  --- PHASE 3 - DUNG S3/MINIO ---
+18:33:25.430  == PHASE 3 - S3 DOWN ==
+18:33:25.447    recipes.list(cached)     200
+18:33:25.464    recipes.list(uncached)   200
+18:33:25.491    recipes.detail           200
+18:33:29.604    media.image(S3)          503
+18:33:33.674    health/ready             503
+18:33:33.675    Y nghia: media.image phai doi tu 404 (object thieu) sang 503 (khong noi duoc S3).
+18:33:33.677  --- PHASE 4 - BAT LAI S3 ---
+18:33:34.511    RECOVER  s3.image                  0.5s -> 404
+18:33:34.548    RECOVER  s3.ready                  0.0s -> 200
+18:33:34.549  --- PHASE 5 - DB KHONG TRUY CAP DUOC (instance 5081 tro port 5499 chet) ---
+18:33:34.585    pid = 25160 (Port=5499 khong co gi de loi -> dang chay that voi DB down)
+18:33:44.606    chan doan: exited=False out=0 err=0
+18:35:45.219    RECOVER  dead.khoi-dong          120.6s -> 200
+18:35:49.389    dead.ready               503
+18:35:49.698    dead.list                200
+18:35:53.943    dead.list(uncach)        503
+18:35:58.147    dead.detail              503
+18:35:58.150    Y nghia: moi duong co cham DB deu 503, khong duoc phat ra 500.
+18:35:58.171  --- PHASE 6 - DUNG HANGFIRE WORKER/API (kill tien trinh 5080) ---
+18:36:06.233    worker.down.ready        ERR
+18:36:06.235    Y nghia: node API/worker la SPOF - client thay connection refused, khong co failover.
+18:36:06.236  --- PHASE 7 - KHOI DONG LAI API ---
+18:36:06.263    pid moi = 8728
+18:36:09.766    RECOVER  api.list                  3.5s -> 200
+18:36:09.956    RECOVER  api.ready                 0.2s -> 200
+18:36:10.005    recipes.list(cached)     200
+18:36:10.166    media.image(S3)          404
+18:36:10.168  --- TONG HOP ---
+18:36:10.176    Baseline        list=200/200  image=404  ready=200
+18:36:10.177    Redis down      list=200/200  ready=503   [mong doi 200/503]
+18:36:10.179    S3 down         image=503  ready=503   [mong doi 503]
+18:36:10.183    DB unreachable  ready=503  list=200  uncached=503  detail=503
+18:36:10.184    Worker/API down ready=ERR   [connection refused]
+18:36:10.186    Phuc hoi        list=200  image=404

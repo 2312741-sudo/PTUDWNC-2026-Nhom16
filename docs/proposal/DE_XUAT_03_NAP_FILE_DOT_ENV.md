@@ -3,6 +3,10 @@
 > **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B3
 > **Mức**: 🟡 Trung bình · **Nguồn**: §5.2 và §6 mục 4 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../report/BAO_CAO_LOI_UPLOAD_ANH_500.md)
 > **Cần ai quyết**: nhóm (thêm dependency mới hay chỉ sửa tài liệu)
+>
+> 🟢 **TRẠNG THÁI 03/10/2026: ĐÃ XONG.** Triển khai `DotNetEnv` + `EnvFileLoader`, thêm `.env.example`,
+> thêm 3 test `DevConfigParityTests` chống hồi quy. Đóng gói trong **PR #19** (30/09).
+> Block B3 đã được gỡ.
 
 ---
 

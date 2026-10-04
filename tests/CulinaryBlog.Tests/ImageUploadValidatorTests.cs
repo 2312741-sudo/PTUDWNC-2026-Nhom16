@@ -8,6 +8,20 @@ public sealed class ImageUploadValidatorTests
 {
     private static Stream Stream(byte[] bytes) => new MemoryStream(bytes);
 
+    /// <summary>
+    /// Đệm header cho tới kích thước tối thiểu của một ảnh thật.
+    ///
+    /// Cần vì validator chặn `file.too_small` **trước** khi đối chiếu magic bytes/MIME: fixture
+    /// chỉ 4–12 byte sẽ bị chặn ở ngưỡng kích thước và không bao giờ tới bước mà test muốn kiểm.
+    /// Đệm giữ nguyên phần đầu nên chữ ký magic bytes không đổi.
+    /// </summary>
+    private static byte[] AtLeastMinSize(params byte[] header)
+    {
+        var bytes = new byte[Math.Max(header.Length, (int)ImageFormats.MinBytes)];
+        header.CopyTo(bytes, 0);
+        return bytes;
+    }
+
     [Theory]
     [InlineData("FFD8FF", ".jpg", "image/jpeg")]
     [InlineData("89504E470D0A1A0A", ".jpg", "image/png")]
@@ -50,7 +64,7 @@ public sealed class ImageUploadValidatorTests
     [Fact]
     public void Validator_rejects_mismatched_content_type()
     {
-        var bytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var bytes = AtLeastMinSize(0xFF, 0xD8, 0xFF, 0xE0);
         var (ok, code, _) = ImageUploadValidator.Validate(Stream(bytes), bytes.Length, "image/png");
         Assert.False(ok);
         Assert.Equal("file.invalid_type", code);
@@ -59,7 +73,7 @@ public sealed class ImageUploadValidatorTests
     [Fact]
     public void Validator_accepts_valid_jpeg_with_matching_mime()
     {
-        var bytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var bytes = AtLeastMinSize(0xFF, 0xD8, 0xFF, 0xE0);
         var (ok, code, _) = ImageUploadValidator.Validate(Stream(bytes), bytes.Length, "image/jpeg");
         Assert.True(ok);
         Assert.Null(code);
@@ -68,10 +82,22 @@ public sealed class ImageUploadValidatorTests
     [Fact]
     public void Validator_accepts_without_declared_mime_and_detects_real_type()
     {
-        var bytes = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0 };
+        var bytes = AtLeastMinSize(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A);
         var (ok, code, _) = ImageUploadValidator.Validate(Stream(bytes), bytes.Length, null);
         Assert.True(ok);
+        Assert.Null(code);
         Assert.Equal("image/png", ImageFormats.DetectMimeType(bytes));
+    }
+
+    [Fact]
+    public void Validator_rejects_file_too_short_to_be_an_image()
+    {
+        // 3 byte `FF D8 FF` khớp chữ ký JPEG nhưng không thể là ảnh — chặn bằng mã riêng để
+        // phân biệt với "MIME sai" và "quá 5 MiB".
+        var bytes = new byte[] { 0xFF, 0xD8, 0xFF };
+        var (ok, code, _) = ImageUploadValidator.Validate(Stream(bytes), bytes.Length, "image/jpeg");
+        Assert.False(ok);
+        Assert.Equal("file.too_small", code);
     }
 
     [Fact]

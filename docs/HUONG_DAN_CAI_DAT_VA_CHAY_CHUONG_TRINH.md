@@ -113,7 +113,11 @@ S3_DIGEST=sha256:8cc9801755448b71a786705ce76692c77e14936cccd87cf2fc31842e58f4d1f
 ConnectionStrings__Database=Host=localhost;Port=5432;Database=culinary_blog;Username=postgres;Password=postgres
 
 # --- Khóa ký JWT (Bắt buộc tối thiểu 64 bytes để thỏa mãn HMAC-SHA256) ---
-Jwt__SigningKey=development-secret-key-that-is-at-least-64-bytes-long-for-jwt-signing-256-bits-security
+# KHÔNG dùng khóa có sẵn. Sinh khóa riêng cho máy này rồi dán kết quả 64 ký tự:
+#   Git Bash / WSL : openssl rand -base64 48
+#   PowerShell     : $b=New-Object byte[] 48; ([Security.Cryptography.RandomNumberGenerator]::Create()).GetBytes($b); [Convert]::ToBase64String($b)
+# Khóa dev từng bị commit vào repo đã bị thu hồi và app sẽ từ chối dùng lại (QD3-3b).
+Jwt__SigningKey=REPLACE_WITH_RANDOM_SECRET_AT_LEAST_64_BYTES
 Jwt__Issuer=culinary-blog
 Jwt__Audience=culinary-blog-client
 
@@ -309,12 +313,22 @@ dotnet test CulinaryBlog.sln
 - **Nguyên nhân**: Ứng dụng Docker Desktop chưa được mở hoặc dịch vụ Docker daemon bị tắt.
 - **Cách khắc phục**: Mở Docker Desktop từ Start Menu và đợi khoảng 30–60 giây cho đến khi trạng thái chuyển sang màu xanh. Sau đó chạy lại lệnh `docker compose -f docker-compose.dev.yml up -d`.
 
-### 🔴 Sự cố 2: Lỗi `System.InvalidOperationException: Configure Jwt:SigningKey (at least 64 UTF-8 bytes)`
-- **Nguyên nhân**: Khóa `Jwt__SigningKey` trong file `.env` ngắn hơn 64 bytes.
-- **Cách khắc phục**: Đảm bảo chuỗi `Jwt__SigningKey` trong `.env` có độ dài tối thiểu 64 ký tự UTF-8, ví dụ:
-  ```ini
-  Jwt__SigningKey=development-secret-key-that-is-at-least-64-bytes-long-for-jwt-signing-256-bits-security
+### 🔴 Sự cố 2: Lỗi `InvalidOperationException: Thieu/yeu Jwt:SigningKey (it nhat 64 byte UTF-8)`
+- **Nguyên nhân**: `Jwt__SigningKey` thiếu, rỗng, hoặc ngắn hơn 64 byte UTF-8. Từ QD3-3b, khóa ký JWT
+  **không còn nằm trong `appsettings*.json`** nên đây là trạng thái bắt buộc phải cấu hình, không phải lỗi cấu hình.
+- **Cách khắc phục**: sinh khóa ngẫu nhiên rồi dán vào `.env` (không commit):
+  ```bash
+  openssl rand -base64 48          # Git Bash / WSL / CI
   ```
+  ```powershell
+  # PowerShell
+  $b=New-Object byte[] 48; ([Security.Cryptography.RandomNumberGenerator]::Create()).GetBytes($b); [Convert]::ToBase64String($b)
+  ```
+  Dán chuỗi 64 ký tự nhận được vào `Jwt__SigningKey` trong `.env`.
+
+### 🔴 Sự cố 2b: Lỗi `Jwt:SigningKey la khoa dev da bi commit vao repo (bi thu hoi)`
+- **Nguyên nhân**: `.env` vẫn dùng khóa dev cũ từng bị commit vào lịch sử repo.
+- **Cách khắc phục**: thay bằng khóa ngẫu nhiên mới (xem Sự cố 2). Lưu ý: mọi phiên đăng nhập đang dùng khóa cũ sẽ mất hiệu lực, cần đăng nhập lại.
 
 ### 🔴 Sự cố 3: Lỗi `28P01: password authentication failed for user "postgres"`
 - **Nguyên nhân**: Mật khẩu trong `.env` không khớp với mật khẩu PostgreSQL đã khởi tạo trong volume container trước đó.

@@ -54,7 +54,12 @@ public sealed record RecipeStepDto(
 /// <summary>Tóm tắt ảnh trong detail. DTO đầy đủ thuộc TV4 — xem docs/IMAGE_CONTRACT.md.</summary>
 public sealed record RecipeImageSummaryDto(
     Guid Id, string OriginalUrl, string? MediumUrl, string? ThumbnailUrl,
-    string? AltText, bool IsPrimary, int OrderIndex);
+    string? AltText, bool IsPrimary, int OrderIndex,
+    /// <summary>
+    /// B5 (PA-3): URL có chữ ký cho ảnh private. CHỈ gán khi recipe chưa Published và người gọi là
+    /// owner/Admin; mọi response công khai để null để không rải bearer token ra ngoài.
+    /// </summary>
+    string? PresignedUrl = null);
 
 // Body record — RecipeId lấy từ route, không nhận từ JSON
 public sealed record UpdateRecipeBody(
@@ -79,7 +84,11 @@ internal static class RecipeMapper
         r.Difficulty.ToString(), r.Status.ToString(), r.PublishedAt, r.CategoryId, r.AuthorId,
         r.Nutrition.ToDto(), Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt);
 
-    public static RecipeDetailDto ToDetailDto(this Recipe r) => new(
+    /// <param name="images">
+    /// B5: danh sách ảnh đã bổ sung presignedUrl. <c>null</c> = dùng ảnh từ entity (không ký).
+    /// Handler chỉ truyền list đã ký khi recipe chưa Published và người gọi là owner/Admin.
+    /// </param>
+    public static RecipeDetailDto ToDetailDto(this Recipe r, IReadOnlyList<RecipeImageSummaryDto>? images = null) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
         r.PrepTimeMinutes + r.CookTimeMinutes,
@@ -87,7 +96,7 @@ internal static class RecipeMapper
         r.Nutrition.ToDto(),
         r.Ingredients.OrderBy(i => i.OrderIndex).Select(i => i.ToDto()).ToList(),
         r.Steps.OrderBy(s => s.StepNumber).Select(s => s.ToDto()).ToList(),
-        r.Images.OrderBy(i => i.OrderIndex)
+        images ?? r.Images.OrderBy(i => i.OrderIndex)
             .Select(i => new RecipeImageSummaryDto(
                 i.Id, i.OriginalUrl, i.MediumUrl, i.ThumbnailUrl, i.AltText, i.IsPrimary, i.OrderIndex))
             .ToList(),
@@ -310,7 +319,10 @@ public sealed class UpdateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
 /// <summary>Lấy theo slug. Draft/Archived chỉ owner hoặc Admin xem được (D12).</summary>
 public sealed record GetRecipeBySlugQuery(string Slug) : IRequest<RecipeDetailDto>;
 
-public sealed class GetRecipeBySlugHandler(IRecipeRepository repo, ICurrentUser currentUser)
+public sealed class GetRecipeBySlugHandler(
+    IRecipeRepository repo,
+    ICurrentUser currentUser,
+    IRecipeImageDtoFactory imageDtos)
     : IRequestHandler<GetRecipeBySlugQuery, RecipeDetailDto>
 {
     public async Task<RecipeDetailDto> Handle(GetRecipeBySlugQuery q, CancellationToken ct)
@@ -318,15 +330,24 @@ public sealed class GetRecipeBySlugHandler(IRecipeRepository repo, ICurrentUser 
         var recipe = await repo.FindBySlugAsync(q.Slug, ct)
             ?? throw new AppException(404, "recipe.not_found", "Không tìm thấy công thức.");
 
+        // B5: ảnh chỉ private khi recipe chưa Published. Người xem công khai không cần (và không được
+        // nhận) URL ký; owner/Admin nhận để thẻ <img> trong wizard tải được ảnh Draft.
+        var isOwner = !string.IsNullOrEmpty(currentUser.UserId) && recipe.AuthorId == currentUser.UserId;
+        var isAdmin = currentUser.IsInRole(Roles.Admin);
+
         if (recipe.Status != RecipeStatus.Published)
         {
-            var isOwner = !string.IsNullOrEmpty(currentUser.UserId) && recipe.AuthorId == currentUser.UserId;
             // Trả 404 thay vì 403: không tiết lộ sự tồn tại của Draft người khác
-            if (!isOwner && !currentUser.IsInRole(Roles.Admin))
+            if (!isOwner && !isAdmin)
                 throw new AppException(404, "recipe.not_found", "Không tìm thấy công thức.");
         }
 
-        return recipe.ToDetailDto();
+        var includePresigned = recipe.Status != RecipeStatus.Published && (isOwner || isAdmin);
+        var images = includePresigned
+            ? await imageDtos.CreateSummariesAsync(recipe, includePresignedUrl: true, ct)
+            : null;
+
+        return recipe.ToDetailDto(images);
     }
 }
 

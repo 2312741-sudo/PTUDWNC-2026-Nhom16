@@ -165,6 +165,10 @@ builder.Services.AddScoped<IObjectStorageReader>(sp => sp.GetRequiredService<Min
 // D23 (TV4): resize ảnh 300x300/800x600 ngoài request qua Hangfire (queue PostgreSQL, retry 3).
 // IObjectStorageWriter tách riêng IFileStorageService: cần ghi object với key phái sinh CHỦ ĐỘNG (HANDOFF 5.1).
 builder.Services.AddScoped<IObjectStorageWriter>(sp => sp.GetRequiredService<MinioStorageService>());
+// B5 (TV4, issue #24): cấp URL có chữ ký cho ảnh private (PA-3) — thẻ <img> không gửi được header Bearer
+// nên proxy D27 trả 403 với ảnh recipe Draft trong wizard.
+builder.Services.AddScoped<IObjectStorageUrlSigner>(sp => sp.GetRequiredService<MinioStorageService>());
+builder.Services.AddScoped<IRecipeImageDtoFactory, RecipeImageDtoFactory>();
 builder.Services.AddScoped<ResizeImageJob>();
 // N1-6: đăng ký SitemapGenerator ở NGOÀI if/else trên. Nếu chỉ đăng ký trong nhánh non-Testing
 // thì ở môi trường Testing kiểu này không phải service đã biết, và minimal API sẽ coi tham số
@@ -277,6 +281,36 @@ if (args.Contains("--seed") || args.Contains("--reseed") || args.Contains("--for
     Console.WriteLine("Database seeded and synchronized successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
 }
+// B6 (TV4, PA-2): nâng một tài khoản ĐÃ TỒN TẠI lên role Admin.
+//   dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin admin@local.test
+// PA-A: idempotent; chỉ Development (từ chối Testing/Production); KHÔNG sửa DbSeeder, không sinh mật khẩu.
+if (args.Any(a => a != null && a.StartsWith(PromoteAdminCommand.SwitchName, StringComparison.OrdinalIgnoreCase)))
+{
+    var email = PromoteAdminCommand.ExtractEmail(args);
+    var decision = PromoteAdminCommand.Decide(email, builder.Environment.EnvironmentName);
+    if (decision.Outcome != PromoteAdminOutcome.Allowed)
+    {
+        Console.Error.WriteLine(decision.Message);
+        Environment.ExitCode = 2;
+        return;
+    }
+
+    using var promoteScope = app.Services.CreateScope();
+    try
+    {
+        var result = await PromoteAdminCommand.ExecuteAsync(
+            promoteScope.ServiceProvider.GetRequiredService<AuthDbContext>(), email!);
+        Console.WriteLine(result.Message);
+        if (!result.Succeeded)
+            Environment.ExitCode = 1;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Khong nang duoc role Admin: {ex.GetType().Name}: {ex.Message}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
 
 // N1-6: đăng lịch sitemap 02:00 UTC.
 // Phải đăng SAU khi đã Build() và thông qua IRecurringJobManager lấy từ DI. Gọi static API
@@ -287,11 +321,23 @@ if (!builder.Environment.IsEnvironment("Testing"))
 {
     using var sitemapScope = app.Services.CreateScope();
     var recurringJobs = sitemapScope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-    recurringJobs.AddOrUpdate<SitemapGenerationJob>(
-        "sitemap-daily",
-        job => job.RunAsync(default),
-        sitemapCron,
-        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+    // N2-C1: bọc try/catch. AddOrUpdate phải ghi vào chính PostgreSQL (bảng hangfire.*), nên khi DB
+    // chết lúc khởi động nó ném NpgsqlException ra khỏi Main và GIẾT CẢ TIẾN TRÌNH — tức mất luôn
+    // cả các endpoint đọc không cần DB. Ở đây chỉ mất lịch sitemap; /health/ready vẫn trả 503
+    // (PostgreSQL unreachable) nên orchestrator sẽ restart pod khi DB trở lại, lúc đó lịch được
+    // đăng ký lại. Giá đổi được chấp nhận: sống nhưng không có sitemap tốt hơn chết hẳn.
+    try
+    {
+        recurringJobs.AddOrUpdate<SitemapGenerationJob>(
+            "sitemap-daily",
+            job => job.RunAsync(default),
+            sitemapCron,
+            new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Đăng ký lịch sitemap bị bỏ qua: {Message}. /health/ready sẽ 503 cho tới khi DB trở lại và app restart.", ex.Message);
+    }
 }
 
 if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("Testing"))

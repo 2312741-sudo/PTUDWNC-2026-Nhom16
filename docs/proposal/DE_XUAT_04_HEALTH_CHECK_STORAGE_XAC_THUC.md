@@ -3,6 +3,11 @@
 > **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B4
 > **Mức**: 🟡 Trung bình · **Nguồn**: §3.3 và §6 mục 3 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../report/BAO_CAO_LOI_UPLOAD_ANH_500.md)
 > **Cần ai quyết**: nhóm (chốt ngữ nghĩa `/health`)
+>
+> 🔵 **TRẠNG THÁI 03/10/2026: ĐÃ TRIỂN KHAI — chờ reviewer xác nhận.** Commit `a1311fa`
+> (`feat(health): kiem tra credential object storage that, /health/ready tra 503 khi sai`) —
+> thêm `ObjectStorageCredentialProbe.cs`, `/health/ready` trả 503 khi credential sai,
+> TCP probe chỉ giữ ở `/health`. Bằng chứng: `HealthTests` 18/18. Issue review: `#22`.
 
 ---
 

@@ -45,6 +45,15 @@ jobs:
       - name: Type check (TypeScript)
         run: npx tsc --noEmit
 
+      # N2-A2: trước khi có bước này, repo không có eslint config nào nên lint chưa bao giờ chạy.
+      # Cố tình làm hỏng 1 lần để chứng minh cổng chặn được: thêm file gọi hook trong nhánh điều
+      # kiện -> `react-hooks/rules-of-hooks` báo error, `npm run lint` exit 1, CI đỏ.
+      # KHÔNG dùng `--max-warnings 0`: 8 cảnh báo `@next/next/no-img-element` là **có chủ đích** —
+      # dự án dùng `<img referrerPolicy="no-referrer">` cho URL presigned, `next/image` sẽ đi
+      # qua Next server và làm hỏng cơ chế ký URL (xem `docs/IMAGE_CONTRACT.md` §7b).
+      - name: Lint (ESLint)
+        run: npm run lint
+
       - name: Run unit tests (if configured)
         run: npm test --if-present
 

@@ -23,6 +23,12 @@ env.ps1
 *.tsbuildinfo
 next-env.d.ts
 
+# Playwright (N2-A1): artifact chạy test sinh ra mỗi lần, không phải mã nguồn
+**/playwright-report/
+**/test-results/
+# Cache token đăng nhập của E2E (JWT tài khoản test, sống ~hạn token) - không phải mã nguồn
+**/.playwright/
+
 *.zip
 
 # Log chạy local

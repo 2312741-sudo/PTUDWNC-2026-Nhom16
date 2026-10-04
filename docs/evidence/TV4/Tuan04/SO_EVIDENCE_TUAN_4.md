@@ -7,6 +7,25 @@
 > **code/config + test + kết quả thật + reviewer Tâm xác nhận**. Ô nào chưa đủ thì ghi **Chưa làm**,
 > không làm tròn số.
 
+> [!NOTE]
+> **📌 Cập nhật 03/10/2026 — các con số dưới đây đã cũ, đọc mục này trước.**
+>
+> | Mục | Ghi cũ | **Thực tế hiện tại** |
+> |---|---|---|
+> | Baseline nhánh | `7fe8fc2` | Đã merge `origin/main` (`3d0695d`); HEAD = **`55b4c2b`** |
+> | Số test | đo lúc mở tuần | **`210/210`** pass · build 0 warning · `dotnet format` exit 0 |
+> | Tổng K của TV4 | — | **9/24 đã được reviewer xác nhận** + **8 ô có bằng chứng mới từ N1, đang chờ duyệt** |
+> | Trạng thái N2–N4 | — | **Chưa làm.** Đã lập kế hoạch: [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) · [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](PLAN_GIAI_DOAN_2_D0_XET_LOI.md) · [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](PLAN_GIAI_DOAN_3_SUA_LOI.md) |
+>
+> **Nguyên tắc bổ sung (rút từ lab 03/10):**
+>
+> 1. ⛔ **`214/214` không phải số của nhánh này.** Đó là nhánh lab `lab/TV4-audit-tuan4` (+4 test hồi quy),
+>    **chưa merge**. Số đưa vào sổ này là `210/210`.
+> 2. ⚠️ **Có bằng chứng ≠ đã được duyệt.** 8 ô K của N1 có code + test + log nhưng **chưa** ô nào
+>    reviewer xác nhận → vẫn ghi "chờ duyệt", không đánh ✅.
+> 3. ⚠️ **Lỗi đã sửa trên lab vẫn tính là lỗi đang mở** cho tới khi merge. Chi tiết:
+>    [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md).
+
 > [!IMPORTANT]
 > **Không lấy 4 file `Lab 04` ở `docs/evidence/TV4/` làm minh chứng của sổ này.**
 > `TUAN_4.md`, `BAO_CAO_LAB_04.md`, `Lab04_2312739_NguyenHuuTrungSon.docx`,
@@ -34,9 +53,318 @@
 | Coverage `CulinaryBlog.Application` | đọc `coverage.cobertura.xml` | ✅ **line 83.37%** / branch 67.44% — **đã vượt ngưỡng G5 80%** | 30/09 |
 | Coverage tổng | cùng trên | 31.29% (2446/7817 dòng) — thấp vì `Infrastructure` chỉ 11.29% | 30/09 |
 | Hạ tầng test | `docker compose -f docker-compose.dev.yml up -d postgres redis s3 mailhog` | ✅ 4 container lên; test E2E storage **thật** (không skip — `Skipped=0`) | 30/09 |
-| Frontend typecheck | `npx tsc --noEmit` | ⬜ Chưa chạy | — |
-| Frontend build | `npm run build` (`src/frontend`) | ⬜ Chưa chạy (nằm ở N2-3 khi dựng cổng CI) | — |
+| Frontend typecheck | `npx tsc --noEmit` | ✅ **exit 0** | 03/10 |
+| Frontend build | `npm run build` (`src/frontend`) | ✅ `✓ Compiled successfully`, **exit 0** — ⚠️ in `TypeError: fetch failed`/`ECONNREFUSED` khi static fetch vì API không chạy, **không** làm build fail | 03/10 |
+
+### Kiểm định sau B5/B6/QD3 (03/10/2026)
+
+| Hạng mục | Lệnh | Kết quả | Ngày |
+|---|---|---|---|
+| Build backend | `dotnet build CulinaryBlog.sln` | ✅ **0 warning / 0 error** | 03/10 |
+| Format | `dotnet format CulinaryBlog.sln --verify-no-changes --no-restore` | ✅ **exit 0** (phải chạy `dotnet format` không-verify 1 lần trước để sửa whitespace file test mới) | 03/10 |
+| Test — targeted B5/B6 | `dotnet test --filter "…B5…\|…PromoteAdmin…\|…Image…"` | ✅ **71/71** | 03/10 |
+| Test — toàn bộ | `dotnet test CulinaryBlog.sln` | ✅ **265/265 pass**, Failed 0, **Skipped 0** (5 m 16 s) | 03/10 |
+| Test — chặn hồi quy JWT | `dotnet test --filter "…JwtSigningKeyNotCommittedTests"` | ✅ **6/6**; đã **cấy khoá thật** vào `appsettings.Development.json` để chứng minh test **bắt lỗi**, rồi hoàn tác | 03/10 |
+| Quét secret (tay) | `git grep -n "<khoá dev đã thu hồi>"` (chuỗi khoá không ghi lại trong tài liệu này) | ✅ chỉ còn 1 chỗ hợp lệ — danh sách chặn trong `JwtService.cs`. Đã dọn 2 chỗ rò trong `docs/HUONG_DAN_CAI_DAT_VA_CHAY_CHUONG_TRINH.md` | 03/10 |
+| Quét secret (script) | `bash deploy/scan-secrets.sh` | ⛔→✅ **Đã gỡ blocker 04/10.** Lần đầu chạy `bash` trên PATH của TV4 là **stub WSL** nên báo `execvpe(/bin/bash) failed`. Chạy bằng **Git Bash** thì được: `C:\Program Files\Git\bin\bash.exe deploy/scan-secrets.sh` → **exit 0**. Bài học: `bash` trên PATH **không** bảo đảm có bash thật | 03/10 → 04/10 |
+| B6 kiểm chứng tay | `dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email>` | ✅ thiếu/sai tham số → `2`; `Testing`/`Production` → từ chối; user không tồn tại → `1`; lần đầu → `0`; chạy lại → `0` (idempotent, không trùng join). ⚠️ DB local đã promote `masterchef@culinary.local` + `trung.huynh@culinary.local` thành `Admin` | 03/10 |
+| E2E hạ tầng thật | `docker compose -f docker-compose.dev.yml up -d …` | ⚠️ Docker/RustFS **không** chạy → các test E2E storage **return sớm** (xUnit báo pass chứ không phải `Skipped`). Cần bật lại hạ tầng để có bằng chứng E2E thật cho B5/N2 | 03/10 |
 | Verify `/search` hết lỗi 500 | TC1–TC3 của `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` | 🟡 **Xác nhận bằng tĩnh, chưa chạy runtime** — xem mục 1.1 | 30/09 |
+
+### Kiểm định N2 (04/10/2026)
+
+Hạ tầng thật đã bật: `docker compose -f docker-compose.dev.yml up -d redis s3 mailhog seq otel-collector`
+(PostgreSQL dùng bản local ở `5432`, không bật container `postgres` để tránh tranh port).
+
+| Hạng mục | Lệnh | Kết quả | Ngày |
+|---|---|---|---|
+| Hạ tầng | `docker compose -f docker-compose.dev.yml up -d redis s3 mailhog seq otel-collector` | ✅ `redis`,`s3`,`mailhog`,`seq`,`otel-collector` đều `running`; port `6379/9000/9001/8025/5341/4317/4318` mở. Bỏ `nginx` và `postgres` (đã có Postgres local) | 04/10 |
+| Test storage/DB với hạ tầng thật | `dotnet test --filter "…MinioE2ETests\|…ImageResizeD2Tests\|…ImageProxyD27Tests\|…StorageFailureContractTests"` | ✅ **44/44 pass** — MinIO/S3 thật, không còn return sớm | 04/10 |
+| N2-A2 ESLint | `npx eslint .` trong `src/frontend` | ✅ **exit 0**; 8 warning `<img>` là cố ý (B5 `<img>` + `no-referrer`). Probe hook conditional → **exit 1** (gate bắt lỗi thật). `@typescript-eslint/no-explicit-any` tắt: repo còn 20 `any` có chủ đích, nằm ngoài phạm vi | 04/10 |
+| N2-A2 CI | `.github/workflows/frontend.yml` | ✅ thêm bước `npm run lint` (hiện chạy `tsc → lint → build`) | 04/10 |
+| N2-A1 Playwright | `npx playwright test --list` | ✅ liệt kê đủ **12** test | 04/10 |
+| N2-B2 search E2E | `npx playwright test` | ✅ **12/12 pass** (25,6 s). TC1–TC12 `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md`. TC8 tự tạo recipe Published (kèm ingredient + step) rồi cleanup, đã xác nhận không còn recipe tiền đề E2E | 04/10 |
+| N2-E6 magic bytes | `dotnet test --filter "…ImageMagicBytesE6Tests"` | ✅ **25/25** — chứng minh signature phải đủ chuỗi (WebP/AVIF kiểm tới byte 11), `.exe` đổi tên `.jpg` bị chặn, `RIFF…WAVE` không phải WebP, brand `mp42` không phải AVIF | 04/10 |
+| N2-E3/E4/E4b/E5/E7 | `dotnet test --filter "…ImageConcurrencyE7Tests"` | ✅ **5/5**, chạy lại **3 lần đều 5/5** (không flaky) | 04/10 |
+| Build + format + full test | `dotnet build` → `dotnet format --verify-no-changes` → `dotnet test CulinaryBlog.sln` | ✅ **0 warning / 0 error** → **exit 0** → ✅ **295/295 pass** + ConcurrencySpike **5/5** (42 s) *(bản ghi trước khi làm N2-C; sau N2-C là 309/309 — xem bảng dưới)* | 04/10 |
+| N2-C6 coverage | `dotnet test CulinaryBlog.sln --collect:"XPlat Code Coverage"` → `bash deploy/check-coverage.sh 80 TestResults` | ✅ **84.35%** line coverage `CulinaryBlog.Application` ≥ ngưỡng 80 → **exit 0**. Probe âm (ngưỡng 90) → **exit 1**; thư mục không có report → **exit 1** | 04/10 |
+| N2-C6 CI gate | `.github/workflows/backend.yml` | ✅ thêm bước `bash deploy/check-coverage.sh 80 TestResults` ngay sau `dotnet test` (trước đó CI **chỉ thu** coverage, không ai siết) | 04/10 |
+| Quét secret (chạy được) | `C:\Program Files\Git\bin\bash.exe deploy/scan-secrets.sh` | ✅ **exit 0** — "OK: không phát hiện secret bị gửi vào repo". Mục bị chặn ở trên đã **gỡ** | 04/10 |
+| N2-B2 TC8 (sau khi sửa) | `npx playwright test --reporter=list` | ✅ **12/12 pass** (22,1 s), TC8 **thật sự chạy** (không skip) — xem "Sự cố TC8" bên dưới | 04/10 |
+| N2-E7 ma trận quyền (Development) | `GET /hangfire` bằng anonymous / Author / Admin | ✅ **401** / **403** / **200** — xem bên dưới | 04/10 |
+| Lint + typecheck frontend | `npm run lint` → `npx tsc --noEmit` → `npm run build` | ✅ `exit 0` / `exit 0` / `exit 0` (`✓ Compiled successfully`, 15/15 static pages) | 04/10 |
+| **N2-C3 k6 script trong repo** | `tests/performance/read-load.js` + `README.md` | ✅ script **đã commit** (trước đây chỉ gõ tay heredoc → không ai tái lập được). 3 nhánh đo riêng: cache / uncached / workload thật, có threshold làm hợp đồng | 04/10 |
+| **N2-C4 số đo k6** | `deploy/…` xem TV4-K22 | ✅ **3 lần × 3606–3607 req ≈ 120 req/s, `http_req_failed` 0.00% (0/3607)**. Số của lần giữa: p50 **6.23ms** / p95 **14.14ms** / p99 **25.06ms**. Tất cả threshold xanh | 04/10 |
+| **N2-C1/C2 outage drill** | `powershell -File deploy/outage-drill.ps1` | ✅ Redis tắt → đọc 200 + ready 503; S3 tắt → media 404→**503**; DB không truy cập → mọi endpoint **503 `database.unavailable`, không 500**. Phục hồi: Redis 0.2s · S3 0.5s · API 3.5s. ⛔ Phát hiện + sửa 2 lỗi thật (xem TV4-K24) | 04/10 |
+| **N2-C1c hợp đồng retry** | `dotnet test --filter "FullyQualifiedName~BackgroundJobRetryContractTests"` | ✅ **4/4** — sitemap **2** (trước đó **không có** `[AutomaticRetry]` ⇒ Hangfire không retry lần nào), resize **3**, xoá ảnh **3**, welcome **3** lần theo lịch 0/1/5/30 phút | 04/10 |
+| **Bug 500 khi DB chết** | `dotnet test --filter "FullyQualifiedName~ApiExceptionHandlerDbUnavailableTests"` | ✅ **6/6** — trước khi sửa, DB không truy cập được ⇒ 3 endpoint đọc trả **500** | 04/10 |
+| Build + format + full test (sau N2-C) | `dotnet build` → `dotnet test CulinaryBlog.sln` | ✅ **0 warning / 0 error** → ✅ **309/309 pass** + ConcurrencySpike **5/5**. Thêm 10 test so với 299/299 trước đó | 04/10 |
+
+#### N2-C6 — siết ngưỡng coverage thay vì chỉ "thu được"
+
+CI trước đó đã có `--collect:"XPlat Code Coverage"` nhưng **không có bước nào fail khi coverage tụt**, nên
+con số thu được là vô nghĩa về mặt kiểm soát. Đã thêm `deploy/check-coverage.sh` đọc `line-rate` của
+package `CulinaryBlog.Application` trong `coverage.cobertura.xml` và fail nếu dưới ngưỡng.
+
+| Tầng | Line coverage |
+|---|---|
+| **`CulinaryBlog.Application`** | **84.35%** ← đặt ngưỡng 80% ở đây |
+| `CulinaryBlog.Domain` | 77.09% |
+| `CulinaryBlog.API` | 58.99% |
+| `CulinaryBlog.Infrastructure` | 11.55% |
+
+Chọn **Application** vì đó là tầng chứa logic nghiệp vụ (validator, handler, guard) — cùng tầng với hai
+bug N2-E vừa tìm ra. `Infrastructure` còn thấp vì phần lớn mã nằm ở `DbContext`/migration, siết ngay
+sẽ tạo cảm giác an toàn giả.
+
+Script được kiểm chứng bằng **cả probe âm lẫn probe dương** (không chỉ chạy một lần thấy exit 0):
+ngưỡng 80 → exit 0; ngưỡng 90 → exit 1; thư mục không có report → exit 1. Chạy được local nhờ
+**Git Bash** ở `C:\Program Files\Git\bin\bash.exe` — cùng cái bash đã gỡ được blocker của
+`deploy/scan-secrets.sh`.
+
+#### N2-E7 — đã kiểm chứng đủ ma trận quyền ở `Development`
+
+Hạn chế đã ghi ở mục dưới ("E7 chỉ kiểm được mức không lộ") **đã được xử lý xong** bằng cách chạy thật
+ở `Development` — nơi `Program.cs` thực sự map dashboard và `AdminDashboardAuthorizationFilter` có tác dụng:
+
+| Vai trò | `GET /hangfire` | Kết luận |
+|---|---|---|
+| Anonymous | **401** | không lộ dashboard cho người chưa đăng nhập |
+| Author (`e2e.playwright@culinary.local`) | **403** | `AdminDashboardAuthorizationFilter` chặn đúng |
+| Admin (`e7.probe@culinary.local`, promote bằng CLI B6) | **200** | Admin vào được dashboard |
+
+⚠️ Tài khoản `e7.probe@culinary.local` là **dữ liệu kiểm chứng tạm** trên DB local (đăng ký qua
+`/register` rồi `dotnet run -- --promote-admin …`). Cần xoá trước khi nộp/bảo vệ để không để lại tài
+khoản Admin có mật khẩu đã biết trong môi trường demo.
+
+#### Sự cố TC8 — helper E2E im lặng `skip` (đã sửa)
+
+Lần chạy lại cho ra **11/12**: TC8 bị `skip`, tức `seeded.total <= 12` — tức không tạo được recipe nào.
+Truy nguyên thì **không phải hư test mà là dữ liệu + cache**:
+
+1. `firstCategoryId()` lấy thẳng `list[0]` từ `GET /api/v1/categories`.
+2. Danh sách này được **cache 60 phút** (`GetCategoriesHandler` → `cache.GetOrSetAsync`), còn
+   `POST /api/v1/recipes` kiểm tra danh mục bằng truy vấn thẳng DB (`RecipeGuard.EnsureCategoryExistsAsync`).
+3. Trong lúc debug lỗi 500 ở tuần trước, ~915 danh mục lab (`LAB cat*`, `Món ảnh D2*`) đã bị dọn
+   **bằng SQL ngoài API** ⇒ không có bước `InvalidatePrefixAsync` nào chạy ⇒ cache vẫn trả id chết.
+4. Bằng chứng: `redis-cli TTL dev:cache:categories:all:False` = **108 giây** còn lại; sau khi
+   `DEL` key đó, list về đúng **25 danh mục thật** và `POST /api/v1/recipes` trả **201**.
+
+Kết luận quan trọng: **`RecipeCacheService.InvalidatePrefixAsync` không hỏng** — nó dùng `SCAN` đúng
+(`RecipeCacheService.cs:186`). Đây là hệ quả của việc sửa DB ngoài API, và tự hết hạn sau 60 phút.
+
+Nhưng cách `skip` im lặng thì không chấp nhận được: một môi trường sạch (CI, máy người khác) hoặc bất kỳ
+lần sửa DB tay nào sẽ khiến TC8 "xanh" mà **không hề kiểm thử phân trang**. Đã sửa `firstCategoryId()`
+trong `src/frontend/e2e/api.ts` để **xác minh** từng danh mục bằng `GET /api/v1/categories/{slug}`
+(đường này đọc DB thật, không qua cache) và trả về danh mục đầu tiên còn sống; hết danh sách mới `skip`
+với lý do rõ ràng. Sau đó: **12/12 pass**.
+
+> Ghi chú khi đọc log: `POST /api/v1/recipes` của Playwright trả **404** trong khi log ghi
+> "Handled CreateRecipeCommand" và **không** có dòng `ERR` nào. Đây là `AppException(404, "category.not_found")`
+> được map sang `ProblemDetails` — handler trả `RecipeDto` bình thường, nên "Handled" không có nghĩa là
+> request thành công. Nếu sau này thấy 404 mà log không đỏ, đừng vội tìm lỗi serialization.
+
+
+#### N2-B3/N2-B4 — 10 kịch bản tấn công file upload ảnh (đã chạy thật)
+
+Spec `src/frontend/e2e/upload-security.spec.ts`, gọi API thật (không mock), upload thật lên MinIO.
+Kết quả: **10/10 pass** (B3-1…B3-7, B4-1…B4-3). Toàn bộ E2E: **26/26** (xem TV4-K21).
+
+**Lỗ hổng thật phát hiện khi làm B3 — file JPEG 3 byte được nhận với `201`.**
+
+Magic bytes chỉ kiểm **tiền tố**, mà chữ ký JPEG chỉ dài đúng 3 byte (`FF D8 FF`). Nên một file rỗng
+bị cắt cụt khớp *toàn bộ* chữ ký và lọt qua biên API. Hậu quả: file đó đẩy tới job resize mới chết,
+lỗi nằm **ngoài request** nên người dùng không nhận được mã lỗi có nghĩa — đúng thứ mà yêu cầu
+B3 cấm ("từ chối đúng mã lỗi, không lọt 500").
+
+Đã sửa tại `src/backend/CulinaryBlog.Application/ImageUpload.cs`:
+
+- Thêm `ImageFormats.MinBytes = 64` và mã lỗi riêng `file.too_small` (HTTP 400).
+- Con số 64 có cơ sở, không phải chọn cảm tính: **PNG hợp lệ nhỏ nhất cần 67 byte**
+  (8 byte signature + 25 byte chunk IHDR + 12 byte chunk IEND); JPEG hợp lệ nhỏ nhất ~125 byte.
+  64 nằm dưới cả hai nên không loại o ảnh thật nào.
+
+Bốn test mới (E6.10 + validator) khoá hành vi: JPEG 3 byte → `file.too_small`; PNG 63 byte →
+`file.too_small`; **PNG 1×1 67 byte thật vẫn được nhận** (chống "vá quá tay" làm hỏng ảnh hợp lệ).
+
+> Đệm fixture phải sửa ở 6 file test (`ImageUploadValidatorTests`, `RecipeImageTests`, `MinioE2ETests`,
+> `StorageFailureContractTests`, `ImageProxyD27Tests`, `ImageResizeD2Tests`). Đây **không** phải hư hỏng
+> của các test đó: chúng dùng payload 4–22 byte, nay bị chặn ở nhánh `file.too_small` **trước** khi tới
+> nhánh MIME mà test muốn kiểm. Đã đệm tới kích thước ảnh thật (giữ nguyên phần đầu nên chữ ký không đổi).
+
+**Sự cố lần 2 của `firstCategoryId()` — im lặng `skip` vẫn quay lại, lần này nguy hiểm hơn.**
+
+Sau khi vá B3, chạy spec ra **10/10 `skipped`**. Nguyên nhân là chuỗi, không phải một lỗi:
+
+1. Cache `categories:all:False` còn giữ list cũ **969 mục** (dữ liệu lab đã bị dọn bằng SQL ngoài API
+   *trước khi* có `InvalidatePrefixAsync` ⇒ cache không được xoá). TTL 60 phút.
+2. Các mục đầu list đều đã xoá ⇒ `GET /api/v1/categories/{slug}` trả **404** cho từng mục.
+3. `firstCategoryId()` **dò không giới hạn** ⇒ phát ra hàng trăm request ⇒ chạm rate limit.
+4. Từ đó **mọi** request trả **429**; code cũ coi `!res.ok()` là "danh mục hỏng" ⇒ hết vòng dò ⇒ trả `null`.
+5. `test.skip(!recipeId, ...)` ⇒ **10 test xanh giả, không test gì cả.**
+
+Đã sửa `firstCategoryId()` (`src/frontend/e2e/api.ts`):
+
+- Giới hạn `MAX_CATEGORY_PROBES = 12` mục — không bao giờ dò hết list.
+- **429 được ném ra như lỗi hạ tầng**, không còn bị hiểu nhầm thành "danh mục hỏng".
+- Hết số lần dò mà không tìm được ⇒ **ném lỗi có nêu các slug bị loại**, thay vì `skip` im lặng.
+
+Bằng chứng list là cache chứ không phải DB: sau khi tạo/xoá một danh mục probe (gọi API ⇒ có
+`InvalidatePrefixAsync`), list về đúng **25 mục** và **100% slug tra được đều trả 200**. Danh mục probe
+đã bị xoá lại (HTTP 204), list cuối cùng xác nhận = **25**.
+
+> Bài học để ghi vào quy trình: `skip` là trạng thái nguy hiểm nhất trong E2E — nó biến lỗi hạ tầng
+> thành kết quả tốt. Mọi `skip` trong spec phải là quyết định có chủ ý và có lý do in ra.
+
+**B4 — quyền upload ảnh.** B4-1 khách không token → `401`; B4-2 Author khác → `403 recipe.forbidden`;
+B4-3 payload **hoàn toàn hợp lệ** nhưng sai chủ vẫn bị chặn, và số ảnh trước/sau **không đổi** — đây là
+bằng chứng handler chặn *trước khi ghi*, không chỉ trả `403` sau khi đã lưu.
+
+> Sửa kèm: B3-6/B4-3 ban đầu gọi `GET /api/v1/recipes/{id}` — **route này không tồn tại**, chỉ có
+> `GET /api/v1/recipes/{slug}`. Gọi bằng `id` trả 404 và làm test fail *vì lý do sai*, che mất lỗi thật.
+> Spec nay giữ cả `{id, slug}`: `id` để upload, `slug` để đọc chi tiết.
+
+**Bền vững của login helper.** `loginAsAuthor()` có cache token theo email trong phạm vi worker và retry
+429 theo `Retry-After`. Đã thêm `LOGIN_BUDGET_MS = 20_000`: nếu chờ sẽ vượt ngân sách thì **ném lỗi nói rõ
+còn bị 429**, thay vì để `beforeAll` chết theo timeout 30s — mà khi đó `auth`/`owner` chưa kịp gán nên
+lỗi hiện ra là `Cannot read properties of undefined`, hoàn toàn lệch với nguyên nhân thật.
+
+Kết quả kiểm tra đầy đủ sau khi sửa: backend **299 + 5 = 304/304 pass**; `dotnet format --verify-no-changes`
+exit `0`; `npx tsc --noEmit` exit `0`; `npm run lint` exit `0` (2 cảnh báo `<img>` có sẵn từ trước);
+`npm run build` exit `0`; Playwright **26/26 pass** (publish 4 + search 12 + upload 10).
+
+
+#### Hai lỗi hạ tầng test phát hiện khi chạy lặp — đã sửa
+
+Phần này ghi lại hai lỗi **không thuộc tính năng** nhưng lại làm báo cáo E2E/CI đỏ ngẫu nhiên.
+Cả hai đều do bỏ qua thực tế khi chạy thật, và đều chỉ lộ ra khi chạy lặp nhiều lần.
+
+**1. `dotnet test` ghi đè cache Redis của môi trường Development.**
+
+`RecipeCacheService` dựng prefix key từ `RedisOptions.Instance` và **mặc định `"dev"`**
+(`RecipeCacheService.cs:54`). Integration test dùng `UseEnvironment("Testing")` nhưng
+`appsettings.Testing.json` **không tồn tại**, nên chúng kế thừa `Instance = "dev"` từ
+`appsettings.json` và ghi vào đúng namespace `dev:cache:` mà API Development đang dùng.
+
+Bằng chứng:
+
+| Bước | Quan sát |
+|---|---|
+| `GET /api/v1/categories` | **1013** mục, tất cả đều là `lab-*` đã bị xoá |
+| Tạo rồi xoá 1 danh mục probe qua API (gọi `InvalidatePrefixAsync`) | list về **25** |
+| `redis-cli --scan` sau khi chạy `dotnet test` | key `dev:cache:categories:all:False` **bị xoá** bởi test |
+
+⇒ 1013 mục **không nằm trong DB** (DB chỉ có 25 danh mục sống); đó là cache bị test ghi đè.
+Hệ quả kép: E2E đỏ ngẫu nhiên, và test có thể đọc được cache của môi trường dev.
+
+Đã sửa bằng `src/backend/CulinaryBlog.API/appsettings.Testing.json` đặt `Redis.Instance = "test"`,
+nên test không còn chạm `dev:cache:`. Ghi chú: chính comment trong
+`TracingObservabilityTests` đã từng phản ánh vấn đề này — "cache ... dùng chung Redis giữa các lần
+chạy test" — nhưng chưa ai xử lý.
+
+Bằng chứng **sau khi sửa** (nạp cache dev rồi chạy full suite):
+
+| Bước | Kết quả |
+|---|---|
+| `GET /api/v1/categories` (nạp cache dev) | `dev:cache:categories:all:False` = **25** slug |
+| Chạy `dotnet test CulinaryBlog.sln` | **304/304 xanh** |
+| Kiểm tra lại key dev | **vẫn 25** — không bị xoá hay ghi đè |
+
+Giới hạn của bằng chứng, nói rõ để không hậu kiện: sau khi tách namespace, **không quan sát thấy**
+key `test:cache:categories:*` nào, nghĩa là ở lần chạy này các test không đi qua nhánh cache danh mục.
+Vì vậy cái lệch 1013 mục **không thể quy kết lại chắc chắn** là do test ghi vào `dev:cache:` đúng thời
+điểm đó — đó là suy luận từ dấu vết (key dev bị test xoá, giá trị từng là 1013 mục `lab-*` đã xoá).
+Điều đã **chứng minh chắc chắn** là trước đây test và app Development dùng chung namespace `dev:cache:`
+(cùng `Instance` mặc định), và giờ đã tách. Đây là cấu hình đúng để giữ, bất kể lỗi lịch sử cụ thể là gì.
+
+**2. Test tracing đỏ ngẫu nhiên do race condition trong chính test.**
+
+`TracingObservabilityTests.Request_to_database_bearing_endpoint_produces_http_span_with_child_db_span`
+fail với `InvalidOperationException: Collection was modified; enumeration operation may not execute`.
+
+Nguyên nhân: listener ghi span vào `List<Activity>` **có** `lock`, nhưng vòng `foreach` dùng để log
+chẩn đoán lại duyệt thẳng danh sách đó **ngoài `lock`**, trong khi thread HTTP server và EF Core vẫn
+đang `Add`. Lock bảo vệ writer nhưng không bảo vệ reader. Đây đúng là loại lỗi "chạy riêng thì xanh,
+chạy song song thì đỏ".
+
+Đã sửa: chụp `snapshot = activities.ToList()` **bên trong** `lock` rồi duyệt bản sao.
+
+Đo trước/sau (full suite `dotnet test CulinaryBlog.sln`, có bắt tên test qua trx logger):
+
+| Trạng thái | Kết quả |
+|---|---|
+| Trước khi sửa | **2/10 lần đỏ** (một lần 2 test, một lần 1 test) |
+| Sau khi sửa | **7/7 lần xanh** |
+
+**3. Token đăng nhập E2E: cache trong RAM không đủ.**
+
+API rate-limit đăng nhập theo IP với cửa sổ 60s (`Retry-After` ≈ 61s). Cache token ban đầu nằm ở
+phạm vi module, nhưng Playwright dựng worker process mới cho **mỗi lần chạy** ⇒ chạy E2E hai lần
+liên tiếp là lần thứ hai gặt 429 ngay ở `beforeAll`. Đã chuyển cache xuống đĩa
+(`.playwright/token-cache.json`, đã gitignore), tự đọc `exp` từ JWT và **coi token là hết hạn sớm
+hơn 60s** để không dùng token sắp chết.
+
+Kết quả: **3 lần `npx playwright test` liên tiếp đều 26/26** (trước đó lần thứ hai là đỏ vì 429).
+
+> Ghi nhận trung thực: trong quá trình làm N2-B3/B4 có **một** lần full backend suite đỏ 2 test mà
+> không bắt được tên (lúc đó chưa bật trx logger); các lần chạy sau đã bắt được đúng test tracing ở
+> trên và sửa triệt để. Không có bằng chứng nào cho thấy nguyên nhân khác ngoài race condition này.
+
+
+#### Hai bug thật phát hiện nhờ N2-E3/E4 và đã sửa
+
+Cả hai đều do làm N2-E, không phải do test hỏng — đã tái hiện được ở tầng EF trước khi sửa.
+
+**Bug 1 — `DELETE /api/v1/recipes/{id}/images/{imageId}` không xoá dòng trong DB.**
+`Recipe.Images` chỉ expose `IReadOnlyList` qua backing field, nên EF không nhận orphan: với
+`DeleteBehavior.Cascade` trên quan hệ bắt buộc, DB chỉ tự xoá khi xoá chính recipe (mà recipe là
+soft-delete). Hậu quả: endpoint trả **204** và xoá object S3, nhưng dòng `RecipeImages` vẫn còn.
+
+> Bằng chứng đo được: sau `RemoveImageDeferringPromotion` + `SaveChanges`, `rowsForRecipe` giảm
+> từ 2 xuống 1 **nhưng** `db.Entry(target).State` vẫn là `Unchanged` — phát hiện orphan không đáng tin.
+> Đổi sang `ClientCascade` một mình vẫn không đủ.
+
+**Bug 2 — `23505 duplicate key ... ux_recipe_images_one_primary`, API trả 422.**
+Unique index partial `(RecipeId) WHERE IsPrimary = true` được Postgres kiểm **từng câu lệnh**, và
+Postgres **không cho unique index partial deferrable**. EF lại không bảo đảm thứ tự phát lệnh giữa
+các entity, nên khi gộp "xoá ảnh primary" + "bật ảnh thay thế" (hoặc "chuyển primary") vào một
+`SaveChanges`, EF có thể phát `UPDATE(bật ảnh mới)` khi dòng primary cũ còn nằm trong bảng → `23505`.
+
+> Bằng chứng đo được: `failedInPhase=phase2`, `rowsAfterPhase1=1`, `primariesAfterPhase1=0` — DB đã
+> còn **0** dòng primary trước khi lệnh `UPDATE` bật primary mới vẫn nhận `23505`.
+
+**Cách sửa (đã áp dụng).**
+1. `IRecipeImageRepository.MarkImageDeleted(RecipeImage)` — xoá tường minh qua `DbSet.Remove`,
+   không còn phụ thuộc phát hiện orphan. `Images` chuyển sang `DeleteBehavior.ClientCascade`.
+2. Mọi thao tác đổi primary lưu **nhiều lần trong một transaction** (`IUnitOfWork.ExecuteInTransactionAsync`,
+   dùng execution strategy retry-safe của Npgsql):
+   - xoá ảnh: hạ tất cả primary → bật ảnh thay thế → `DELETE` dòng cũ;
+   - `PATCH isPrimary`: hạ tất cả primary → bật ảnh mới.
+   Chỉ chạy nhánh "dựng lại primary" khi ảnh bị xoá **đang là** primary, nếu không thì xoá ảnh
+   thường sẽ làm mất ảnh chính của công thức (đã bị test `Delete_removes_image_and_deletes_object`
+   bắt và sửa).
+3. Aggregate thêm `ClearPrimaryImages()`, `PromotePrimaryImage()`, `GetPrimaryReplacementCandidate()`;
+   `RemoveImage()` giữ nguyên hành vi cũ (vẫn promote) để không phá domain test.
+
+**Hồi quy được bảo vệ bằng test.** `E4` nay kiểm cả ba điều: xoá trả `204`, còn **đúng một** primary
+là ảnh thay thế, và dòng ảnh đã xoá **thực sự biến mất khỏi DB** (`Assert.False(...AnyAsync(i => i.Id == first.Id))`).
+`E3` chấp nhận `422 recipe.version_conflict` cho request thua cuộc — đó là hành vi đúng của
+optimistic concurrency (D19), đặt kỳ vọng "cả hai phải 200" sẽ che mất đúng cơ chế bảo vệ.
+
+#### Hạn chế còn lại của N2-E (ghi rõ, không che)
+
+- **E7 đã kiểm đủ cả hai mức.** Test tự động `E7_Hangfire_dashboard_is_never_publicly_exposed` vẫn chỉ
+  chạy được ở `Testing` (Hangfire không được đăng ký ⇒ `/hangfire` trả **404** chứ không phải 403 từ
+  `AdminDashboardAuthorizationFilter`). Phần "Author 403 / Admin 200" **đã kiểm chứng tay ở `Development`**:
+  401 / 403 / 200 — xem bảng ở mục "N2-E7" phía trên. Đây là giới hạn của môi trường test, không phải
+  của logic phân quyền.
+- **E1/E2 đã có test sẵn ở tuần trước**, không nhân bản: `ImageResizeD2Tests.Deleted_image_is_not_regenerated_by_resize_job`
+  và `ImageResizeD2Tests.Resize_is_idempotent_when_job_runs_twice`. Riêng "không xoá object ngoài
+  bucket/prefix" mới chỉ được bảo vệ gián tiếp qua kiểm tra key `recipes/{recipeId}/...` trong các
+  test D2/D27, chưa có test riêng gọi thẳng vào `MinioStorageService.DeleteAsync`.
+- `dotnet test` vẫn có một test flaky về tracing: `TracingObservabilityTests.Request_to_database_bearing_endpoint_produces_http_span_with_child_db_span`
+  từng fail khi chạy song song, pass khi chạy riêng. Không liên quan N2-E.
+
 
 > So với tuần 3 (`80b2c0e`: 172/172) ⇒ **178/178, +6 test**, không có test nào bị skip.
 
@@ -85,12 +413,12 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 | K07 | UoW/transaction/audit/soft delete/RowVersion | 🟡 | Race sitemap chặn bằng Redis lock (1/1 thắng); audit/RowVersion còn ở phần lab | `SitemapGenerator.cs`, `SitemapLockTests` | 🟢 Lock đã làm 30/09 · lab chưa |
 | K08 | Identity/PBKDF2, JWT, refresh rotation/reuse/logout | ✅ | Bù lab mục 2 (refresh hash/rotation/reuse) (N3-1) | TV4-K08 | 🟡 Có nền · tuần 4 bổ sung lab |
 | K09 | Google OAuth2/PKCE, Auth.js, ID token verify/link | ❌ | Lab mục 2; **thiếu credentials ⇒ ghi "còn chờ", không tính hoàn thành** (N3-1) | TV4-K09 | ⬜ Chưa làm |
-| K10 | RBAC/ownership/policy/rate limit/secrets/HTTPS/CORS | 🟡 | Bỏ secret khỏi `render.yaml` (`sync:false` + `fromService`); CI chạy `deploy/scan-secrets.sh` (bắt được JWT hardcode khi thử) | `render.yaml`, `deploy/scan-secrets.sh`, `backend.yml` | 🟢 Đã làm 30/09 · **còn rotate key thật** |
+| K10 | RBAC/ownership/policy/rate limit/secrets/HTTPS/CORS | 🟡 | Bỏ secret khỏi `render.yaml` (`sync:false` + `fromService`); CI chạy `deploy/scan-secrets.sh` (bắt được JWT hardcode khi thử) | `render.yaml`, `deploy/scan-secrets.sh`, `backend.yml` | 🟢 Đã làm 30/09 · ⛔ **còn rotate key thật** — ngoài repo, xem [`DE_XUAT_09`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md) |
 | K11 | FTS tsvector/unaccent/pg_trgm/GIN/ts_rank, filter/sort/page | ✅ | EXPLAIN lại + đo sau thay đổi (N2-6) | TV4-K11 | 🟡 Có nền · tuần 4 đo lại |
 | K12 | Redis cache-aside, OutputCache, invalidation, fallback | 🟡 | `RecipeCacheService` dùng Redis thật + JSON + xoá theo prefix + fallback local khi Redis chết; 2 service dùng chung key (6/6 test) | `RecipeCacheService.cs`, `RedisSharedCacheTests` | 🟢 Gap đã lấp 30/09 · k6 cache-hit đo ở N2-5 |
 | K13 | MinIO/S3 upload/delete, stream/MIME/magic bytes/GUID | ✅ | Kịch bản tấn công file ở mức E2E (N2-4) | TV4-K13 | 🟡 Có nền · bổ sung E2E tấn công |
 | K14 | Hangfire fire-and-forget/delayed/recurring, retry, persistence, dashboard | 🟡 | Recurring "sitemap-daily" `0 2 * * *` UTC qua `IRecurringJobManager`; storage PostgreSQL dùng chung cho mọi worker | `Program.cs`, `SitemapGenerator.cs` | 🟢 Đã làm 30/09 · chờ Tâm duyệt |
-| K15 | SMTP/MailKit, resize 300×300/800×600, sitemap XML | 🟡 | `deploy/backup.sh` + `deploy/restore.sh` (drill 14 bảng); sitemap XML sinh theo lịch, `/sitemap.xml` trả 200 | `deploy/backup.sh`, `deploy/restore.sh`, `SitemapGenerator.cs` | 🟢 Đã làm 30/09 · lịch 03:00 ICT chờ đặt ở host |
+| K15 | SMTP/MailKit, resize 300×300/800×600, sitemap XML | 🟡 | `deploy/backup.sh` + `deploy/restore.sh` (drill 14 bảng); sitemap XML sinh theo lịch, `/sitemap.xml` trả 200 | `deploy/backup.sh`, `deploy/restore.sh`, `SitemapGenerator.cs` | 🟢 Đã làm 30/09 · 🔴 nơi đặt lịch 03:00 ICT **chưa chốt** → [`DE_XUAT_07`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) |
 | K16 | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | ❌ | Hạ tầng CI build FE + lab L5 (`search-ssr`, `isr-detail`) (N2-3, N3-2) | TV4-K16 | ⬜ Chưa làm |
 | K17 | TanStack Query/server state, optimistic rollback, next/image | ❌ | Progress upload + rollback; lab `query-rollback`, `image-opt` (N2-8, N3-2) | TV4-K17 | ⬜ Chưa làm |
 | K18 | Responsive, WCAG 2.1 AA, keyboard, loading/error | ❌ | Checklist 320/768/1200 px + focus/aria (N2-8) | TV4-K18 | ⬜ Chưa làm |
@@ -98,7 +426,7 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 | K20 | Serilog/Seq/correlation, OTEL HTTP/DB/metrics, health probes | 🟡 | Trace thật qua collector: span HTTP + span `db.system=postgresql` cùng TraceId; log Serilog cùng TraceId; health probe credential S3 thật | `logs/seq_trace_recipes.log`, `TracingObservabilityTests`, `HealthTests` | 🟢 Đã làm 30/09 · chờ Tâm duyệt |
 | K21 | xUnit/unit ≥80%, API happy+error, Jest/RTL, Playwright | ❌ | Playwright thật + 5 luồng; ngưỡng coverage trong CI (N2-1, N2-2, N2-7) | TV4-K21 | ⬜ Chưa làm |
 | K22 | k6 p50/p95/p99, EXPLAIN/N+1/cache hit, CWV/Lighthouse | ❌ | Commit script k6 tái lập được + đo p95/p99; số đo resilience (N2-5, N2-6) | TV4-K22 | ⬜ Chưa làm |
-| K23 | Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling | 🟡 | Backup/restore drill thật + OTEL collector trong Compose + Redis shared; **chưa dựng 2 process API qua Nginx** | `deploy/backup.sh`, `deploy/restore.sh`, `docker-compose.dev.yml` | 🟡 Phần đa xong 30/09 · thiếu 2 tiến trình API |
+| K23 | Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling | 🟡 | Backup/restore drill thật + OTEL collector trong Compose + Redis shared; 2 instance đã đo thủ công qua Nginx nhưng **chưa có profile compose sẵn dùng** | `deploy/backup.sh`, `deploy/restore.sh`, `docker-compose.dev.yml` | 🟡 Phần đa xong 30/09 · profile 2 API + kho backup 30 ngày để **tuần 5** / [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) |
 | K24 | Git/PR/review/CI/static analysis/architecture test/secret scan/docs | 🟡 | Secret scan trong CI + Redis service cho test; CI frontend, PR lab, runbook để N2/N3/N4 | `backend.yml`, `deploy/scan-secrets.sh` | 🟢 Secret scan xong 30/09 · phần còn lại để sau |
 
 **Đếm (sau N1, cập nhật 30/09)**: 9 ô đã có + **8 ô vừa có bằng chứng trong N1** (K02, K03, K07, K10, K12,
@@ -177,9 +505,71 @@ Reviewer + ngày: ⬜
 ```text
 Evidence: TV4-K21
 Tuần / Người / Task: 4 / TV4 / N2-1, N2-2 (luồng publish + search của TV4)
-Đường dẫn: src/frontend/playwright.config.ts, tests e2e, package.json scripts
-Lệnh chạy: [điền]
-Kết quả: [điền — số luồng pass/fail; search phải phủ TC1–TC12 của báo cáo lỗi 500]
+Đường dẫn: src/frontend/playwright.config.ts,
+            src/frontend/e2e/recipe-publish.spec.ts   (N2-B1 publish — MỚI 04/10),
+            src/frontend/e2e/search.spec.ts           (search TC1–TC12),
+            src/frontend/e2e/upload-security.spec.ts  (N2-B3/B4, 10 test),
+            src/frontend/e2e/api.ts                   (helper: login cache, browserAccessToken,
+                                                          firstCategoryId, deleteRecipe),
+            src/frontend/src/app/dashboard/recipes/_wizard/RecipeWizard.tsx   (sửa lỗi mất bước),
+            src/frontend/src/app/dashboard/recipes/[id]/edit/EditRecipeClient.tsx,
+            package.json scripts
+Lệnh chạy: # Postgres + docker compose (redis/s3) phải lên trước
+           npm run test:e2e                       # toàn bộ; Playwright tự bật frontend + backend
+           npm run test:e2e -- recipe-publish     # riêng luồng publish
+           E2E_START_BACKEND=0 npm run test:e2e   # tự bật backend (dùng trong CI)
+Kết quả: Toàn bộ **26/26 pass** = publish **4** + search **12** (TC1–TC12) + upload **10**
+         (B3-1…B3-7, B4-1…B4-3). `--retries=0` chạy **3 lần liên tiếp đều 26/26**
+         (51.1s / 52.9s / 51.8s); `recipe-publish --repeat-each=4` → **16/16**.
+
+         Luồng publish (recipe-publish.spec.ts) — B1-1…B1-4, tất cả đi qua **UI thật**
+         (wizard 5 bước), không gọi fetch:
+         B1-1 validate client chặn tiêu đề <5 ký tự và thiếu danh mục, không nhảy bước, không tạo draft.
+         B1-2 nút "Xuất bản" `disabled` khi thiếu bước thực hiện.
+         B1-3 trọn vẹn: lưu nháp → 2 nguyên liệu → 2 bước → xuất bản → badge Draft→Published →
+              link "Xem trang công khai" → trang `/recipes/{slug}` hiện tên món, **không còn nhãn
+              "Bản nháp"** → tab "Công thức của tôi" hiện "Đã đăng" + nút "Xem".
+         B1-4 recipe đã publish mở ở bước 5 hiện badge Published và **không còn** nút "Xuất bản".
+
+         🟢 Phát hiện **1 lỗi sản phẩm thật** trong lúc làm luồng publish (đã sửa + khoá bằng test):
+         **Wizard mất bước khi lưu công thức mới.** `saveBasic` (`RecipeWizard.tsx:161`) đổi URL từ
+         `/dashboard/recipes/new` sang `/dashboard/recipes/{id}/edit`. Next.js render theo URL mới nên
+         trang `edit` **thay thế** trang `new`: `EditRecipeClient` mount và dựng `RecipeWizard` mới
+         với `step: 0`. Hệ quả người dùng thấy: bấm "Lưu & tiếp" xong **bị quay ngược về đúng bước
+         cơ bản** (dữ liệu đã lưu, nhưng phải bấm "Nguyên liệu" lần nữa) — và nếu đang gõ dở ở bước
+         sau thì mất trắng.
+         Sửa: mang bước hiện tại trên URL (`?step=`), `EditRecipeClient` đọc lại khi mount
+         (`parseStepParam`) và có `useEffect` đồng bộ mỗi khi đổi bước. Bonus: F5/bookmark giữ đúng bước.
+         Bài **B1-3** giờ khẳng định wizard **tự** sang bước 2 sau lần lưu đầu — lỗi quay lại bước 1
+         làm form nguyên liệu không bao giờ hiện và test đỏ đúng chỗ.
+         Bằng chứng trước khi sửa: `--repeat-each=6` → **5/6 đỏ**; log API cho thấy `POST /recipes` 201
+         rồi `GET` chi tiết nhưng **không có** `POST .../ingredients` nào.
+
+         🟢 Sửa 3 lỗi trong **test** (không phải lỗi sản phẩm):
+         1. `getByRole('alert')` khớp 2 phần tử vì Next.js tự sinh `#__next-route-announcer__`
+            cũng mang `role="alert"` → phải loại nó (`div[role="alert"]:not(#__next-route-announcer__)`).
+         2. `getByRole('button', { name: 'Xuất bản' })` mặc định khớp **substring**, nên cũng khớp
+            nút bước `5. Xem lại & Xuất bản` → `strict mode violation`; sửa bằng `exact: true`.
+         3. `gotoStep` giờ kiểm `aria-current="step"` sau khi bấm, và `settleStep` chờ `networkidle`.
+            Trước đó lỗi thật hiện ra là `timeout` 60s ở một ô nhập của bước *kế tiếp* — dấu hiệu không
+            liên quan gì tới nguyên nhân thật.
+
+         🟢 `playwright.config.ts` giờ **tự bật backend** trong `webServer` (chờ `/health/ready`, không
+         phải chỉ cổng) thay vì bắt người chạy tự mở terminal khác. Lý do: khi tiến trình API bị dọn
+         giữa lúc test đang chạy, các test còn lại nhận `ECONNREFUSED` — **lỗi hạ tầng bị quy nhầm thành
+         lỗi sản phẩm**. Đo được một lần mất **14/26 test** chỉ vì lý do này. Đặt `E2E_START_BACKEND=0`
+         để tự quản lý (CI dùng chế độ này vì đã có sẵn Postgres/Redis/S3).
+
+         Kết quả ổn định: `recipe-publish --repeat-each=4` → **16/16**; full suite `--retries=0` chạy
+         **3 lần liên tiếp đều 26/26** (51.1s / 52.9s / 51.8s); và 1 lần chạy khi **tắt hẳn API** để
+         Playwright tự bật cũng **26/26** (1.1m, gồm cả lúc build + khởi động backend).
+
+         ⚠️ **Phạm vi còn thiếu, đã ghi rõ**: plan ghi "5 luồng E2E đầy đủ" nhưng N2-B1 của TV4 chỉ
+         nhận **publish + search**; `register/login` (TV1), `category` (TV2), `create-recipe`
+         (TV3) do thành viên khác viết và **tuần 5 mới có** → mục này hiện mới phủ 2/5 luồng.
+         Ngoài ra frontend **chưa có** nút Unpublish/Archive (API `PATCH /{id}/unpublish`,
+         `/{id}/archive` đã có ở `Program.cs:620,627` nhưng chưa nối vào UI) → gỡ xuất bản hiện chỉ
+         kiểm được ở tầng API, chưa kiểm được bằng UI.
 Reviewer + ngày: ⬜
 ```
 
@@ -218,6 +608,11 @@ Giới hạn: Hai tiến trình API đã chạy thật trên máy (5080/5081) sa
          Lịch 03:00 Asia/Ho_Chi_Minh đã có trong repo: .github/workflows/backup.yml với cron
          '0 20 * * *' UTC (= 20:00 UTC hôm trước). Cần secret DATABASE_URL trong repository
          settings. Artifact của GitHub chỉ giữ 7 ngày nên 30 ngày phải chạy trên host có ổ đĩa riêng.
+         ⛔ CHƯA ĐẠT "giữ 30 ngày": biến BACKUP_KEEP_DAYS=30 trong backup.yml chỉ dọn file trên
+           runner, không phải thời hạn lưu thật. Cần bucket/NAS riêng -> DE_XUAT_08.
+         ⛔ CHƯA CHỐT nơi đặt lịch: GitHub Actions có thể trễ/bỏ qua job khi repo lâu không commit
+           -> DE_XUAT_07 (khuyến nghị: giữ GH Actions + thêm job canh).
+         ⛔ CHƯA ROTATE khoá JWT đã lộ trong git history -> DE_XUAT_09.
 Reviewer + ngày: ⬜
 ```
 
@@ -246,10 +641,103 @@ Reviewer + ngày: ⬜
 
 ```text
 Evidence: TV4-K22
-Tuần / Người / Task: 4 / TV4 / N2-5, N2-6
-Đường dẫn: tests/performance/*.js (script k6 đã commit)
-Lệnh chạy: [điền]
-Kết quả: [điền — p50/p95/p99, req/s, % lỗi; bảng failover từng dependency]
+Tuần / Người / Task: 4 / TV4 / N2-C3, N2-C4, N2-C5, N2-C6
+Đường dẫn: tests/performance/read-load.js (script k6 ĐÃ COMMIT — trước đây chỉ gõ tay heredoc
+           nên người khác không tái lập được workload), tests/performance/README.md (runbook),
+           deploy/outage-drill.ps1 (kịch bản dừng dịch vụ), Tuan04/logs/k6_c4_run{1,2,3}.log,
+           Tuan04/logs/c1_outage_drill.log
+Lệnh chạy: # C3/C4 — k6 (máy này không có binary k6 nên dùng Docker grafana/k6)
+           docker exec culinaryblog-redis redis-cli FLUSHALL
+           docker run --rm --network host -e BASE_URL=http://host.docker.internal:5080 \
+             -e RATE=20 -e DURATION=30s -v "%CD%/tests/performance:/scripts:ro" \
+             grafana/k6 run /scripts/read-load.js
+           # C1/C2 — dừng lần lượt Redis / S3 / DB rồi đo trạng thái + thời gian phục hồi
+           powershell -NoProfile -ExecutionPolicy Bypass -File deploy/outage-drill.ps1
+Kết quả:  ✅ C3 — script k6 nằm trong repo, có threshold (hợp đồng) + README nêu rõ cách chạy
+           lại và những gì BẮT BUỘC phải ghi kèm số đo.
+           ✅ C4 — chạy 3 lần, đều FLUSHALL trước (đo đường xuống DB, không đo cache ấm).
+              Dữ liệu: 101 recipe Published · 25 danh mục · Redis còn 605 key sau k6.
+              Máy đo: i5-12450H (8C/12T) · 31.7 GB · Windows 11 Home.
+              Workload: 3 scenario × 20 req/s × 30s = 3606–3607 request ≈ 120 req/s.
+              http_req_failed = 0.00% (0/3607) ở cả 3 lần.
+
+              Lấy số của LẦN GIỮA (run 2) — không phải lần đẹp nhất:
+              | nhánh             | p50    | p95    | p99    |
+              |-------------------|--------|--------|--------|
+              | list_cached       |  6.85ms| 14.61ms| 26.46ms|
+              | list_uncached     | 10.89ms| 18.07ms| 29.22ms|
+              | read_mixed        |  5.69ms| 11.20ms| 18.01ms|
+              | tất cả            |  6.23ms| 14.14ms| 25.06ms|
+
+              Cả 3 lần đều xanh threshold: cached p95<200ms, uncached p95<800ms, mixed p95<500ms.
+              Nhận xét phải nói kèm: uncached CHẬM HƠN cached ~1.5–1.8× ở p95, đúng như mong đợi
+              của cache-aside. Nhưng ở tải này cả hai đường đều dưới 20ms nên CACHE CHƯA TẠO
+              RA KHÁC BIỆT Ý NGHĨA — nói "cache giảm tải" ở mức p95 hiện tại là nói quá.
+Giới hạn: k6 chạy trên chính máy dev có API + Postgres + Redis + MinIO cùng chạy (không tách
+          tải), nên con số KHÔNG đại diện hạ tầng production. Chưa đo khi DB thật bị nghẽn tải
+          (không có môi trường staging). Không có môi trường đo p95/p99 hữu ích khi tải cao.
+Reviewer + ngày: ⬜
+```
+
+### TV4-K24 (N2-C1, N2-C1b, N2-C1c, N2-C2) — Outage drill: dừng Redis / S3 / DB / worker
+
+```text
+Evidence: TV4-K24
+Tuần / Người / Task: 4 / TV4 / N2-C1, N2-C1b, N2-C1c, N2-C2
+Đường dẫn: deploy/outage-drill.ps1, Tuan04/logs/c1_outage_drill.log,
+           src/backend/CulinaryBlog.API/ApiExceptionHandler.cs (map lỗi DB → 503),
+           src/backend/CulinaryBlog.API/Program.cs (fail-soft đăng ký lịch sitemap),
+           src/backend/CulinaryBlog.Infrastructure/SitemapGenerator.cs ([AutomaticRetry(2)]),
+           src/backend/CulinaryBlog.Infrastructure/MinioStorageService.cs (retry xoá 3 lần),
+           src/backend/CulinaryBlog.Infrastructure/WelcomeEmail.cs (RetryDelays 0/1/5/30 phút),
+           tests/CulinaryBlog.Tests/ApiExceptionHandlerDbUnavailableTests.cs,
+           tests/CulinaryBlog.Tests/BackgroundJobRetryContractTests.cs
+Lệnh chạy: powershell -NoProfile -ExecutionPolicy Bypass -File deploy/outage-drill.ps1
+           dotnet test --filter "FullyQualifiedName~ApiExceptionHandlerDbUnavailableTests|FullyQualifiedName~BackgroundJobRetryContractTests"
+Kết quả:  ✅ C2 — Redis tắt: đọc VẪN 200 (fallback cache in-process, log "Redis unavailable,
+           falling back to in-process cache"), /health/ready 503. KHÔNG có 500.
+           ✅ C1/S3 — S3 tắt: media.image đổi 404 → 503 (storage.unavailable), /health/ready 503.
+           ✅ C1/DB — DB không truy cập được: /health/live 200, /health/ready 503,
+           list(uncached) 503, detail 503 — tất cả 503 database.unavailable, KHÔNG 500.
+           ✅ Phục hồi: Redis 0.2s · S3 0.5s · API 3.5s (tính từ lúc bật lại tới 200 đầu tiên).
+           ✅ C1/worker — kill tiến trình API: /health/ready connection refused. Node đơn là
+           SPOF, không có failover (xem Giới hạn).
+           ✅ C1c — hợp đồng số lần retry khoá bằng test: sitemap 2, resize 3, xoá ảnh 3,
+           welcome 3 lần theo lịch 0/1/5/30 phút. 10/10 test mới xanh.
+           ✅ C1b — cache dùng chung giữa 2 tiến trình + sitemap distributed lock: xem TV4-K23
+           (2 API thật 5080/5081 qua nginx, 10 request → api-1: 5 / api-2: 5) và TV4-K14
+           (2 generator tranh lock → đúng 1 thắng).
+
+           ⛔ HAI LỖI THẬT PHÁT HIỆN + ĐÃ SỬA TRONG LÚC DRILL (không phải chỉ ghi nhận):
+           1. DB không truy cập được ⇒ 3 endpoint đọc trả **500 server.error**. Nguyên nhân:
+              EfUnitOfWork chạy lệnh qua execution strategy của EF nên NpgsqlException gốc bị
+              bọc thành InvalidOperationException("...likely due to a transient failure"), còn
+              ApiExceptionHandler chỉ kiểm tra exception ngoài cùng nên không nhận ra. Sửa: dò
+              CẢ chuỗi InnerException, map Npgsql/Socket/Timeout → 503 database.unavailable,
+              và đặt nhánh này TRƯỚC nhánh 422 để DbUpdateException do mất kết nối không bị
+              báo nhầm "dữ liệu đã thay đổi". 6 test hồi quy.
+           2. DB không truy cập được lúc KHỞI ĐỘNG ⇒ AddOrUpdate của lịch sitemap ném
+              NpgsqlException ra khỏi Main và **giết cả tiến trình**, mất luôn endpoint không
+              cần DB. Sửa: bọc try/catch + log; /health/ready vẫn 503 nên orchestrator restart
+              pod khi DB trở lại, lúc đó lịch được đăng ký lại.
+
+           ⚠️ HAI HÀNH VI ĐÁNG GHI ĐỂ GIẢI THÍCH SỐ ĐO:
+           - Khi DB chết mà Redis còn, list(page=1) vẫn **200** vì đọc cache. Đây là
+             cache-aside đúng thiết kế, nhưng nghĩa là khi DB chết người dùng vẫn thấy DỮ LIỆU
+             CŨ mà không có tín hiệu nào cho biết. Nếu không chấp nhận trả dữ liệu cũ thì phải
+             thêm cờ hạn dữ liệu trong response — chưa làm.
+           - App mất **~95–120 giây** mới bắt đầu LISTEN khi DB không truy cập được (Hangfire
+             retry connection nhiều lần lúc khởi động). Readiness probe của orchestrator phải
+             có startupProbe riêng, nếu chỉ dùng livenessProbe timeout ngắn sẽ giết app vô
+             lý và tạo vòng lặp restart.
+Giới hạn: ⚠️ KHÔNG dừng được PostgreSQL thật — máy này không chạy admin, `Stop-Service` và
+          `pg_ctl stop` đều trả "Operation not permitted". Thay vào đó chạy instance thứ hai
+          trỏ port DB không có gì lắng nghe (5499): lỗi Npgsql thật ở tầng app, chỉ khác là
+          không cần quyền admin. Lệnh chuẩn để chạy thật: `Stop-Service postgresql-x64-18`
+          (cần quyền Administrator).
+          Đo trên một node đơn, không có load balancer/second node ⇒ số liệu failover là
+          "mất dịch vụ", không phải "suy hao dịch vụ". Chưa đo RPO/RTO thật.
+          S3/Redis dừng được bằng `docker stop` nên phần này là sự cố thật, không mô phỏng.
 Reviewer + ngày: ⬜
 ```
 

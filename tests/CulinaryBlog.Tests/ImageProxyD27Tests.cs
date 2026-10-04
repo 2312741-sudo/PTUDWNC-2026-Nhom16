@@ -40,11 +40,22 @@ public sealed class ImageProxyD27Tests : IAsyncLifetime
 
     public Task InitializeAsync() => Task.CompletedTask;
 
-    private static readonly byte[] JpegBytes =
-    [
-        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
-        0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xD9
-    ];
+    // Header JPEG hợp lệ (`FF D8 FF E0` + JFIF) rồi đệm tới `ImageFormats.MinBytes`.
+    // Validator chặn `file.too_small` **trước** khi đối chiếu magic bytes, nên payload 22 byte
+    // sẽ bị chặn ở ngưỡng kích thước thay vì tới nhánh kiểm tra ảnh.
+    private static readonly byte[] JpegBytes = BuildJpeg();
+
+    private static byte[] BuildJpeg()
+    {
+        byte[] header =
+        [
+            0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
+            0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xD9
+        ];
+        var bytes = new byte[Math.Max(header.Length, (int)ImageFormats.MinBytes)];
+        header.CopyTo(bytes, 0);
+        return bytes;
+    }
 
     private async Task RegisterAsync(HttpClient http)
     {

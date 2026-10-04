@@ -5,7 +5,11 @@ import { mediaUrl } from "./recipe-editor";
 const duration = (m?: number | null) => (m && m > 0 ? `PT${m}M` : undefined);
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// `r` là response chi tiết của API (`GET /recipes/{slug}`), gồm nhiều field hơn `RecipeDetail` khai
+// báo trong `recipe-editor.ts` (`authorName`, `publishedAt`, …). Giữ `any` có chủ đích cho tới khi
+// interface được đồng bộ với contract — xem phát sinh N2-A2 trong `SO_EVIDENCE_TUAN_4.md`.
+// Chỉ thị `eslint-disable @typescript-eslint/no-explicit-any` từng có ở đây là **vô hiệu** vì rule
+// chưa được đăng ký trong eslint config, nên đã bỏ để không sinh cảnh báo "unused directive".
 export function buildRecipeJsonLd(r: any, slug?: string) {
   const has = (v: unknown) => v !== null && v !== undefined;
   const images = [...(r.images ?? [])]

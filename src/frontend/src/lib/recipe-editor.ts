@@ -157,6 +157,12 @@ export interface RecipeImage {
   id: string;
   originalUrl?: string | null; mediumUrl?: string | null; thumbnailUrl?: string | null; url?: string | null;
   altText?: string | null; isPrimary: boolean; orderIndex: number;
+  /**
+   * B5 (TV4, PA-3): URL có chữ ký cho ảnh PRIVATE (recipe chưa Published).
+   * Proxy ảnh chỉ cho owner/Admin nên thẻ <img> (không gửi header Bearer) cần URL này mới tải được.
+   * Hết hạn sau ~10 phút → phải PATCH lại ảnh để lấy URL mới. Luôn null với ảnh public.
+   */
+  presignedUrl?: string | null;
 }
 
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
@@ -172,7 +178,37 @@ export function mediaUrl(key?: string | null): string | null {
   }
   return MEDIA ? `${MEDIA.replace(/\/$/, "")}/${key.replace(/^\//, "")}` : (key.startsWith('/') ? key : `/${key}`);
 }
-export const imageSrc = (i: RecipeImage) => mediaUrl(i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
+/**
+ * B5: ưu tiên URL có chữ ký khi ảnh còn private. `mediaUrl` trả nguyên URL tuyệt đối,
+ * nên không cần ghép NEXT_PUBLIC_MEDIA_URL cho trường này.
+ */
+export const imageSrc = (i: RecipeImage) =>
+  mediaUrl(i.presignedUrl ?? i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
+
+/** Chặn dùng URL ký sắp hết hạn (bù độ trễ mạng/render) — 20 giây. */
+const PRESIGNED_SAFETY_MS = 20_000;
+
+/**
+ * B5: thời điểm hết hạn (ms) của URL ký, đọc từ X-Amz-Date + X-Amz-Expires.
+ * Trả null nếu không phải URL ký hoặc thiếu tham số → coi như không hết hạn.
+ */
+export function presignedExpiresAt(url?: string | null): number | null {
+  if (!url || !/^https?:\/\//i.test(url)) return null;
+  const date = /[?&]X-Amz-Date=(\d{8}T\d{6}Z)/i.exec(url);
+  const expires = /[?&]X-Amz-Expires=(\d+)/i.exec(url);
+  if (!date || !expires) return null;
+
+  const signed = Date.parse(
+    `${date[1].slice(0, 4)}-${date[1].slice(4, 6)}-${date[1].slice(6, 8)}T` +
+    `${date[1].slice(9, 11)}:${date[1].slice(11, 13)}:${date[1].slice(13, 15)}Z`);
+  return Number.isNaN(signed) ? null : signed + Number(expires[1]) * 1000;
+}
+
+/** B5: URL ký đã hết hạn (hoặc sắp hết) thì thẻ <img> sẽ 403 → cần báo người dùng tải lại. */
+export function isPresignedStale(url?: string | null, now: number = Date.now()): boolean {
+  const at = presignedExpiresAt(url);
+  return at !== null && at - now <= PRESIGNED_SAFETY_MS;
+}
 
 export async function uploadImage(id: string, file: File, altText: string | null): Promise<RecipeImage> {
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
@@ -189,9 +225,10 @@ export async function uploadImage(id: string, file: File, altText: string | null
   return (body?.data ?? body) as RecipeImage;
 }
 
-// PATCH gửi đủ 3 field (JSON strict) và giữ nguyên giá trị hiện tại để không vô tình xoá altText/orderIndex
+// PATCH gửi đủ 3 field (JSON strict) và giữ nguyên giá trị hiện tại để không vô tình xoá altText/orderIndex.
+// B5: response là RecipeImageDto nên mang cả presignedUrl MỚI — cần để gia hạn URL đã hết hạn.
 export const updateImage = (id: string, img: RecipeImage, patch: Partial<Pick<RecipeImage, "isPrimary" | "altText" | "orderIndex">>) =>
-  request<unknown>(`/recipes/${id}/images/${img.id}`, json("PATCH", {
+  request<RecipeImage>(`/recipes/${id}/images/${img.id}`, json("PATCH", {
     isPrimary: patch.isPrimary ?? img.isPrimary,
     altText: patch.altText ?? img.altText ?? null,
     orderIndex: patch.orderIndex ?? img.orderIndex,

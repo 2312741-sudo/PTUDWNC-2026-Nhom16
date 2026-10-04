@@ -71,11 +71,39 @@ Magic bytes được nhận diện:
   "isPrimary": true,
   "orderIndex": 0,
   "createdAt": "2026-09-17T01:00:00Z",
-  "updatedAt": "2026-09-17T01:00:00Z"
+  "updatedAt": "2026-09-17T01:00:00Z",
+  "presignedUrl": null
 }
 ```
 
 *Ghi chú:* `originalUrl` chứa **key** (đường dẫn tương đối) của object. Cách biến key thành URL trình duyệt tùy quyết định bucket policy (D27) — xem mục 5.
+
+### `RecipeImageSummaryDto` (ảnh trong `GET /recipes/{slug}`)
+Cùng các trường trên **trừ** `recipeId`/`createdAt`/`updatedAt`, và có thêm `presignedUrl`.
+
+### Trường `presignedUrl` (PA-3)
+
+| Trường | Kiểu | Ý nghĩa |
+|---|---|---|
+| `presignedUrl` | `string \| null` | URL **có chữ ký** (query `X-Amz-Algorithm`/`X-Amz-Credential`/`X-Amz-Date`/`X-Amz-Expires`/`X-Amz-SignedHeaders`/`X-Amz-Signature`) trỏ thẳng vào object RustFS/MinIO. |
+
+**Luật quyết định giá trị (backend, `RecipeImageAccess.NeedsPresignedUrls`):**
+
+| Recipe status | Người gọi | `presignedUrl` |
+|---|---|---|
+| `Draft` / `Archived` | owner hoặc Admin | có (ký) |
+| `Draft` / `Archived` | thành viên khác / khách | endpoint trả `404 recipe.not_found` — không lộ |
+| `Published` | bất kỳ ai | `null` (ảnh đã phục vụ công khai qua proxy) |
+
+Áp dụng cho cả `POST /recipes/{id}/images`, `PATCH /recipes/{id}/images/{imageId}` và `GET /recipes/{slug}`.
+
+**Ràng buộc vận hành:**
+- Hạn mặc định **10 phút**, chặn cấu hình ngoài khoảng `1..15` phút (`Minio:PresignedUrlExpiryMinutes`, `MinioOptions.MaxPresignedUrlExpiryMinutes`). App không khởi động được nếu sai.
+- Chỉ ký **một** biến thể theo thứ tự ưu tiên `thumbnailUrl` → `mediumUrl` → `originalUrl`, và chỉ ký biến thể có giá trị trong DB (tức là object resize đã tồn tại).
+- Ký lỗi (RustFS/MinIO down) là **fail-soft**: `presignedUrl = null`, request vẫn `200`; không ném 500.
+- **Không được log** URL ký hay `X-Amz-Signature` (chỉ log bucket + key).
+
+**Hệ quả với frontend:** `<img>` không gửi header `Authorization`, nên phải dùng `presignedUrl` làm `src` và set `referrerPolicy="no-referrer"` (URL ký là bearer token nằm trong query string). URL hết hạn thì `<img>` nhận `403 image.forbidden` và không tự retry — UI phải hiện thông báo và cho PATCH lại ảnh để lấy URL mới (`presignedExpiresAt` / `isPresignedStale` trong `recipe-editor.ts`).
 
 ### `PATCH /recipes/{id}/images/{imageId}` — Request Body
 ```json
@@ -88,6 +116,7 @@ Magic bytes được nhận diện:
 - `altText`: Tùy chọn, ≤ 200 ký tự.
 - `isPrimary`: Tùy chọn boolean; truyền `true` để chuyển ảnh này thành ảnh chính (tự bỏ primary của ảnh khác).
 - `orderIndex`: Tùy chọn, số nguyên ≥ 0.
+- Response là `RecipeImageDto` **kèm `presignedUrl` mới** → dùng để gia hạn URL đã hết hạn mà không cần upload lại ảnh.
 
 ---
 
@@ -147,6 +176,20 @@ Mọi phản hồi lỗi dùng `Content-Type: application/problem+json` và head
 
 ---
 
+## 7b. Ảnh Draft trong wizard (PA-3 — ✅ chốt 28/09: presigned URL)
+
+**Vấn đề:** proxy §5 trả `403 image.forbidden` cho ảnh của recipe Draft, nhưng thẻ `<img>` không gửi header `Authorization` → wizard không hiện được ảnh vừa upload.
+
+**Cách chọn: PA-3 — URL có chữ ký (presigned URL) đặt trong DTO.** Các phương án khác đã bị loại: `PA-1` cookie token (nới rộng bề mặt tấn công CSRF/XSS), `PA-2` render ảnh qua `blob:` (không vẽ được thumbnail sau khi reload wizard), `PA-4` nới `403` thành `200` (xoá hẳn ranh giới Draft/Published của D27).
+
+- **Hợp đồng**: trường `presignedUrl` (nullable) trên `RecipeImageDto` và `RecipeImageSummaryDto` — bảng quy tắc giá trị ở **§3**.
+- **Backend**: `IObjectStorageUrlSigner` (Application) ← `MinioStorageService.CreatePresignedUrlAsync` (Infrastructure, `PresignedGetObjectAsync` — HMAC cục bộ, không gọi mạng); `RecipeImageDtoFactory` chọn biến thể và ký; DI đăng ký ở `Program.cs`.
+- **Không đụng contract TV3**: `IFileStorageService`/`StoredFile` giữ nguyên; `RecipeImageDto.From(...)` vẫn không ký nên mọi đường dùng cũ giữ hành vi cũ.
+- **FE**: `imageSrc()` ưu tiên `presignedUrl`; `<img referrerPolicy="no-referrer">`; `isPresignedStale()` phát hiện URL sắp hết hạn và hiện nút **Tải lại liên kết ảnh** (PATCH lại ảnh để lấy URL mới).
+- **Kiểm thử**: `RecipeImagePresignedB5Tests` + `RecipeDetailPresignedB5Tests` (`tests/CulinaryBlog.Tests/RecipeImagePresignedB5Tests.cs`) — Draft owner/Admin có URL; Published kể cả owner cũng `null`; khách xem Published không có URL và signer không được gọi; member khác không đọc được Draft (`404`); ưu tiên thumbnail → medium → original; signer lỗi thì fail-soft; hạn URL bị chặn ở 15 phút và URL ký không lọt vào log.
+
+---
+
 ## 8. Tích hợp cho TV3 (Recipe editor)
 
 - TV3 gọi `POST /recipes/{id}/images` với `multipart/form-data` (field `file`, tùy chọn `altText`) → nhận `RecipeImageDto`.
@@ -154,3 +197,4 @@ Mọi phản hồi lỗi dùng `Content-Type: application/problem+json` và head
 - `DELETE .../{imageId}` → `204`; UI xoá khỏi gallery và gọi đồng bộ.
 - Ảnh đầu tiên tự thành primary — editor chỉ cần set primary khi có ≥ 2 ảnh.
 - **Gallery sau upload**: poll/reload `GET /recipes/{slug}` để lấy `thumbnailUrl`/`mediumUrl` (job resize bất đồng bộ — xem §7). `imageSrc()` của FE đã tự fallback về `originalUrl` khi hai URL này còn `null`.
+- **Ảnh Draft**: `GET /recipes/{slug}` trả kèm `presignedUrl` cho owner/Admin (§7b). Hết hạn sau ~10 phút → gọi lại `GET /recipes/{slug}` hoặc `PATCH` ảnh đó để lấy URL mới; không cần upload lại.

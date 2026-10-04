@@ -11,6 +11,16 @@ public sealed class MinioOptions
     public bool UseSsl { get; set; }
 
     /// <summary>
+    /// B5 (issue #24): hạn của URL ảnh có chữ ký, tính bằng PHÚT. Mặc định 10.
+    /// Giới hạn trên 15 phút là bắt buộc: URL ký là bearer token, đọc được trong access log và
+    /// lịch sử trình duyệt ⇒ hạn dài đồng nghĩa rò ảnh recipe Draft/Archived.
+    /// </summary>
+    public int PresignedUrlExpiryMinutes { get; set; } = 10;
+
+    /// <summary>Trần cứng cho <see cref="PresignedUrlExpiryMinutes"/> (15 phút) — không nới.</summary>
+    public const int MaxPresignedUrlExpiryMinutes = 15;
+
+    /// <summary>
     /// B2 (issue #21, N1-7): fail-fast lúc khởi động thay vì để lỗi lộ ra lúc runtime.
     /// Trước đây AccessKey/SecretKey rỗng vẫn khởi động được và báo /health = Healthy, chỉ khi
     /// người dùng bấm "Tải lên" mới nhận 500 server.error — phải đọc log Serilog mới hiểu vì sao.
@@ -28,6 +38,12 @@ public sealed class MinioOptions
             problems.Add("Minio:SecretKey (biến môi trường Minio__SecretKey) phải có giá trị — nếu rỗng thì upload ảnh sẽ trả lỗi 503 storage.unavailable.");
         if (string.IsNullOrWhiteSpace(Bucket))
             problems.Add("Minio:Bucket (biến môi trường Minio__Bucket) phải có giá trị, ví dụ 'culinary-blog'.");
+
+        // B5: URL ký coi như bearer token — chặn cấu hình thiếu/0/âm và chặn vượt trần 15 phút.
+        if (PresignedUrlExpiryMinutes <= 0)
+            problems.Add("Minio:PresignedUrlExpiryMinutes phải >= 1 (phút).");
+        else if (PresignedUrlExpiryMinutes > MaxPresignedUrlExpiryMinutes)
+            problems.Add($"Minio:PresignedUrlExpiryMinutes không được vượt {MaxPresignedUrlExpiryMinutes} phút — URL ảnh có chữ ký là bearer token, hạn dài sẽ rò ảnh Draft.");
 
         return problems;
     }

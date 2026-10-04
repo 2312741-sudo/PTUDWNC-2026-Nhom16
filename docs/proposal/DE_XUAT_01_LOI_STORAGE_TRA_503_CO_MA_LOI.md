@@ -3,6 +3,10 @@
 > **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B1
 > **Mức**: 🔴 Cao · **Nguồn**: §6 mục 2 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../report/BAO_CAO_LOI_UPLOAD_ANH_500.md)
 > **Cần ai quyết**: nhóm (thống nhất contract lỗi) + TV3 (consumer của API)
+>
+> 🔵 **TRẠNG THÁI 03/10/2026: ĐÃ TRIỂN KHAI — chờ reviewer duyệt.** Commit `9e786e7`
+> (`feat(storage): loi duoc doc ro rang 503 storage.unavailable + validate MinIO luc khoi dong`).
+> Bằng chứng: `StorageFailureContractTests`. Issue review: `#20`. Chưa có phản hồi từ nhóm.
 
 ---
 

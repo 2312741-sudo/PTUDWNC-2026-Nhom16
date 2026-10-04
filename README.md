@@ -273,6 +273,9 @@ dotnet restore CulinaryBlog.sln --locked-mode
 
 # 2. Tạo .env cho máy này (giá trị thật, KHÔNG commit)
 cp .env.example .env
+#    BẮT BUỘC sinh khóa JWT rồi dán vào .env (app sẽ không khởi động nếu bỏ trống):
+#      Git Bash / WSL : openssl rand -base64 48
+#      PowerShell     : $b=New-Object byte[] 48; ([Security.Cryptography.RandomNumberGenerator]::Create()).GetBytes($b); [Convert]::ToBase64String($b)
 
 # 3. Áp dụng migration cơ sở dữ liệu
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
@@ -285,7 +288,12 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 ```
 > Không cần `export` gì thêm: `EnvFileLoader` nạp `.env` tự động (bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`).
 > Không có `.env` thì app dùng default trong `appsettings.Development.json` (`Password=postgres`) — khớp default của `docker-compose.dev.yml`.
-> Muốn dùng JWT key riêng thì sửa `Jwt__SigningKey` trong `.env` (≥ 64 bytes).
+>
+> 🔑 **`Jwt__SigningKey` là BẮT BUỘC (QD3-3b).** Khoá ký JWT không còn nằm trong `appsettings*.json`; app **fail-fast** khi
+> thiếu hoặc khoá < 64 byte (`InvalidOperationException` kèm hướng dẫn). Đổi khoá = mọi phiên đăng nhập cũ mất hiệu lực.
+> Khoá dev cũ từng bị commit vào repo đã bị **thu hồi** — app từ chối dùng lại nó.
+>
+> 👑 Cần tài khoản Admin? `dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email>` (chỉ Development, idempotent — xem `docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md` §6.1).
 
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
 

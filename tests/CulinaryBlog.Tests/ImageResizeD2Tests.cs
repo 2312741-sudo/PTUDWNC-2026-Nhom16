@@ -52,12 +52,24 @@ public sealed class ImageResizeD2Tests : IAsyncLifetime
         return output.ToArray();
     }
 
-    /// <summary>JPEG "header + EOI" không decode được — mô phỏng ảnh hỏng để kiểm tra original fallback.</summary>
-    private static readonly byte[] TruncatedJpeg =
-    [
-        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
-        0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xD9
-    ];
+    /// <summary>
+    /// JPEG "header + EOI" không decode được — mô phỏng ảnh hỏng để kiểm tra original fallback.
+    /// Đệm tới `ImageFormats.MinBytes` vì validator chặn `file.too_small` trước khi đối chiếu magic
+    /// bytes; padding zero vẫn giữ nguyên tính chất "không decode được".
+    /// </summary>
+    private static readonly byte[] TruncatedJpeg = BuildUndecodableJpeg();
+
+    private static byte[] BuildUndecodableJpeg()
+    {
+        byte[] header =
+        [
+            0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
+            0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xD9
+        ];
+        var bytes = new byte[Math.Max(header.Length, (int)ImageFormats.MinBytes)];
+        header.CopyTo(bytes, 0);
+        return bytes;
+    }
 
     private async Task RegisterAsync(HttpClient http)
     {

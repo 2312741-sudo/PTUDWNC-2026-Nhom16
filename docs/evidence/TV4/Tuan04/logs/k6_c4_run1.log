@@ -1,0 +1,227 @@
+﻿
+         /\      Grafana   /ΓÇ╛ΓÇ╛/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ΓÇ╛ΓÇ╛\ 
+  /          \   |   (  |  (ΓÇ╛)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/read-load.js
+        output: -
+
+     scenarios: (100.00%) 3 scenarios, 300 max VUs, 1m0s max duration (incl. graceful stop):
+              * list_cached: 20.00 iterations/s for 30s (maxVUs: 50-100, exec: listCached, gracefulStop: 30s)
+              * list_uncached: 20.00 iterations/s for 30s (maxVUs: 50-100, exec: listUncached, gracefulStop: 30s)
+              * read_mixed: 20.00 iterations/s for 30s (maxVUs: 50-100, exec: readMixed, gracefulStop: 30s)
+
+
+running (0m01.0s), 002/150 VUs, 58 complete and 0 interrupted iterations
+list_cached     [   3% ] 000/050 VUs  01.0s/30s  20.00 iters/s
+list_uncached   [   3% ] 001/050 VUs  01.0s/30s  20.00 iters/s
+read_mixed      [   3% ] 001/050 VUs  01.0s/30s  20.00 iters/s
+
+running (0m02.0s), 001/150 VUs, 119 complete and 0 interrupted iterations
+list_cached     [   7% ] 000/050 VUs  02.0s/30s  20.00 iters/s
+list_uncached   [   7% ] 000/050 VUs  02.0s/30s  20.00 iters/s
+read_mixed      [   7% ] 001/050 VUs  02.0s/30s  20.00 iters/s
+
+running (0m03.0s), 000/150 VUs, 180 complete and 0 interrupted iterations
+list_cached     [  10% ] 000/050 VUs  03.0s/30s  20.00 iters/s
+list_uncached   [  10% ] 000/050 VUs  03.0s/30s  20.00 iters/s
+read_mixed      [  10% ] 000/050 VUs  03.0s/30s  20.00 iters/s
+
+running (0m04.0s), 000/150 VUs, 240 complete and 0 interrupted iterations
+list_cached     [  13% ] 000/050 VUs  04.0s/30s  20.00 iters/s
+list_uncached   [  13% ] 000/050 VUs  04.0s/30s  20.00 iters/s
+read_mixed      [  13% ] 000/050 VUs  04.0s/30s  20.00 iters/s
+
+running (0m05.0s), 001/150 VUs, 299 complete and 0 interrupted iterations
+list_cached     [  17% ] 000/050 VUs  05.0s/30s  20.00 iters/s
+list_uncached   [  17% ] 000/050 VUs  05.0s/30s  20.00 iters/s
+read_mixed      [  17% ] 001/050 VUs  05.0s/30s  20.00 iters/s
+
+running (0m06.0s), 001/150 VUs, 359 complete and 0 interrupted iterations
+list_cached     [  20% ] 000/050 VUs  06.0s/30s  20.00 iters/s
+list_uncached   [  20% ] 000/050 VUs  06.0s/30s  20.00 iters/s
+read_mixed      [  20% ] 001/050 VUs  06.0s/30s  20.00 iters/s
+
+running (0m07.0s), 001/150 VUs, 419 complete and 0 interrupted iterations
+list_cached     [  23% ] 000/050 VUs  07.0s/30s  20.00 iters/s
+list_uncached   [  23% ] 000/050 VUs  07.0s/30s  20.00 iters/s
+read_mixed      [  23% ] 001/050 VUs  07.0s/30s  20.00 iters/s
+
+running (0m08.0s), 000/150 VUs, 480 complete and 0 interrupted iterations
+list_cached     [  27% ] 000/050 VUs  08.0s/30s  20.00 iters/s
+list_uncached   [  27% ] 000/050 VUs  08.0s/30s  20.00 iters/s
+read_mixed      [  27% ] 000/050 VUs  08.0s/30s  20.00 iters/s
+
+running (0m09.0s), 000/150 VUs, 540 complete and 0 interrupted iterations
+list_cached     [  30% ] 000/050 VUs  09.0s/30s  20.00 iters/s
+list_uncached   [  30% ] 000/050 VUs  09.0s/30s  20.00 iters/s
+read_mixed      [  30% ] 000/050 VUs  09.0s/30s  20.00 iters/s
+
+running (0m10.0s), 001/150 VUs, 599 complete and 0 interrupted iterations
+list_cached     [  33% ] 000/050 VUs  10.0s/30s  20.00 iters/s
+list_uncached   [  33% ] 000/050 VUs  10.0s/30s  20.00 iters/s
+read_mixed      [  33% ] 001/050 VUs  10.0s/30s  20.00 iters/s
+
+running (0m11.0s), 000/150 VUs, 660 complete and 0 interrupted iterations
+list_cached     [  37% ] 000/050 VUs  11.0s/30s  20.00 iters/s
+list_uncached   [  37% ] 000/050 VUs  11.0s/30s  20.00 iters/s
+read_mixed      [  37% ] 000/050 VUs  11.0s/30s  20.00 iters/s
+
+running (0m12.0s), 001/150 VUs, 719 complete and 0 interrupted iterations
+list_cached     [  40% ] 000/050 VUs  12.0s/30s  20.00 iters/s
+list_uncached   [  40% ] 000/050 VUs  12.0s/30s  20.00 iters/s
+read_mixed      [  40% ] 001/050 VUs  12.0s/30s  20.00 iters/s
+
+running (0m13.0s), 000/150 VUs, 780 complete and 0 interrupted iterations
+list_cached     [  43% ] 000/050 VUs  13.0s/30s  20.00 iters/s
+list_uncached   [  43% ] 000/050 VUs  13.0s/30s  20.00 iters/s
+read_mixed      [  43% ] 000/050 VUs  13.0s/30s  20.00 iters/s
+
+running (0m14.0s), 001/150 VUs, 839 complete and 0 interrupted iterations
+list_cached     [  47% ] 000/050 VUs  14.0s/30s  20.00 iters/s
+list_uncached   [  47% ] 000/050 VUs  14.0s/30s  20.00 iters/s
+read_mixed      [  47% ] 001/050 VUs  14.0s/30s  20.00 iters/s
+
+running (0m15.0s), 001/150 VUs, 899 complete and 0 interrupted iterations
+list_cached     [  50% ] 000/050 VUs  15.0s/30s  20.00 iters/s
+list_uncached   [  50% ] 000/050 VUs  15.0s/30s  20.00 iters/s
+read_mixed      [  50% ] 001/050 VUs  15.0s/30s  20.00 iters/s
+
+running (0m16.0s), 000/150 VUs, 960 complete and 0 interrupted iterations
+list_cached     [  53% ] 000/050 VUs  16.0s/30s  20.00 iters/s
+list_uncached   [  53% ] 000/050 VUs  16.0s/30s  20.00 iters/s
+read_mixed      [  53% ] 000/050 VUs  16.0s/30s  20.00 iters/s
+
+running (0m17.0s), 001/150 VUs, 1019 complete and 0 interrupted iterations
+list_cached     [  57% ] 000/050 VUs  17.0s/30s  20.00 iters/s
+list_uncached   [  57% ] 000/050 VUs  17.0s/30s  20.00 iters/s
+read_mixed      [  57% ] 001/050 VUs  17.0s/30s  20.00 iters/s
+
+running (0m18.0s), 000/150 VUs, 1080 complete and 0 interrupted iterations
+list_cached     [  60% ] 000/050 VUs  18.0s/30s  20.00 iters/s
+list_uncached   [  60% ] 000/050 VUs  18.0s/30s  20.00 iters/s
+read_mixed      [  60% ] 000/050 VUs  18.0s/30s  20.00 iters/s
+
+running (0m19.0s), 000/150 VUs, 1140 complete and 0 interrupted iterations
+list_cached     [  63% ] 000/050 VUs  19.0s/30s  20.00 iters/s
+list_uncached   [  63% ] 000/050 VUs  19.0s/30s  20.00 iters/s
+read_mixed      [  63% ] 000/050 VUs  19.0s/30s  20.00 iters/s
+
+running (0m20.0s), 001/150 VUs, 1199 complete and 0 interrupted iterations
+list_cached     [  67% ] 000/050 VUs  20.0s/30s  20.00 iters/s
+list_uncached   [  67% ] 000/050 VUs  20.0s/30s  20.00 iters/s
+read_mixed      [  67% ] 001/050 VUs  20.0s/30s  20.00 iters/s
+
+running (0m21.0s), 000/150 VUs, 1260 complete and 0 interrupted iterations
+list_cached     [  70% ] 000/050 VUs  21.0s/30s  20.00 iters/s
+list_uncached   [  70% ] 000/050 VUs  21.0s/30s  20.00 iters/s
+read_mixed      [  70% ] 000/050 VUs  21.0s/30s  20.00 iters/s
+
+running (0m22.0s), 001/150 VUs, 1319 complete and 0 interrupted iterations
+list_cached     [  73% ] 000/050 VUs  22.0s/30s  20.00 iters/s
+list_uncached   [  73% ] 000/050 VUs  22.0s/30s  20.00 iters/s
+read_mixed      [  73% ] 001/050 VUs  22.0s/30s  20.00 iters/s
+
+running (0m23.0s), 000/150 VUs, 1380 complete and 0 interrupted iterations
+list_cached     [  77% ] 000/050 VUs  23.0s/30s  20.00 iters/s
+list_uncached   [  77% ] 000/050 VUs  23.0s/30s  20.00 iters/s
+read_mixed      [  77% ] 000/050 VUs  23.0s/30s  20.00 iters/s
+
+running (0m24.0s), 000/150 VUs, 1440 complete and 0 interrupted iterations
+list_cached     [  80% ] 000/050 VUs  24.0s/30s  20.00 iters/s
+list_uncached   [  80% ] 000/050 VUs  24.0s/30s  20.00 iters/s
+read_mixed      [  80% ] 000/050 VUs  24.0s/30s  20.00 iters/s
+
+running (0m25.0s), 001/150 VUs, 1499 complete and 0 interrupted iterations
+list_cached     [  83% ] 000/050 VUs  25.0s/30s  20.00 iters/s
+list_uncached   [  83% ] 000/050 VUs  25.0s/30s  20.00 iters/s
+read_mixed      [  83% ] 001/050 VUs  25.0s/30s  20.00 iters/s
+
+running (0m26.0s), 001/150 VUs, 1559 complete and 0 interrupted iterations
+list_cached     [  87% ] 000/050 VUs  26.0s/30s  20.00 iters/s
+list_uncached   [  87% ] 000/050 VUs  26.0s/30s  20.00 iters/s
+read_mixed      [  87% ] 001/050 VUs  26.0s/30s  20.00 iters/s
+
+running (0m27.0s), 001/150 VUs, 1619 complete and 0 interrupted iterations
+list_cached     [  90% ] 000/050 VUs  27.0s/30s  20.00 iters/s
+list_uncached   [  90% ] 000/050 VUs  27.0s/30s  20.00 iters/s
+read_mixed      [  90% ] 001/050 VUs  27.0s/30s  20.00 iters/s
+
+running (0m28.0s), 001/150 VUs, 1679 complete and 0 interrupted iterations
+list_cached     [  93% ] 000/050 VUs  28.0s/30s  20.00 iters/s
+list_uncached   [  93% ] 000/050 VUs  28.0s/30s  20.00 iters/s
+read_mixed      [  93% ] 001/050 VUs  28.0s/30s  20.00 iters/s
+
+running (0m29.0s), 001/150 VUs, 1739 complete and 0 interrupted iterations
+list_cached     [  97% ] 000/050 VUs  29.0s/30s  20.00 iters/s
+list_uncached   [  97% ] 000/050 VUs  29.0s/30s  20.00 iters/s
+read_mixed      [  97% ] 001/050 VUs  29.0s/30s  20.00 iters/s
+
+running (0m30.0s), 002/150 VUs, 1798 complete and 0 interrupted iterations
+list_cached     [ 100% ] 000/050 VUs  30.0s/30s  20.00 iters/s
+list_uncached   [ 100% ] 001/050 VUs  30.0s/30s  20.00 iters/s
+read_mixed      [ 100% ] 001/050 VUs  30.0s/30s  20.00 iters/s
+
+
+  Γûê THRESHOLDS 
+
+    http_req_duration{scenario:list_cached}
+    Γ£ô 'p(95)<200' p(95)=15.11ms
+
+    http_req_duration{scenario:list_uncached}
+    Γ£ô 'p(95)<800' p(95)=19.33ms
+
+    http_req_duration{scenario:read_mixed}
+    Γ£ô 'p(95)<500' p(95)=11.35ms
+
+    http_req_failed
+    Γ£ô 'rate==0' rate=0.00%
+
+
+  Γûê TOTAL RESULTS 
+
+    checks_total.......: 7212    240.133748/s
+    checks_succeeded...: 100.00% 7212 out of 7212
+    checks_failed......: 0.00%   0 out of 7212
+
+    Γ£ô recipes.list trß║ú 200
+    Γ£ô recipes.list kh├┤ng phß║úi 5xx
+    Γ£ô recipes.list(uncached) trß║ú 200
+    Γ£ô recipes.list(uncached) kh├┤ng phß║úi 5xx
+    Γ£ô recipes.search trß║ú 200
+    Γ£ô recipes.search kh├┤ng phß║úi 5xx
+    Γ£ô recipes.detail trß║ú 200
+    Γ£ô recipes.detail kh├┤ng phß║úi 5xx
+    Γ£ô categories trß║ú 200
+    Γ£ô categories kh├┤ng phß║úi 5xx
+
+    HTTP
+    http_req_duration..............: avg=7.79ms  min=2.62ms med=6.4ms   p(90)=12.32ms p(95)=14.8ms  p(99)=27.54ms max=87.83ms 
+      { expected_response:true }...: avg=7.79ms  min=2.62ms med=6.4ms   p(90)=12.32ms p(95)=14.8ms  p(99)=27.54ms max=87.83ms 
+      { scenario:list_cached }.....: avg=8.62ms  min=3.96ms med=7.23ms  p(90)=12.51ms p(95)=15.11ms p(99)=32.65ms max=84.49ms 
+      { scenario:list_uncached }...: avg=12.49ms min=7.12ms med=11.11ms p(90)=15.82ms p(95)=19.33ms p(99)=33.42ms max=87.83ms 
+      { scenario:read_mixed }......: avg=6.4ms   min=2.62ms med=5.76ms  p(90)=9.18ms  p(95)=11.35ms p(99)=19.31ms max=84.66ms 
+    http_req_failed................: 0.00%  0 out of 3607
+    http_reqs......................: 3607   120.10017/s
+
+    EXECUTION
+    iteration_duration.............: avg=16.15ms min=4.13ms med=12.55ms p(90)=28.73ms p(95)=32.58ms p(99)=44.7ms  max=114.63ms
+    iterations.....................: 1803   60.033437/s
+    vus............................: 2      min=0         max=2  
+    vus_max........................: 150    min=150       max=150
+
+    NETWORK
+    data_received..................: 24 MB  788 kB/s
+    data_sent......................: 416 kB 14 kB/s
+
+
+
+
+running (0m30.0s), 000/150 VUs, 1803 complete and 0 interrupted iterations
+list_cached   Γ£ô [ 100% ] 000/050 VUs  30s  20.00 iters/s
+list_uncached Γ£ô [ 100% ] 000/050 VUs  30s  20.00 iters/s
+read_mixed    Γ£ô [ 100% ] 000/050 VUs  30s  20.00 iters/s

@@ -113,6 +113,10 @@ jobs:
           echo "Redis did not become ready in time"; exit 1
       # --blame-hang-timeout: test treo sẽ bị bắt và dump thay vì để job treo tới hết 30 phút.
       - run: dotnet test CulinaryBlog.sln --no-build --configuration Release --blame-hang-timeout 10m --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
+      # N2-C6: coverage chỉ "thu được" chứ không ai siết. Gate này chặn hồi quy của tầng
+      # Application (đang 84.35% lúc đặt ngưỡng). Threshold nằm trong script để sửa một chỗ.
+      - name: Coverage gate (CulinaryBlog.Application ≥ 80%)
+        run: bash deploy/check-coverage.sh 80 TestResults
       - uses: actions/upload-artifact@v4
         if: always()
         with:

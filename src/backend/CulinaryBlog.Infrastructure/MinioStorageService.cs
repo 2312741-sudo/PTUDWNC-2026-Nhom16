@@ -49,8 +49,10 @@ public interface IObjectStorageWriter
 /// Cố ý KHÔNG bọc <see cref="OperationCanceledException"/> (storage chậm nhưng vẫn ghi được —
 /// báo 503 nhầm sẽ khiến client retry một thao tác đang chạy dở).
 /// <see cref="ObjectNotFoundException"/> giữ nguyên ngữ nghĩa cũ: object không tồn tại ⇒ null (404).
+/// B5 (issue #24): <see cref="IObjectStorageUrlSigner"/> cấp URL có chữ ký cho thẻ &lt;img&gt; (PA-3) —
+/// tách khỏi proxy D27 vì proxy cần header Bearer mà thẻ img không gửi được.
 /// </remarks>
-public sealed class MinioStorageService : IFileStorageService, IObjectStorageReader, IObjectStorageWriter
+public sealed class MinioStorageService : IFileStorageService, IObjectStorageReader, IObjectStorageWriter, IObjectStorageUrlSigner
 {
     private readonly IMinioClient _client;
     private readonly MinioOptions _options;
@@ -103,10 +105,41 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         return new StoredFile(key, key, contentType, content.Length);
     }
 
+    /// <summary>
+    /// Số lần thử tối đa cho thao tác **xoá** object (N2-C1c: "ảnh resize/delete retry 3 lần").
+    ///
+    /// Vì sao xoá cần retry còn upload thì không: upload sinh key UUID mới mỗi lần nên thử lại sẽ
+    /// tạo rác — vì vậy upload cố ý fail-fast trả 503 để client tự quyết định. Xoá thì idempotent:
+    /// S3/MinIO `DELETE` trên object không tồn tại vẫn trả 204, nên thử lại không có tác dụng phụ.
+    /// </summary>
+    public const int DeleteAttempts = 3;
+
+    /// <summary>Nghỉ giữa các lần thử xoá: 200ms rồi 400ms — đủ để vượt lỗi mạng chớp nhoáng, không làm treo request.</summary>
+    private static readonly TimeSpan DeleteRetryDelay = TimeSpan.FromMilliseconds(200);
+
     public async Task DeleteAsync(string key, CancellationToken ct = default)
     {
-        await GuardAsync("delete", ct, () => _client.RemoveObjectAsync(
-            new RemoveObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct)).ConfigureAwait(false);
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await _client.RemoveObjectAsync(
+                    new RemoveObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct).ConfigureAwait(false);
+                return;
+            }
+            catch (Exception ex) when (IsStorageFailure(ex, ct) && attempt < DeleteAttempts)
+            {
+                _logger.LogWarning(
+                    "Xoá object {Key} lần {Attempt}/{Attempts} thất bại ({ErrorType}), thử lại",
+                    key, attempt, DeleteAttempts, ex.GetType().Name);
+                await Task.Delay(DeleteRetryDelay * attempt, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (IsStorageFailure(ex, ct))
+            {
+                _logger.LogError(ex, "Xoá object {Key} thất bại sau {Attempts} lần thử", key, DeleteAttempts);
+                throw StorageUnavailable(ex, "delete");
+            }
+        }
     }
 
     /// <summary>D27 proxy: stat rồi đọc object về MemoryStream. Object missing → null (404); MinIO down → 503 storage.unavailable.</summary>
@@ -174,6 +207,48 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
             ".avif" => "image/avif",
             _ => "application/octet-stream"
         };
+    }
+
+    /// <summary>
+    /// B5 (issue #24): URL có chữ ký cho ảnh private để thẻ &lt;img&gt; tải được (proxy D27 cần Bearer).
+    /// MinIO SDK tính chữ ký NGAY TRÊN MÁY (SigV4 là HMAC cục bộ) nên không có round-trip ra storage.
+    /// ⛔ TUYỆT ĐỐI KHÔNG ghi URL trả về vào log — query string chứa X-Amz-Signature là bearer token
+    /// (rò qua access log / lịch sử trình duyệt / Referer). Chỉ log số ký tự và kết quả.
+    /// Lỗi (kể cả storage down) trả null: ảnh đã upload xong không được đổi thành lỗi 5xx.
+    /// </summary>
+    public async Task<string?> CreatePresignedUrlAsync(string key, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return null;
+
+        var expirySeconds = (int)TimeSpan.FromMinutes(
+            Math.Clamp(_options.PresignedUrlExpiryMinutes, 1, MinioOptions.MaxPresignedUrlExpiryMinutes)).TotalSeconds;
+        try
+        {
+            // MinIO 7.0.0: PresignedGetObjectAsync KHÔNG nhận CancellationToken — hạn tối đa 7 ngày,
+            // ta luôn truyền <= 15 phút nên không vướng trần đó.
+            ct.ThrowIfCancellationRequested();
+
+            var presigned = await _client.PresignedGetObjectAsync(
+                new PresignedGetObjectArgs()
+                    .WithBucket(_options.Bucket)
+                    .WithObject(key)
+                    .WithExpiry(expirySeconds)).ConfigureAwait(false);
+
+            _logger.LogDebug("Issued presigned URL for {Bucket}/{Key} ({HasUrl}, expiry {ExpiryMinutes} min)",
+                _options.Bucket, key, presigned is not null, _options.PresignedUrlExpiryMinutes);
+            return presigned;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsStorageFailure(ex, ct))
+        {
+            _logger.LogError(ex, "Khong cap duoc URL co chu ky: presign {Bucket}/{Key} ({ErrorType})",
+                _options.Bucket, key, ex.GetType().Name);
+            return null;
+        }
     }
 
     /// <summary>D23: object phái sinh {uuid}_300x300/_800x600 đã tồn tại chưa (idempotent — không ghi đè).</summary>

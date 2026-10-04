@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using CulinaryBlog.Application;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -129,7 +130,15 @@ public sealed class SitemapGenerator(
     }
 }
 
-/// <summary>Job Hangfire cho sitemap. Tên hàm phải public để Hangfire serialize được.</summary>
+/// <summary>
+/// Job Hangfire cho sitemap. Tên hàm phải public để Hangfire serialize được.
+///
+/// N2-C1c: retry **2** lần (tổng 3 lần thử). Trước đây job không có <c>[AutomaticRetry]</c> nên
+/// Hangfire **không** thử lại lần nào — một lần DB chậm lúc 02:00 UTC là mất sitemap cả ngày.
+/// Giữ số lần thử ở mức thấp (khác resize là 3) vì sitemap chạy 1 lần/ngày: thử nhiều chỉ kéo dài
+/// việc giữ lock mà không tăng xác suất thành công.
+/// </summary>
+[AutomaticRetry(Attempts = 2)]
 public sealed class SitemapGenerationJob(
     SitemapGenerator generator,
     IOptions<SitemapOptions> options,

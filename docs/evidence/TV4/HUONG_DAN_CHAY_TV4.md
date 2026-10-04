@@ -215,6 +215,33 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 > 💡 API **tự migrate + seed lúc khởi động** (trừ khi chạy `--no-auto-migrate` hoặc môi trường `Testing`),
 > nên bước 3/4 ở trên chỉ cần khi muốn chủ động chạy trước.
 
+### 6.1. Cần tài khoản Admin? Dùng `--promote-admin` (B6, ✅ chốt 28/09: PA-A)
+
+Tài khoản đăng ký qua UI/API mặc định là **Author**. Lệnh này nâng một tài khoản **đã tồn tại** lên role `Admin` mà **không cần mật khẩu**:
+
+```powershell
+# Nâng lên Admin (đăng nhập lại để nhận claim mới)
+dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email-cua-ban>
+# Cũng chấp nhận dạng --promote-admin=<email> và không phân biệt hoa/thường
+```
+
+| Trường hợp | Kết quả | Exit code |
+|---|---|---|
+| Thiếu email | `Thieu email. Cach dung: ...` | `2` |
+| Email sai định dạng | `Email khong hop le: '...'` | `2` |
+| Chạy ở `Testing` / `Production` / bất kỳ môi trường nào khác `Development` | `Tu choi chay o moi truong '...'. Chi chay o Development.` | `2` |
+| Email không tồn tại | `Khong tim thay tai khoan '...'` | `1` |
+| Lần đầu | `Da them role Admin cho '<user>' (<id>).` | `0` |
+| Chạy lại (đã là Admin) | `'<user>' da co role Admin. Khong thay doi gi.` | `0` |
+
+Lưu ý an toàn:
+- **Chỉ chạy ở `Development`.** Muốn kiểm tra ở môi trường khác phải bỏ launch profile để không bị ép `Development`:
+  `dotnet run --project src/backend/CulinaryBlog.API --no-launch-profile -- --promote-admin <email>`.
+- **Idempotent** — chạy bao nhiêu lần cũng chỉ có đúng **một** bản ghi role trong `UserRoles`.
+- Không sửa `DbSeeder`, không sinh mật khẩu mới, không nhân bản account admin mặc định.
+- Chỉ cần role `Admin` **đã có sẵn trong DB** (do `HasData`/seed tạo) — lệnh không tự tạo role.
+- Sau khi nâng, **đăng xuất và đăng nhập lại** để JWT mới chứa claim role.
+
 ---
 
 ## 7. Bước 4 — Chạy Frontend (Next.js 15)

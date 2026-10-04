@@ -54,15 +54,21 @@ public sealed class TracingObservabilityTests : IClassFixture<ApiFactory>
 
         Activity? httpSpan;
         List<Activity> dbSpans;
+        List<Activity> snapshot;
         lock (activities)
         {
             httpSpan = activities.FirstOrDefault(a => a.Source.Name == "Microsoft.AspNetCore");
             dbSpans = activities
                 .Where(a => a.Source.Name.Contains("EntityFrameworkCore", StringComparison.OrdinalIgnoreCase))
                 .ToList();
+            // Phải chụp bản sao trong `lock` rồi mới duyệt. Trước đây vòng `foreach` log bên dưới
+            // duyệt thẳng `activities` **ngoài** lock, trong khi thread của HTTP server / EF Core vẫn
+            // không ngừng `Add` ⇒ `InvalidOperationException: Collection was modified` ngẫu nhiên khi
+            // chạy song song, và im lặng xanh khi chạy riêng test này.
+            snapshot = activities.ToList();
         }
 
-        foreach (var a in activities)
+        foreach (var a in snapshot)
             output.WriteLine($"{a.Source.Name} :: {a.DisplayName} :: trace={a.TraceId} :: parent={a.ParentId}");
 
         Assert.True((int)response.StatusCode < 500, $"endpoint trả {response.StatusCode}, xem log test để biết nguyên nhân");

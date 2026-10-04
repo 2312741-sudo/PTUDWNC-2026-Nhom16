@@ -51,6 +51,10 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
 
 ## 4. Hạn chế đã biết — chưa được tính là đạt
 
+> ⭐ **Cập nhật 03/10 (sau N1):** các hạn chế **2, 3, 7** dưới đây giờ đã có **đề xuất riêng** và **một
+> quyết định đã chốt** — xem [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md)
+> và `docs/proposal/DE_XUAT_07/08/09`. **TV4 không tự quyết** vì cả ba nằm ngoài hạ tầng dự án.
+
 1. **Hai tiến trình API thật đã kiểm chứng** (nginx round-robin, 5/5 mỗi instance, cache dùng chung
    qua Redis, fallback khi Redis chết) — nhưng mới chạy thủ công trên máy, **chưa có profile
    docker-compose sẵn dùng** cho cả nhóm, và chưa đo trên Render. Xem `logs/multi_instance_two_api.log`.
@@ -59,9 +63,14 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
    workflow sẽ đỏ với thông báo rõ ràng. Lưu ý vận hành: GitHub **có thể trễ hoặc bỏ qua** job theo
    lịch khi repo lâu không có commit, nên cron trên Render/host là lựa chọn đáng tin hơn cho mục tiêu
    99% có backup. Cần reviewer chốt nơi đặt lịch chính.
+   → **[`DE_XUAT_07_NOI_DAT_LICH_BACKUP.md`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md)** — 3 phương
+   án, khuyến nghị **A: giữ GitHub Actions + thêm job canh** (chi phí 0, phát hiện hỏng trong ≤ 24h).
 3. **Bản sao lưu trên GitHub chỉ giữ 7 ngày (artifact)**. Yêu cầu giữ **30 ngày** chỉ thoả khi
    chạy script trên host có ổ đĩa riêng. Muốn đúng nghị quyết thì phải đẩy sang kho riêng
    (RustFS/S3/NAS).
+   → **[`DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md)** —
+   khuyến nghị **A: bucket RustFS/S3 riêng + lifecycle 30 ngày**. ⚠️ `BACKUP_KEEP_DAYS=30` trong
+   `backup.yml` **chỉ dọn trên runner**, ⛔ **không** phải giữ 30 ngày thật.
 4. **Google OAuth (K09) còn chờ credentials** — không tính hoàn thành.
 5. **Chưa có k6 / Playwright / Lighthouse** (K21, K22) — thuộc N2.
 6. **Bẫy CI đã vấp: `redis-cli` không có trên ubuntu runner.** Bước "chờ Redis sẵn sàng" dùng
@@ -70,6 +79,9 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
    GitHub có rất ít binary; cứ dùng `bash /dev/tcp` hoặc `docker exec` vào service container.
 7. **Secret cũ còn trong git history.** Đã bỏ khỏi `render.yaml` nhưng **phải rotate khoá JWT thật**;
    việc này cần làm ngoài repo.
+   → **[`DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md)** —
+   khuyến nghị **rotate trước, xoá history sau** (hoặc **không** xoá history). ⛔ TV4 **không** tự
+   rotate khoá đang chạy và **không** xoá history; chỉ làm được phần trong repo (3a/3b/3c).
 8. **Bucket `culinary-blog` phải tồn tại trước khi app báo khoẻ.** `HealthTests` tự bootstrap bucket qua
    `IObjectStorageWriter`, nhưng ứng dụng thật thì không — production cần bucket có sẵn hoặc bước khởi tạo
    khi deploy (ADR D27 nói bucket private).
@@ -84,14 +96,37 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
 3. Máy này có **native PostgreSQL 18 và container PostgreSQL cùng nhận cổng 5432**. `localhost:5432` trỏ
    tới native; database có dữ liệu thật nằm ở native, không nằm trong container. `pg_dump`/`pg_restore`
    phải dùng client tại `E:\PostgreSQL\bin`.
-4. `docs/evidence/TV4/TamKiem/` là việc của TV1 — **không** stage, không commit, không sửa.
+4. `docs/evidence/TV4/TamKiem/` là **do chính TV4 tạo** (tự rà soát nội dung commit + báo cáo của
+   cả 4 thành viên) và chỉ dành cho TV4 đọc đối chiếu — **không** stage, không commit, không sửa,
+   không dùng làm minh chứng hay căn cứ chấm điểm cho bất kỳ ai.
+   *(Đính chính 03/10: dòng này trước đây ghi nhầm "là việc của TV1". Tác giả đúng là TV4.)*
 5. `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` phải giữ nguyên blob
    `93661aa13e6fa2e081b9a89b2517eca5d0df083c`.
 6. File backup `*.dump` đã được thêm vào `.gitignore` vì dump chứa dữ liệu người dùng — không được commit.
 
 ## 6. Bước tiếp theo đề xuất
 
+> **Cập nhật 03/10:** các bước dưới đây đã được tách thành kế hoạch 3 giai đoạn —
+> [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](PLAN_TRIEN_KHAI_TV4_TUAN4.md) (tổng),
+> [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md),
+> [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](PLAN_GIAI_DOAN_2_D0_XET_LOI.md),
+> [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](PLAN_GIAI_DOAN_3_SUA_LOI.md). **Chưa thực thi gì.**
+>
+> ⭐ **Bổ sung 03/10:** [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) —
+> TV4 đã **chốt** B5 (→ PA-A) và B6 (→ PA-A), và **tự thực hiện** luôn phần việc sinh ra cho TV3/TV1
+> theo nguyên tắc "ngoài contact" (báo trước, ⛔ không chờ trả lời). B5/B6 là **điều kiện tiên quyết**
+> của N2: B6 mở khoá N2-E7. 3 việc hạ tầng còn lại **không tự quyết** — đã tách thành đề xuất 07/08/09.
+
 1. Reviewer duyệt mapping + B1/B2/B4, rồi cập nhật issue `#20`, `#21`, `#22`.
-2. Hoàn thiện nốt K23 ở mức triển khai: đóng gói 2 API vào profile docker-compose dùng chung, và
-   chốt nơi đặt lịch backup 03:00 ICT cùng kho lưu 30 ngày.
-3. Sang N2: Playwright 5 luồng, k6 đo p95/p99 và tỉ lệ cache hit, CI frontend, EXPLAIN lại.
+2. ⭐ **Trước tiên: triển khai B5 → B6 → QD3-3a/3b/3c** (điều kiện tiên quyết của N2) — xem
+   [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §4.1.
+3. Hoàn thiện nốt K23 ở mức triển khai: đóng gói 2 API vào profile docker-compose dùng chung *(tuần 5)*.
+4. Chốt 3 việc hạ tầng với Tâm + TV2 — dựa trên đề xuất 07/08/09, **không** tự quyết:
+   [`DE_XUAT_07`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) (nơi đặt lịch),
+   [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) (kho 30 ngày),
+   [`DE_XUAT_09`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md) (rotate khoá JWT).
+5. Sang N2: Playwright, publish E2E, k6 đo p95/p99 và tỉ lệ cache hit, CI frontend.
+   ⛔ **Đính chính phạm vi**: bản gốc ghi "Playwright **5 luồng**" — cổng *5 E2E flows* thuộc
+   **tuần 5** (6-tuần L170). Tuần 4 của TV4 chỉ làm **publish + search**; `register/login` (TV1),
+   `category` (TV2), `create-recipe` (TV3) do thành viên khác viết. EXPLAIN chỉ chạy lại **nếu có
+   đổi index**. Chi tiết: `PLAN_GIAI_DOAN_1_N2_N4.md` §0.2.

@@ -48,6 +48,9 @@ Dự án áp dụng mô hình Kim tự tháp kiểm thử (Testing Pyramid) vớ
 ### 2.1. Yêu cầu Tiên quyết
 - .NET 10 SDK đã cài đặt (`dotnet --version` hiển thị `10.0.x`).
 - PostgreSQL 16 đang hoạt động (có thể dùng qua Docker Compose hoặc Postgres local).
+- **`Jwt__SigningKey` đã được đặt trong `.env`** (≥ 64 byte). Bắt buộc từ QD3-3b: khoá ký JWT không còn nằm trong
+  `appsettings*.json`, nên app **không khởi động** nếu thiếu. Test không cần làm thủ công vì test host tự nạp
+  khoá riêng, nhưng các lệnh chạy app thật (`--migrate`, `--seed`, `--promote-admin`) thì cần.
 
 ### 2.2. Thiết lập Biến Môi trường Test Database
 ```bash
