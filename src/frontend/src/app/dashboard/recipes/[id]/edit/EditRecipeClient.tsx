@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { RecipeDetail, UnauthorizedError, getRecipeDetail, toBasicInfo } from "@/lib/recipe-editor";
 import RecipeWizard, { WizardState } from "../../_wizard/RecipeWizard";
 
 export default function EditRecipeClient() {
   const { id } = useParams<{ id: string }>();
-  const slug = useSearchParams().get("slug");
   const router = useRouter();
   const [initial, setInitial] = useState<Partial<WizardState> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,8 +16,8 @@ export default function EditRecipeClient() {
     if (!localStorage.getItem("accessToken")) { router.replace("/auth/login"); return; }
     (async () => {
       try {
-        // API chi tiết tra theo slug; không có slug thì thử bằng id
-        const d: RecipeDetail = await getRecipeDetail(slug ?? id);
+        // API chi tiết nhận id hoặc slug; tra theo id vì slug trên URL có thể đã cũ (tiêu đề bản nháp đổi ở nơi khác)
+        const d: RecipeDetail = await getRecipeDetail(id);
         if (d.id !== id) throw new Error("Không khớp công thức cần sửa");
         setInitial({
           step: 0, recipeId: d.id, slug: d.slug, rowVersion: d.rowVersion,
@@ -29,7 +28,7 @@ export default function EditRecipeClient() {
         setError(e instanceof Error ? e.message : "Không tải được công thức");
       }
     })();
-  }, [id, slug, router]);
+  }, [id, router]);
 
   if (error) return (
     <div className="mx-auto max-w-3xl p-6">

@@ -179,6 +179,15 @@ public sealed class RecipeRepository(AuthDbContext db) : IRecipeRepository, IRec
             .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.Slug == slug, ct);
 
+    public Task<Recipe?> FindByIdAsync(Guid id, CancellationToken ct) =>
+        db.Recipes
+            .AsNoTracking()
+            .Include(r => r.Ingredients)
+            .Include(r => r.Steps)
+            .Include(r => r.Images)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
+
     public async Task<IReadOnlyList<string>> FindUsedSlugsAsync(
         string baseSlug, Guid? excludeRecipeId, CancellationToken ct) =>
         await db.Recipes

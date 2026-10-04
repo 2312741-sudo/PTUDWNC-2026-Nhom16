@@ -113,6 +113,12 @@ public interface IRecipeRepository
     /// <summary>Nạp recipe theo slug kèm toàn bộ con (chỉ đọc) cho màn chi tiết.</summary>
     Task<Recipe?> FindBySlugAsync(string slug, CancellationToken ct);
 
+    /// <summary>
+    /// Nạp recipe theo id kèm toàn bộ con (chỉ đọc) cho màn chi tiết — slug bản nháp đổi theo tiêu đề, id thì không.
+    /// Mặc định null: các repository giả trong test không cần cài, handler sẽ tra tiếp theo slug.
+    /// </summary>
+    Task<Recipe?> FindByIdAsync(Guid id, CancellationToken ct) => Task.FromResult<Recipe?>(null);
+
     /// <summary>Các slug đã dùng, kể cả bản ghi đã soft delete (vẫn chiếm unique index).</summary>
     Task<IReadOnlyList<string>> FindUsedSlugsAsync(string baseSlug, Guid? excludeRecipeId, CancellationToken ct);
 
@@ -326,7 +332,10 @@ public sealed class GetRecipeBySlugHandler(
 {
     public async Task<RecipeDetailDto> Handle(GetRecipeBySlugQuery q, CancellationToken ct)
     {
-        var recipe = await repo.FindBySlugAsync(q.Slug, ct)
+        // Khoá là id (wizard nạp lại theo id vì slug bản nháp đổi khi sửa tiêu đề) hoặc slug; id không thấy thì tra tiếp
+        // theo slug (slug sinh từ tiêu đề có thể trông như Guid)
+        var recipe = (Guid.TryParse(q.Slug, out var id) ? await repo.FindByIdAsync(id, ct) : null)
+            ?? await repo.FindBySlugAsync(q.Slug, ct)
             ?? throw new AppException(404, "recipe.not_found", "Không tìm thấy công thức.");
 
         if (recipe.Status != RecipeStatus.Published)

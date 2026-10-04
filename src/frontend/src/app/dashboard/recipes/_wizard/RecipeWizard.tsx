@@ -95,7 +95,7 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
   // enabled: false -> không tự fetch; wizard nạp lại bằng reload() sau mỗi lần lưu, useQuery chỉ đọc/theo dõi cache
   const { data: detail = null } = useQuery({
     queryKey: detailKey(s.recipeId),
-    queryFn: () => getRecipeDetail(s.slug!),
+    queryFn: () => getRecipeDetail(s.recipeId!),
     enabled: false,
     initialData: initialDetail ?? undefined,
   });
@@ -147,17 +147,18 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
       .finally(() => { if (window.location.pathname === mountedPath.current) router.refresh(); });
   }
 
-  // staleTime: 0 -> luôn gọi server (mặc định Infinity sẽ trả lại bản trong cache)
-  async function reload(slug = s.slug, id = s.recipeId): Promise<RecipeDetail | null> {
-    if (!slug || !id) return null;
-    const d = await queryClient.fetchQuery({ queryKey: detailKey(id), queryFn: () => getRecipeDetail(slug), staleTime: 0 });
+  // staleTime: 0 -> luôn gọi server (mặc định Infinity sẽ trả lại bản trong cache).
+  // Nạp theo id, không theo slug: slug bản nháp đổi khi sửa tiêu đề (ở tab/thiết bị khác thì slug đang giữ đã cũ -> 404)
+  async function reload(id = s.recipeId): Promise<RecipeDetail | null> {
+    if (!id) return null;
+    const d = await queryClient.fetchQuery({ queryKey: detailKey(id), queryFn: () => getRecipeDetail(id), staleTime: 0 });
     dispatch({ type: "loaded", detail: d });
     return d;
   }
 
   // Conflict reload: lấy bản mới nhất từ server, bỏ phần sửa dở ở bước 1
   async function reloadLatest() {
-    if (!s.slug) return;
+    if (!s.recipeId) return;
     dispatch({ type: "saving" });
     try {
       const d = await reload();
@@ -199,7 +200,7 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
       const saved = s.recipeId
         ? await updateRecipe(s.recipeId, info, s.rowVersion!)
         : await createRecipe(info);
-      await reload(saved.slug, saved.id);
+      await reload(saved.id);
       refreshPublic(saved.slug, s.slug); // đổi tiêu đề có thể đổi slug -> làm mới cả slug cũ
       // Đổi URL sang trang edit: F5 hay bấm lại không tạo thêm bản nháp trùng
       const url = `/dashboard/recipes/${saved.id}/edit?slug=${encodeURIComponent(saved.slug)}`;
