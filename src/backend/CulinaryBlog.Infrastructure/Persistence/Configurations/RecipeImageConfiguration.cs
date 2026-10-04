@@ -24,9 +24,11 @@ public sealed class RecipeImageConfiguration : IEntityTypeConfiguration<RecipeIm
         b.HasIndex(i => new { i.RecipeId, i.OrderIndex });
 
         // Partial unique index: đúng 1 primary cho mỗi recipe (Postgres filtered index) - chống race 2 request set primary.
+        // Bỏ qua ảnh đã xoá mềm: dòng xoá mềm vẫn giữ IsPrimary = true, nếu còn chiếm chỗ thì tải ảnh chính mới
+        // hoặc đôn ảnh còn lại lên chính đều vi phạm 23505 -> 422 (cùng loại lỗi với StepNumber của bước, 784459c).
         b.HasIndex(i => i.RecipeId)
             .IsUnique()
             .HasDatabaseName("ux_recipe_images_one_primary")
-            .HasFilter("\"IsPrimary\" = true");
+            .HasFilter("\"IsPrimary\" = true AND \"IsDeleted\" = false");
     }
 }
