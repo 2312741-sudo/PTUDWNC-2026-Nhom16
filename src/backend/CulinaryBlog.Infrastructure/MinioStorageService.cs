@@ -54,7 +54,7 @@ public interface IObjectStorageWriter
 /// </remarks>
 public sealed class MinioStorageService : IFileStorageService, IObjectStorageReader, IObjectStorageWriter, IObjectStorageUrlSigner
 {
-    private readonly IMinioClient _client;
+    private readonly Lazy<IMinioClient> _client;
     private readonly MinioOptions _options;
     private readonly ILogger<MinioStorageService> _logger;
 
@@ -62,11 +62,30 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
     {
         _options = options.Value;
         _logger = logger;
-        _client = new MinioClient()
+        // N2-C1d: Build() LAZY — sửa lỗi thật do B5 (issue #24) lộ ra.
+        //
+        // Vì sao phải lazy: `MinioClient.Build()` NÉM `MinioException: User Access Credentials not
+        // initialized` khi AccessKey/SecretKey rỗng. Trước B5, hậu quả chỉ là endpoint upload 500 —
+        // chấp nhận được vì upload đúng là cần storage. Nhưng B5 cho `GetRecipeBySlugHandler` tiêm
+        // `IRecipeImageDtoFactory` → `IObjectStorageUrlSigner` → chính service này, nên MỌI lần đọc
+        // công thức công khai cũng dựng service ⇒ chỉ cần thiếu credential storage là
+        // `GET /recipes/{slug}` trả 500, tức hỏng cả endpoint không liên quan gì tới ảnh.
+        // CI bắt được đúng lỗi này: workflow không có file .env nên không có `Minio__*`, còn máy
+        // dev có trong .env nên test local vẫn xanh và che mất lỗi.
+        //
+        // Build() giờ chạy lần đầu khi thật sự gọi storage, tức nằm trong `GuardAsync`/catch của
+        // từng thao tác ⇒ `MinioException` bị `IsStorageFailure` bắt và thành **503
+        // storage.unavailable** đúng như tài liệu mô tả. `CreatePresignedUrlAsync` cũng bắt và trả
+        // null, vì ảnh đã upload xong không được đổi thành lỗi 5xx.
+        //
+        // Fail-fast lúc khởi động KHÔNG bị mất: `MinioOptionsValidator` + `ValidateOnStart()` vẫn
+        // chạy ở mọi môi trường trừ Testing, nên thiếu credential vẫn chết ngay khi boot như thiết
+        // kế B2/N1-7. Lazy chỉ gỡ đúng trường hợp "service bị DI dựng trên đường đọc".
+        _client = new Lazy<IMinioClient>(() => new MinioClient()
             .WithEndpoint(_options.Endpoint)
             .WithCredentials(_options.AccessKey, _options.SecretKey)
             .WithSSL(_options.UseSsl)
-            .Build();
+            .Build());
     }
 
     public async Task<StoredFile> UploadAsync(
@@ -84,15 +103,15 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
 
         await GuardAsync("upload", ct, async () =>
         {
-            var bucketExists = await _client.BucketExistsAsync(
+            var bucketExists = await _client.Value.BucketExistsAsync(
                 new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
             if (!bucketExists)
             {
-                await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+                await _client.Value.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
                 _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
             }
 
-            await _client.PutObjectAsync(
+            await _client.Value.PutObjectAsync(
                 new PutObjectArgs()
                     .WithBucket(_options.Bucket)
                     .WithObject(key)
@@ -123,7 +142,7 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         {
             try
             {
-                await _client.RemoveObjectAsync(
+                await _client.Value.RemoveObjectAsync(
                     new RemoveObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct).ConfigureAwait(false);
                 return;
             }
@@ -148,7 +167,7 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
         ObjectStat stat;
         try
         {
-            stat = await _client.StatObjectAsync(
+            stat = await _client.Value.StatObjectAsync(
                 new StatObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct).ConfigureAwait(false);
         }
         catch (ObjectNotFoundException)
@@ -167,7 +186,7 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
             // Nếu truyền async lambda thì C# tạo async void (fire-and-forget): GetObjectAsync có thể trả về
             // trước khi copy xong => buffer cắt cụt (ảnh không decode được), và lỗi nền không ai quan sát
             // (ArgumentOutOfRangeException từ HttpConnection.CopyFromBufferAsync làm crash test host).
-            await _client.GetObjectAsync(
+            await _client.Value.GetObjectAsync(
                 new GetObjectArgs()
                     .WithBucket(_options.Bucket)
                     .WithObject(key)
@@ -229,7 +248,7 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
             // ta luôn truyền <= 15 phút nên không vướng trần đó.
             ct.ThrowIfCancellationRequested();
 
-            var presigned = await _client.PresignedGetObjectAsync(
+            var presigned = await _client.Value.PresignedGetObjectAsync(
                 new PresignedGetObjectArgs()
                     .WithBucket(_options.Bucket)
                     .WithObject(key)
@@ -256,7 +275,7 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
     {
         try
         {
-            await _client.StatObjectAsync(
+            await _client.Value.StatObjectAsync(
                 new StatObjectArgs().WithBucket(_options.Bucket).WithObject(key), ct).ConfigureAwait(false);
             return true;
         }
@@ -275,15 +294,15 @@ public sealed class MinioStorageService : IFileStorageService, IObjectStorageRea
     {
         await GuardAsync("resize-upload", ct, async () =>
         {
-            var bucketExists = await _client.BucketExistsAsync(
+            var bucketExists = await _client.Value.BucketExistsAsync(
                 new BucketExistsArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
             if (!bucketExists)
             {
-                await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
+                await _client.Value.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct).ConfigureAwait(false);
                 _logger.LogInformation("Created bucket {Bucket}", _options.Bucket);
             }
 
-            await _client.PutObjectAsync(
+            await _client.Value.PutObjectAsync(
                 new PutObjectArgs()
                     .WithBucket(_options.Bucket)
                     .WithObject(key)

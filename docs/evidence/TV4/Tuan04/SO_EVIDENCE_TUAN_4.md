@@ -708,7 +708,7 @@ Kết quả:  ✅ C2 — Redis tắt: đọc VẪN 200 (fallback cache in-proces
            (2 API thật 5080/5081 qua nginx, 10 request → api-1: 5 / api-2: 5) và TV4-K14
            (2 generator tranh lock → đúng 1 thắng).
 
-           ⛔ HAI LỖI THẬT PHÁT HIỆN + ĐÃ SỬA TRONG LÚC DRILL (không phải chỉ ghi nhận):
+            ⛔ HAI LỖI THẬT PHÁT HIỆN + ĐÃ SỬA TRONG LÚC DRILL, và LỖI THỨ BA DO CI BẮT (không phải chỉ ghi nhận):
            1. DB không truy cập được ⇒ 3 endpoint đọc trả **500 server.error**. Nguyên nhân:
               EfUnitOfWork chạy lệnh qua execution strategy của EF nên NpgsqlException gốc bị
               bọc thành InvalidOperationException("...likely due to a transient failure"), còn
@@ -716,10 +716,37 @@ Kết quả:  ✅ C2 — Redis tắt: đọc VẪN 200 (fallback cache in-proces
               CẢ chuỗi InnerException, map Npgsql/Socket/Timeout → 503 database.unavailable,
               và đặt nhánh này TRƯỚC nhánh 422 để DbUpdateException do mất kết nối không bị
               báo nhầm "dữ liệu đã thay đổi". 6 test hồi quy.
-           2. DB không truy cập được lúc KHỞI ĐỘNG ⇒ AddOrUpdate của lịch sitemap ném
-              NpgsqlException ra khỏi Main và **giết cả tiến trình**, mất luôn endpoint không
-              cần DB. Sửa: bọc try/catch + log; /health/ready vẫn 503 nên orchestrator restart
-              pod khi DB trở lại, lúc đó lịch được đăng ký lại.
+            2. DB không truy cập được lúc KHỞI ĐỘNG ⇒ AddOrUpdate của lịch sitemap ném
+               NpgsqlException ra khỏi Main và **giết cả tiến trình**, mất luôn endpoint không
+               cần DB. Sửa: bọc try/catch + log; /health/ready vẫn 503 nên orchestrator restart
+               pod khi DB trở lại, lúc đó lịch được đăng ký lại.
+
+            ⛔ LỖI THẬT THỨ BA — do **CI bắt được**, không phải do drill:
+            Sau khi push, job `Backend week 1` đỏ 2 test (`RecipeAuthoringFlowTests`, và
+            `TracingObservabilityTests` hỏng theo dây chuyền). Cả hai xanh ở máy dev.
+            Nguyên nhân: CI **không có file `.env`** nên không có biến `Minio__*`, còn máy dev có
+            trong `.env` — đúng loại lỗi mà môi trường dev che giấu.
+            - `MinioClient.Build()` **ném** `MinioException: User Access Credentials not
+              initialized` khi `AccessKey`/`SecretKey` rỗng, và `MinioStorageService` gọi nó ngay
+              trong **constructor**.
+            - B5 (issue #24) cho `GetRecipeBySlugHandler` tiêm `IRecipeImageDtoFactory` →
+              `IObjectStorageUrlSigner` → `MinioStorageService`. Từ đó **mọi** lần đọc công thức
+              công khai đều dựng service này, nên chỉ cần thiếu credential storage là
+              `GET /api/v1/recipes/{slug>` trả **500 server.error** — hỏng cả endpoint không liên
+              quan gì tới ảnh. Đây là lỗi **sản phẩm**, không phải lỗi test: đúng lúc deploy lên
+              môi trường thiếu credential là mất sẵn trang công thức.
+            - Sửa: `MinioClient` dựng **lazy** (`Lazy<IMinioClient>`). Constructor không còn ném,
+              `Build()` chạy lần đầu khi thật sự gọi storage — tức nằm trong `GuardAsync`/catch
+              của từng thao tác, nên `MinioException` bị `IsStorageFailure` bắt và thành **503
+              storage.unavailable** đúng như tài liệu mô tả. Fail-fast lúc khởi động **không mất**:
+              `MinioOptionsValidator` + `ValidateOnStart()` vẫn chạy ở mọi môi trường trừ Testing.
+            - Khoá bằng **2 test hồi quy** trong `StorageFailureContractTests`:
+              `Recipe_detail_still_readable_when_storage_credentials_are_missing` (thiếu credential
+              thì đọc công thức vẫn 200) và `Upload_with_missing_storage_credentials_returns_503_not_500`
+              (thiếu credential thì upload báo 503 chứ không 500). Đã kiểm chứng test có tác dụng:
+              ép `Build()` chạy ở constructor thì **2 test đỏ**; bỏ ép thì **9/9 xanh**.
+            - Sau khi sửa: **311/311** ở môi trường dev, và **311/311** khi dựng lại đúng điều kiện
+              CI (không `Minio__*`, `Redis__Instance=ci`) — tức đã đóng được đúng chỗ CI đỏ.
 
            ⚠️ HAI HÀNH VI ĐÁNG GHI ĐỂ GIẢI THÍCH SỐ ĐO:
            - Khi DB chết mà Redis còn, list(page=1) vẫn **200** vì đọc cache. Đây là

@@ -240,14 +240,16 @@ Chi tiết theo ô: `SO_EVIDENCE_TUAN_4.md` mục 2.
 12. Tài liệu + evidence + chốt sổ 24/24 K, nộp review Tâm (N4-C). ⛔ Runbook đầy đủ, deploy staging,
        TLS/HSTS, 5 E2E flows, responsive/a11y, Jest/RTL → **tuần 5**.
 
-**Trạng thái build sau N2-B1 (04/10):** backend **309 + 5 = 314/314** ✅ · `dotnet format --verify-no-changes`
+**Trạng thái build sau N2-B1 (04/10):** backend **311 + 5 = 316/316** ✅ · `dotnet format --verify-no-changes`
 exit `0` ✅ · `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (chỉ cảnh báo `<img>` có sẵn từ trước) ·
 Playwright **26/26**, 3 lần xanh ✅ · coverage `Application` **84.38%** ≥ 80% ✅.
 
-**Trạng thái build sau N2-C (04/10):** backend **309 + 5 = 314/314** ✅ (thêm 10 test so với 304/304 trước đó) ·
+**Trạng thái build sau N2-C (04/10):** backend **311 + 5 = 316/316** ✅ (thêm 12 test so với 304/304 trước đó) ·
 `dotnet build` 0 warning/0 error ✅ · coverage gate `Application` **84.38%** ≥ 80% ✅ ·
-frontend `tsc`/`lint`/`build` exit `0` ✅ · Playwright **22/22** ✅ ·
+frontend `tsc`/`lint`/`build` exit `0` ✅ · Playwright **26/26** ✅ ·
 k6 **3/3 lần xanh**, `http_req_failed` **0.00%** ✅.
+**Backend cũng 311/311 khi dựng lại đúng điều kiện CI** (không `Minio__*`, `Redis__Instance=ci`) ✅ —
+đây là cách kiểm chứng lỗi do CI bắt, xem mục "lỗi thứ ba" trong `SO_EVIDENCE_TUAN_4.md` §TV4-K24.
 
 **Trạng thái build sau N2-B3/B4 (04/10):** backend **299 + 5 = 304/304** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
 `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (2 cảnh báo `<img>` có sẵn từ trước) ·

@@ -94,6 +94,18 @@ public sealed class StorageDownApiFactory : StorageFailureApiFactoryBase
     }
 }
 
+/// <summary>Credential rỗng (không phải sai) — đúng trạng thái CI khi không có file <c>.env</c>.</summary>
+public sealed class MissingCredentialApiFactory : StorageFailureApiFactoryBase
+{
+    protected override void ConfigureStorage(Dictionary<string, string?> settings)
+    {
+        settings["Minio:Endpoint"] = EnvFileLoader.Get("MINIO_ENDPOINT", "127.0.0.1:9000");
+        settings["Minio:AccessKey"] = "";
+        settings["Minio:SecretKey"] = "";
+        settings["Minio:Bucket"] = EnvFileLoader.Get("MINIO_BUCKET", "culinary-blog");
+    }
+}
+
 public sealed class StorageFailureContractTests : IAsyncLifetime
 {
     // Đệm tới `ImageFormats.MinBytes`: validator chặn `file.too_small` trước khi đối chiếu magic
@@ -114,13 +126,16 @@ public sealed class StorageFailureContractTests : IAsyncLifetime
 
     private BadCredentialApiFactory badCredential = null!;
     private StorageDownApiFactory storageDown = null!;
+    private MissingCredentialApiFactory missingCredential = null!;
 
     public Task InitializeAsync()
     {
         badCredential = new BadCredentialApiFactory();
         storageDown = new StorageDownApiFactory();
+        missingCredential = new MissingCredentialApiFactory();
         badCredential.EnsureMigrated();
         storageDown.EnsureMigrated();
+        missingCredential.EnsureMigrated();
         return Task.CompletedTask;
     }
 
@@ -128,6 +143,89 @@ public sealed class StorageFailureContractTests : IAsyncLifetime
     {
         await badCredential.DisposeAsync();
         await storageDown.DisposeAsync();
+        await missingCredential.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Tạo recipe và trả cả <c>slug</c> để đọc đúng endpoint công khai <c>GET /recipes/{slug}</c>.
+    /// Tách khỏi <see cref="CreateRecipeAsync"/> vì hàm đó không trả slug, mà recipe vừa tạo là Draft
+    /// nên danh sách công khai không có để mà lấy slug gián tiếp.
+    /// </summary>
+    private static async Task<string> CreateDraftRecipeAndGetSlugAsync(
+        StorageFailureApiFactoryBase factory, HttpClient client)
+    {
+        await AuthorizeAsync(client);
+
+        Guid categoryId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var category = new Category($"Món Storage Fail {Guid.NewGuid():N}",
+                $"mon-storage-fail-{Guid.NewGuid():N}", "storage fail test");
+            db.Categories.Add(category);
+            await db.SaveChangesAsync();
+            categoryId = category.Id;
+        }
+
+        var created = await client.PostAsJsonAsync("/api/v1/recipes", new
+        {
+            title = $"Phở storage fail {Guid.NewGuid():N}",
+            description = "Công thức cho test hợp đồng lỗi storage.",
+            instructions = "",
+            prepTimeMinutes = 20,
+            cookTimeMinutes = 40,
+            servings = 2,
+            difficulty = 2,
+            categoryId
+        });
+        var createdBody = await created.Content.ReadAsStringAsync();
+        Assert.True(created.IsSuccessStatusCode, $"tạo recipe thất bại {created.StatusCode}: {createdBody}");
+
+        using var doc = JsonDocument.Parse(createdBody);
+        return doc.RootElement.GetProperty("data").GetProperty("slug").GetString()!;
+    }
+
+    /// <summary>
+    /// N2-C1d (chốt hồi quy): thiếu credential object storage KHÔNG được làm hỏng endpoint đọc.
+    ///
+    /// B5 (issue #24) cho <c>GetRecipeBySlugHandler</c> tiêm <c>IRecipeImageDtoFactory</c> →
+    /// <c>IObjectStorageUrlSigner</c> → <c>MinioStorageService</c>. Trước đó service này dựng
+    /// <c>MinioClient</c> ngay trong constructor, mà <c>Build()</c> NÉM
+    /// <c>MinioException: User Access Credentials not initialized</c> khi credential rỗng ⇒ chỉ cần
+    /// thiếu credential là <c>GET /recipes/{slug}</c> trả <c>500 server.error</c>, tức hỏng cả
+    /// endpoint không liên quan gì tới ảnh. Lỗi này lọt qua test local vì máy dev có
+    /// <c>Minio__*</c> trong <c>.env</c>, còn CI không có <c>.env</c> nên mới đỏ.
+    ///
+    /// Không có test này thì lỗi quay lại đúng lúc deploy lên môi trường thiếu credential.
+    /// </summary>
+    [Fact]
+    public async Task Recipe_detail_still_readable_when_storage_credentials_are_missing()
+    {
+        using var client = missingCredential.CreateClient();
+        var slug = await CreateDraftRecipeAndGetSlugAsync(missingCredential, client);
+
+        var response = await client.GetAsync($"/api/v1/recipes/{slug}");
+
+        Assert.True(response.IsSuccessStatusCode,
+            $"GET /recipes/{slug} phai tra 200 du thieu credential storage, nhung ra {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync()}");
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(slug, body.GetProperty("data").GetProperty("slug").GetString());
+    }
+
+    /// <summary>
+    /// Đối chiếu với test trên: endpoint <em>có</em> cần storage thì phải báo lỗi TẠM THỜI (503) để
+    /// client retry, không phải 500 — cùng nguyên nhân thiếu credential nhưng báo lỗi đúng cách.
+    /// </summary>
+    [Fact]
+    public async Task Upload_with_missing_storage_credentials_returns_503_not_500()
+    {
+        using var client = missingCredential.CreateClient();
+        var (recipeId, _) = await CreateRecipeAsync(missingCredential, client);
+
+        var (status, body) = await UploadAsync(client, recipeId, JpegBytes, "image/jpeg");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, status);
+        Assert.Equal("storage.unavailable", body.GetProperty("code").GetString());
     }
 
     [Fact]
