@@ -102,10 +102,22 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 
 | # | Việc | Trạng thái | Bằng chứng | Ghi chú |
 |---|---|---|---|---|
-| 1 | Bù mục 2 L4 (refresh/forms/FTS/Google) | ⬜ Chưa làm | — | Nợ tuần 3 |
-| 2 | Lab L5 (8 phase) trên `practice/TV4/L5` | ⬜ Chưa làm | — | Chấm điểm kiểu L4 |
-| 3 | `SOK_LAB_L5.md` | ⬜ Chưa làm | — | |
-| 4 | Mở PR cho nhánh lab | ⬜ Chưa làm | — | `practice/TV4/L4` hiện chỉ có branch |
+| A1 | Identity/PBKDF2 | 🟢 Có trong sản phẩm + test | `AuthTests.cs:108-111` | Assert **V3 / SHA512 / ≥100 000 vòng**. Theo quy tắc plan: dùng PR sản phẩm làm minh chứng, không viết lại lab cho đủ số file |
+| A2 | Refresh hash/rotation/reuse/logout | 🟢 8/8 test | `Week3AuthAndPersonalLabTests.cs` | Rotation, **reuse ⇒ thu hồi cả family**, logout thu hồi, token hết hạn, refresh đồng thời |
+| A4 | FTS tsvector/GIN/`ts_rank`/AND/phân trang | 🟡 Có trong sản phẩm + test | `RecipeConfiguration.cs`, `DiscoveryAndSearchTests.cs` | ⬜ EXPLAIN **đo lại tuần 4 chưa chạy** (index không đổi ⇒ `N2-C5` đã loại) |
+| **A3** | **Zod/RHF phía FE** | ⬜ **Chưa làm** | `grep` `src/frontend` | `zod` có trong `package.json` nhưng **`src/` không import chỗ nào**; FE chỉ dùng `react-hook-form`. Phía BE đã có FluentValidation |
+| **A5** | **Google OAuth2/PKCE** | ⬜ **Còn chờ credentials** | — | Không có mock nào được tính là hoàn thành |
+| B1 | Lab L5 — `search-ssr` | ⬜ Chưa làm | — | Sản phẩm **đã là** Next.js App Router với `revalidate` (ISR), nhưng chưa có lab |
+| B2 | Lab L5 — `isr-detail` | ⬜ Chưa làm | — | idem |
+| B3 | Lab L5 — `query-rollback` | ⬜ Chưa làm | — | `useQuery`/`useOptimistic`: **0 file** trong `src/frontend` |
+| B4 | Lab L5 — `image-opt` | ⬜ Chưa làm | — | `next/image`: **0 file** |
+| B5 | Lab L5 — `seo` | ⬜ Chưa làm | — | Sản phẩm đã có `export const metadata`, sitemap 02:00 UTC, `robots.txt`, JSON-LD |
+| B6 | Lab L5 — `observability` | ⬜ Chưa làm | — | Sản phẩm có Serilog + OTEL + Seq + health probes (đã kiểm ở N1/N2-C) |
+| B7 | Lab L5 — `multi-instance` | ⬜ Chưa làm | — | Đã đo thủ công 2 API qua Nginx ở N1, chưa có compose profile |
+| — | Nhánh `practice/TV4/L5` | ⬜ **Chưa tạo** | — | Đã **dời sang tuần 5** theo quy tắc ưu tiên trong `PLAN_GIAI_DOAN_1_N2_N4.md` mục 4: *"Nếu thiếu thời gian thì dời N3-B xuống tuần 5 trước"*. Lý do: `N2-C` vừa phát hiện và sửa **2 lỗi hạ tầng thật**, ưu tiên sửa lỗi sản phẩm trước khi làm lab |
+| 3 | `SOK_LAB_L5.md` | ⬜ Chưa làm | — | Không tạo vì N3-B chưa có |
+| 4 | Mở PR cho nhánh lab | ⬜ Chưa làm | — | `practice/TV4/L4` hiện chỉ có branch, chưa có PR → tuần 5 |
+| **C3** | **Đính chính bảng 24 ô theo quy tắc code + test + log** | ✅ **Xong 04/10** | `SO_EVIDENCE_TUAN_4.md` mục 2 | Bảng cũ còn ghi "⬜ Chưa làm" cho K21/K22 dù đã có bằng chứng tuần 4 |
 
 ---
 
@@ -113,23 +125,27 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 
 | # | Việc | Trạng thái | Bằng chứng | Ghi chú |
 |---|---|---|---|---|
-| 1 | `docs/RUNBOOK.md` có số liệu thật | ⬜ Chưa làm | — | |
-| 2 | Deploy lặp lại được (compose prod hoặc checklist Render) | ⬜ Chưa làm | — | |
-| 3 | Cập nhật `HUONG_DAN_CHAY_TV4.md` + `README.md` + `CHANGELOG.md` | ⬜ Chưa làm | — | |
-| 4 | Chốt sổ 24/24 K + nộp review Tâm | ⬜ Chưa làm | — | |
+| 1 | `docs/RUNBOOK.md` có số liệu thật | ⛔ **Thuộc tuần 5** | — | `N4-A` đã loại khỏi phạm vi GĐ1 (6-tuần L88: "load/SEO/**runbook**") |
+| 2 | Deploy lặp lại được (compose prod hoặc checklist Render) | ⛔ **Thuộc tuần 5** | — | `N4-B` đã loại khỏi phạm vi GĐ1 |
+| 3 | Cập nhật `HUONG_DAN_CHAY_TV4.md` + `README.md` + `CHANGELOG.md` | ✅ **Xong 04/10** | commit docs | HUONG_DAN: 154 → **311**, thêm lệnh coverage/E2E/k6/outage + bài học từ lỗi CI · README §4.5: 172 → **316/316** · CHANGELOG thêm `0.4.0` và `0.3.0` |
+| 4 | Chốt sổ 24/24 K + nộp review Tâm | ✅ **Xong 04/10** (chờ Tâm xác nhận) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo ghi rõ **3 ô còn thiếu thật** (K09/K17/K18) và **8 ô có nền nhưng thiếu phần lab/đo lại**. Không ô nào tự đánh dấu đạt |
 
 ---
 
 ## 7. Kỹ năng
 
-| Chỉ số | Tuần 3 vào | Tuần 4 hiện tại | Mục tiêu |
-|---|---|---|---|
-| Số ô kỹ năng có minh chứng | 9/24 | **9/24** | 24/24 tại G4 |
-| Ô đang làm dở | — | 0 | — |
-| Ô còn thiếu | 15 | **15** | 0 |
+Cập nhật 04/10/2026 theo quy tắc N3-C3 — chỉ tính ô khi có **code + test + log**:
 
-Danh sách 15 ô cần bù: K02, K03, K04, K06, K07, K09, K10, K14, K15, K16, K17, K18, K19, K21, K22.
-Chi tiết theo ô: `SO_EVIDENCE_TUAN_4.md` mục 2.
+| Mức | Số ô | Ô |
+|---|---|---|
+| 🟢 **đủ bằng chứng** | **3** | K08, K13, K21 |
+| 🟢 **gần đạt, còn 1 việc nhỏ** | **10** | K02, K03, K07, K10, K12, K14, K15, K20, K23, K24 |
+| 🟡 **có nền sản phẩm, thiếu phần lab/đo lại** | **8** | K01, K04, K05, K06, K11, K16, K19, K22 |
+| ⬜ **còn thiếu thật** | **3** | K09 (chờ credentials), K17 (thiếu TanStack Query/next/image), K18 (thuộc TV2) |
+
+- Ô **còn thiếu thật** giảm từ **15 → 3** so với đầu tuần 4.
+- ⛔ **Không ô nào tự đánh dấu đạt** — toàn bộ 24 ô đang chờ **Nguyễn Thanh Tâm** xác nhận và ghi ngày.
+- Chi tiết từng ô: `SO_EVIDENCE_TUAN_4.md` mục 2 · mapping 24 dòng: [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md).
 
 ---
 
