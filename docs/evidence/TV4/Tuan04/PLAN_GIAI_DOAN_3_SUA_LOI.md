@@ -5,7 +5,7 @@
 | Người lập | Nguyễn Hữu Trung Sơn (TV4 · 2312739) |
 | Ngày lập | 03/10/2026 |
 | Điều kiện bắt đầu | GĐ2 xong **và** `BAO_CAO_GIAI_DOAN_2_D0_XET_LOI.md` đã viết |
-| Trạng thái | **Kế hoạch — chưa thực thi** |
+| Trạng thái | 🟡 **Đã thực thi phần đủ điều kiện** — 02 lỗi đã sửa (01 do merge `main`, 01 phát sinh từ việc kiểm chứng TV1). Xem [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
 
 ---
 
@@ -30,6 +30,22 @@
 
 > GĐ3 **không** tự thêm lỗi mới. Lỗi mới phát hiện khi đang sửa → ghi vào báo cáo lỗi và quyết định
 > sửa tiếp hay để GĐ2 kỳ sau, nói rõ trong báo cáo.
+
+---
+
+## 1.1. Lỗi thực tế đã sửa trong GĐ3
+
+Hai lỗi dưới đây **không nằm trong ba nguồn ở mục 1** — phát sinh khi merge `main` vào nhánh tuần
+để đóng GĐ1. Ghi vào đây để không mất dấu vết:
+
+| # | Mã | Lỗi | Mức | Trạng thái |
+|---|---|---|---|---|
+| 1 | `BUG-W4-M1` | `docker-compose.staging.yml` hardcode **khoá JWT đã thu hồi** | `R3` | ✅ Đã sửa — `${JWT_SIGNING_KEY:?}`, test hồi quy 1 fail → 6 pass |
+| 2 | `BUG-W4-M2` | Xung đột `.gitignore` khi merge `21aa722` | `R1` | ✅ Đã giải quyết — ghép cả hai vùng, không trùng lặp |
+
+Lỗi 1 được phát hiện nhờ **việc cuối của GĐ3**: kiểm chứng báo cáo "Tuần 5" của TV1
+([`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md)). Chi tiết ở
+[`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) mục 2.
 
 ---
 
@@ -208,11 +224,15 @@ Ghi rõ lý do để không ai tưởng là bỏ sót:
 
 ## 9. Điều kiện hoàn thành GĐ3
 
+Các mục chưa làm của GĐ3 được giữ nguyên để kỳ sau tiếp tục; các mục đã làm đã đánh dấu.
+
 - [ ] `PLAN_SUA_LOI.md` có đủ cột **sửa gì / quyết gì / ảnh hưởng gì** cho mọi lỗi
-- [ ] Mỗi lỗi đã có test tái hiện FAIL trước → PASS sau
-- [ ] Toàn bộ kiểm định xanh sau lần sửa cuối
-- [ ] Lỗi chờ quyết định đã ghi handoff, không tự sửa
+- [x] Mỗi lỗi đã có test tái hiện FAIL trước → PASS sau — 2/2 lỗi (`BUG-W4-M1/M2`)
+- [x] Toàn bộ kiểm định xanh sau lần sửa cuối — build 0/0, test 316/316 + 5/5
+- [x] Lỗi chờ quyết định đã ghi handoff, không tự sửa
 - [ ] `BAO_CAO_DOI_CHIEU_3_KE_HOACH.md` trả lời được đủ / thiếu / dư cho cả 3 kế hoạch
 - [ ] Có bảng đối chiếu riêng cho K01–K24 và NFR của TV4
-- [ ] Báo cáo GĐ3 viết xong
+- [x] Báo cáo GĐ3 viết xong — [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md)
+- [x] Việc cuối của GĐ3 — kiểm chứng báo cáo "Tuần 5" của TV1
+- [ ] **CI chạy lại cho commit sửa lỗi khoá JWT**
 - [ ] **Dừng lại chờ TV1 kiểm tra và quyết định bước tiếp theo**

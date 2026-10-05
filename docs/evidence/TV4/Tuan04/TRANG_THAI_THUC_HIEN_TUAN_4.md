@@ -98,7 +98,7 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 
 ---
 
-## 5. N3 — D6: Lab
+## 5. N3 — D6: Lab (cập nhật 05/10 — N3-B/C1/C2 đã xong, còn A3/A5)
 
 | # | Việc | Trạng thái | Bằng chứng | Ghi chú |
 |---|---|---|---|---|
@@ -107,17 +107,21 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 | A4 | FTS tsvector/GIN/`ts_rank`/AND/phân trang | 🟡 Có trong sản phẩm + test | `RecipeConfiguration.cs`, `DiscoveryAndSearchTests.cs` | ⬜ EXPLAIN **đo lại tuần 4 chưa chạy** (index không đổi ⇒ `N2-C5` đã loại) |
 | **A3** | **Zod/RHF phía FE** | ⬜ **Chưa làm** | `grep` `src/frontend` | `zod` có trong `package.json` nhưng **`src/` không import chỗ nào**; FE chỉ dùng `react-hook-form`. Phía BE đã có FluentValidation |
 | **A5** | **Google OAuth2/PKCE** | ⬜ **Còn chờ credentials** | — | Không có mock nào được tính là hoàn thành |
-| B1 | Lab L5 — `search-ssr` | ⬜ Chưa làm | — | Sản phẩm **đã là** Next.js App Router với `revalidate` (ISR), nhưng chưa có lab |
-| B2 | Lab L5 — `isr-detail` | ⬜ Chưa làm | — | idem |
-| B3 | Lab L5 — `query-rollback` | ⬜ Chưa làm | — | `useQuery`/`useOptimistic`: **0 file** trong `src/frontend` |
-| B4 | Lab L5 — `image-opt` | ⬜ Chưa làm | — | `next/image`: **0 file** |
-| B5 | Lab L5 — `seo` | ⬜ Chưa làm | — | Sản phẩm đã có `export const metadata`, sitemap 02:00 UTC, `robots.txt`, JSON-LD |
-| B6 | Lab L5 — `observability` | ⬜ Chưa làm | — | Sản phẩm có Serilog + OTEL + Seq + health probes (đã kiểm ở N1/N2-C) |
-| B7 | Lab L5 — `multi-instance` | ⬜ Chưa làm | — | Đã đo thủ công 2 API qua Nginx ở N1, chưa có compose profile |
-| — | Nhánh `practice/TV4/L5` | ⬜ **Chưa tạo** | — | Đã **dời sang tuần 5** theo quy tắc ưu tiên trong `PLAN_GIAI_DOAN_1_N2_N4.md` mục 4: *"Nếu thiếu thời gian thì dời N3-B xuống tuần 5 trước"*. Lý do: `N2-C` vừa phát hiện và sửa **2 lỗi hạ tầng thật**, ưu tiên sửa lỗi sản phẩm trước khi làm lab |
-| 3 | `SOK_LAB_L5.md` | ⬜ Chưa làm | — | Không tạo vì N3-B chưa có |
-| 4 | Mở PR cho nhánh lab | ⬜ Chưa làm | — | `practice/TV4/L4` hiện chỉ có branch, chưa có PR → tuần 5 |
+| B1 | Lab L5 — `search-ssr` | 🟡 Đã làm 05/10, **5/6** | `SOK_LAB_L5.md`, `logs/lab_l5_run.log` | SSR thật (HTML chứa text tiếng Việt, `self.__next_f`), nhưng response trả `no-store, must-revalidate, private` |
+| B2 | Lab L5 — `isr-detail` | 🟡 Đã làm 05/10, **5/8** | `SOK_LAB_L5.md` | Code khai `revalidate = 300` nhưng runtime **không có** `x-nextjs-cache`/`x-nextjs-revalidate`; build đánh dấu `ƒ (Dynamic)`. **ISR không hoạt động** |
+| B3 | Lab L5 — `query-rollback` | 🟡 Đã làm 05/10, **9/10** | `SOK_LAB_L5.md` | `RecipeWizard.tsx` có `useOptimistic` + `rollbacks`; rollback đúng. **RowVersion chưa kiểm chứng** — tài khoản E2E không sở hữu công thức, `GetRecipesQuery` không có filter chủ sở hữu |
+| B4 | Lab L5 — `image-opt` | 🟡 Đã làm 05/10, **1/7** | `SOK_LAB_L5.md`, `logs/lab_l5_db.txt` | `next/image`: **0 file**; có **9** file dùng `<img>` thô; HTML không có `/_next/image`. 101/101 recipe trỏ ảnh tĩnh, không có biến thể medium/large |
+| B5 | Lab L5 — `seo` | 🟢 Đã làm 05/10, **15/15** | `SOK_LAB_L5.md` | Metadata, JSON-LD Recipe, robots, sitemap, canonical — đều đạt |
+| B6 | Lab L5 — `observability` | 🟢 Đã làm 05/10, **10/10** | `SOK_LAB_L5.md` | `traceId` trong body lỗi + server log; Seq/OTLP liên lạc được |
+| B7 | Lab L5 — `multi-instance` | 🟢 Đã làm 05/10, **7/7** | `SOK_LAB_L5.md`, `logs/multi_instance_two_api.log` | 2 API cùng dữ liệu, dùng chung Redis; khoá `lab:l5:...:shared-probe` khớp. ⬜ Hangfire server thực tế **chưa xác nhận** — thiếu `LAB_APP_DB` |
+| — | Nhánh `practice/TV4/L5` | 🟢 **Đã tạo** 05/10 | commit `6c90ad8` | Đã từng **dời sang tuần 5** theo quy tắc ưu tiên; nay thực hiện trong tuần 4 sau khi đóng GĐ1 |
+| 3 | `SOK_LAB_L5.md` | 🟢 **Đã làm 05/10** | commit `870d6e3` | Kèm 2 log: `logs/lab_l5_run.log` (63 check), `logs/lab_l5_db.txt` |
+| 4 | Mở PR cho nhánh lab | 🟢 **Đã làm 05/10** | PR #28 | Đã mở rồi **đóng** theo quyết định nhóm: lab ở nhánh riêng, PR chỉ để đánh dấu/review, không merge vào `main` |
 | **C3** | **Đính chính bảng 24 ô theo quy tắc code + test + log** | ✅ **Xong 04/10** | `SO_EVIDENCE_TUAN_4.md` mục 2 | Bảng cũ còn ghi "⬜ Chưa làm" cho K21/K22 dù đã có bằng chứng tuần 4 |
+
+> **Kết luận N3:** 4/7 phase PASS. **3 phase lộ ra vấn đề thật** — `isr-detail` (ISR không
+> hoạt động), `image-opt` (không tối ưu 2 tầng), `search-ssr` (`no-store`). Các vấn đề này
+> **chuyển sang sửa ở GĐ3/GĐ4**, không sửa trong phạm vi lab.
 
 ---
 
@@ -128,23 +132,25 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 | 1 | `docs/RUNBOOK.md` có số liệu thật | ⛔ **Thuộc tuần 5** | — | `N4-A` đã loại khỏi phạm vi GĐ1 (6-tuần L88: "load/SEO/**runbook**") |
 | 2 | Deploy lặp lại được (compose prod hoặc checklist Render) | ⛔ **Thuộc tuần 5** | — | `N4-B` đã loại khỏi phạm vi GĐ1 |
 | 3 | Cập nhật `HUONG_DAN_CHAY_TV4.md` + `README.md` + `CHANGELOG.md` | ✅ **Xong 04/10** | commit docs | HUONG_DAN: 154 → **311**, thêm lệnh coverage/E2E/k6/outage + bài học từ lỗi CI · README §4.5: 172 → **316/316** · CHANGELOG thêm `0.4.0` và `0.3.0` |
-| 4 | Chốt sổ 24/24 K + nộp review Tâm | ✅ **Xong 04/10** (chờ Tâm xác nhận) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo ghi rõ **3 ô còn thiếu thật** (K09/K17/K18) và **8 ô có nền nhưng thiếu phần lab/đo lại**. Không ô nào tự đánh dấu đạt |
+| 4 | Chốt sổ 24/24 K + nộp review Tâm | ✅ **Xong 04/10**, cập nhật 05/10 (chờ Tâm xác nhận) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo ghi rõ **2 ô còn thiếu thật** (K09/K18) và **8 ô có nền nhưng thiếu phần lab/đo lại**. Không ô nào tự đánh dấu đạt |
+| 5 | **Kiểm chứng báo cáo của thành viên khác** (việc cuối GĐ3) | ✅ **Xong 05/10** | [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md), [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) | Báo cáo "Tuần 5" của TV1 (`21aa722`) đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận + thiếu minh chứng chạy. Trong lúc kiểm chứng phát hiện và **đã sửa lỗi khoá JWT** (`R3`) trong compose staging |
 
 ---
 
 ## 7. Kỹ năng
 
-Cập nhật 04/10/2026 theo quy tắc N3-C3 — chỉ tính ô khi có **code + test + log**:
+Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 — chỉ tính ô khi có **code + test + log**:
 
 | Mức | Số ô | Ô |
 |---|---|---|
-| 🟢 **đủ bằng chứng** | **3** | K08, K13, K21 |
-| 🟢 **gần đạt, còn 1 việc nhỏ** | **10** | K02, K03, K07, K10, K12, K14, K15, K20, K23, K24 |
-| 🟡 **có nền sản phẩm, thiếu phần lab/đo lại** | **8** | K01, K04, K05, K06, K11, K16, K19, K22 |
-| ⬜ **còn thiếu thật** | **3** | K09 (chờ credentials), K17 (thiếu TanStack Query/next/image), K18 (thuộc TV2) |
+| 🟢 **đủ bằng chứng** | **6** | K08, K13, K19, K20, K21, K24 |
+| 🟢 **gần đạt, còn 1 việc nhỏ** | **8** | K02, K03, K07, K10, K12, K14, K15, K23 |
+| 🟡 **có nền sản phẩm, thiếu phần lab/đo lại** | **8** | K01, K04, K05, K06, K11, K16, K17, K22 |
+| ⬜ **còn thiếu thật** | **2** | K09 (chờ credentials), K18 (thuộc TV2) |
 
-- Ô **còn thiếu thật** giảm từ **15 → 3** so với đầu tuần 4.
+- Ô **còn thiếu thật** giảm **15 → 3 → 2**.
 - ⛔ **Không ô nào tự đánh dấu đạt** — toàn bộ 24 ô đang chờ **Nguyễn Thanh Tâm** xác nhận và ghi ngày.
+- ⚠️ **CI cần chạy lại** cho commit `03564c4` (sửa khoá JWT). Trạng thái CI xanh hiện ở `870d6e3`.
 - Chi tiết từng ô: `SO_EVIDENCE_TUAN_4.md` mục 2 · mapping 24 dòng: [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md).
 
 ---
@@ -184,6 +190,9 @@ Cập nhật 04/10/2026 theo quy tắc N3-C3 — chỉ tính ô khi có **code +
 > của GĐ1 là **B5 → B6 → QD3-3a/3b/3c → N2 → N3 → N4-C** — xem
 > [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §4.1 và
 > [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) §4.
+>
+> ⭐ **Đính chính 05/10:** mục 0, 7 và các mục N3 **đã xong**. Việc đầu tiên của kỳ tiếp theo là
+> **chạy lại CI** cho commit `03564c4` rồi **chờ Tâm xác nhận** các ô kỹ năng.
 
 0. ⭐ **Trước tiên: B5-1…B5-7 → B6-1…B6-4 → QD3-3a/3b/3c.** Đây là **điều kiện tiên quyết** của N2:
    B6 mở khoá N2-E7, B5 mở khoá xem ảnh Draft trong wizard. ⛔ Không cắt để đổi — nếu thiếu thời gian
@@ -200,7 +209,9 @@ Cập nhật 04/10/2026 theo quy tắc N3-C3 — chỉ tính ô khi có **code +
    job canh lịch → đề xuất 07/08.
 5. ~~OTEL collector + Seq + chụp trace thật (N1-3)~~ — **xong 30/09**.
 6. ~~Sitemap cron 02:00 UTC + distributed lock (N1-6)~~ — **xong 30/09**.
-7. Lab L5 + bù mục 2 L4; mở PR cho nhánh lab (N3).
+7. ~~Lab L5 + bù mục 2 L4; mở PR cho nhánh lab (N3)~~ — **xong 05/10**: `practice/TV4/L5`
+   tạo, 7 phase chạy thật (**63 check**, 3/7 phase PASS), `SOK_LAB_L5.md` + 2 log, PR #28 đã
+   mở rồi đóng. ⬜ N3 còn `A3` (Zod/RHF) và `A5` (Google OAuth — chờ credentials).
 8. ~~Kịch bản tấn công file (N2-E6)~~ — **xong 04/10**: `ImageMagicBytesE6Tests` **25/25**.
    ~~Race/idempotent/phân quyền ảnh (N2-E3, E4, E5, E7)~~ — **xong 04/10**:
    `ImageConcurrencyE7Tests` **5/5**, chạy lại 3 lần không flaky. 🟢 Phát hiện và **đã sửa 2 bug thật**
@@ -253,8 +264,18 @@ Cập nhật 04/10/2026 theo quy tắc N3-C3 — chỉ tính ô khi có **code +
    ⚠️ **Còn thiếu**: nút **Unpublish/Archive chưa có trong UI** (API đã có ở `Program.cs:620,627`) →
    gỡ xuất bản mới chỉ kiểm được ở tầng API; `register/login` (TV1), `category` (TV2),
    `create-recipe` (TV3) thuộc **G6 tuần 5**. Chi tiết: `SO_EVIDENCE_TUAN_4.md` §"TV4-K21".
-12. Tài liệu + evidence + chốt sổ 24/24 K, nộp review Tâm (N4-C). ⛔ Runbook đầy đủ, deploy staging,
-       TLS/HSTS, 5 E2E flows, responsive/a11y, Jest/RTL → **tuần 5**.
+12. ~~Tài liệu + evidence + chốt sổ 24/24 K, nộp review Tâm (N4-C)~~ — **xong 04/10**,
+    cập nhật 05/10. ⛔ Còn: Runbook đầy đủ, deploy staging, TLS/HSTS, 5 E2E flows,
+    responsive/a11y, Jest/RTL → **tuần 5**.
+13. **Kiểm chứng báo cáo "Tuần 5" của TV1** (việc cuối GĐ3) — **xong 05/10**:
+    [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md). Kết quả: báo cáo đánh dấu
+    **không đáng tin**; tìm ra và sửa lỗi khoá JWT `R3` trong compose staging.
+
+**Trạng thái build sau việc cuối GĐ3 (05/10):** backend **316/316** + `ConcurrencySpike` **5/5** ✅ ·
+`dotnet build -c Release` **0 warning / 0 error** ✅ · `docker compose -f docker-compose.staging.yml config`
+exit `0` khi có `JWT_SIGNING_KEY`, exit `1` kèm thông báo khi thiếu ✅ ·
+evidence L4/L5 nguyên vẹn sau merge ✅ · file bảo vệ `BAO_CAO_LOI_500_TRANG_SEARCH.md` nguyên vẹn ✅.
+⚠️ **CI chưa chạy lại cho `03564c4`** — trạng thái CI xanh hiện ở `870d6e3`, trước lần sửa khoá JWT.
 
 **Trạng thái build sau N2-B1 (04/10):** backend **311 + 5 = 316/316** ✅ · `dotnet format --verify-no-changes`
 exit `0` ✅ · `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (chỉ cảnh báo `<img>` có sẵn từ trước) ·

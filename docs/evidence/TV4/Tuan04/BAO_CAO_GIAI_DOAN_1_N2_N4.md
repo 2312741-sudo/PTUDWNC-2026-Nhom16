@@ -3,9 +3,9 @@
 | Mục | Nội dung |
 |---|---|
 | **Người lập** | Nguyễn Hữu Trung Sơn (TV4 · 2312739) |
-| **Ngày chốt** | 04/10/2026 |
+| **Ngày chốt** | 04/10/2026 · **cập nhật 05/10/2026** (N3-B/C1/C2 hoàn thành; thêm việc cuối GĐ3) |
 | **Nhánh** | `2312739_NHTSon_D5-D6-D7` — **không push `main`** |
-| **Commit chốt** | `8d9d62b` (fix storage) · `51719a5` (evidence CI xanh) |
+| **Commit chốt** | `8d9d62b` (fix storage) · `51719a5` (evidence CI xanh) · `870d6e3` (evidence L5) · `03564c4` (fix khoá JWT, merge `main`) |
 | **Phạm vi** | Giai đoạn 1 = tuần 4: **N2** (resilience + E2E publish), **N3** (LAB), **N4-C** (tài liệu + chốt evidence) |
 | **Trạng thái** | ⛔ **Cổng G4 — chờ Nguyễn Thanh Tâm (reviewer) xác nhận.** Báo cáo này không tự đánh dấu ô nào là đạt. |
 
@@ -13,7 +13,7 @@
 
 ## 1. Tóm tắt cho reviewer
 
-Tuần 4 đóng được **N2** và **N4-C**; **N3 chưa đóng** (chi tiết ở mục 4).
+Tuần 4 đóng được **N2** và **N4-C**. **N3 gần đóng** — 05/10 đã hoàn thành `N3-B` (Lab L5), `N3-C1` (Sổ K), `N3-C2` (PR lab); còn `N3-A3` và `N3-A5` chưa làm.
 
 **Ba lỗi thật đã tìm ra và sửa, mỗi lỗi kèm test hồi quy:**
 
@@ -73,7 +73,7 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 
 ---
 
-## 4. N3 — CHƯA ĐÓNG
+## 4. N3 — GẦN ĐÓNG (còn A3 và A5)
 
 | Mục | Nội dung | Trạng thái |
 |---|---|---|
@@ -82,12 +82,17 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 | N3-A4 | FTS tsvector/trigger/GIN/`ts_rank`/AND/phân trang | ✅ Có trong sản phẩm + test; ⬜ EXPLAIN **đo lại tuần 4 chưa chạy** |
 | **N3-A3** | **Zod/RHF phía FE** | ⬜ **Chưa làm** — `zod` có trong `package.json` nhưng `src/` **không import chỗ nào**. FE chỉ dùng `react-hook-form`. Phía BE đã có FluentValidation. |
 | **N3-A5** | **Google OAuth2/PKCE** | ⬜ **Chưa làm — còn chờ credentials.** Không tính mock là hoàn thành. |
-| **N3-B** | **Lab L5** (7 phase: `search-ssr`, `isr-detail`, `query-rollback`, `image-opt`, `seo`, `observability`, `multi-instance`) | ⬜ **Chưa làm.** Nhánh `practice/TV4/L5` **chưa tạo**. Theo `PLAN_GIAI_DOAN_1_N2_N4.md`: *"Nếu thiếu thời gian thì **dời** N3-B xuống tuần 5 trước"* — đã dời. |
-| N3-C1 | `SOK_LAB_L5.md` | ⬜ Không tạo vì N3-B chưa có |
-| N3-C2 | Mở PR cho nhánh lab | ⬜ Chưa (L4 cũng chưa có PR) → tuần 5 |
+| **N3-B** | **Lab L5** (7 phase: `search-ssr`, `isr-detail`, `query-rollback`, `image-opt`, `seo`, `observability`, `multi-instance`) | 🟡 **Đã làm 05/10 — nhánh `practice/TV4/L5` đã tạo.** 63 check · **3/7 phase PASS** (`seo` 15/15, `observability` 10/10, `multi-instance` 7/7). 4/7 phase lộ ra vấn đề thật: ISR không hoạt động, ảnh không tối ưu 2 tầng, search trả `no-store`, RowVersion chưa kiểm chứng được. Bằng chứng: `SOK_LAB_L5.md` + `logs/lab_l5_run.log` + `logs/lab_l5_db.txt` |
+| **N3-C1** | `SOK_LAB_L5.md` | ✅ **Đã tạo 05/10** — commit `870d6e3`, kèm 2 log. Kết luận lab: *"FAIL có chủ đích — 41/63 check đạt, 3/7 phase PASS, 4/7 phase lộ ra vấn đề thật"* |
+| **N3-C2** | Mở PR cho nhánh lab | ✅ **Đã làm 05/10** — PR #28, đã mở rồi **đóng** theo quyết định nhóm: lab ở nhánh riêng, PR chỉ để đánh dấu/review. Commit code lab `6c90ad8`, evidence `870d6e3` |
 | **N3-C3** | **Đính chính bảng 24 ô theo quy tắc code + test + log** | ✅ **Đã làm** — xem mục §2 của `SO_EVIDENCE_TUAN_4.md` |
 
-> **Vì sao dời N3-B:** L5 là lab UI/SEO/vận hành, cần 7 phase với check đếm được. Trong khi đó
+> **Cập nhật 05/10 — N3-B/C1/C2 đã hoàn thành, đã dời khỏi danh sách "chưa làm".**
+> Nội dung báo cáo này trước đó ghi "L5 dời sang tuần 5" theo đúng quy tắc ưu tiên trong
+> `PLAN_GIAI_DOAN_1_N2_N4.md`. Nay đã thực hiện trong tuần 4 sau khi đóng được GĐ1.
+> **N3 vẫn chưa đóng** vì còn `A3` và `A5` chưa làm.
+>
+> **Vì sao dời N3-B lúc đó:** L5 là lab UI/SEO/vận hành, cần 7 phase với check đếm được. Trong khi đó
 > `N2-C` vừa phát hiện và sửa 2 lỗi hạ tầng thật (lỗi 1 và lỗi 2) — ưu tiên đúng là xử lý lỗi sản
 > phẩm trước khi làm lab. `N4-C` là điều kiện cổng G4 nên làm trước.
 
@@ -148,6 +153,9 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 | 8 | 04/10 | N3-A5 | Thiếu credentials Google OAuth | S1 | Ghi "còn chờ", không tính hoàn thành |
 | 9 | 04/10 | N3-B | Lab L5 7 phase chưa làm | S1 | Dời tuần 5 theo quy tắc ưu tiên trong plan |
 | 10 | 04/10 | Tool | Dùng PowerShell `Get-Content`/`Set-Content` sửa source tiếng Việt đã làm hỏng encoding UTF-8 (`đ` → `?`) | S2 | Khôi phục bằng `git checkout` rồi sửa lại bằng tool edit; đã ghi cảnh báo cho các phiên sau |
+| 11 | 05/10 | N3-B/C1/C2 | Lab L5 7 phase đã làm xong; 4/7 phase lộ ra vấn đề thật (ISR không hoạt động, ảnh không tối ưu 2 tầng, search `no-store`, RowVersion chưa kiểm chứng) | S2 | Ghi Sổ K + log; **chuyển sang sửa ở GĐ3/GĐ4**, không sửa trong GĐ1 |
+| 12 | 05/10 | Merge | Merge `main` mang vào `docker-compose.staging.yml` **hardcode khoá JWT đã thu hồi** — test `JwtSigningKeyNotCommittedTests` đỏ 1/316 | S2 | Sửa ở **GĐ3** (`03564c4`): `${JWT_SIGNING_KEY:?}`; test 6/6 xanh |
+| 13 | 05/10 | TV1 | Báo cáo "Tuần 5" của TV1 có 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) | S2 | Hồ sơ [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md); **không sửa báo cáo của TV1** |
 
 ---
 
@@ -158,7 +166,15 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 2. Bảng 24 ô kỹ năng mục §2 của `SO_EVIDENCE_TUAN_4.md` — đánh dấu ✅/❌ từng ô.
 3. Số đo mục §2: **316/316**, coverage **84.13%**, Playwright **26/26**, k6 `http_req_failed` **0.00%**.
 4. Danh sách giới hạn mục 6 — có ô nào reviewer cho là đã đủ bằng chứng dù tôi ghi là chưa thì không?
-5. **N3 chưa đóng** (A3/A5/B) — xác nhận có chấp nhận dời sang tuần 5, hay cần giữ trong GĐ1.
+5. **N3 gần đóng** — `N3-B`/`C1`/`C2` đã xong 05/10. Xác nhận có chấp nhận việc đóng N3 trong
+   tuần 4 với `A3`/`A5` chuyển kỳ sau, hay cần giữ.
+6. **Lab L5 lộ ra 4 vấn đề thật** (ISR, ảnh, `no-store`, RowVersion) — xác nhận có đưa vào
+   sửa ở GĐ3/GĐ4 hay để kỳ sau. Chi tiết `SOK_LAB_L5.md`.
+7. **Báo cáo "Tuần 5" của TV1 đánh dấu không đáng tin** — xem
+   [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md). Đề nghị TV1 đính chính
+   6 điểm §5 của hồ sơ đó.
+8. **CI cần chạy lại** cho commit `03564c4`. Trạng thái CI xanh hiện ở `870d6e3`, **trước** lần
+   sửa khoá JWT.
 
 ## 9. Chỉ số tài liệu
 
@@ -168,5 +184,8 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 | [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) | Trạng thái từng mục N2/N3/N4 |
 | [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) | Kế hoạch + lý do loại bớt phạm vi |
 | [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) | Quyết định đưa B5/B6 lên trước N2 |
+| [`SOK_LAB_L5.md`](SOK_LAB_L5.md) | Sổ K Lab L5 — 63 check, 3/7 phase PASS |
+| [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) | Báo cáo GĐ3 — gồm việc cuối: kiểm chứng báo cáo TV1 |
+| [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md) | Hồ sơ kiểm chứng báo cáo "Tuần 5" của TV1 |
 | [`../HUONG_DAN_CHAY_TV4.md`](../HUONG_DAN_CHAY_TV4.md) | Lệnh cài đặt/chạy + số đo mới |
 | [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md) | Mapping 24 dòng K ↔ FR/NFR ↔ ADR ↔ evidence |

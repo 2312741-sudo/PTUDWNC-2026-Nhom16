@@ -420,30 +420,39 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 | K14 | Hangfire fire-and-forget/delayed/recurring, retry, persistence, dashboard | 🟡 | Recurring "sitemap-daily" `0 2 * * *` UTC qua `IRecurringJobManager`; storage PostgreSQL dùng chung cho mọi worker | `Program.cs`, `SitemapGenerator.cs` | 🟢 Đã làm 30/09 · chờ Tâm duyệt |
 | K15 | SMTP/MailKit, resize 300×300/800×600, sitemap XML | 🟡 | `deploy/backup.sh` + `deploy/restore.sh` (drill 14 bảng); sitemap XML sinh theo lịch, `/sitemap.xml` trả 200 | `deploy/backup.sh`, `deploy/restore.sh`, `SitemapGenerator.cs` | 🟢 Đã làm 30/09 · 🔴 nơi đặt lịch 03:00 ICT **chưa chốt** → [`DE_XUAT_07`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) |
 | K16 | Next.js App Router/TS/Tailwind, SSR/ISR/CSR | ❌ | Hạ tầng CI build FE + lab L5 (`search-ssr`, `isr-detail`) (N2-3, N3-2) | TV4-K16 | 🟡 Sản phẩm **là Next.js App Router** (`src/app/**`), `revalidate` dùng ở 8 file → có ISR trong sản phẩm, CI có job build FE (`Frontend CI` run `37213966761` thành công); ⬜ **lab L5 `search-ssr`/`isr-detail` chưa làm** → tuần 5 |
-| K17 | TanStack Query/server state, optimistic rollback, next/image | ❌ | Progress upload + rollback; lab `query-rollback`, `image-opt` (N2-8, N3-2) | TV4-K17 | ⬜ **Chưa làm** — kiểm bằng `grep` trên `src/frontend`: `useQuery` **0 file**, `useOptimistic` **0 file**, `next/image` **0 file**. Sản phẩm đang fetch thẳng, không có optimistic update. Cũng **không có** progress upload % (thuộc `N2-D1`, đã loại) |
+| K17 | TanStack Query/server state, optimistic rollback, next/image | ❌ | Progress upload + rollback; lab `query-rollback`, `image-opt` (N2-8, N3-2) | TV4-K17 | 🟡 **Lab L5 đã đo 05/10 (9/10 + 1/7)**: optimistic rollback **có thật** — `RecipeWizard.tsx` dùng `useOptimistic` + `rollbacks`, rollback đúng; nhưng `next/image` **0 file**, có **9** file `<img>` thô. ⬜ **TanStack Query (`useQuery`) vẫn 0 file**, RowVersion chưa kiểm chứng được, và **không có** progress upload % (`N2-D1` đã loại) |
 | K18 | Responsive, WCAG 2.1 AA, keyboard, loading/error | ❌ | Checklist 320/768/1200 px + focus/aria (N2-8) | TV4-K18 | ⬜ **Chưa làm** — `N2-D3` đã **loại khỏi tuần 4**, thuộc **TV2** theo phân chia công việc tuần 5 |
-| K19 | SEO metadata/OG/Twitter/canonical/301/robots/JSON-LD | ❌ | Sitemap theo lịch; lab `seo` đủ metadata/robots/redirect (N1-6, N3-2) | `src/frontend/src/app/recipes/[slug]/layout.tsx`, `Program.cs` | 🟡 Sản phẩm **có** `export const metadata` (2 file), sitemap theo lịch **02:00 UTC** + distributed lock, `/sitemap.xml` trả 200, `robots.txt` khai báo URL, và test JSON-LD Schema.org Recipe; ⬜ **lab L5 `seo` chưa làm**, và **301 redirect chưa kiểm chứng bằng test** |
-| K20 | Serilog/Seq/correlation, OTEL HTTP/DB/metrics, health probes | 🟡 | Trace thật qua collector: span HTTP + span `db.system=postgresql` cùng TraceId; log Serilog cùng TraceId; health probe credential S3 thật | `logs/seq_trace_recipes.log`, `TracingObservabilityTests`, `HealthTests` | 🟢 Đã làm 30/09 · chờ Tâm duyệt |
+| K19 | SEO metadata/OG/Twitter/canonical/301/robots/JSON-LD | 🟡 | Sitemap theo lịch; lab `seo` đủ metadata/robots/redirect (N1-6, N3-2) | `SOK_LAB_L5.md` (phase `seo`), `logs/lab_l5_run.log` | 🟢 **Lab L5 đã làm 05/10 — 15/15 PASS**: metadata, JSON-LD Schema.org Recipe, robots, sitemap, canonical đều đạt; sitemap theo lịch **02:00 UTC** + distributed lock. ⬜ **301 redirect chưa kiểm chứng bằng test** |
+| K20 | Serilog/Seq/correlation, OTEL HTTP/DB/metrics, health probes | 🟢 | Trace thật qua collector: span HTTP + span `db.system=postgresql` cùng TraceId; log Serilog cùng TraceId; health probe credential S3 thật | `SOK_LAB_L5.md` (phase `observability`), `logs/seq_trace_recipes.log`, `logs/lab_l5_run.log`, `TracingObservabilityTests`, `HealthTests` | 🟢 **Lab L5 đã làm 05/10 — 10/10 PASS**: `traceId` xuất hiện trong **body lỗi** lẫn server log, Seq/OTLP liên lạc được. Chờ Tâm duyệt |
 | K21 | xUnit/unit ≥80%, API happy+error, Jest/RTL, Playwright | ❌ | Playwright thật + 5 luồng; ngưỡng coverage trong CI (N2-1, N2-2, N2-7) | `recipe-publish.spec.ts`, `recipe-search.spec.ts`, `backend.yml`, `frontend.yml` | 🟢 **Code + test + log** — xUnit **311/311** + `ConcurrencySpike` **5/5**, coverage `Application` **84.13%** vượt ngưỡng cổng **80%** (gate chạy trong CI); Playwright **26/26**, 3 lần liên tiếp, `--repeat-each=4` là 16/16. ⬜ **Jest/RTL chưa có** (thuộc **TV1**, `N2-A3` đã loại) và mới phủ **2/5** luồng E2E |
 | K22 | k6 p50/p95/p99, EXPLAIN/N+1/cache hit, CWV/Lighthouse | ❌ | Commit script k6 tái lập được + đo p95/p99; số đo resilience (N2-5, N2-6) | `tests/performance/read-load.js`, `tests/performance/README.md`, 3 log k6 | 🟡 **k6 xong**: script commit được, **3 log chuẩn**, `~3606 request`, `~120 req/s`, `http_req_failed` **0.00%**, đủ p50/p95/p99. ⬜ Chưa đo: **cache-hit ratio**, **EXPLAIN lại**, **N+1**, **CWV/Lighthouse** |
-| K23 | Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling | 🟡 | Backup/restore drill thật + OTEL collector trong Compose + Redis shared; 2 instance đã đo thủ công qua Nginx nhưng **chưa có profile compose sẵn dùng** | `deploy/backup.sh`, `deploy/restore.sh`, `docker-compose.dev.yml` | 🟡 Phần đa xong 30/09 · profile 2 API + kho backup 30 ngày để **tuần 5** / [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) |
-| K24 | Git/PR/review/CI/static analysis/architecture test/secret scan/docs | 🟡 | Secret scan trong CI + Redis service cho test; CI frontend, PR lab, runbook để N2/N3/N4 | `backend.yml`, `frontend.yml`, `deploy/scan-secrets.sh`, `ArchitectureTests.cs` | 🟢 secret scan + **2 workflow CI** (cả hai xanh) + `ArchitectureTests` + tài liệu đã cập nhật. ⬜ **Chưa mở PR cho nhánh lab** (`N3-C2` — L4 cũng chưa có PR, để tuần 5) và **runbook đầy đủ** (`N4-A` → tuần 5) |
+| K23 | Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling | 🟡 | Backup/restore drill thật + OTEL collector trong Compose + Redis shared; 2 instance đã đo bằng lab `multi-instance` | `SOK_LAB_L5.md` (phase `multi-instance`), `logs/multi_instance_two_api.log`, `deploy/backup.sh`, `deploy/restore.sh` | 🟡 **Lab L5 đã làm 05/10 — 7/7**: 2 API (5080/5081) cùng dữ liệu, dùng chung Redis, khoá `lab:l5:...:shared-probe` ghi/đọc khớp. ⬜ **Số Hangfire server khi chạy 2 API chưa xác nhận** (thiếu `LAB_APP_DB`); profile compose 2 API + kho backup 30 ngày để kỳ sau · [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) |
+| K24 | Git/PR/review/CI/static analysis/architecture test/secret scan/docs | 🟢 | Secret scan trong CI + Redis service cho test; CI frontend; **PR lab** đã mở 05/10 | `backend.yml`, `frontend.yml`, `deploy/scan-secrets.sh`, `ArchitectureTests.cs`, `KiemChung_Commit_Week5_TV1.md` | 🟢 secret scan + **2 workflow CI** + `ArchitectureTests` + tài liệu đã cập nhật + **PR #28 đã mở rồi đóng** theo quyết định nhóm. ⬜ **Runbook đầy đủ** (`N4-A` → tuần 5). ⚠️ **CI cần chạy lại** cho commit `03564c4` (sửa khoá JWT) — trạng thái xanh hiện ở `870d6e3` |
 
-**Đếm (sau N2, cập nhật 04/10/2026 — theo quy tắc N3-C3: chỉ tính khi có **code + test + log**):**
+**Đếm (cập nhật 05/10/2026 — sau N3-B + việc cuối GĐ3 — theo quy tắc N3-C3: chỉ tính khi có **code + test + log**):**
 
 | Mức | Ô | Ghi chú |
 |---|---|---|
-| 🟢 **đủ bằng chứng** | K08, K13, K21 | có code + test + log thật |
-| 🟢 **gần đạt, còn 1 việc nhỏ** | K02, K03, K07, K10, K12, K14, K15, K20, K23, K24 | đã có bằng chứng, nhưng còn phần hoàn thiện (xem cột Trạng thái) |
-| 🟡 **có nền sản phẩm, thiếu phần lab/đo lại** | K01, K04, K05, K06, K11, K16, K19, K22 | sản phẩm đã có nhưng chưa đủ "code + test + log" của phần bổ sung |
-| ⬜ **còn thiếu thật** | K09, K17, K18 | K09 chờ credentials Google · K17 thiếu TanStack Query/next/image · K18 thuộc TV2 |
+| 🟢 **đủ bằng chứng** | K08, K13, K19, K20, K21, K24 | có code + test + log thật (K19/K20/K24 nhận thêm bằng chứng từ lab L5 05/10) |
+| 🟢 **gần đạt, còn 1 việc nhỏ** | K02, K03, K07, K10, K12, K14, K15, K23 | đã có bằng chứng, nhưng còn phần hoàn thiện (xem cột Trạng thái) |
+| 🟡 **có nền sản phẩm, thiếu phần lab/đo lại** | K01, K04, K05, K06, K11, K16, K17, K22 | sản phẩm đã có nhưng chưa đủ "code + test + log" của phần bổ sung (K17 đã có số đo lab nhưng còn thiếu TanStack Query + `next/image`) |
+| ⬜ **còn thiếu thật** | K09, K18 | K09 chờ credentials Google · K18 thuộc TV2 |
 
 > ⛔ **Không ô nào tự đánh dấu đạt.** Toàn bộ 24 ô đang chờ **Nguyễn Thanh Tâm** xác nhận và ghi ngày.
 > Ô nào cuối tuần vẫn thiếu đã ghi rõ ở `TRANG_THAI_THUC_HIEN_TUAN_4.md` và trong
 > [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md).
 
-> Lưu ý trung thực cho K23: phần "2 API instance" mới chứng minh được bằng **hai đối tượng dùng chung
-> Redis/lock**, chưa phải hai tiến trình API sau Nginx. Chưa được tính là đạt.
+> **Thay đổi so với 04/10:** `K17` chuyển từ ⬜ sang 🟡 (lab L5 đã đo: optimistic rollback có
+> thật, `next/image` 0 file). `K19` và `K20` lên 🟢 (phase `seo` 15/15, `observability` 10/10).
+> `K23` giữ 🟢-gần-đạt (7/7 nhưng **chưa xác nhận** số Hangfire server khi chạy 2 API).
+> Ô **còn thiếu thật** giảm **3 → 2**.
+>
+> Lưu ý trung thực cho K23: đã đo bằng **hai tiến trình API thật** (5080/5081) qua lab
+> `multi-instance`, nhưng **số Hangfire server khi chạy 2 API chưa xác nhận** vì thiếu
+> `LAB_APP_DB`. Chưa được tính là đạt.
+>
+> Lưu ý cho K24: đã mở PR #28 rồi đóng theo quyết định nhóm. **CI cần chạy lại** cho commit
+> `03564c4` (sửa khoá JWT) — trạng thái xanh hiện tại là ở `870d6e3`, trước lần sửa.
 
 ---
 

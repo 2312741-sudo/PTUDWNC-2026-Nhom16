@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.4.1 — 2026-10-05 (Giai đoạn 3 sửa lỗi + đóng N3 — TV4)
+
+Nhánh `2312739_NHTSon_D5-D6-D7`.
+
+### Sửa lỗi thật
+
+- **`docker-compose.staging.yml` hardcode khoá JWT đã thu hồi.** File do TV1 thêm trong commit
+  `21aa722` đặt cứng đúng khoá mà `JwtSettings.Validate()` đã cấm trong codebase — nghĩa là JWT của
+  staging được ký bằng khoá nằm công khai trong git. Test
+  `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` đỏ **1/316**.
+  Sửa: thay bằng `${JWT_SIGNING_KEY:?...}` **không có giá trị mặc định**, để thiếu biến thì
+  `docker compose config` exit 1 kèm thông báo. Kiểm chứng cả hai chiều; test **6/6** xanh.
+
+### Kiểm chứng báo cáo của thành viên khác
+
+- **Báo cáo "Tuần 5" của TV1 (`21aa722`) đánh dấu KHÔNG ĐÁNG TIN.** 4 sai lệch đã xác nhận:
+  1. **Số liệu p95 vi phạm bất biến toán học** — cả 3 endpoint đều ghi p95 < mean
+     (7ms < 20.95ms; 6ms < 9.61ms; 2ms < 2.12ms); p95 không bao giờ nhỏ hơn mean.
+  2. **Nhãn tuần sai** — repo đã có `TUAN_4.md` của chính TV1 ghi task A6/A7 với 177/177 test;
+     commit này ghi lại đúng task A7 nhưng đổi thành "Tuần 5" và 183/183.
+  3. **Số test không khớp** — báo cáo nói 183; thực tế sau khi merge là 321 (316 + 5).
+  4. **`render.yaml` ghi là đầu ra nhưng không tồn tại trong commit.**
+- **Thiếu minh chứng chạy**: tuyên bố RTO < 2 phút / RPO = 0 cho BCP/DR nhưng không lưu log
+  diễn tập, không có dump; tuyên bố hiệu năng có script k6 nhưng không có output (đo lại bằng `ab`,
+  công cụ không xuất p95 đáng tin).
+- **Vai trò**: cả 5 bản ghi đều tự xác nhận — người xác nhận là chính người thực hiện.
+- **Công nhận**: mục "Bản ghi 5" liệt kê đề xuất B1 (`500` → `503 storage.unavailable`) thuộc TV4,
+  đã được TV4 triển khai trước.
+- Hồ sơ: [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/KiemChung_Commit_Week5_TV1.md).
+  **Không sửa báo cáo của TV1** — giữ nguyên bản ghi gốc để TV1 tự đính chính.
+
+### Đóng N3-B / N3-C1 / N3-C2
+
+- **Lab L5** (`practice/TV4/L5`, commit `6c90ad8`) — 7 phase chạy thật: **63 check, 41 đạt,
+  3/7 phase PASS** (`seo` 15/15, `observability` 10/10, `multi-instance` 7/7).
+- **4 phase lộ ra vấn đề thật**: `isr-detail` — code khai `revalidate = 300` nhưng runtime không có
+  `x-nextjs-cache`, ISR không hoạt động; `image-opt` — `next/image` 0 file, có 9 file `<img>` thô,
+  không có biến thể medium/large; `search-ssr` — SSR thật nhưng trả `no-store`; `query-rollback` —
+  optimistic rollback có thật nhưng RowVersion chưa kiểm chứng được.
+- Sổ K + 2 log (`SOK_LAB_L5.md`, `logs/lab_l5_run.log`, `logs/lab_l5_db.txt`) — commit `870d6e3`.
+- PR #28 đã mở rồi **đóng** theo quyết định nhóm: lab ở nhánh riêng, PR chỉ để đánh dấu/review.
+
+### Sửa
+
+- `.gitignore` — ghép sau xung đột khi merge `main`: giữ cả artifact Playwright + `run.log`
+  (nhánh tuần) lẫn `backups/**/*.sql*` (từ `21aa722`).
+
+### Số đo sau thay đổi
+
+- `dotnet build -c Release`: **0 warning, 0 error**.
+- `dotnet test`: **316/316** `CulinaryBlog.Tests` + **5/5** `ConcurrencySpike` (trước khi sửa: 1 đỏ).
+- `docker compose -f docker-compose.staging.yml config`: exit 0 khi có `JWT_SIGNING_KEY`, exit 1 khi thiếu.
+- Ô kỹ năng còn thiếu thật: **3 → 2** (K09 chờ credentials, K18 thuộc TV2).
+- ⛔ CI **chưa** chạy lại cho commit `03564c4` — trạng thái xanh hiện ở `870d6e3`.
+
+---
+
 ## 0.4.0 — 2026-10-04 (Giai đoạn 1 — TV4, tuần 4)
 
 Nhánh `2312739_NHTSon_D5-D6-D7`. Số đo đều lấy từ lần chạy thật, có lệnh và log trong
