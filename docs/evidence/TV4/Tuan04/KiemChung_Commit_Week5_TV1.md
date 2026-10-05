@@ -97,9 +97,14 @@ vi phạm nguyên tắc test phải tạo dữ liệu của riêng nó.
 ⚠️ **Hệ quả nghiêm trọng hơn:** "321 test xanh" trong báo cáo của TV1 là **kết quả chạy trên máy
 dev có sẵn seed**, không phải trên môi trường sạch. Con số xanh đó **không tái lập được**.
 
-🛑 **Đề nghị TV1 tự sửa:** hoặc cho `Scenario_5` tự tạo công thức riêng, hoặc `ApiFactory` seed
-trong `Testing`. **TV4 không tự sửa test của thành viên khác** — cùng nguyên tắc với việc không
-đính chính báo cáo của TV1.
+🛑 **Đề nghị TV1 tự đính chính:** con số "321 test xanh" trong báo cáo phải kèm điều kiện môi trường,
+hoặc làm `Scenario_5` thành test tự chứa.
+
+> **✅ TV4 đã sửa phần hạ tầng (05/10, commit `8a585ef`).** Vì sửa trong `ApiFactory` là sửa **hạ tầng test
+> dùng chung**, không sửa logic kiểm chứng của TV1 nên TV4 thực hiện và đã báo nhóm. `EnsureMigrated()` nay gọi
+> `DbSeeder.SeedAsync`; CI xanh ở `8a585ef` (`Backend week 1` run `37320431750`).
+> ⚠️ Việc sửa này **không** thay đổi kết luận ở §5: con số "321 test xanh" trong báo cáo của TV1 vẫn **không
+> tái lập được** trên môi trường sạch trước khi có bản sửa này, và TV1 vẫn cần đính chính.
 
 ---
 

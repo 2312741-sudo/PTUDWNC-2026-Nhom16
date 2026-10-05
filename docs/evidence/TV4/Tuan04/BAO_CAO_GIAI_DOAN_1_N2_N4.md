@@ -178,9 +178,9 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 7. **Báo cáo "Tuần 5" của TV1 đánh dấu không đáng tin** — xem
    [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md). Đề nghị TV1 đính chính
    6 điểm §5 của hồ sơ đó.
-8. ⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e` — nguyên nhân: `.md` của TV4 chứa
-   khoá JWT đã thu hồi (đã gỡ). Thêm flaky `TracingObservabilityTests` từ `870d6e3`.
-   CI xanh gần nhất: `8d9d62b` (run `37213966752`), cả 2 job ở `6caf2cf`.
+8. ✅ **CI đã xanh trở lại** ở `8a585ef` (05/10): `Backend week 1` run `37320431750` ✅ + `Frontend CI` run
+   `37320431432` ✅. Đã xử lý cả 3 nguyên nhân đỏ: khoá JWT còn sót trong `.md` của TV4 · `ApiFactory` không seed
+   khiến `E2E_Scenario_5` của TV1 đỏ trên Postgres sạch · race span trong `TracingObservabilityTests`.
 
 ## 9. Chỉ số tài liệu
 

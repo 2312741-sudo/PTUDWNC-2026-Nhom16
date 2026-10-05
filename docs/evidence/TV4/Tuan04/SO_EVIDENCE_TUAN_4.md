@@ -453,16 +453,18 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 >
 > Lưu ý cho K24: đã mở PR #28 rồi đóng theo quyết định nhóm.
 >
-> ⛔ **CI backend hiện ĐỎ — đã kiểm tra log thật 05/10, không phải "chưa chạy".**
+> ✅ **CI backend đã XANH trở lại — xác nhận bằng CI thật ở `8a585ef` (05/10).**
 >
-> | Commit | `Backend week 1` | Nguyên nhân |
+> | Commit | `Backend week 1` | Nguyên nhân / trạng thái |
 > |---|---|---|
-> | `8d9d62b` (04/10) | ✅ **success** — run `37213966752` | — |
-> | `870d6e3` | ❌ failure — run `37295446878` | `TracingObservabilityTests.Request_to_database_bearing_endpoint_produces_http_span_with_child_db_span` — `Assert.NotNull()` Value is null (trace span không đọc được) |
-> | `03564c4`, `d4edfa2`, `0dfac4e` | ❌ failure | `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` — **tài liệu của chính TV4 chép lại khoá JWT đã thu hồi vào `.md`** ⇒ đúng bất biến mà nhóm đã viết test để chặn |
+> | `8d9d62b` (04/10) | ✅ success — run `37213966752` | — |
+> | `870d6e3` | ❌ failure — run `37295446878` | `TracingObservabilityTests...child_db_span` — `Assert.NotNull()`; **đã sửa** ở `8a585ef` |
+> | `03564c4`, `d4edfa2`, `0dfac4e` | ❌ failure | `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` — **tài liệu của chính TV4 chép lại khoá JWT đã thu hồi vào `.md`** ⇒ đúng bất biến mà nhóm đã viết test để chặn; **đã gỡ** |
+> | `08052fc`, `5593c23` | ❌ failure | `Week5StagingAndE2ETests.E2E_Scenario_5_FTS_Vietnamese_Search_AND_Filter_And_Draft_Isolation` — test **không tự tạo dữ liệu**, còn `DbSeeder` bị bỏ qua khi `Environment=Testing` (`Program.cs:343`); **đã sửa** bằng cách cho `ApiFactory.EnsureMigrated()` seed |
+> | **`8a585ef`** | ✅ **success — run `37320431750`** (`321/321`) | `Frontend CI` run `37320431432` ✅ cùng đợt |
 >
-> Lần xanh gần nhất của cả 2 job: **`6caf2cf`**. Nguyên nhân đỏ đã **gỡ** ở commit sau
-> (xoá khoá khỏi 2 file `.md`). Còn lại **flaky trace span** ở `870d6e3` — chưa xử lý.
+> Cả 3 nguyên nhân đỏ đều là **lỗi hạ tầng test**, không phải lỗi nghiệp vụ. Đã sửa và xác nhận lại bằng CI thật.
+> Chi tiết phát hiện về test của TV1: `KiemChung_Commit_Week5_TV1.md` §1.7.
 
 ---
 

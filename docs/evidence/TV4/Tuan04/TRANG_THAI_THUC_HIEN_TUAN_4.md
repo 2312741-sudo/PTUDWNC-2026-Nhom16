@@ -155,7 +155,7 @@ Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 —
 
 - Ô **còn thiếu thật** giảm **15 → 3 → 2**.
 - ⛔ **Không ô nào tự đánh dấu đạt** — toàn bộ 24 ô đang chờ **Nguyễn Thanh Tâm** xác nhận và ghi ngày.
-- ⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e`: `.md` của TV4 chứa khoá JWT đã thu hồi (đã gỡ) · thêm flaky `TracingObservabilityTests` từ `870d6e3`. Xanh gần nhất `8d9d62b`, cả 2 job ở `6caf2cf`.
+- ✅ **CI đã xanh trở lại** ở `8a585ef` (05/10): `Backend week 1` run `37320431750` ✅, `Frontend CI` run `37320431432` ✅. Đã xử lý cả 3 nguyên nhân đỏ: khoá JWT trong `.md` · thiếu seed khiến `E2E_Scenario_5` của TV1 đỏ · race span trong `TracingObservabilityTests`.
 - Chi tiết từng ô: `SO_EVIDENCE_TUAN_4.md` mục 2 · mapping 24 dòng: [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md).
 
 ---
@@ -300,8 +300,11 @@ coverage gate pass) và `Frontend CI` run `37213966761` ✅.
 `JwtSigningKeyNotCommittedTests` **6/6** ✅ — cần gỡ khoá khỏi `docker-compose.staging.yml` **và** khỏi
 2 file `.md` của TV4 vì test quét cả tài liệu.
 Tăng thêm 5 test vì merge `main` mang vào 5 test tuần 5 của TV1.
-⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e` — nguyên nhân chính là khoá còn sót trong
-`.md` (đã gỡ). Xanh gần nhất `8d9d62b`, cả 2 job ở `6caf2cf`.
+✅ **CI thật đã xanh** tại `8a585ef` (05/10): `Backend week 1` run `37320431750` ✅ + `Frontend CI` run `37320431432` ✅ — hết 4 lần đỏ liên tiếp.
+✅ Đã sửa xong cả 3 nguyên nhân CI đỏ, xác nhận bằng CI thật tại `8a585ef`: (1) gỡ khoá JWT khỏi 2 file `.md`;
+(2) `ApiFactory.EnsureMigrated()` nay gọi thêm `DbSeeder.SeedAsync` vì `Program.cs:343` bỏ qua seed ở môi trường
+`Testing`, khiến `Week5StagingAndE2ETests.E2E_Scenario_5` của TV1 đỏ trên Postgres sạch; (3) `TracingObservabilityTests`
+chập chờn vì đọc span ngay sau `GetAsync`, nay chờ tới 10s.
 
 **Trạng thái build sau N2-B3/B4 (04/10):** backend **299 + 5 = 304/304** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
 `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (2 cảnh báo `<img>` có sẵn từ trước) ·
