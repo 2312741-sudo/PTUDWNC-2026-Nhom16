@@ -239,18 +239,20 @@ export default function DashboardRecipesPage() {
                     </td>
                     <td className="px-4 py-3 text-stone-700">{fmtDate(r.updatedAt ?? r.createdAt)}</td>
                     <td className="px-4 py-3">
+                      {/* K18 (NVDA): mỗi hàng chỉ đọc "Sửa link" -> aria-label kèm tên công thức, chữ nhìn thấy đứng đầu tên (WCAG 2.5.3) */}
                       <div className="flex justify-end gap-3 whitespace-nowrap">
                         {r.status === "Published" && (
-                          <Link href={`/recipes/${r.slug}`} className="text-stone-700 underline-offset-2 hover:underline">
+                          <Link href={`/recipes/${r.slug}`} aria-label={`Xem công thức ${r.title}`} className="text-stone-700 underline-offset-2 hover:underline">
                             Xem
                           </Link>
                         )}
-                        <Link href={`/dashboard/recipes/${r.id}/edit?slug=${encodeURIComponent(r.slug)}`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
+                        <Link href={`/dashboard/recipes/${r.id}/edit?slug=${encodeURIComponent(r.slug)}`} aria-label={`Sửa công thức ${r.title}`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
                           Sửa
                         </Link>
                         <button
                           onClick={() => void onDelete(r)}
                           disabled={deletingId === r.id}
+                          aria-label={`${deletingId === r.id ? "Đang xoá" : "Xoá"} công thức ${r.title}`}
                           className="text-red-700 underline-offset-2 hover:underline disabled:opacity-50"
                         >
                           {deletingId === r.id ? "Đang xoá…" : "Xoá"}
