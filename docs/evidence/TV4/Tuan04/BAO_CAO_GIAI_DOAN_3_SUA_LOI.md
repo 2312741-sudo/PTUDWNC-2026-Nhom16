@@ -120,17 +120,26 @@ TV4 **không sửa** `TUAN_5.md`, `BAO_CAO_LAB_05.md` hay các file `.docx` củ
 
 | Mã lỗi | Lỗi | Vì sao không sửa |
 |---|---|---|
-| BUG-W4-04 | Lỗi còn mở theo `BAO_CAO_LOI_TUAN_4_TV4.md` | Thuộc GĐ4 |
-| BUG-W4-05 | — | ⛔ Lỗi của thành viên khác — xác nhận rồi gửi log, không sửa trực tiếp |
-| BUG-W4-06 | — | ⛔ Cần quyết định nhóm |
-| BUG-W4-07 | — | ⏳ Chờ quyết định |
-| BUG-W4-09 | — | ⏳ Chờ quyết định |
-| BUG-W4-10 | — | ⏳ Chờ quyết định |
-| Google OAuth thật | — | ⛔ Thiếu credentials |
-| Uptime thật 99,5% | — | ⛔ Cần vận hành dài hạn, không sửa được bằng code |
-| RowVersion/optimistic concurrency | Chưa kiểm chứng được ở lab | Tài khoản E2E không sở hữu công thức, `GetRecipesQuery` không có filter chủ sở hữu |
+| BUG-W4-01 | `422 recipe.version_conflict` khi thêm ảnh vào recipe đã có ảnh | ✅ **Đã sửa trên lab** `lab/TV4-audit-tuan4` nhưng ⛔ **chưa merge** nhánh tuần — đã kiểm chứng lại 05/10: `RecipeImageConfiguration.cs` **vẫn thiếu** `ValueGeneratedNever()`. ⏳ Cần **Tâm chốt C1 hay C2** (đụng schema của TV3, không tự quyết) |
+| BUG-W4-02 | Secret còn trong file tracked, `scan-secrets.sh` không bắt được | ✅ Đã sửa trên lab nhưng ⛔ **chưa merge** |
+| BUG-W4-03 | 2 IP khác nhau dùng chung 1 bucket | ✅ Đã sửa trên lab nhưng ⛔ **chưa merge** |
+| BUG-W4-04 | Số liệu mâu thuẫn trong README | ✅ Đã xác định (README đã cập nhật 05/10) — cần Tâm đối chiếu |
+| BUG-W4-05 | `CHANGELOG.md` thiếu mục | ✅ Đã sửa — nay có `0.3.0`, `0.4.0`, `0.4.1` |
+| BUG-W4-06 | Phải đính chính | ⛔ **Không được xoá soft delete của `Recipe`** — đã xác nhận đang dùng, chỉ sửa tên test + ADR |
+| BUG-W4-07 | Round-robin/failover OK nhưng **TLS chưa bắt** | ⏳ TLS thuộc tuần 5 (`N4-B`) |
+| BUG-W4-08 | **Chưa kiểm tra sâu** | ⏳ Chưa xác minh — không tự kết luận |
+| BUG-W4-09 | Phải đính chính | ⏳ Điều kiện cạnh tranh, không phải trạng thái thường |
+| BUG-W4-10 | Migration no-op không sửa lỗi runtime | ❌ Không có tác dụng lên database; chỉ cập nhật snapshot |
+| — | Google OAuth thật | ⛔ Thiếu credentials |
+| — | Uptime thật 99,5% | ⛔ Cần vận hành dài hạn, không sửa được bằng code |
+| — | RowVersion/optimistic concurrency | ⛔ Tài khoản E2E không sở hữu công thức, `GetRecipesQuery` không có filter chủ sở hữu |
 
-> BUG-W4-01/02/03 đã sửa và kiểm chứng ở GĐ1 — **không sửa lần nữa**.
+> **Ba lỗi GĐ1 đã đóng KHÁC với BUG-W4-01/02/03.** Ba lỗi trong báo cáo GĐ1 là: DB chết trả
+> `500`, DB chết lúc khởi động giết tiến trình, và `GET /recipes/{slug}` trả `500` khi thiếu
+> credential storage — cả ba **đã merge** vào nhánh tuần ở commit `8d9d62b` và khoá bằng test hồi
+> quy. `BUG-W4-01/02/03` của [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md) là lỗi khác,
+> bản vá vẫn nằm trên nhánh lab `lab/TV4-audit-tuan4` và **chưa merge**. Không được tính chồng hai
+> danh sách này.
 
 ---
 

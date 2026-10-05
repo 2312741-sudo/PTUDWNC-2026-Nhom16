@@ -47,13 +47,37 @@ Nhánh `2312739_NHTSon_D5-D6-D7`.
 - `.gitignore` — ghép sau xung đột khi merge `main`: giữ cả artifact Playwright + `run.log`
   (nhánh tuần) lẫn `backups/**/*.sql*` (từ `21aa722`).
 
+### Đồng bộ tài liệu tuần 4 (05/10, sau `d4edfa2`)
+
+Rà toàn bộ tài liệu trong `docs/evidence/TV4/Tuan04/` để loại mâu thuẫn trạng thái:
+
+- **N2 không còn được ghi không điều kiện là "đã đóng".** Số thực tế: **7/8 việc xong**, dở dang
+  `D1/D2/D3` (progress upload, UI unpublish/archive, checklist WCAG). Sửa ở
+  `TRANG_THAI_THUC_HIEN_TUAN_4.md`, `SO_EVIDENCE_TUAN_4.md` và báo cáo GĐ1.
+- **Sửa lỗi báo cáo GĐ3 về danh sách lỗi.** Trước đó ghi "BUG-W4-01/02/03 đã sửa và kiểm chứng ở
+  GĐ1 — không sửa lần nữa". Đã kiểm chứng lại: `RecipeImageConfiguration.cs` **vẫn thiếu**
+  `ValueGeneratedNever()`, bản vá vẫn nằm trên nhánh lab `lab/TV4-audit-tuan4` và **chưa merge**
+  ⇒ 3 lỗi này **còn mở**. Ba lỗi đã đóng ở GĐ1 là lỗi **khác** (DB chết trả `500`, DB chết lúc
+  khởi động, storage `500`) và đã merge ở `8d9d62b`. Bổ sung bảng phân biệt ở GĐ3, GĐ1,
+  `BAO_CAO_LOI_TUAN_4_TV4.md` và `BAO_CAO_LAB_TUAN4_V2.md`.
+- **Bổ sung 2 lỗi bị thiếu** trong danh sách lỗi còn mở của GĐ3: `BUG-W4-08` (chưa kiểm tra sâu)
+  và TLS chưa bắt của `BUG-W4-07`.
+- **Thêm banner "ảnh chụp lịch sử"** cho các tài liệu kế hoạch để dòng "chưa làm" trong đó không bị
+  hiểu là trạng thái hiện tại: `KE_HOACH_TUAN_4_TV4.md`, `KE_HOACH_TUAN_4_TV4_V2.md`,
+  `MO_TA_CONG_VIEC_TUAN_4.md`, `HANDOFF_TV4_TUAN4_N1.md`, `PLAN_GIAI_DOAN_1_N2_N4.md`.
+- `PLAN_TRIEN_KHAI_TV4_TUAN4.md`: đổi trạng thái từ "chưa thực thi" sang **GĐ1/GĐ3 đã thực thi,
+  GĐ2 còn mở**.
+- `README.md`: số test sau khi merge `main` là **321/321 (316 + 5)**, không phải 316 — 5 test tuần 5
+  của TV1 được merge vào. Giữ lại số đo 04/10 (`8d9d62b`) như bản ghi lịch sử.
+
 ### Số đo sau thay đổi
 
 - `dotnet build -c Release`: **0 warning, 0 error**.
 - `dotnet test`: **316/316** `CulinaryBlog.Tests` + **5/5** `ConcurrencySpike` (trước khi sửa: 1 đỏ).
 - `docker compose -f docker-compose.staging.yml config`: exit 0 khi có `JWT_SIGNING_KEY`, exit 1 khi thiếu.
 - Ô kỹ năng còn thiếu thật: **3 → 2** (K09 chờ credentials, K18 thuộc TV2).
-- ⛔ CI **chưa** chạy lại cho commit `03564c4` — trạng thái xanh hiện ở `870d6e3`.
+- ⛔ CI **chưa** chạy lại cho các commit `03564c4`, `d4edfa2` và commit đồng bộ tài liệu này —
+  trạng thái xanh đã xác nhận gần nhất là `870d6e3`.
 
 ---
 

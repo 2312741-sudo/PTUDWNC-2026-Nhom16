@@ -16,6 +16,21 @@
 > 3. Mỗi "đã làm" đều kèm `file:line` hoặc log. Không có "nên làm".
 > 4. Ô kỹ năng chỉ chuyển ✅ khi **có code/config + test + kết quả thật + Tâm xác nhận và ghi ngày**.
 
+> [!NOTE]
+> **📌 Kế hoạch này đã được thực thi — đọc mục này trước khi dùng các tiêu đề "chưa làm" bên dưới.**
+>
+> Tài liệu này là **ảnh chụp kế hoạch lúc lập 03/10**. Tiêu đề mục §4.1/§4.2/§4.3 còn ghi
+> *"chưa làm"* là **đúng tại thời điểm lập kế hoạch**, không phải trạng thái hiện tại.
+>
+> | Mục | Kế hoạch (03/10) | **Thực tế (05/10)** |
+> |---|---|---|
+> | §4.1 N2 — 8 việc | 8 việc chưa làm | 🟢 **7/8 xong** (Playwright **26/26**, CI frontend, tấn công file **25/25 + 10/10**, outage drill, k6 **0.00%**, coverage gate **84.13%**). ⬜ Dở dang **1**: `D1/D2/D3` — progress upload, UI unpublish/archive, WCAG |
+> | §4.2 N3 — 4 việc | 4 việc chưa làm | 🟢 **3/4 xong** (Lab L5 **63 check / 3 phase PASS**, `SOK_LAB_L5.md`, PR #28). ⬜ Còn: bù mục 2 L4; N3-A3 (Zod/RHF), N3-A5 (Google OAuth — chờ credentials) |
+> | §4.3 N4 — 4 việc | 4 việc chưa làm | 🟢 **N4-C xong** (HUONG_DAN, README, CHANGELOG, sổ 24 ô). ⛔ Còn: runbook đầy đủ, deploy staging, TLS/HSTS → tuần 5 |
+>
+> Nguồn sự thật hiện tại: [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) và
+> [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md).
+
 ---
 
 ## 🧪 CẬP NHẬT SAU KIỂM CHỨNG THỰC TẾ (03/10/2026)

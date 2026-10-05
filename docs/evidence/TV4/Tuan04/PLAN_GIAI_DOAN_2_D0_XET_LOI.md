@@ -5,7 +5,15 @@
 | Người lập | Nguyễn Hữu Trung Sơn (TV4 · 2312739) |
 | Ngày lập | 03/10/2026 |
 | Điều kiện bắt đầu | GĐ1 xong **và** `BAO_CAO_GIAI_DOAN_1_N2_N4.md` đã viết |
-| Trạng thái | **Kế hoạch — chưa thực thi** |
+| Trạng thái | **Kế hoạch — chưa thực thi** *(đúng thực tế 05/10)* |
+
+> [!NOTE]
+> **📌 GĐ2 vẫn CHƯA thực thi — vì điều kiện bắt đầu chưa thoả.**
+>
+> Điều kiện bắt đầu là "GĐ1 xong". Thực tế 05/10: **N2 7/8 xong** (còn `D1/D2/D3`), **N3-A3**
+> (Zod/RHF) chưa xong, **N3-A5** (Google OAuth) bị chặn bởi thiếu credentials. GĐ1 mới đạt
+> **"đủ điều kiện chặn tiếp"**, chưa phải "xong hoàn toàn" — xem
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md).
 
 ---
 

@@ -5,6 +5,15 @@
 - **Ngày bàn giao**: 30/09/2026
 - **Phạm vi bàn giao**: N0 (xong) + N1 (xong 8/8 việc kỹ thuật). N2/N3/N4 chưa làm.
 
+> [!NOTE]
+> **📌 Ảnh chụp lúc bàn giao 30/09 — phần "N2/N3/N4 chưa làm" đã cũ.**
+>
+> Cập nhật 05/10: **N2 7/8 xong** (dở dang `D1/D2/D3` — progress upload, UI unpublish/archive,
+> WCAG), **N3-B/C1/C2 xong** (Lab L5 63 check, 3/7 phase PASS), **N4-C xong**; còn `N3-A3`
+> (Zod/RHF) và `N3-A5` (Google OAuth — chờ credentials).
+> Xem [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) và
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md).
+
 ---
 
 ## 1. Trạng thái kiểm định lúc bàn giao

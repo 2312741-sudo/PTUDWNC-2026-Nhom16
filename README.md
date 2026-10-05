@@ -221,22 +221,27 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 
 ### 4.5. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
 
-Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (316 / 316 tests pass)**:
+Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (321 / 321 tests pass)**:
 
 ```text
 Test run for ConcurrencySpike.dll (net10.0)
 Passed!  - Failed: 0, Passed:  5, Skipped: 0, Total:  5, Duration: 1 s
 
 Test run for CulinaryBlog.Tests.dll (net10.0)
-Passed!  - Failed: 0, Passed: 311, Skipped: 0, Total: 311, Duration: 28 s
+Passed!  - Failed: 0, Passed: 316, Skipped: 0, Total: 316, Duration: 28 s
 
-Total: 316/316 tests passed (100% Green).
+Total: 321/321 tests passed (100% Green).
 ```
 
-> **Đo gần nhất 04/10/2026** (commit `8d9d62b`, xác nhận trên CI run `37213966752`):
-> `CulinaryBlog.Tests` **311/311** + `ConcurrencySpike` **5/5** = **316/316**;
-> coverage `CulinaryBlog.Application` **84.13%** ≥ ngưỡng cổng G5 **80%**;
-> `dotnet format --verify-no-changes` exit `0`; build 0 warning / 0 error.
+> **Đo gần nhất 05/10/2026** (sau khi merge `main` vào `2312739_NHTSon_D5-D6-D7` ở commit
+> `72e4044`, đo tại `d4edfa2`): `CulinaryBlog.Tests` **316/316** + `ConcurrencySpike` **5/5** =
+> **321/321**; build 0 warning / 0 error; `dotnet format --verify-no-changes` exit `0`;
+> coverage `CulinaryBlog.Application` **84.13%** ≥ ngưỡng cổng G5 **80%**.
+>
+> **Đo trước đó 04/10/2026** (commit `8d9d62b`, xác nhận trên CI run `37213966752`):
+> `CulinaryBlog.Tests` **311/311** + `ConcurrencySpike` **5/5** = **316/316**.
+> Số test tăng thêm 5 vì merge `main` mang vào 5 test tuần 5 của TV1
+> (`Week5_CommitVerificationTests`).
 >
 > **Frontend**: Playwright **26/26** (chạy 3 lần liên tiếp đều xanh), `npx tsc --noEmit` / `npm run lint` / `npm run build` đều exit `0`.
 >
@@ -376,8 +381,8 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
    - ✅ **Ba lỗi thật đã tìm và sửa kèm test hồi quy**: (1) DB chết trả `500` vì `ApiExceptionHandler` không dò `InnerException`; (2) DB chết lúc khởi động giết tiến trình vì lịch sitemap ném ra khỏi `Main`; (3) `GET /recipes/{slug}` trả `500` khi thiếu credential object storage vì `MinioClient.Build()` ném ngay trong constructor — **lỗi này do CI bắt, không phải do test local**, và đã khoá bằng 2 test hồi quy.
    - ✅ **N3-B/C1/C2 (05/10)**: Lab L5 7 phase chạy thật (63 check, **3/7 phase PASS** — `seo` 15/15, `observability` 10/10, `multi-instance` 7/7), Sổ K + 2 log, PR #28 đã mở rồi đóng theo quyết định nhóm. **4 phase lộ ra vấn đề thật**: ISR không hoạt động, ảnh không tối ưu 2 tầng, search trả `no-store`, RowVersion chưa kiểm chứng được.
    - 🔒 **Kiểm chứng báo cáo "Tuần 5" của TV1** (việc cuối GĐ3) — báo cáo đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) + tuyên bố RTO/RPO không có bản ghi chạy. Phát hiện và **đã sửa lỗi khoá JWT `R3`** trong `docker-compose.staging.yml`. Xem [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/KiemChung_Commit_Week5_TV1.md).
-   - 📊 **Số đo cuối tuần 4**: backend **316/316** (311 + 5), coverage `Application` **84.13%** ≥ 80%, Playwright **26/26**, k6 `http_req_failed` **0.00%**, `dotnet format` exit `0`. Cả hai job CI đều **xanh** trên commit `8d9d62b`. Sau merge `main` (05/10): build 0 warning/0 error, **316/316 + 5/5** xanh.
-   - ⏭ **Còn lại**: N2-D3 (checklist WCAG/responsive — thuộc TV2), 3 luồng E2E còn lại (`register/login` TV1, `category` TV2, `create-recipe` TV3), runbook đầy đủ + deploy staging + TLS/HSTS (N4-A/N4-B), Zod/RHF (N3-A3), và Google OAuth2-PKCE (cần credentials). ⛔ **CI cần chạy lại** cho commit `03564c4`.
+   - 📊 **Số đo cuối tuần 4**: coverage `Application` **84.13%** ≥ 80%, Playwright **26/26**, k6 `http_req_failed` **0.00%**, `dotnet format` exit `0`. Backend **trước** khi merge `main`: **316/316** (311 + 5) tại `8d9d62b`, CI run `37213966752` xanh. **Sau** merge `main` (05/10): **321/321** (316 + 5), build 0 warning/0 error.
+   - ⏭ **Còn lại**: N2-D3 (checklist WCAG/responsive — thuộc TV2), 3 luồng E2E còn lại (`register/login` TV1, `category` TV2, `create-recipe` TV3), runbook đầy đủ + deploy staging + TLS/HSTS (N4-A/N4-B), Zod/RHF (N3-A3), và Google OAuth2-PKCE (cần credentials). ⛔ **CI cần chạy lại** cho các commit tài liệu mới nhất (`03564c4`, `d4edfa2` và commit đồng bộ tài liệu kế tiếp) — trạng thái CI xanh đã xác nhận gần nhất là `870d6e3`.
 
 ---
 

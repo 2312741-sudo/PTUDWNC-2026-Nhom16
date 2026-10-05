@@ -6,7 +6,16 @@
 | Ngày lập | 03/10/2026 |
 | Nhánh làm việc | `2312739_NHTSon_D5-D6-D7` (không push `main`) |
 | Phạm vi | Tổ chức công việc còn lại của tuần 4 theo 3 giai đoạn do TV1 giao |
-| Trạng thái file | **Kế hoạch — chưa thực thi** |
+| Trạng thái file | 🟡 **Kế hoạch — đã thực thi GĐ1, GĐ3; GĐ2 (D0 xét lỗi) còn mở** |
+
+> [!NOTE]
+> **📌 Trạng thái 3 giai đoạn, cập nhật 05/10.**
+>
+> | Giai đoạn | Trạng thái | Báo cáo |
+> |---|---|---|
+> | **GĐ1** — N2/N3/N4 | 🟡 Xong phần đủ điều kiện: **N2 7/8** (dở dang `D1/D2/D3`), **N3-B/C1/C2 xong**, N4-C xong. Còn `N3-A3` (Zod/RHF) và `N3-A5` (Google OAuth — chờ credentials) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) |
+> | **GĐ2** — D0 xét lỗi | ⬜ **Chưa thực thi** | [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](PLAN_GIAI_DOAN_2_D0_XET_LOI.md) (chỉ là plan) |
+> | **GĐ3** — sửa lỗi | 🟡 Đã thực thi **2 lỗi** (`BUG-W4-M1` khoá JWT `R3`, `BUG-W4-M2` conflict `.gitignore`) + **việc cuối: kiểm chứng báo cáo TV1**. Còn `BUG-W4-01/02/03` (đã sửa trên lab, **chưa merge**) và các lỗi chờ quyết định | [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
 
 ---
 

@@ -9,6 +9,19 @@
 | Mục đích | Kiểm chứng thực tế các lỗi đã ghi trong `BAO_CAO_LOI_TUAN_4_TV4.md` và các yêu cầu trong `KE_HOACH_TUAN_4_TV4_V2.md`, thay vì chỉ đọc code |
 | Kết luận | **3 lỗi được chứng minh + sửa thành công trên lab**; 4 lỗi xác nhận/sửa một phần; 3 lỗi còn mở |
 
+> [!WARNING]
+> **📌 Ảnh chụp kiểm chứng lúc làm 03/10 — trạng thái merge đã được kiểm chứng lại 05/10.**
+>
+> | Việc | Kết quả kiểm chứng 05/10 |
+> |---|---|
+> | 3 lỗi "đã sửa thành công trên lab" | ⛔ **Bản vá vẫn nằm trên nhánh lab `lab/TV4-audit-tuan4`, CHƯA merge** nhánh tuần. Đã kiểm chứng lại: `RecipeImageConfiguration.cs` vẫn thiếu `ValueGeneratedNever()` ⇒ BUG-W4-01 **còn mở** |
+> | Nhánh `lab/TV4-audit-tuan4` | ✅ Còn tồn tại |
+>
+> ⛔ **Không nhầm với 3 lỗi đã đóng ở GĐ1** (DB chết trả `500`, DB chết lúc khởi động giết tiến
+> trình, `GET /recipes/{slug}` trả `500` khi thiếu credential storage) — ba lỗi đó **đã merge**
+> ở commit `8d9d62b`. Chi tiết: [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md) và
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md).
+
 ---
 
 ## 1. Môi trường kiểm thử

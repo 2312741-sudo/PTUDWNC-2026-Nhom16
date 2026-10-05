@@ -11,6 +11,18 @@
 > Ba đề xuất **B1, B2, B6** cần nhóm trưởng duyệt trước khi làm; **B4** thì TV4 có thể tự làm
 > vì đã có đề xuất sẵn trong `docs/proposal/DE_XUAT_04_HEALTH_CHECK_STORAGE_XAC_THUC.md`.
 
+> [!NOTE]
+> **📌 Mô tả việc cần làm — ĐÃ THỰC THI phần lớn. Đọc mục này trước kể cả "việc chưa làm" bên dưới.**
+>
+> | Khối | Lúc lập tài liệu | **Thực tế 05/10** |
+> |---|---|---|
+> | N2 — E2E, tấn công file, CI, số đo | 8 việc chưa làm | 🟢 **7/8 xong**; dở dang `D1/D2/D3` (progress upload, UI unpublish/archive, WCAG) |
+> | N3 — Lab L5 + bù mục 2 L4 | 4 việc chưa làm | 🟢 **3/4 xong** (L5 63 check, 3/7 phase PASS; PR #28); còn bù mục 2 L4, `A3` Zod/RHF, `A5` Google OAuth |
+> | N4 — Runbook, release, bàn giao | 4 việc chưa làm | 🟢 **N4-C xong**; ⛔ runbook đầy đủ + deploy staging + TLS/HSTS → tuần 5 |
+>
+> Nguồn sự thật: [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) ·
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md)
+
 ---
 
 ## 1. Tổng quan tuần 4

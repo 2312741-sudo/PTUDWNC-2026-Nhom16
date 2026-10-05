@@ -87,14 +87,19 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 
 | # | Việc | Trạng thái | Bằng chứng | Ghi chú |
 |---|---|---|---|---|
-| 1 | Playwright thật (`playwright.config.ts` + `@playwright/test`) | ⬜ Chưa làm | — | Điều kiện cho 4 ô K |
-| 2 | 5 luồng E2E (TV4 viết **publish** + **search**) | ⬜ Chưa làm | — | Search phủ TC1–TC12 của báo cáo 500 |
-| 3 | Cổng CI frontend (`npm ci` → `tsc` → `next build` → `lint`) | ⬜ Chưa làm | — | Nguyên nhân gốc lỗi 500 lọt CI |
-| 4 | Kịch bản tấn công file (size / MIME giả / hỏng / rate limit / ownership) | ⬜ Chưa làm | — | Hiện chỉ có unit test |
-| 5 | Resilience có số liệu (DB/Redis/storage/worker/2 instance) | ✅ Xong 04/10 — `deploy/outage-drill.ps1` | K22, K24 | Redis/S3 dừng thật bằng `docker stop`; DB dùng instance trỏ port chết (thiếu quyền admin để `Stop-Service`) |
-| 6 | Commit script k6 + EXPLAIN lại | ✅ Xong 04/10 — `tests/performance/read-load.js`; EXPLAIN thì **không** chạy lại (không đổi index) | K22 | 3 lần × ~3607 req, 0.00% lỗi |
-| 7 | Ngưỡng coverage `Application` ≥ 80% trong CI | ⬜ Chưa làm | — | |
-| 8 | D4-UI còn treo: progress upload + nút Unpublish/Archive + WCAG | ⬜ Chưa làm | — | Nợ từ tuần 3 |
+| 1 | Playwright thật (`playwright.config.ts` + `@playwright/test`) | 🟢 Xong 04/10 | `playwright.config.ts`, `src/frontend/e2e/` | **26/26**, 3 lần liên tiếp. `playwright.config.ts` **tự bật backend** (chờ `/health/ready`); CI đặt `E2E_START_BACKEND=0` |
+| 2 | 5 luồng E2E (TV4 viết **publish** + **search**) | 🟡 Xong **2/5** luồng của TV4 | `recipe-publish.spec.ts`, `search.spec.ts` | Publish ✅ 26/26 (`--repeat-each=4` = 16/16). Search ✅ 12/12 phủ TC1–TC12 của báo cáo 500. ⬜ 3 luồng còn lại thuộc TV1/TV2/TV3 → G6 tuần 5 |
+| 3 | Cổng CI frontend (`npm ci` → `tsc` → `next build` → `lint`) | 🟢 Xong 04/10 | `.github/workflows/frontend.yml` | ESLint 9 flat config + `npm run lint` trong CI; `npx eslint .` exit 0, probe lỗi hook bị chặn (exit 1) |
+| 4 | Kịch bản tấn công file (size / MIME giả / hỏng / rate limit / ownership) | 🟢 Xong 04/10 | `ImageMagicBytesE6Tests` **25/25**, `upload-security.spec.ts` **10/10** | 🟢 Phát hiện và **đã sửa 2 lỗ hổng thật**: JPEG 3 byte khớp trọn chữ ký vẫn được `201` → thêm `ImageFormats.MinBytes = 64`; lỗi `firstCategoryId()` dò không giới hạn → 429 bị hiểu nhầm thành "danh mục hỏng" |
+| 5 | Resilience có số liệu (DB/Redis/storage/worker/2 instance) | 🟢 Xong 04/10 | `deploy/outage-drill.ps1`, `logs/c1_outage_drill.log` | Redis/S3 dừng thật bằng `docker stop`; DB dùng instance trỏ port chết (thiếu quyền admin để `Stop-Service`) |
+| 6 | Commit script k6 + EXPLAIN lại | 🟡 Xong **k6** 04/10 | `tests/performance/read-load.js`, 3 log k6 | 3 lần × ~3607 req, `http_req_failed` 0.00%, đủ p50/p95/p99. ⬜ **EXPLAIN không chạy lại** (không đổi index) → `N2-C5` đã loại khỏi phạm vi |
+| 7 | Ngưỡng coverage `Application` ≥ 80% trong CI | 🟢 Xong 04/10 | `deploy/check-coverage.sh` + gate trong `backend.yml` | `Application` **84.13%** ≥ 80%. Probe âm (ngưỡng 90 → exit 1) và thiếu report (exit 1) đều đã kiểm chứng |
+| 8 | D4-UI còn treo: progress upload + nút Unpublish/Archive + WCAG | ⬜ **Chưa làm** | — | API unpublish/archive **đã có** (`Program.cs:620,627`) nhưng UI chưa làm ⇒ không E2E được luồng gỡ xuất bản. WCAG/responsive thuộc **TV2**. Nợ từ tuần 3 |
+
+> **Kết luận N2:** 7/8 việc đã xong. **Dở dang đúng 1 việc** — `N2-D1/D2/D3` (progress upload
+> % · UI unpublish/archive · checklist WCAG/responsive). Vì vậy báo cáo GĐ1 ghi "N2 **ĐÃ ĐÓNG**"
+> là nói phần **D7 resilience + E2E + CI**, còn các hạng mục D1–D3 được ghi rõ là dở dang.
+> Số đo bám theo bằng chứng: Playwright **26/26**, coverage **84.13%**, k6 **0.00%** lỗi.
 
 ---
 
@@ -281,7 +286,7 @@ evidence L4/L5 nguyên vẹn sau merge ✅ · file bảo vệ `BAO_CAO_LOI_500_T
 exit `0` ✅ · `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (chỉ cảnh báo `<img>` có sẵn từ trước) ·
 Playwright **26/26**, 3 lần xanh ✅ · coverage `Application` **84.38%** ≥ 80% ✅.
 
-**Trạng thái build sau N2-C (04/10):** backend **311 + 5 = 316/316** ✅ (thêm 12 test so với 304/304 trước đó) ·
+**Trạng thái build sau N2-C (04/10, trước khi merge `main`):** backend **311 + 5 = 316/316** ✅ (thêm 12 test so với 304/304 trước đó) ·
 `dotnet build` 0 warning/0 error ✅ · coverage gate `Application` **84.38%** ≥ 80% ✅ ·
 frontend `tsc`/`lint`/`build` exit `0` ✅ · Playwright **26/26** ✅ ·
 k6 **3/3 lần xanh**, `http_req_failed` **0.00%** ✅.
@@ -289,6 +294,13 @@ k6 **3/3 lần xanh**, `http_req_failed` **0.00%** ✅.
 đây là cách kiểm chứng lỗi do CI bắt, xem mục "lỗi thứ ba" trong `SO_EVIDENCE_TUAN_4.md` §TV4-K24.
 **CI thật đã xanh** sau commit `8d9d62b`: `Backend week 1` run `37213966752` ✅ (`311/311` + `5/5`,
 coverage gate pass) và `Frontend CI` run `37213966761` ✅.
+
+**Trạng thái build mới nhất (05/10, sau merge `main` ở `72e4044`):** backend **316 + 5 = 321/321** ✅ ·
+`dotnet build -c Release` **0 warning / 0 error** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
+`JwtSigningKeyNotCommittedTests` **6/6** ✅ (sau khi gỡ khoá JWT đã thu hồi khỏi `docker-compose.staging.yml`).
+Tăng thêm 5 test vì merge `main` mang vào 5 test tuần 5 của TV1.
+⛔ **CI chưa chạy lại** cho `03564c4`, `d4edfa2` và commit đồng bộ tài liệu — trạng thái xanh đã xác nhận
+gần nhất là `870d6e3`.
 
 **Trạng thái build sau N2-B3/B4 (04/10):** backend **299 + 5 = 304/304** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
 `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (2 cảnh báo `<img>` có sẵn từ trước) ·

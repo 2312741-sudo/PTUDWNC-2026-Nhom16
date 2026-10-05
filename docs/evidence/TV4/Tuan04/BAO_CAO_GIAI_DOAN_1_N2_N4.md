@@ -26,7 +26,7 @@ Tuần 4 đóng được **N2** và **N4-C**. **N3 gần đóng** — 05/10 đã
 > 🔴 **Lỗi 3 chỉ do CI bắt, không phải do test local.** Máy dev có `Minio__*` trong `.env`; CI không có
 > file `.env` nên job không set. Đây là dạng lỗi kinh điển: **môi trường dev che giấu, môi trường mới
 > làm lộ**. Bài học đã ghi vào `HUONG_DAN_CHAY_TV4.md`: khi sửa lỗi hạ tầng, kiểm lại bằng cách dựng
-> lại đúng điều kiện CI (xoá `Minio__*`, thêm `Redis__Instance=ci`) — **311/311 xanh**.
+> lại đúng điều kiện CI (xoá `Minio__*`, thêm `Redis__Instance=ci`) — **311/311 xanh** tại commit `8d9d62b`.
 
 ---
 
@@ -34,7 +34,7 @@ Tuần 4 đóng được **N2** và **N4-C**. **N3 gần đóng** — 05/10 đã
 
 | Hạng mục | Kết quả | Bằng chứng |
 |---|---|---|
-| Backend `dotnet test CulinaryBlog.sln` | **316/316** (311 + 5), `Skipped = 0` | log `dotnet test` mục §6 `SO_EVIDENCE_TUAN_4.md` |
+| Backend `dotnet test CulinaryBlog.sln` | ✅ **321/321** (`CulinaryBlog.Tests` **316/316** + `ConcurrencySpike` **5/5**) sau khi merge `main` 05/10 — trước merge tính **316/316** (311 + 5). `Skipped = 0` | log `dotnet test` mục §6 `SO_EVIDENCE_TUAN_4.md` |
 | Coverage `CulinaryBlog.Application` | **84.13%** ≥ ngưỡng cổng **80%** | `deploy/check-coverage.sh 80 TestResults` |
 | `dotnet build` | 0 warning / 0 error | CI `Backend week 1` |
 | `dotnet format --verify-no-changes` | exit `0` | chạy cục bộ |
@@ -49,7 +49,12 @@ Tuần 4 đóng được **N2** và **N4-C**. **N3 gần đóng** — 05/10 đã
 
 ---
 
-## 3. N2 — ĐÃ ĐÓNG
+## 3. N2 — 7/8 XONG, CÒN 1 CỤM `D1/D2/D3`
+
+> **Phân biệt rõ:** phần **lõi của N2** (resilience C1–C4, tấn công file B2–B4, E2E B1, retry/race E,
+> CI, k6, coverage gate) **đã đóng**. Nhưng **toàn bộ khối N2 chưa xong** vì còn cụm
+> `N2-D1/D2/D3` treo từ tuần 3. Không được ghi "N2 đã đóng" không điều kiện.
+> **N2 = 7/8 việc xong, 1 việc dở dang.**
 
 | Mục | Nội dung | Trạng thái |
 |---|---|---|
@@ -57,10 +62,10 @@ Tuần 4 đóng được **N2** và **N4-C**. **N3 gần đóng** — 05/10 đã
 | N2-C1b | Cache dùng chung giữa nhiều instance qua Redis; sitemap có **distributed lock** | ✅ |
 | N2-C1c | Hợp đồng retry khoá bằng test: sitemap **2**, resize **3**, xoá ảnh **3**, welcome 0/1/5/30 phút | ✅ 4/4 |
 | N2-C3/C4 | Commit `tests/performance/read-load.js` + 3 log k6, đủ p50/p95/p99 | ✅ |
-| N2-B1 | Playwright: đăng ký → đăng nhập → **wizard 5 bước** → publish → tra cứu tìm kiếm | ✅ 26/26 (2/5 luồng) |
+| N2-B1 | Playwright: đăng ký → đăng nhập → **wizard 5 bước** → publish → tra cứu tìm kiếm | 🟡 **26/26 xanh nhưng mới phủ 2/5 luồng** (publish, search) |
 | N2-B2/B3/B4 | File-size attack, MIME spoofing (magic bytes), quyền upload | ✅ |
 | N2-E | Retry/race/security: retry idempotent, delete-vs-resize, 2 request đặt primary, xoá file không tồn tại | ✅ |
-| **N2-D1/D2** | Progress upload % + UI unpublish/archive | ⚠️ **Dở dang** — API unpublish/archive đã có tại `Program.cs:620,627`, **UI chưa làm**, không E2E được |
+| **N2-D1/D2/D3** | Progress upload % · UI unpublish/archive · checklist WCAG 320/768/1200 px | ⬜ **Dở dang** — API unpublish/archive đã có tại `Program.cs:620,627` nhưng **UI chưa làm**, nên không E2E được; D3 thuộc **TV2** |
 
 ### 3.1 Lỗi sản phẩm đã sửa trong N2-B1
 

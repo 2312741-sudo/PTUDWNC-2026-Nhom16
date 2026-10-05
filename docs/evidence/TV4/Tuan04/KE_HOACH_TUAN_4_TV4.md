@@ -12,6 +12,15 @@
 > Tài liệu này là **kế hoạch thực thi + khung minh chứng**. Mọi việc ở tuần 4 khởi đầu ở trạng thái
 > **Chưa làm**, trừ phần đã được kiểm chứng thật ở mục 2 (có đường dẫn/commit/số liệu).
 
+> [!NOTE]
+> **📌 Bản gốc — ĐÃ ĐƯỢC THỰC THI. Đọc [`KE_HOACH_TUAN_4_TV4_V2.md`](KE_HOACH_TUAN_4_TV4_V2.md) và
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) trước.**
+>
+> Tài liệu này là **ảnh chụp kế hoạch bản gốc**, giữ nguyên để đối chiếu xem V2 đã đổi gì.
+> Mọi dòng ghi "⬜ Chưa làm" bên dưới là **đúng tại thời điểm lập kế hoạch**, không phải trạng
+> thái hiện tại. Thực tế 05/10: **N2 7/8 xong**, **N3 3/4 xong**, **N4-C xong**; dở dang
+> `D1/D2/D3` (UI) và `N3-A3`/`N3-A5`.
+
 > [!IMPORTANT]
 > **Ghi chú về nguồn gốc file `Lab 04` trong `docs/evidence/TV4/`** — không phải do TV4 tạo
 > 4 file `TUAN_4.md`, `BAO_CAO_LAB_04.md`, `Lab04_2312739_NguyenHuuTrungSon.docx`,

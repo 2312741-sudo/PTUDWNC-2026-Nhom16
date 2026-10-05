@@ -51,6 +51,21 @@ Bằng chứng đầy đủ: [`BAO_CAO_LAB_TUAN4_V2.md`](BAO_CAO_LAB_TUAN4_V2.md
 > Lỗi 01/02/03 **đã có bản vá và test hồi quy trên nhánh lab** `lab/TV4-audit-tuan4`, nhưng bản vá
 > **chưa merge** — nên vẫn tính là đang mở. Xem bảng trạng thái ở mục trên.
 
+> [!WARNING]
+> **Kiểm chứng lại 05/10/2026 — vẫn đúng, nhưng dễ nhầm với lỗi GĐ1.**
+>
+> | Kiểm tra | Kết quả 05/10 |
+> |---|---|
+> | `RecipeImageConfiguration.cs` có `ValueGeneratedNever()`? | ❌ **Không** — vẫn lệch với `RecipeIngredientConfiguration.cs:20` và `RecipeStepConfiguration.cs:20` ⇒ BUG-W4-01 **chưa merge** |
+> | Nhánh `lab/TV4-audit-tuan4` còn tồn tại? | ✅ Còn |
+>
+> ⛔ **Ba lỗi đã đóng ở GĐ1 là lỗi KHÁC**, không phải 01/02/03: DB chết trả `500`, DB chết lúc
+> khởi động giết tiến trình, `GET /recipes/{slug}` trả `500` khi thiếu credential storage. Cả ba
+> **đã merge** ở commit `8d9d62b` và khoá bằng test hồi quy. Xem
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) mục 1.
+>
+> BUG-W4-01 vẫn **cần Tâm chốt C1 hay C2** (đụng schema `RecipeImages` dùng chung với TV3).
+
 ### BUG-W4-01 🔴 — `422 recipe.version_conflict` khi thêm ảnh vào recipe **đã có ảnh**
 
 | | |

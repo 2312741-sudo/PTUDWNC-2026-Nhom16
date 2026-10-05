@@ -295,13 +295,13 @@ bash deploy/check-coverage.sh 80 TestResults
 Kết quả chuẩn trên máy TV4 (**04/10/2026**, commit `8d9d62b` — cùng số đo đã xác nhận trên CI run `37213966752`):
 
 ```
-Passed!  - Failed: 0, Passed: 311, Skipped: 0, Total: 311 - CulinaryBlog.Tests.dll
+Passed!  - Failed: 0, Passed: 316, Skipped: 0, Total: 316 - CulinaryBlog.Tests.dll
 Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5 - ConcurrencySpike.dll
 ```
 
 | Hạng mục | Số đo |
 |---|---|
-| Backend | **311 + 5 = 316/316**, `Skipped = 0` |
+| Backend | **316 + 5 = 321/321**, `Skipped = 0` *(trước khi merge `main`: 311 + 5 = 316/316 tại `8d9d62b`)* |
 | Coverage `CulinaryBlog.Application` | **84.13%** ≥ ngưỡng **80%** |
 | `dotnet format --verify-no-changes` | exit `0` |
 | `dotnet build` | 0 warning / 0 error |
@@ -396,7 +396,7 @@ docker exec culinaryblog-pg psql -U postgres -tAc "select 1"                  # 
 Invoke-WebRequest http://localhost:5080/health/ready -UseBasicParsing | Select-Object StatusCode   # 200
 Invoke-WebRequest http://localhost:9000/health -UseBasicParsing | Select-Object StatusCode         # 200 (RustFS)
 Invoke-WebRequest http://localhost:3000 -UseBasicParsing | Select-Object StatusCode                # 200
-dotnet test CulinaryBlog.sln                                                  # 311 + 5, Skipped=0
+dotnet test CulinaryBlog.sln                                                  # 316 + 5, Skipped=0
 ```
 
 ---
@@ -452,7 +452,7 @@ Biến dùng trong toàn bộ hướng dẫn — **khai trong `.env` ở thư m�
 | `pg_hba.conf` của `culinaryblog-pg` | `local ... trust`, `host ... 127.0.0.1/32 trust`, `host all all all scram-sha-256` → giải thích vì sao `psql` không có `-h` luôn "thành công" |
 | `dotnet build CulinaryBlog.sln --configuration Release` | 0 warning, 0 error |
 | `dotnet format CulinaryBlog.sln --verify-no-changes` | Sạch |
-| `dotnet test CulinaryBlog.sln` | 311/311 + 5/5, `Skipped=0` |
+| `dotnet test CulinaryBlog.sln` | `311/311 + 5/5` tại `8d9d62b` (04/10) · **`316/316 + 5/5` = 321/321** sau khi merge `main` (05/10), `Skipped=0` |
 | `npx tsc --noEmit` (frontend) | exit 0 |
 | `npm run build` (frontend) | exit 0, 16/16 trang |
 | CI sau khi push PR #16 | run `36391382819` — `172/172`, `Skipped=0` |

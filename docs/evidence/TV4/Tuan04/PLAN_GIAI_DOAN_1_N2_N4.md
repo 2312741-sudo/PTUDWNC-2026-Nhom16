@@ -6,7 +6,7 @@
 | Ngày lập | 03/10/2026 |
 | Nhánh | `2312739_NHTSon_D5-D6-D7` — **không push `main`** |
 | Nguồn | `KE_HOACH_TUAN_4_TV4.md` mục 3 (`N2`, `N3`, `N4`) + `KE_HOACH_TUAN_4_TV4_V2.md` |
-| Trạng thái | **Kế hoạch — chưa thực thi** |
+| Trạng thái | 🟡 **Đã thực thi — đủ điều kiện chặn tiếp, còn `D1/D2/D3` + `N3-A3` + `N3-A5`** |
 | Quyết định bổ sung | [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) (03/10) — B5 → **PA-A**, B6 → **PA-A**, 3 task lock hạ tầng → đề xuất 07/08/09 |
 | Quy tắc phát sinh | [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](PLAN_TRIEN_KHAI_TV4_TUAN4.md) mục 2 |
 
@@ -18,8 +18,17 @@
 |---|---|
 | **N0** (chốt baseline, verify lỗi 500 `/search`) | ✅ Xong |
 | **N1** (health thật, OTEL+Seq, backup/restore, multi-instance, sitemap cron+lock, B1/B2/B4, no-secret) | ✅ Xong 8/8 — xem `HANDOFF_TV4_TUAN4_N1.md` |
-| **N2 / N3 / N4** | ⬜ **Chưa làm** — đây là phạm vi của plan này |
+| **N2 / N3 / N4** | ⬜ **Chưa làm** — đây là phạm vi của plan này *(lúc lập plan)* |
 | Baseline đo được | build 0 warning · `dotnet test` **210/210** · `npx tsc --noEmit` 0 · `npm run build` OK |
+
+> [!NOTE]
+> **📌 Mục 0 là ảnh chụp bối cảnh lúc lập plan — cập nhật 05/10.**
+>
+> | Việc | Lúc lập plan (03/10) | **Thực tế 05/10** |
+> |---|---|---|
+> | **N2 / N3 / N4** | ⬜ Chưa làm | 🟡 **N2 7/8** (dở dang `D1/D2/D3` — progress upload, UI unpublish/archive, WCAG) · **N3 3/4** (còn `A3` Zod/RHF và `A5` Google OAuth — chờ credentials) · **N4-C xong** (runbook + deploy staging → tuần 5) |
+>
+> Nguồn: [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) · [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md)
 
 ### 0.1. NFR của riêng TV4 — dùng để tự kiểm mỗi khối có phục vụ NFR không
 
