@@ -74,6 +74,33 @@ Cả 5 bản ghi đều ghi:
 
 Người thực hiện và người xác nhận là **cùng một người**. Đây không phải nghiệm thu độc lập, không đạt yêu cầu tách vai trong bản ghi minh chứng.
 
+### 1.7 ⛔ SAI LỆCH MỚI (phát hiện 05/10 khi kiểm tra CI): test E2E Scenario 5 phụ thuộc dữ liệu seed mà CI không có
+
+`CommitWeek5VerificationTests` của commit `21aa722` báo "321 test, xanh". Nhưng khi merge vào
+nhánh tuần và chạy trên CI thật, test này **đỏ** — và đây là nguyên nhân khiến job
+`Backend week 1` đỏ ở commit `08052fc`:
+
+| Mục | Thực tế |
+|---|---|
+| Test đỏ | `Week5StagingAndE2ETests.E2E_Scenario_5_FTS_Vietnamese_Search_AND_Filter_And_Draft_Isolation` |
+| Run | `37316696268` (`08052fc`) — lần thứ 4 liên tiếp `Backend week 1` đỏ |
+| Mã bị đỏ | `Assert.NotEmpty(searchData.Data)` và `Assert.Contains(..., r => r.Title.Contains("Canh"))` |
+| Test **không** tự tạo dữ liệu | `Week5StagingAndE2ETests.cs:245-265` chỉ `GET /api/v1/recipes/search?q=canh` rồi kỳ vọng có `"Canh chua cá lóc"` |
+| Dữ liệu đó **có** trong seed | `RecipeSeedData.cs:253-256` — `Title: "Canh Chua Cá Lóc Dương"`, slug `canh-chua-ca-loc-dong` |
+| Nhưng seed **không chạy** khi test | `Program.cs:343` — `if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("Testing"))` ⇒ môi trường `Testing` **bỏ qua** cả `Migrate` lẫn `DbSeeder.SeedAsync` |
+| Test harness chỉ migrate | `AuthTests.cs:44-64` — `EnsureMigrated()` gọi `Database.Migrate()`, **không** seed |
+
+⇒ Test chỉ xanh khi database **đã có sẵn dữ liệu seed từ trước** (máy dev). Trên CI với Postgres
+container sạch, test **luôn đỏ**. Đây là test **không tự chứa**, phụ thuộc trạng thái ngoài —
+vi phạm nguyên tắc test phải tạo dữ liệu của riêng nó.
+
+⚠️ **Hệ quả nghiêm trọng hơn:** "321 test xanh" trong báo cáo của TV1 là **kết quả chạy trên máy
+dev có sẵn seed**, không phải trên môi trường sạch. Con số xanh đó **không tái lập được**.
+
+🛑 **Đề nghị TV1 tự sửa:** hoặc cho `Scenario_5` tự tạo công thức riêng, hoặc `ApiFactory` seed
+trong `Testing`. **TV4 không tự sửa test của thành viên khác** — cùng nguyên tắc với việc không
+đính chính báo cáo của TV1.
+
 ---
 
 ## 2. Vấn đề "ghi Hoàn thành nhưng không có minh chứng"
