@@ -33,3 +33,9 @@ next-env.d.ts
 
 # Log chạy local
 run.log
+
+# Backups (TV1 tuần 5): dump CSDL và archive storage là dữ liệu sinh ra khi chạy,
+# không phải mã nguồn. Giữ .gitkeep để thư mục tồn tại trong repo.
+backups/**/*.sql*
+backups/**/*.tar*
+!backups/**/.gitkeep
