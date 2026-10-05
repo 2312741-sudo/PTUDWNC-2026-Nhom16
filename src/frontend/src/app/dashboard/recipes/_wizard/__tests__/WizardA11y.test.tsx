@@ -84,6 +84,41 @@ it("o loi co aria-invalid va aria-describedby tro toi thong bao loi", async () =
   expect(m.addIngredient).not.toHaveBeenCalled();
 });
 
+// K18 NVDA lỗi 2 (K18_nvda_speech_log.txt mục B): `Sửa<span className="sr-only"> nguyên liệu X</span>` bị đọc dính
+// "Sửanguyên liệu cá viên" -> tên đầy đủ đặt ở aria-label, chữ nhìn thấy vẫn là "Sửa"/"Xoá" và đứng đầu tên (WCAG 2.5.3)
+describe("nut lap lai dung aria-label, khong dung span sr-only", () => {
+  const expectLabel = (visible: string, label: string) => {
+    const b = screen.getByRole("button", { name: label });
+    expect(b).toHaveAttribute("aria-label", label);
+    expect(b).toHaveTextContent(new RegExp(`^${visible}$`));
+    expect(label.startsWith(visible)).toBe(true);
+  };
+
+  it("buoc Nguyen lieu", async () => {
+    await start(1);
+    expectLabel("Sửa", "Sửa nguyên liệu Ca loc");
+    expectLabel("Xoá", "Xoá nguyên liệu Ca loc");
+  });
+
+  it("buoc Cac buoc", async () => {
+    await start(2);
+    expectLabel("Sửa", "Sửa bước 1: So che");
+    expectLabel("Xoá", "Xoá bước 1: So che");
+  });
+
+  it("buoc Anh: kem so thu tu, kem alt neu co", async () => {
+    const images = [
+      { id: "g1", originalUrl: "https://cdn.example.com/a.webp", altText: "Bat canh chua", isPrimary: true, orderIndex: 0 },
+      { id: "g2", originalUrl: "https://cdn.example.com/b.webp", altText: null, isPrimary: false, orderIndex: 1 },
+    ];
+    render(<RecipeWizard initial={{ step: 3, recipeId: "r1", slug: "s1", rowVersion: "v1", detail: { ...detail, images } as RecipeDetail }} />);
+    await act(() => Promise.resolve());
+    expectLabel("Xoá", "Xoá ảnh 1: Bat canh chua");
+    expectLabel("Đặt làm ảnh chính", "Đặt làm ảnh chính (ảnh 2)");
+    expectLabel("Xoá", "Xoá ảnh 2");
+  });
+});
+
 // K18 NVDA lỗi 1 (K18_nvda_speech_log.txt mục A): bộ đếm (N/2000) nằm trong <label> -> mỗi phím NVDA đọc lại "Mô tả (N/2000)"
 describe("bo dem o Mo ta nam ngoai nhan", () => {
   const openStep1 = async () => { render(<RecipeWizard />); await act(() => Promise.resolve()); };

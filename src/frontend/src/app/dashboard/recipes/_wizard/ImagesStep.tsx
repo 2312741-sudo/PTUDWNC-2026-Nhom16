@@ -60,9 +60,9 @@ export default function ImagesStep({ recipe, busy, run }: Props) {
                   {img.altText && <p className="truncate text-gray-600">{img.altText}</p>}
                   <div className="flex gap-2">
                     {!img.isPrimary && (
-                      <button disabled={busy} onClick={() => setPrimary(img)} className="text-blue-600 disabled:opacity-40">Đặt làm ảnh chính<span className="sr-only"> (ảnh {idx + 1})</span></button>
+                      <button disabled={busy} onClick={() => setPrimary(img)} aria-label={`Đặt làm ảnh chính (ảnh ${idx + 1})`} className="text-blue-600 disabled:opacity-40">Đặt làm ảnh chính</button>
                     )}
-                    <button disabled={busy} onClick={() => remove(img)} className="text-red-600 disabled:opacity-40">Xoá<span className="sr-only"> ảnh {idx + 1}{img.altText ? `: ${img.altText}` : ""}</span></button>
+                    <button disabled={busy} onClick={() => remove(img)} aria-label={`Xoá ảnh ${idx + 1}${img.altText ? `: ${img.altText}` : ""}`} className="text-red-600 disabled:opacity-40">Xoá</button>
                   </div>
                 </div>
               </li>
