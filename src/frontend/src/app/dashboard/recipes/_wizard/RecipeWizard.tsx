@@ -17,6 +17,7 @@ import ImagesStep from "./ImagesStep";
 import ReviewStep from "./ReviewStep";
 
 export const STEPS = ["Thông tin cơ bản", "Nguyên liệu", "Các bước", "Ảnh", "Xem lại & Xuất bản"] as const;
+const DESC_MAX = 2000; // khớp basicInfoSchema.description
 
 /** fn gọi API; optimistic (tuỳ chọn) cập nhật UI ngay, lỗi thì hoàn tác về snapshot. */
 export type RunFn = (fn: () => Promise<unknown>, optimistic?: (d: RecipeDetail) => RecipeDetail) => Promise<boolean>;
@@ -216,6 +217,9 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
     dispatch({ type: "goto", step });
   }
   const hasNutrition = !!nutrition && Object.values(nutrition).some(v => v !== null);
+  const descLen = description?.length ?? 0;
+  const descLimitMsg = descLen >= DESC_MAX ? `Mô tả đã đạt giới hạn ${DESC_MAX} ký tự.`
+    : DESC_MAX - descLen < 100 ? "Mô tả còn dưới 100 ký tự." : "";
   const onError = (m: string) => dispatch({ type: "error", message: m });
   const last = STEPS.length - 1;
 
@@ -258,10 +262,16 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
             <input className="w-full rounded border p-2" placeholder="VD: Canh chua cá lóc" maxLength={200}
               {...register("title")} {...ariaOf("err-title", errors.title)} />
             <ErrorText id="err-title" error={errors.title} /></label>
-          <label className="block text-sm">Mô tả <span className="text-gray-400">({description?.length ?? 0}/2000)</span>
-            <textarea className="w-full rounded border p-2" rows={3} maxLength={2000}
-              {...register("description")} {...ariaOf("err-description", errors.description)} />
-            <ErrorText id="err-description" error={errors.description} /></label>
+          {/* K18 (NVDA): bộ đếm nằm ngoài nhãn -> tên ô luôn là "Mô tả"; chỉ nối bằng aria-describedby (đọc khi focus).
+              Vùng polite riêng chỉ đổi chữ khi qua ngưỡng còn < 100 ký tự / chạm giới hạn, không đọc theo từng phím */}
+          <div className="text-sm">
+            <label htmlFor="recipe-description" className="block">Mô tả</label>
+            <textarea id="recipe-description" className="w-full rounded border p-2" rows={3} maxLength={DESC_MAX}
+              {...register("description")} {...ariaOf("err-description", errors.description)}
+              aria-describedby={["description-count", errors.description && "err-description"].filter(Boolean).join(" ")} />
+            <p id="description-count" className="text-xs text-gray-600">{descLen}/{DESC_MAX} ký tự</p>
+            <p id="description-limit" aria-live="polite" className="sr-only">{descLimitMsg}</p>
+            <ErrorText id="err-description" error={errors.description} /></div>
           <label className="block text-sm">Hướng dẫn chung
             <textarea className="w-full rounded border p-2" rows={4} {...register("instructions")} /></label>
           <div className="grid grid-cols-3 gap-3">

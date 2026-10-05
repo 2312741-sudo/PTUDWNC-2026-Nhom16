@@ -83,3 +83,40 @@ it("o loi co aria-invalid va aria-describedby tro toi thong bao loi", async () =
   expect(qty).toHaveAccessibleDescription("Số lượng phải lớn hơn 0");
   expect(m.addIngredient).not.toHaveBeenCalled();
 });
+
+// K18 NVDA lỗi 1 (K18_nvda_speech_log.txt mục A): bộ đếm (N/2000) nằm trong <label> -> mỗi phím NVDA đọc lại "Mô tả (N/2000)"
+describe("bo dem o Mo ta nam ngoai nhan", () => {
+  const openStep1 = async () => { render(<RecipeWizard />); await act(() => Promise.resolve()); };
+  const desc = () => screen.getByRole("textbox", { name: "Mô tả" });
+  const limit = () => document.getElementById("description-limit")!;
+
+  it("ten truy cap luon la 'Mo ta' khi go; bo dem noi bang aria-describedby, khong aria-live", async () => {
+    const user = userEvent.setup();
+    await openStep1();
+    for (const ch of "can") {
+      await user.type(desc(), ch);
+      expect(desc()).toHaveAccessibleName("Mô tả");
+    }
+    const counter = screen.getByText(/^3\/2000/);
+    expect(counter.closest("label")).toBeNull();
+    expect(desc().getAttribute("aria-describedby")?.split(" ")).toContain(counter.id);
+    expect(counter.closest("[aria-live]")).toBeNull();
+    expect(limit()).toHaveAttribute("aria-live", "polite");
+    expect(limit()).toBeEmptyDOMElement();
+  });
+
+  it("chi thong bao polite khi con duoi 100 ky tu va khi cham gioi han, khong doi theo tung phim", async () => {
+    const user = userEvent.setup();
+    await openStep1();
+    await user.click(desc());
+    await user.paste("a".repeat(1901));
+    expect(limit()).toHaveTextContent("Mô tả còn dưới 100 ký tự.");
+    const node = limit().firstChild;
+    await user.type(desc(), "bb");
+    expect(limit().firstChild).toBe(node); // cùng một nút chữ, không đổi nội dung -> trình đọc không đọc lại
+
+    await user.paste("c".repeat(97));
+    expect(screen.getByText(/^2000\/2000/)).toBeInTheDocument();
+    expect(limit()).toHaveTextContent("Mô tả đã đạt giới hạn 2000 ký tự.");
+  });
+});
