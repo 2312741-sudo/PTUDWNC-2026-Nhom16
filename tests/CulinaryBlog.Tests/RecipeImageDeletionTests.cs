@@ -108,6 +108,30 @@ public sealed class RecipeImageDeletionTests : IClassFixture<ApiFactory>
         Assert.Equal(primary, Assert.Single(active, r => r.IsPrimary).Id);
     }
 
+    [Fact]
+    public async Task Legacy_soft_deleted_row_still_primary_does_not_block_new_primary_upload()
+    {
+        // Dữ liệu do code cũ để lại (culinary_blog có 3 dòng như vậy): ảnh đã xoá mềm nhưng vẫn IsPrimary = true.
+        // Chỉ bộ lọc mới của ux_recipe_images_one_primary ("IsDeleted" = false) gỡ được, sửa domain không với tới.
+        var (client, recipeId) = await NewRecipe();
+        var legacy = await UploadId(client, recipeId, "Ảnh cũ");
+        using (var scope = _app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var n = await db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE \"RecipeImages\" SET \"IsDeleted\" = true WHERE \"Id\" = {legacy} AND \"IsPrimary\" = true");
+            Assert.Equal(1, n);
+        }
+
+        var res = await UploadPng(client, recipeId, "Ảnh mới");
+        await AssertStatus(HttpStatusCode.Created, res);
+        Assert.True((await DataOf(res)).GetProperty("isPrimary").GetBoolean());
+
+        var rows = await ImagesInDb(recipeId);
+        Assert.Equal(2, rows.Count(r => r.IsPrimary)); // dòng cũ (đã xoá mềm) và ảnh mới
+        Assert.Single(rows, r => r.IsPrimary && !r.IsDeleted);
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private sealed record ImageRow(Guid Id, bool IsPrimary, bool IsDeleted, int OrderIndex);
