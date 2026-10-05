@@ -1,0 +1,54 @@
+psql -d culinary_test -f q_idx.sql (EXPLAIN loc truc tiep theo RecipeId + danh sach index), 02/10/2026
+
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=20.85..20.85 rows=2 width=112) (actual time=0.187..0.188 rows=10 loops=1)
+   Sort Key: "RecipeIngredients"."OrderIndex"
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=15
+   InitPlan 1 (returns $0)
+     ->  Limit  (cost=11.98..11.99 rows=1 width=24) (actual time=0.145..0.145 rows=1 loops=1)
+           Buffers: shared hit=9
+           ->  Sort  (cost=11.98..12.32 rows=136 width=24) (actual time=0.143..0.143 rows=1 loops=1)
+                 Sort Key: (count(*)) DESC
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=9
+                 ->  HashAggregate  (cost=9.95..11.30 rows=136 width=24) (actual time=0.106..0.118 rows=139 loops=1)
+                       Group Key: "RecipeIngredients_1"."RecipeId"
+                       Batches: 1  Memory Usage: 48kB
+                       Buffers: shared hit=6
+                       ->  Seq Scan on "RecipeIngredients" "RecipeIngredients_1"  (cost=0.00..8.63 rows=263 width=16) (actual time=0.008..0.054 rows=266 loops=1)
+                             Buffers: shared hit=6
+   ->  Bitmap Heap Scan on "RecipeIngredients"  (cost=4.29..8.85 rows=2 width=112) (actual time=0.167..0.168 rows=10 loops=1)
+         Recheck Cond: ("RecipeId" = $0)
+         Filter: (NOT "IsDeleted")
+         Rows Removed by Filter: 1
+         Heap Blocks: exact=1
+         Buffers: shared hit=12
+         ->  Bitmap Index Scan on "IX_RecipeIngredients_RecipeId_OrderIndex"  (cost=0.00..4.29 rows=2 width=0) (actual time=0.162..0.162 rows=21 loops=1)
+               Index Cond: ("RecipeId" = $0)
+               Buffers: shared hit=11
+ Planning:
+   Buffers: shared hit=161
+ Planning Time: 1.073 ms
+ Execution Time: 0.298 ms
+(30 rows)
+
+     tablename     |                indexname                 |                                                                      indexdef                                                                       
+-------------------+------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------
+ RecipeImages      | IX_RecipeImages_RecipeId_OrderIndex      | CREATE INDEX "IX_RecipeImages_RecipeId_OrderIndex" ON public."RecipeImages" USING btree ("RecipeId", "OrderIndex")
+ RecipeImages      | PK_RecipeImages                          | CREATE UNIQUE INDEX "PK_RecipeImages" ON public."RecipeImages" USING btree ("Id")
+ RecipeImages      | ux_recipe_images_one_primary             | CREATE UNIQUE INDEX ux_recipe_images_one_primary ON public."RecipeImages" USING btree ("RecipeId") WHERE ("IsPrimary" = true)
+ RecipeIngredients | IX_RecipeIngredients_RecipeId_OrderIndex | CREATE INDEX "IX_RecipeIngredients_RecipeId_OrderIndex" ON public."RecipeIngredients" USING btree ("RecipeId", "OrderIndex")
+ RecipeIngredients | PK_RecipeIngredients                     | CREATE UNIQUE INDEX "PK_RecipeIngredients" ON public."RecipeIngredients" USING btree ("Id")
+ RecipeSteps       | IX_RecipeSteps_RecipeId_StepNumber       | CREATE UNIQUE INDEX "IX_RecipeSteps_RecipeId_StepNumber" ON public."RecipeSteps" USING btree ("RecipeId", "StepNumber") WHERE ("IsDeleted" = false)
+ RecipeSteps       | PK_RecipeSteps                           | CREATE UNIQUE INDEX "PK_RecipeSteps" ON public."RecipeSteps" USING btree ("Id")
+ Recipes           | IDX_Recipe_AuthorId                      | CREATE INDEX "IDX_Recipe_AuthorId" ON public."Recipes" USING btree ("AuthorId")
+ Recipes           | IDX_Recipe_CategoryId                    | CREATE INDEX "IDX_Recipe_CategoryId" ON public."Recipes" USING btree ("CategoryId")
+ Recipes           | IDX_Recipe_Difficulty                    | CREATE INDEX "IDX_Recipe_Difficulty" ON public."Recipes" USING btree ("Difficulty")
+ Recipes           | IDX_Recipe_IsDeleted                     | CREATE INDEX "IDX_Recipe_IsDeleted" ON public."Recipes" USING btree ("IsDeleted") WHERE ("IsDeleted" = false)
+ Recipes           | IDX_Recipe_PublishedAt                   | CREATE INDEX "IDX_Recipe_PublishedAt" ON public."Recipes" USING btree ("PublishedAt")
+ Recipes           | IDX_Recipe_Slug                          | CREATE UNIQUE INDEX "IDX_Recipe_Slug" ON public."Recipes" USING btree ("Slug")
+ Recipes           | IDX_Recipe_Status                        | CREATE INDEX "IDX_Recipe_Status" ON public."Recipes" USING btree ("Status")
+ Recipes           | PK_Recipes                               | CREATE UNIQUE INDEX "PK_Recipes" ON public."Recipes" USING btree ("Id")
+(15 rows)

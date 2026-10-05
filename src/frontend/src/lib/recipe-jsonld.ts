@@ -5,12 +5,25 @@ import { mediaUrl } from "./recipe-editor";
 const duration = (m?: number | null) => (m && m > 0 ? `PT${m}M` : undefined);
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
+/**
+ * Google yêu cầu image là URL tuyệt đối. Ảnh seed là đường dẫn tĩnh của Next ("/images/recipes/x.jpg") -> ghép SITE;
+ * key MinIO ("recipes/{id}/x.webp") -> mediaUrl (cần NEXT_PUBLIC_MEDIA_URL, không có thì bỏ, không xuất đường dẫn tương đối).
+ */
+const absoluteImage = (u?: string | null): string | null => {
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  if (u.startsWith("/")) return `${SITE}${u}`;
+  // mediaUrl (sau 1492b39) trả đường dẫn tương đối khi thiếu NEXT_PUBLIC_MEDIA_URL -> JSON-LD chỉ nhận URL tuyệt đối
+  const m = mediaUrl(u);
+  return m && /^https?:\/\//i.test(m) ? m : null;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildRecipeJsonLd(r: any, slug?: string) {
   const has = (v: unknown) => v !== null && v !== undefined;
   const images = [...(r.images ?? [])]
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-    .map(i => mediaUrl(i.originalUrl ?? i.url))
+    .map(i => absoluteImage(i.originalUrl ?? i.url))
     .filter(Boolean);
   const n = r.nutrition;
   const nutrition = n && Object.values(n).some(has) ? {
@@ -38,7 +51,7 @@ export function buildRecipeJsonLd(r: any, slug?: string) {
     cookTime: duration(r.cookTimeMinutes),
     totalTime: duration((r.prepTimeMinutes ?? 0) + (r.cookTimeMinutes ?? 0)),
     recipeYield: r.servings ? `${r.servings} khẩu phần` : undefined,
-    recipeCategory: r.categoryName ?? undefined,
+    recipeCategory: r.categoryName || undefined, // "" cũng bỏ, không xuất thuộc tính rỗng
     recipeIngredient: [...(r.ingredients ?? [])]
       .sort((a, b) => a.orderIndex - b.orderIndex)
       .map(i => [i.quantity, i.unit, i.name].filter(x => has(x) && x !== "").join(" ")),

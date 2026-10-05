@@ -181,7 +181,6 @@ namespace CulinaryBlog.Infrastructure.Migrations
             modelBuilder.Entity("CulinaryBlog.Domain.Entities.RecipeImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("AltText")
@@ -229,7 +228,7 @@ namespace CulinaryBlog.Infrastructure.Migrations
                     b.HasIndex("RecipeId")
                         .IsUnique()
                         .HasDatabaseName("ux_recipe_images_one_primary")
-                        .HasFilter("\"IsPrimary\" = true");
+                        .HasFilter("\"IsPrimary\" = true AND \"IsDeleted\" = false");
 
                     b.HasIndex("RecipeId", "OrderIndex");
 
@@ -329,7 +328,8 @@ namespace CulinaryBlog.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RecipeId", "StepNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("RecipeSteps", (string)null);
                 });

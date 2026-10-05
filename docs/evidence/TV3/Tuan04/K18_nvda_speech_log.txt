@@ -1,0 +1,60 @@
+# K18 - Trich Speech Viewer cua NVDA (Chrome, ban build, da dang nhap), 05/10/2026.
+# Chi giu cac dong thuoc ung dung, dung nguyen van. Da bo: cua so Claude, thanh cong cu Chrome, hop thoai chon file.
+
+## A. Buoc 1 - Thong tin co ban (/dashboard/recipes/new)
+Tiêu đề *  edit  VD: Canh chua cá lóc  blank
+Mô tả (0/2000)  edit  multi line  blank
+c
+Mô tả (1/2000)
+a
+Mô tả (2/2000)
+n
+Mô tả (3/2000)
+(... lap lai cho moi ky tu gap)
+Độ khó  combo box  Trung bình  collapsed
+Danh mục *  combo box  Món lẩu  collapsed
+Lưu & tiếp →  button
+Đang lưu…  unavailable
+Đang lưu...
+Bước 2/5: Nguyên liệu  heading  level 2
+
+## B. Buoc 2 - Nguyen lieu
+Tên nguyên liệu (dòng 1)  edit  Tên *  blank
+Số lượng (dòng 1)  spin button  editable  SL  blank
+Đơn vị (dòng 1)  edit  Đơn vị  blank
+Ghi chú (dòng 1)  edit  Ghi chú  blank
++ Thêm dòng  button
+← Quay lại  button
+Tiếp →  button
+table  with 2 rows and 5 columns  row 2  Thao tác  column 5  Sửanguyên liệu cá viên  button
+Xoánguyên liệu cá viên  button
+Các bước soạn công thức  navigation landmark  list  with 5 items
+2. Nguyên liệu  button  current step
+
+## C. Buoc 3 - Cac buoc
+Bước 3/5: Các bước  heading  level 2
+Chưa có bước nào.
+Tiêu đề bước (dòng 1)  edit  Tiêu đề bước *  blank
+Hẹn giờ (phút) (dòng 1)  spin button  editable  Hẹn giờ (phút)
+Mô tả chi tiết (dòng 1)  edit  multi line  Mô tả chi tiết *  blank
+Lưu bước  button
+Bước 4/5: Ảnh  heading  level 2
+
+## D. Buoc 4 - Anh
+Chọn ảnh: No file chosen  button
+
+## E. Dashboard /dashboard/recipes
+Công thức của tôi  visited  same page  link  current page
+main landmark  heading  level 1  Công thức của tôi
+5 công thức
+Lọc theo trạng thái  navigation landmark  toggle button  pressed  Tất cả 5
+toggle button  not pressed  Bản nháp 1
+table  with 7 rows and 5 columns  row 2  Thao tác  column 5  Sửa  visited  link
+
+## Nhan xet (cua TV3, khong phai dau ra NVDA)
+- Dat: nhan o nhap, bat buoc (*), combo box, trang thai luu, tieu de moi buoc, current step, landmark.
+- Loi 1: bo dem (N/2000) nam trong the label cua o Mo ta -> moi phim NVDA doc lai nhan.
+- Loi 2: nut Sua/Xoa o buoc Nguyen lieu bi doc dinh "Suanguyen lieu ..." (khong dau cach); cung kieu viet o buoc Cac buoc va Anh (chua kiem).
+- Loi 3: dashboard, lien ket Sua/Xoa khong kem ten cong thuc.
+- Chua kiem: thong bao loi khi de trong tieu de, chu mo ta (alt) cua anh, trang thai sap xep cot.
+- "Vietnamese (not supported)": NVDA khong co giong tieng Viet, khong phai loi cua ung dung.

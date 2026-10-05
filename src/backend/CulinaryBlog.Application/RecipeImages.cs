@@ -1,3 +1,4 @@
+using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using FluentValidation;
@@ -155,10 +156,12 @@ public sealed class UpdateRecipeImageHandler(
     }
 }
 
+// uow tuỳ chọn: test đơn vị dựng handler bằng tay không cần transaction; DI luôn truyền EfUnitOfWork
 public sealed class DeleteRecipeImageHandler(
     IRecipeImageRepository repository,
     IFileStorageService storage,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    IUnitOfWork? uow = null)
     : IRequestHandler<DeleteRecipeImageCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteRecipeImageCommand request, CancellationToken ct)
@@ -171,8 +174,20 @@ public sealed class DeleteRecipeImageHandler(
             ?? throw new AppException(404, "image.not_found", "Không tìm thấy ảnh thuộc công thức này.");
 
         var key = image.OriginalUrl;
-        recipe.RemoveImage(request.ImageId);
-        await repository.SaveChangesAsync(ct);
+        // Hai lần lưu trong một transaction (như ReorderSteps): xoá mềm ảnh trước để nhả chỗ trong
+        // ux_recipe_images_one_primary, rồi mới đôn ảnh còn lại lên chính — Postgres kiểm unique ngay sau từng UPDATE.
+        async Task RemoveThenPromote(CancellationToken c)
+        {
+            recipe.RemoveImage(request.ImageId, promoteNext: false);
+            await repository.SaveChangesAsync(c);
+            recipe.EnsurePrimaryImage();
+        }
+        if (uow is null)
+        {
+            await RemoveThenPromote(ct);
+            await repository.SaveChangesAsync(ct);
+        }
+        else await uow.ExecuteInTransactionAsync(RemoveThenPromote, ct); // EfUnitOfWork lưu lần 2 rồi commit
         await storage.DeleteAsync(key, ct);
 
         // D2: xoá luôn object resize phái sinh (nếu job đã chạy hoặc chạy trễ vẫn sạch — idempotent).
