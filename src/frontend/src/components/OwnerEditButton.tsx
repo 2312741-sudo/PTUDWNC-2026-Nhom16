@@ -35,7 +35,7 @@ export default function OwnerEditButton({ recipeId, slug, authorId }: Props) {
   return (
     <Link
       href={`/dashboard/recipes/${recipeId}/edit?slug=${encodeURIComponent(slug)}`}
-      className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-orange-700"
+      className="inline-flex items-center gap-1.5 rounded-xl bg-orange-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-orange-800"
     >
       <Pencil className="w-4 h-4" />
       Sửa công thức

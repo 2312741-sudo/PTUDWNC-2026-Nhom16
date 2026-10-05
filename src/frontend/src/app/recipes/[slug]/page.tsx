@@ -296,7 +296,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
                   key={step.id}
                   className="flex gap-4 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
                 >
-                  <span className="shrink-0 w-9 h-9 rounded-full bg-orange-600 text-white font-bold flex items-center justify-center">
+                  <span className="shrink-0 w-9 h-9 rounded-full bg-orange-700 text-white font-bold flex items-center justify-center">
                     {step.stepNumber}
                   </span>
                   <div className="min-w-0 space-y-1.5">
