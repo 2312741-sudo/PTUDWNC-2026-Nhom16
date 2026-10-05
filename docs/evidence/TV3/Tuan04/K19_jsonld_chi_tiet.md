@@ -1,4 +1,4 @@
-# K19 (SP) — JSON-LD Schema.org Recipe trang chi tiết `/recipes/[slug]` (NFR-SEO-001) — TV3
+﻿# K19 (SP) — JSON-LD Schema.org Recipe trang chi tiết `/recipes/[slug]` (NFR-SEO-001) — TV3
 
 Ngày: 02/10/2026. Nhánh `2312786_HuynhQuocTrung_C7-frontend-tests`. Commit: test đỏ `5930a41` → sửa xanh `f0cc239`.
 
@@ -118,9 +118,15 @@ Lưu ý ISR: layout cache kết quả API 60 s, nên ngay sau khi deploy backend
 - `src/backend/CulinaryBlog.API/Program.cs`: 1 dòng đăng ký DI cạnh `IMyRecipesRepository`.
 - `src/frontend/src/lib/recipe-jsonld.ts`: `absoluteImage`.
 
-## Cần Trung kiểm tay bằng validator ngoài (chưa làm, không tự khẳng định)
+## Cần Trung kiểm tay bằng validator ngoài (đã làm ngày 05/10/2026, kết quả ở cuối file)
 1. **Schema Markup Validator** (https://validator.schema.org) → tab *Code snippet* → dán khối JSON ở trên (hoặc toàn bộ HTML trang) → ghi số lỗi/cảnh báo: ____
 2. **Google Rich Results Test** (https://search.google.com/test/rich-results) → *Code* → dán HTML trang. `localhost` không truy cập được từ Google nên phải dùng chế độ dán mã;
    ảnh `http://localhost:3000/...` có thể bị cảnh báo không tải được — cần URL công khai (staging) mới kiểm được ảnh. Kết quả: ____
 3. Dự kiến Google cảnh báo thiếu `aggregateRating`/`video` (tuỳ chọn): **chấp nhận**, vì không có dữ liệu đánh giá và NFR không cho bịa. NFR-SEO-001 ghi "pass 100%" và
    "star rating" — phần "star rating" không đạt được khi chưa có tính năng đánh giá; cần thầy/nhóm xác nhận cách hiểu.
+
+## Kết quả kiểm tay (05/10/2026)
+
+- validator.schema.org (tab Code): Recipe, **0 lỗi, 0 cảnh báo** (ảnh bằng chứng `K19_validator.png`).
+- Rich Results Test của Google (tab Code): với địa chỉ `localhost` báo 2 lỗi "URL trong trường image không hợp lệ"; thay `localhost` bằng tên miền công khai (`www.example.com`) thì "Đã phát hiện 1 mục hợp lệ", chỉ còn cảnh báo trường khuyến nghị (`recipeCuisine`, `description`, `aggregateRating`, `keywords`, `video`, `nutrition`). Thiếu `aggregateRating` là cố ý (NFR-SEO-001). Ảnh chụp kết quả không nằm trong repo (TV3 chạy tay).
+- JSON-LD thật (Console): `Recipe`, `author` là tên hiển thị, `image` gồm 2 URL tuyệt đối (`K19_jsonld_console.png`), không có `aggregateRating` hay `review`.
