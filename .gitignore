@@ -18,7 +18,7 @@ env.ps1
 *.tsbuildinfo
 next-env.d.ts
 
-*.zip
-
-# Log chạy local
-run.log
+# Backups
+backups/**/*.sql*
+backups/**/*.tar*
+!backups/**/.gitkeep
