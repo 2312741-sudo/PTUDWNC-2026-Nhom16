@@ -62,8 +62,12 @@ Phần script BCP/DR tự thân có vẻ hợp lý về logic: `set -euo pipefai
 Commit `21aa722` đưa vào `docker-compose.staging.yml:81` đúng khoá mà `JwtSettings.Validate()` đã thu hồi:
 
 ```yaml
-Jwt__SigningKey: "development-secret-key-that-is-at-least-64-bytes-long-for-jwt-signing-256-bits-security"
+Jwt__SigningKey: "<khoá dev đã bị thu hồi — xem danh sách chặn trong JwtService.cs>"
 ```
+
+> ⛔ **Không chép lại giá trị khoá thật vào tài liệu.** Tài liệu này là file text mà test
+> `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` quét; danh sách cho
+> phép chỉ gồm `JwtService.cs` và chính file test. Chép khoá vào đây sẽ làm CI đỏ y hệt lỗi gốc.
 
 Hệ quả: nếu chạy staging bằng file này, toàn bộ JWT được ký bằng khoá đã bị cấm trong codebase — **và khoá đó nằm công khai trong git**. Đây đúng là bất biến bảo mật mà nhóm đã viết test để chặn.
 
@@ -112,7 +116,12 @@ TV4 **không sửa** `TUAN_5.md`, `BAO_CAO_LAB_05.md` hay các file `.docx` củ
 | Evidence L4 (`SOK_LAB_L4.md`) | nguyên vẹn sau merge |
 | File bảo vệ `BAO_CAO_LOI_500_TRANG_SEARCH.md` | nguyên vẹn — hash `93661aa13e6fa2e081b9a89b2517eca5d0df083c` không đổi |
 
-> ⛔ **CI chưa chạy lại** cho commit `03564c4`. Trạng thái CI đã xanh là ở commit `870d6e3`, **trước** lần sửa khoá JWT. Cần chạy lại trước khi chốt cổng.
+> ⛔ **CI backend đang ĐỎ — đã xem log thật 05/10, không phải "chưa chạy".** `03564c4`, `d4edfa2` và
+> `0dfac4e` đều đỏ ở `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist`
+> (run `37300109133`, `37305355389`, `37315121347`) vì **chính hồ sơ này và
+> `KiemChung_Commit_Week5_TV1.md` chép lại khoá JWT đã thu hồi vào file `.md`** — đúng bất biến mà
+> nhóm đã viết test để chặn. Đã gỡ, test local `6/6` xanh. Ngoài ra `870d6e3` đỏ ở
+> `TracingObservabilityTests` (flaky, chưa xử lý). CI xanh gần nhất: `8d9d62b` (run `37213966752`).
 
 ---
 

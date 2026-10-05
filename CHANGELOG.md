@@ -76,8 +76,14 @@ Rà toàn bộ tài liệu trong `docs/evidence/TV4/Tuan04/` để loại mâu t
 - `dotnet test`: **316/316** `CulinaryBlog.Tests` + **5/5** `ConcurrencySpike` (trước khi sửa: 1 đỏ).
 - `docker compose -f docker-compose.staging.yml config`: exit 0 khi có `JWT_SIGNING_KEY`, exit 1 khi thiếu.
 - Ô kỹ năng còn thiếu thật: **3 → 2** (K09 chờ credentials, K18 thuộc TV2).
-- ⛔ CI **chưa** chạy lại cho các commit `03564c4`, `d4edfa2` và commit đồng bộ tài liệu này —
-  trạng thái xanh đã xác nhận gần nhất là `870d6e3`.
+- ⛔ **CI backend đang ĐỎ** — đã đọc log thật, không phải "chưa chạy". `03564c4`, `d4edfa2`, `0dfac4e`
+  đều đỏ ở `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist`: bản sửa ở
+  `docker-compose.staging.yml` đúng, nhưng **hai hồ sơ `.md` của TV4 lại chép nguyên khoá đã thu hồi**,
+  mà test quét cả `.md` ⇒ chính tài liệu phá bất biến mà test bảo vệ. Đã gỡ khỏi
+  `BAO_CAO_GIAI_DOAN_3_SUA_LOI.md` và `KiemChung_Commit_Week5_TV1.md`; test local `6/6` xanh.
+- ⚠️ Ngoài ra `870d6e3` đỏ ở `TracingObservabilityTests.Request_to_database_bearing_endpoint_produces_http_span_with_child_db_span`
+  (`Assert.NotNull()` Value is null) — flaky, **chưa** xử lý.
+- CI xanh gần nhất: `8d9d62b` (`Backend week 1` run `37213966752`); cả 2 job ở `6caf2cf`.
 
 ---
 

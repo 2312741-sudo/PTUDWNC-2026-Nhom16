@@ -108,8 +108,13 @@ Xuất hiện ngoài danh sách ở: docker-compose.staging.yml
 `docker-compose.staging.yml:81` (do `21aa722` thêm) đặt cứng đúng khoá mà `JwtSettings.Validate()` đã thu hồi:
 
 ```yaml
-Jwt__SigningKey: "development-secret-key-that-is-at-least-64-bytes-long-for-jwt-signing-256-bits-security"
+Jwt__SigningKey: "<khoá dev đã bị thu hồi — xem danh sách chặn trong JwtService.cs>"
 ```
+
+> ⛔ **Không chép lại giá trị khoá thật vào tài liệu.** Hồ sơ này là file text mà test
+> `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` quét; danh sách cho
+> phép chỉ gồm `JwtService.cs` và chính file test. Chép khoá vào đây làm CI đỏ y hệt lỗi gốc —
+> **đã xảy ra và đã được sửa 05/10**, xem [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md).
 
 Ý nghĩa: nếu ai đó chạy staging bằng file này, toàn bộ JWT của staging được ký bằng khoá đã bị cấm trong codebase — và khoá đó đang nằm công khai trong git. Đây đúng là vi phạm bất biến bảo mật mà test của nhóm đã viết để chặn.
 

@@ -155,7 +155,7 @@ Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 —
 
 - Ô **còn thiếu thật** giảm **15 → 3 → 2**.
 - ⛔ **Không ô nào tự đánh dấu đạt** — toàn bộ 24 ô đang chờ **Nguyễn Thanh Tâm** xác nhận và ghi ngày.
-- ⚠️ **CI cần chạy lại** cho commit `03564c4` (sửa khoá JWT). Trạng thái CI xanh hiện ở `870d6e3`.
+- ⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e`: `.md` của TV4 chứa khoá JWT đã thu hồi (đã gỡ) · thêm flaky `TracingObservabilityTests` từ `870d6e3`. Xanh gần nhất `8d9d62b`, cả 2 job ở `6caf2cf`.
 - Chi tiết từng ô: `SO_EVIDENCE_TUAN_4.md` mục 2 · mapping 24 dòng: [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md).
 
 ---
@@ -280,7 +280,7 @@ Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 —
 `dotnet build -c Release` **0 warning / 0 error** ✅ · `docker compose -f docker-compose.staging.yml config`
 exit `0` khi có `JWT_SIGNING_KEY`, exit `1` kèm thông báo khi thiếu ✅ ·
 evidence L4/L5 nguyên vẹn sau merge ✅ · file bảo vệ `BAO_CAO_LOI_500_TRANG_SEARCH.md` nguyên vẹn ✅.
-⚠️ **CI chưa chạy lại cho `03564c4`** — trạng thái CI xanh hiện ở `870d6e3`, trước lần sửa khoá JWT.
+⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e` — đã xem log: `.md` của TV4 chứa khoá JWT đã thu hồi (đã gỡ). Ngoài ra `870d6e3` đỏ ở `TracingObservabilityTests` (flaky, chưa xử lý). Xanh gần nhất `8d9d62b`.
 
 **Trạng thái build sau N2-B1 (04/10):** backend **311 + 5 = 316/316** ✅ · `dotnet format --verify-no-changes`
 exit `0` ✅ · `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (chỉ cảnh báo `<img>` có sẵn từ trước) ·
@@ -297,10 +297,11 @@ coverage gate pass) và `Frontend CI` run `37213966761` ✅.
 
 **Trạng thái build mới nhất (05/10, sau merge `main` ở `72e4044`):** backend **316 + 5 = 321/321** ✅ ·
 `dotnet build -c Release` **0 warning / 0 error** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
-`JwtSigningKeyNotCommittedTests` **6/6** ✅ (sau khi gỡ khoá JWT đã thu hồi khỏi `docker-compose.staging.yml`).
+`JwtSigningKeyNotCommittedTests` **6/6** ✅ — cần gỡ khoá khỏi `docker-compose.staging.yml` **và** khỏi
+2 file `.md` của TV4 vì test quét cả tài liệu.
 Tăng thêm 5 test vì merge `main` mang vào 5 test tuần 5 của TV1.
-⛔ **CI chưa chạy lại** cho `03564c4`, `d4edfa2` và commit đồng bộ tài liệu — trạng thái xanh đã xác nhận
-gần nhất là `870d6e3`.
+⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e` — nguyên nhân chính là khoá còn sót trong
+`.md` (đã gỡ). Xanh gần nhất `8d9d62b`, cả 2 job ở `6caf2cf`.
 
 **Trạng thái build sau N2-B3/B4 (04/10):** backend **299 + 5 = 304/304** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
 `npx tsc --noEmit` exit `0` ✅ · `npm run lint` exit `0` ✅ (2 cảnh báo `<img>` có sẵn từ trước) ·

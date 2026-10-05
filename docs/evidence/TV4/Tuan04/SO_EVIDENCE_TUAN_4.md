@@ -427,7 +427,7 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 | K21 | xUnit/unit ≥80%, API happy+error, Jest/RTL, Playwright | ❌ | Playwright thật + 5 luồng; ngưỡng coverage trong CI (N2-1, N2-2, N2-7) | `recipe-publish.spec.ts`, `recipe-search.spec.ts`, `backend.yml`, `frontend.yml` | 🟢 **Code + test + log** — xUnit **316/316** + `ConcurrencySpike` **5/5** (sau merge `main`: 321 test; trước merge tính `311/311` + 5), coverage `Application` **84.13%** vượt ngưỡng cổng **80%** (gate chạy trong CI); Playwright **26/26**, 3 lần liên tiếp, `--repeat-each=4` là 16/16. ⬜ **Jest/RTL chưa có** (thuộc **TV1**, `N2-A3` đã loại) và mới phủ **2/5** luồng E2E |
 | K22 | k6 p50/p95/p99, EXPLAIN/N+1/cache hit, CWV/Lighthouse | ❌ | Commit script k6 tái lập được + đo p95/p99; số đo resilience (N2-5, N2-6) | `tests/performance/read-load.js`, `tests/performance/README.md`, 3 log k6 | 🟡 **k6 xong**: script commit được, **3 log chuẩn**, `~3606 request`, `~120 req/s`, `http_req_failed` **0.00%**, đủ p50/p95/p99. ⬜ Chưa đo: **cache-hit ratio**, **EXPLAIN lại**, **N+1**, **CWV/Lighthouse** |
 | K23 | Docker multi-stage/Compose/Nginx/env/volumes/backup-restore/scaling | 🟡 | Backup/restore drill thật + OTEL collector trong Compose + Redis shared; 2 instance đã đo bằng lab `multi-instance` | `SOK_LAB_L5.md` (phase `multi-instance`), `logs/multi_instance_two_api.log`, `deploy/backup.sh`, `deploy/restore.sh` | 🟡 **Lab L5 đã làm 05/10 — 7/7**: 2 API (5080/5081) cùng dữ liệu, dùng chung Redis, khoá `lab:l5:...:shared-probe` ghi/đọc khớp. ⬜ **Số Hangfire server khi chạy 2 API chưa xác nhận** (thiếu `LAB_APP_DB`); profile compose 2 API + kho backup 30 ngày để kỳ sau · [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) |
-| K24 | Git/PR/review/CI/static analysis/architecture test/secret scan/docs | 🟢 | Secret scan trong CI + Redis service cho test; CI frontend; **PR lab** đã mở 05/10 | `backend.yml`, `frontend.yml`, `deploy/scan-secrets.sh`, `ArchitectureTests.cs`, `KiemChung_Commit_Week5_TV1.md` | 🟢 secret scan + **2 workflow CI** + `ArchitectureTests` + tài liệu đã cập nhật + **PR #28 đã mở rồi đóng** theo quyết định nhóm. ⬜ **Runbook đầy đủ** (`N4-A` → tuần 5). ⚠️ **CI cần chạy lại** cho các commit `03564c4`, `d4edfa2` và commit đồng bộ tài liệu (sửa khoá JWT) — trạng thái xanh đã xác nhận gần nhất ở `870d6e3` |
+| K24 | Git/PR/review/CI/static analysis/architecture test/secret scan/docs | 🟢 | Secret scan trong CI + Redis service cho test; CI frontend; **PR lab** đã mở 05/10 | `backend.yml`, `frontend.yml`, `deploy/scan-secrets.sh`, `ArchitectureTests.cs`, `KiemChung_Commit_Week5_TV1.md` | 🟢 secret scan + **2 workflow CI** + `ArchitectureTests` + tài liệu đã cập nhật + **PR #28 đã mở rồi đóng** theo quyết định nhóm. ⬜ **Runbook đầy đủ** (`N4-A` → tuần 5). ⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e` vì `.md` của TV4 chứa khoá JWT đã thu hồi (đã gỡ); còn flaky `TracingObservabilityTests` từ `870d6e3`. Xanh gần nhất: `8d9d62b` / `6caf2cf` |
 
 **Đếm (cập nhật 05/10/2026 — sau N3-B + việc cuối GĐ3 — theo quy tắc N3-C3: chỉ tính khi có **code + test + log**):**
 
@@ -451,8 +451,18 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 > `multi-instance`, nhưng **số Hangfire server khi chạy 2 API chưa xác nhận** vì thiếu
 > `LAB_APP_DB`. Chưa được tính là đạt.
 >
-> Lưu ý cho K24: đã mở PR #28 rồi đóng theo quyết định nhóm. **CI cần chạy lại** cho commit
-> `03564c4` (sửa khoá JWT) — trạng thái xanh hiện tại là ở `870d6e3`, trước lần sửa.
+> Lưu ý cho K24: đã mở PR #28 rồi đóng theo quyết định nhóm.
+>
+> ⛔ **CI backend hiện ĐỎ — đã kiểm tra log thật 05/10, không phải "chưa chạy".**
+>
+> | Commit | `Backend week 1` | Nguyên nhân |
+> |---|---|---|
+> | `8d9d62b` (04/10) | ✅ **success** — run `37213966752` | — |
+> | `870d6e3` | ❌ failure — run `37295446878` | `TracingObservabilityTests.Request_to_database_bearing_endpoint_produces_http_span_with_child_db_span` — `Assert.NotNull()` Value is null (trace span không đọc được) |
+> | `03564c4`, `d4edfa2`, `0dfac4e` | ❌ failure | `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` — **tài liệu của chính TV4 chép lại khoá JWT đã thu hồi vào `.md`** ⇒ đúng bất biến mà nhóm đã viết test để chặn |
+>
+> Lần xanh gần nhất của cả 2 job: **`6caf2cf`**. Nguyên nhân đỏ đã **gỡ** ở commit sau
+> (xoá khoá khỏi 2 file `.md`). Còn lại **flaky trace span** ở `870d6e3` — chưa xử lý.
 
 ---
 

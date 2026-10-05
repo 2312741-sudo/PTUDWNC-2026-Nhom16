@@ -178,8 +178,9 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 7. **Báo cáo "Tuần 5" của TV1 đánh dấu không đáng tin** — xem
    [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md). Đề nghị TV1 đính chính
    6 điểm §5 của hồ sơ đó.
-8. **CI cần chạy lại** cho commit `03564c4`. Trạng thái CI xanh hiện ở `870d6e3`, **trước** lần
-   sửa khoá JWT.
+8. ⛔ **CI backend đang ĐỎ** ở `03564c4`/`d4edfa2`/`0dfac4e` — nguyên nhân: `.md` của TV4 chứa
+   khoá JWT đã thu hồi (đã gỡ). Thêm flaky `TracingObservabilityTests` từ `870d6e3`.
+   CI xanh gần nhất: `8d9d62b` (run `37213966752`), cả 2 job ở `6caf2cf`.
 
 ## 9. Chỉ số tài liệu
 
