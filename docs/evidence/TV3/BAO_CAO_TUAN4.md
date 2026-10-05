@@ -172,3 +172,20 @@ Chưa chạy lại sau merge: Playwright E2E và `npm run build` (workflow front
 Ghi chú vận hành: lúc build có tiến trình API cổng 5080 (PID 27628, khởi chạy 19:33 bằng `dotnet run ... --urls http://localhost:5080`, không phải phiên này) khoá thư mục `bin/Debug`
 → phiên này build/test bằng Release, không tắt tiến trình đó (đến 20:00 nó đã tự dừng, không do phiên này). Phiên này chỉ tắt API cổng 5081 và container collector do chính nó tạo.
 Handoff cũ `TV4_K20_otel_meter_chan.md` có thể đã hết tác dụng sau `c8b7c64` — chưa xoá vì không nằm trong yêu cầu.
+
+## 11. Cập nhật 05/10 sáng — K23 chạy thật; sửa lỗi xoá ảnh rồi tải lại (SP)
+
+| Việc | Trạng thái | Commit | Số thật / bằng chứng |
+|---|---|---|---|
+| K23 build image `lab-tv3-api:dev` | **XONG** | — (chạy, không đổi code lab) | `lab-up.local.ps1` exit 0, 07:13:52 → 07:15:10, không bị kill; API cổng 5090 và 5091 sẵn sàng — `LAB_K23_tuan4_chay_that.md` |
+| K23 2 API sau Nginx (smoke-scale) | **XONG** | — | `KET QUA: buoc1 so instance tra loi = 2; khi tat api2 so request loi = 0` |
+| K23 sao lưu/khôi phục file | **XONG** | — | `KET QUA: restore 10 file, sha256 khop tung file` (`files-20261005-071551.tgz`, 4,051 KB) |
+| K23 dọn (`lab-down.ps1`) | **XONG** | — | còn lại 0 container, 0 volume `lab-tv3-*` |
+| SP: xoá ảnh duy nhất rồi tải lại -> 422 | **XONG** | `1b6f973`, `161771a`, `21582b6`, `e055e49`, `156a19a` (nhánh C7) | nguyên nhân từ log Postgres: 23505 `ux_recipe_images_one_primary` (dòng xoá mềm vẫn `IsPrimary = true`); migration đổi bộ lọc + xoá ảnh lưu 2 pha; test tích hợp đỏ 2/3 → xanh 4/4; Playwright (d2) đỏ với code cũ → xanh; `dotnet test` 281/281 + 5/5, Jest 65/65, Playwright 11/11, coverage Application 95,45% |
+
+Số đo RAM/ổ C: (thật): 07:13:19 RAM trống 0,83 GB, C: 15,22 GB (sau khi dừng 3 container dev); trong lúc chạy còn 0,17–0,25 GB;
+07:16:08 sau khi dọn 0,35 GB, C: 13,81 GB. Chạy bằng bản `*.local.ps1` bỏ đúng dòng chặn RAM (giữ kiểm C: ≥ 3 GB),
+không commit, nằm trong `.git/info/exclude`; script gốc không sửa.
+
+Ghi chú: `--migrate` trên `culinary_blog` in "Database migrations applied successfully." dù thất bại (lịch sử migration lệch);
+đoạn này của TV1, đã ghi handoff. Còn mở cho TV4: xoá ảnh ngay lúc job resize vừa ghi xong có thể nhận 422 (handoff, không sửa).
