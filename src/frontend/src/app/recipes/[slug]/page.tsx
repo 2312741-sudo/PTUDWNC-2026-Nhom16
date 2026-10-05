@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getRecipeBySlug } from '@/lib/api';
 import { mediaUrl } from '@/lib/recipe-editor';
+import { recipeMetaDescription } from '@/lib/recipe-meta';
 import { getRecipeImage } from '@/lib/recipeImages';
 import OwnerEditButton from '@/components/OwnerEditButton';
 import RecipeDetailImage from '@/components/RecipeDetailImage';
@@ -61,13 +62,21 @@ export async function generateMetadata({ params }: RecipeDetailPageProps): Promi
 
   const url = `${SITE_URL}/recipes/${encodeURIComponent(slug)}`;
   const image = getRecipeDetailImage(recipe, slug, (recipe as any).categoryName);
+  // K19: mô tả rỗng thì Next bỏ thẻ meta description -> dự phòng dựng từ dữ liệu thật (JSON-LD giữ nguyên)
+  const description = recipeMetaDescription(recipe);
   return {
     title: recipe.title,
-    description: recipe.description,
+    description,
     alternates: { canonical: url },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title: recipe.title,
+      description,
+      images: image ? [image] : undefined,
+    },
     openGraph: {
       title: recipe.title,
-      description: recipe.description,
+      description,
       type: 'article',
       url,
       images: image ? [{ url: image }] : [],
