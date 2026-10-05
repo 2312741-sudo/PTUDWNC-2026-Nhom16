@@ -1,6 +1,6 @@
 # Sổ minh chứng K01–K24 — TV3 Huỳnh Quốc Trung (2312786)
 
-> Cập nhật 02/10/2026 (tối). Ô kỹ năng lấy từ `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md` mục 5 (cột TV3). Quy tắc mục 5.2: thiếu một phần thì ô **CHƯA**.
+> Cập nhật 05/10/2026 (sáng; trước đó 02/10 tối). Ô kỹ năng lấy từ `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md` mục 5 (cột TV3). Quy tắc mục 5.2: thiếu một phần thì ô **CHƯA**.
 > **XONG** chỉ khi có file bằng chứng chạy thật. Đường dẫn không có tiền tố = nhánh SP `2312786_HuynhQuocTrung_C7-frontend-tests`;
 > `lab:` = nhánh `practice/TV3/labs` (worktree `D:\CulinaryBlog-lab`, không merge vào main).
 > Reviewer theo quy định: Nguyễn Thanh Tâm — **chưa có xác nhận/ngày review** cho ô nào (xem K24).
@@ -11,7 +11,7 @@
 > Lệnh chung — SP backend: `$env:TEST_DATABASE=...culinary_test...; dotnet test tests/CulinaryBlog.Tests`; SP frontend: `cd src/frontend; npx jest`;
 > lab: `. .\.secrets.local.ps1; $env:LAB_PG="Host=localhost;Port=5432;Username=postgres;Password=$env:LAB_PG_PASSWORD"; dotnet test labs/TV3/Lab.TV3.Tests --filter "Infra!=docker" -m:1`.
 
-## Tổng hợp: XONG 20 / CHƯA 4 (K18, K22, K23, K24)
+## Tổng hợp: XONG 21 / CHƯA 3 (K18, K22, K24)
 
 | K | Ô của TV3 | FR/NFR | Code | Commit / PR | Lệnh chạy | Kết quả thật (file) | Trạng thái |
 |---|---|---|---|---|---|---|---|
@@ -37,7 +37,7 @@
 | K20 | SP recipe metric; LAB trace/log sink/health | NFR-OBS | SP `RecipeMetrics.cs` + `Program.cs` (`ConfigureOpenTelemetryMeterProvider(...AddMeter(RecipeMetrics.MeterName))`); lab `L20/Observability.cs` | merge main `5b16601`; đỏ `d7a7c30` → xanh `c8b7c64`, docs `a075b72`; SP `af534c1`; lab `37985e4` → `ac33ac8`, `a3e26a8` | lệnh SP; collector OTLP | `Tuan04/K20_metric_otel_chay_that.md`: OpenTelemetry Collector nhận `culinary.recipes.created` = 1 và `culinary.recipes.updated` = 1 qua OTLP thật; RecipeMetricsExportTests + RecipeMetricsTests 4/4; `lab:LAB_K20.md`, `LAB_K20_chay_that.txt` (8/8) | **XONG** |
 | K21 | SP recipe API/UI/E2E | NFR-MAINT-002 (coverage ≥ 80%) | `tests/CulinaryBlog.Tests/Recipe*`, `_wizard/__tests__`, `src/frontend/e2e/create-recipe.spec.ts` | `0d4c368`, `e01c5f8` và các commit test(C7) | backend + Jest + `npx playwright test` | Coverage Application **96.09% (1058/1101)** ở `f691d31` sau merge main (trước: 92.58% ở `085a25a`, 90.9% ở `1d64d66`); backend 272/272, Jest 55/55; `Tuan04/C7_E2E_va_loi_wizard.md` (E2E 3/3, chưa chạy lại sau merge); lỗi đỏ trước/xanh sau `fc34f87` → `64b29c1`, `2f406f4` → `e46f951` (L6) | **XONG** |
 | K22 | SP concurrency/query; k6 + đo trang của mình | NFR-PERF-001/004/005 | `RecipeQueryPerformanceTests.cs`, `SlowQueryInterceptor.cs`, `RecipeRepository` (`FindBySlugAsync` + `FindForWriteAsync` dùng `AsSplitQuery`), `tests/k6/recipe-detail.js` | `227fcb0` → `cbfdc01`, `b70f114`, `625b3fd` → `b2789e4`, `7c7d545` → `5681133`, docs `1b5c837`, `78b824b`, `b39757e` | xem file | `Tuan04/K22_hieu_nang_recipe.md`: không N+1; chi tiết 18 dòng thay vì 60; nạp để ghi 17 dòng thay vì 60; k6 API p95 11.35 ms; **Lighthouse/CWV trang chưa đo** (Trung đo tay) | **CHƯA** |
-| K23 | SP migration startup; tự deploy/restore/test 2 API | SRS 4.6 | SP `Program.cs` (`--migrate`); lab `labs/TV3/deploy/*` | lab `f36ddf3` → `57cab5f` | lab | `lab:LAB_K23.md`: L23 2/2, restore DB khớp bảng. **Build image, Nginx 2 instance, tắt api2, backup/restore file chưa chạy — BLOCKED RAM**: đo 02/10 20:11 sau khi dọn tiến trình của phiên: 628 / 607 / 589 MB (ngưỡng 1.5 GB) | **CHƯA** |
+| K23 | SP migration startup; tự deploy/restore/test 2 API | SRS 4.6 | SP `Program.cs` (`--migrate`); lab `labs/TV3/deploy/*` | lab `f36ddf3` → `57cab5f`; chạy thật `b92eb01` | lab: `lab-up.ps1`, `smoke-scale.ps1`, `backup-restore-files.ps1 -Seed`, `lab-down.ps1` (bản `*.local.ps1` bỏ đúng dòng chặn RAM, không commit) | `lab:LAB_K23.md`: L23 2/2, restore DB khớp bảng; `lab:LAB_K23_tuan4_chay_that.md` (05/10 07:13–07:16, RAM trống 0,17–0,86 GB): build `lab-tv3-api:dev` exit 0, API 5090/5091 sẵn sàng; `so instance tra loi = 2; khi tat api2 so request loi = 0`; `restore 10 file, sha256 khop tung file`; lab-down còn 0 container/0 volume. Ghi chú: `--migrate` (đoạn của TV1) trên `culinary_blog` in thành công dù thất bại do lịch sử migration lệch — đã handoff | **XONG** |
 | K24 | PR cá nhân + Tâm review + ADR/runbook + CI + static/secret scan | NFR-MAINT | toàn bộ | PR #3, #13 (merge bởi tài khoản Tâm), #15 (merge bởi TV4); `7ffd290`, `2b10cdd` | GitHub API; gitleaks | ADR-0002 + `docs/RUNBOOK_SOAN_THAO_CONG_THUC.md`; secret scan `Tuan04/K24_secret_scan.md` (205 commit mọi nhánh, 8 phát hiện đều dương tính giả, bí mật thật chỉ ở file cục bộ bị git bỏ qua); architecture test LayerDependencyRulesTests 4 xanh; format verify exit 0; CI nhánh C7 xanh 6/6. **Còn thiếu: review chính thức của Tâm (0 review trên PR), PR C4/C7 chưa mở, CI lab sau `2159787` chưa xác nhận** | **CHƯA** |
 
 ## Việc còn lại để chuyển CHƯA → XONG
@@ -46,5 +46,4 @@
 | K18 | Chạy kịch bản N1–N15 bằng NVDA + kiểm 320/768/1200, điền `lab:LAB_K18_checklist.md` | Trung (tay) |
 | K19 | Dán HTML/JSON-LD vào validator.schema.org và Rich Results Test, ghi kết quả vào `Tuan04/K19_jsonld_chi_tiet.md` | Trung (tay) |
 | K22 | Lighthouse trang chi tiết bản build (`npm run build; npm run start`), 3 lần lấy trung vị | Trung (tay) |
-| K23 | Khi RAM ≥ 1.5 GB: `lab-up.ps1`, `smoke-scale.ps1`, `backup-restore-files.ps1` theo `lab:LAB_K23.md` | TV3 |
 | K24 | Mở PR C4/C7 (mô tả ở `lab:PR_NOTES.md`), xin Tâm review bằng chức năng Review của GitHub (ghi ngày), xác nhận CI lab; (đã có: ADR-0002, runbook, secret scan) | Trung |
