@@ -125,14 +125,14 @@ Câu hỏi:
 
 - Đổi bước: `<h2 tabIndex={-1} className="sr-only">Bước n/5: …</h2>` và `focus()` khi `step` đổi (so với bước đã hiện trước đó, nên lúc mở trang không cướp focus) — WCAG 2.4.3.
 - `<p role="status" className="sr-only">` hiện "Đang lưu…" khi đang gọi API → trình đọc màn hình đọc mà không đổi giao diện — WCAG 4.1.3.
-- Nút lặp lại có ngữ cảnh: `Sửa<span className="sr-only"> nguyên liệu Cá lóc</span>` → tên truy cập "Sửa nguyên liệu Cá lóc" — WCAG 2.4.6.
+- Nút lặp lại có ngữ cảnh: ban đầu `Sửa<span className="sr-only"> nguyên liệu Cá lóc</span>`; NVDA thật đọc dính "Sửanguyên liệu cá viên" → 05/10 đổi sang `aria-label="Sửa nguyên liệu Cá lóc"` (xem mục K18 NVDA) — WCAG 2.4.6.
 - Dashboard: `<th aria-sort="descending">` ở cột đang sắp xếp (mũi tên ↓ chỉ là hình) — WCAG 1.3.1.
 - Có từ trước: `aria-invalid` + `aria-describedby` trỏ tới lỗi dưới ô, banner lỗi `role="alert"`, `aria-current="step"`.
 - 5 test tự động trong `WizardA11y.test.tsx`; NVDA/zoom/tương phản là phần kiểm tay (chưa làm, có kịch bản N1–N15).
 
 Câu hỏi:
 1. *`role="status"` khác `role="alert"`?* — status = `aria-live="polite"` (đọc khi rảnh, cho thông báo bình thường); alert = `assertive` (ngắt lời ngay, cho lỗi).
-2. *Sao dùng `sr-only` mà không `aria-label`?* — `aria-label` thay toàn bộ tên; `sr-only` giữ chữ "Sửa" nhìn thấy làm phần đầu tên (WCAG 2.5.3 "label in name": người dùng giọng nói nói "Sửa" vẫn khớp).
+2. *Sao lúc đầu dùng `sr-only`, sau lại đổi sang `aria-label`?* — Lúc đầu nghĩ `sr-only` an toàn hơn cho WCAG 2.5.3. NVDA thật cho thấy dấu cách đầu trong span bị bỏ → đọc dính chữ. `aria-label` vẫn đạt 2.5.3 nếu bắt đầu bằng chữ nhìn thấy ("Sửa …"); test kiểm điều đó.
 3. *`tabIndex={-1}` để làm gì?* — Cho phép `focus()` bằng code vào tiêu đề nhưng không thêm điểm dừng khi người dùng bấm Tab.
 4. *Test tự động có thay được NVDA?* — Không: jsdom kiểm được thuộc tính (tên, aria, focus), không kiểm được cách NVDA thực sự đọc, tương phản màu hay bố cục 320 px.
 
@@ -159,3 +159,34 @@ Câu hỏi:
 2. *Sao không gắn tag authorId?* — High cardinality: mỗi user một chuỗi thời gian, làm nổ bộ nhớ hệ thống metric.
 3. *Sao đếm sau SaveChanges?* — Để metric phản ánh việc đã thành công thật; đếm trước sẽ tính cả lần rollback/xung đột.
 4. *Sao test phải chạy không song song?* — `MeterListener` nghe cả process; test khác tạo công thức cùng lúc sẽ làm số đếm sai.
+
+## K18 NVDA — 3 lỗi tìm ra bằng trình đọc màn hình thật (SP, 05/10; log `Tuan04/K18_nvda_speech_log.txt`)
+
+- Cách làm: Chrome bản build, NVDA + Speech Viewer, đi qua bước 1–4 của wizard và `/dashboard/recipes`; chỉ giữ dòng thuộc ứng dụng.
+- Lỗi 1 (`RecipeWizard.tsx`): bộ đếm nằm trong `<label>` → tên ô = "Mô tả (3/2000)", đổi mỗi phím, NVDA đọc lại nhãn. Sửa: `<label htmlFor>` chỉ còn "Mô tả";
+  bộ đếm là `<p id="description-count">` nối bằng `aria-describedby` (chỉ đọc khi focus); `<p aria-live="polite">` riêng có chữ cố định theo ngưỡng
+  ("còn dưới 100 ký tự", "đã đạt giới hạn") → gõ trong cùng ngưỡng thì nội dung không đổi nên NVDA không đọc lại.
+- Lỗi 2 (`IngredientsStep`, `StepsStep`, `ImagesStep`): span `sr-only` bị NVDA nối dính chữ. Sửa: `aria-label` đầy đủ, chữ nhìn thấy giữ "Sửa"/"Xoá".
+- Lỗi 3 (`dashboard/recipes/page.tsx`): mọi hàng đều "Sửa link". Sửa: `aria-label="Sửa công thức {tiêu đề}"`; nút xoá đổi tên theo chữ "Đang xoá…".
+- Test: mỗi lỗi một test Jest đỏ trước (thiếu `aria-label`, tên ô còn bộ đếm) rồi xanh; Playwright dùng tên chứa "Sửa"/"Xoá" nên không phải sửa.
+- Chưa kiểm: lỗi khi để trống tiêu đề, alt ảnh, sắp xếp cột, bước 5, nghe lại sau sửa; kiểm tay 320/768/1200 (chỉ có Playwright (h2) tự động: không cuộn ngang ở 320/768/1200 cả 5 bước).
+
+Câu hỏi:
+1. *Sao jest-axe 0 vi phạm mà NVDA vẫn ra lỗi?* — axe kiểm quy tắc tĩnh (có tên, có nhãn); nó không biết tên đổi theo từng phím hay NVDA nối chữ thế nào. Phải nghe thật.
+2. *`aria-describedby` khác `aria-live`?* — describedby là mô tả đọc khi focus vào ô; live là vùng tự đọc khi nội dung đổi. Bộ đếm theo phím mà để live sẽ "nói" liên tục.
+3. *WCAG 2.5.3 Label in Name là gì?* — Tên truy cập phải chứa (tốt nhất bắt đầu bằng) chữ nhìn thấy, để người dùng điều khiển bằng giọng nói nói "Sửa" là trúng nút.
+4. *Sao test kiểm thuộc tính `aria-label` chứ không chỉ tên truy cập?* — jsdom tính tên từ span `sr-only` vẫn có dấu cách nên test theo tên xanh cả khi NVDA đọc sai; kiểm thuộc tính mới bắt được lỗi.
+
+## K19 validator + meta description; K22 Lighthouse (SP, 05/10)
+
+- validator.schema.org 0 lỗi/0 cảnh báo. Rich Results Test: localhost báo 2 lỗi URL ảnh vì Google không tải được `http://localhost:5080/...`; trên tên miền công khai thì hợp lệ.
+- Không có `aggregateRating`/`review`: hệ thống chưa có đánh giá; thêm điểm giả là trái chính sách dữ liệu có cấu trúc của Google.
+- `3c23a55` (`lib/recipe-meta.ts`): mô tả rỗng → ghép tiêu đề + tổng thời gian + khẩu phần + 4 nguyên liệu đầu, cắt ≤ 155 ký tự ở ranh giới từ; dùng chung cho `description`, `openGraph`, `twitter`.
+- `fb2dc56`: chữ trắng trên nền cam cũ chỉ 3.56:1 (< 4.5:1) → `orange-700` 5.18:1; test tính tỷ lệ từ mã màu Tailwind. Chân trang (`Footer.tsx`, TV2) chưa sửa.
+- Lighthouse Performance 81 → 86, SEO 92 → 100: hai lần đo ở hai công thức khác nhau, mỗi bên 1 lần → chỉ tham khảo.
+
+Câu hỏi:
+1. *Sao Rich Results báo lỗi mà vẫn coi là đạt?* — Lỗi do URL ảnh `localhost` không truy cập được từ Internet, không phải do cấu trúc; trên tên miền công khai hợp lệ, validator.schema.org 0 lỗi.
+2. *Sao cắt 155 ký tự?* — Google thường hiển thị khoảng 150–160 ký tự; cắt ở ranh giới từ để không đứt giữa chữ.
+3. *Performance 81 → 86 có phải nhờ sửa code?* — Không kết luận được: khác trang, khác lúc đo, 1 lần; Lighthouse dao động vài điểm giữa các lần. Muốn so phải cùng trang, chạy ≥ 3 lần lấy trung vị.
+4. *Tỷ lệ tương phản tính thế nào?* — (L1 + 0.05) / (L2 + 0.05), L1/L2 là độ sáng tương đối của màu sáng hơn/tối hơn; chữ thường cần ≥ 4.5:1 (AA).

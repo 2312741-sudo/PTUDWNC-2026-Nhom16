@@ -88,7 +88,7 @@ Docker (redis/minio/mailhog) đã được **dừng** trong lúc chạy E2E đ�
 - Sửa lỗi nhảy bước bằng cách bỏ `router.refresh()` khi URL đã đổi sang `/edit` trong phiên tạo mới: `/api/revalidate` (cache ISR phía server)
   vẫn gọi; chỉ Router Cache phía trình duyệt của phiên đó không bị xoá (trang công khai đúng lại sau ≤ 5 phút hoặc khi tải lại).
 - K17: `QueryClient` riêng cho wizard, `staleTime: Infinity`, không refetch khi focus/reconnect, không retry — giữ đúng hành vi cũ.
-- K18: tên nút có thêm chữ ẩn (`Sửa nguyên liệu …`) — người nhìn thấy không đổi.
+- K18: tên nút có thêm chữ ẩn (`Sửa nguyên liệu …`) — người nhìn thấy không đổi. **(05/10: NVDA đọc dính chữ → đã đổi sang `aria-label`, xem mục 12.)**
 
 ## 6. Thông tin môi trường (không nhạy cảm)
 
@@ -189,3 +189,25 @@ không commit, nằm trong `.git/info/exclude`; script gốc không sửa.
 
 Ghi chú: `--migrate` trên `culinary_blog` in "Database migrations applied successfully." dù thất bại (lịch sử migration lệch);
 đoạn này của TV1, đã ghi handoff. Còn mở cho TV4: xoá ảnh ngay lúc job resize vừa ghi xong có thể nhận 422 (handoff, không sửa).
+
+## 12. Cập nhật 05/10 chiều — K18 NVDA, K19 validator, K22 Lighthouse (SP: nhánh `2312786_HuynhQuocTrung_C7-frontend-tests`)
+
+Bằng chứng (SP, `docs/evidence/TV3/Tuan04/`, commit `8bf59fc`): `K18_nvda_speech_log.txt`, `K19_validator.png`, `K19_jsonld_console.png`,
+`K22_lighthouse_truoc_diem.png`, `K22_lighthouse_truoc_metrics.png`, `K22_lighthouse_truoc_seo.png`, `K22_lighthouse_truoc_a11y.png`,
+`K22_lighthouse_truoc_tuongphan.png`, `K22_lighthouse_sau_diem.png`, `K22_lighthouse_sau_trang_bbbbb.png`.
+
+| Việc | Trạng thái | Commit (SP) | Số thật / bằng chứng |
+|---|---|---|---|
+| K19 validator ngoài | **XONG** | — | validator.schema.org **0 lỗi, 0 cảnh báo** (`K19_validator.png`, JSON-LD `/recipes/aaaaab`). Rich Results Test (Trung chạy tay, không có ảnh chụp): localhost báo **2 lỗi URL ảnh** (URL `http://localhost:5080/...` Google không tải được), tên miền công khai hợp lệ. Thiếu `aggregateRating` là cố ý (chưa có tính năng đánh giá) |
+| Meta description dự phòng | **XONG** | `3c23a55` | Lighthouse trước: SEO 92, "Document does not have a meta description". Sửa: mô tả rỗng → ghép tiêu đề + tổng thời gian + khẩu phần + 4 nguyên liệu đầu, ≤ 155 ký tự. Jest đỏ 8/9 → xanh 9/9. Sau: SEO 100 — đo ở trang khác (`/recipes/bbbbb`, có mô tả), nên Jest mới là bằng chứng riêng của nhánh dự phòng |
+| Tương phản (K18) | **XONG phần của TV3** | `fb2dc56` | Lighthouse báo nút "Sửa công thức" (chữ trắng nền cam) → `bg-orange-700`: 3.56:1 → 5.18:1 (test tính tỷ lệ WCAG). Còn 3 phần tử chân trang thuộc `Footer.tsx` (TV2) — không sửa; vì vậy Accessibility vẫn 96 ở lần đo sau |
+| Lighthouse trước/sau (K22) | **XONG, chỉ tham khảo** | — | trước `/recipes/aaaaab`: Performance **81**, Accessibility 96, Best Practices 100, SEO 92; FCP 0.8 s, LCP 2.7 s, TBT 260 ms, CLS 0, Speed Index 17.2 s. Sau `/recipes/bbbbb`: **86** / 96 / 100 / 100. Khác công thức và điều kiện đo, mỗi bên 1 lần (không trung vị) → không kết luận hiệu năng tăng |
+| K18 NVDA (Speech Viewer, Chrome, bản build) | **Một phần** | — | Đạt: nhãn ô, dấu (*), combo box, trạng thái lưu, tiêu đề bước, `current step`, landmark. Tìm ra 3 lỗi (dưới). **Chưa kiểm:** thông báo lỗi khi để trống tiêu đề, alt ảnh, trạng thái sắp xếp cột, bước 5; chưa nghe lại sau khi sửa; kiểm tay 320/768/1200 + zoom 200% chưa làm (chỉ có Playwright (h2) tự động: không cuộn ngang ở 320/768/1200 cả 5 bước) |
+| NVDA lỗi 1 — bộ đếm `(N/2000)` trong `<label>` ô Mô tả, mỗi phím NVDA đọc lại "Mô tả (N/2000)" | **ĐÃ SỬA** | `1ae6ce4` | bộ đếm ra ngoài nhãn, nối `aria-describedby`; vùng `aria-live="polite"` riêng chỉ đổi chữ khi còn < 100 ký tự / chạm 2000. Jest đỏ 2/2 → xanh |
+| NVDA lỗi 2 — nút nguyên liệu đọc dính "Sửanguyên liệu cá viên" (span `sr-only` mất dấu cách đầu); bước Các bước và Ảnh cùng kiểu viết, NVDA chưa kiểm | **ĐÃ SỬA** | `08e64ce` | `aria-label` cho Sửa/Xoá nguyên liệu, Sửa/Xoá bước, Đặt làm ảnh chính, Xoá ảnh; chữ nhìn thấy đứng đầu tên (WCAG 2.5.3). Jest đỏ 3/3 → xanh |
+| NVDA lỗi 3 — bảng dashboard chỉ đọc "Sửa link" | **ĐÃ SỬA** | `548e4a7` | `aria-label` "Xem/Sửa/Xoá công thức {tiêu đề}" (đang xoá: "Đang xoá công thức …"). Jest đỏ 2/2 → xanh |
+| K24 | **CHƯA** | — | giữ CHƯA tới khi Tâm review PR |
+
+Kiểm tra cuối (SP, HEAD `548e4a7`): `dotnet test CulinaryBlog.sln` (TEST_DATABASE = `culinary_test`, API tắt) CulinaryBlog.Tests **281/281**, ConcurrencySpike 5/5;
+`npm test` **85/85** (14 suite, jest-axe 0 vi phạm); `npx tsc --noEmit` exit 0; `npm run build` thành công (exit 0); `npx playwright test` 11/11 (bản build `next start` :3000 + API :5080, DB dev `culinary_blog`).
+Sổ minh chứng SP: XONG 22 / CHƯA 2 (K18, K24).

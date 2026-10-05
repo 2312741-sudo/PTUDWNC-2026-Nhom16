@@ -58,7 +58,10 @@ Tay: `/dashboard/recipes/new` → bỏ trống tiêu đề → lỗi dưới ô;
 - **K17 TanStack Query** (3 commit): `QueryClientProvider` riêng trong wizard (không đụng `app/layout.tsx`), dữ liệu công thức qua `useQuery`
   (`["recipe-detail", id]`), thao tác con qua `useMutation` (`onMutate` snapshot + optimistic, `onError` hoàn tác). Không đổi chữ ký `RunFn`
   nên các bước con không sửa. Đã thử đột biến bỏ dòng hoàn tác → 4 test đỏ.
-- **K18 a11y**: focus về tiêu đề bước khi đổi bước, `role="status"` báo đang lưu, nút Sửa/Xoá có ngữ cảnh sr-only, `aria-sort` cột sắp xếp dashboard.
+- **K18 a11y**: focus về tiêu đề bước khi đổi bước, `role="status"` báo đang lưu, `aria-sort` cột sắp xếp dashboard. Sau NVDA thật (05/10, `Tuan04/K18_nvda_speech_log.txt`)
+  sửa 3 lỗi, mỗi lỗi Jest đỏ trước/xanh sau: bộ đếm Mô tả ra ngoài nhãn (`1ae6ce4`); nút Sửa/Xoá nguyên liệu/bước/ảnh dùng `aria-label` thay span sr-only
+  vì NVDA đọc dính "Sửanguyên liệu" (`08e64ce`); Xem/Sửa/Xoá ở bảng dashboard kèm tên công thức (`548e4a7`). Tương phản nút "Sửa công thức" 3.56:1 → 5.18:1 (`fb2dc56`).
+- **K19 meta description dự phòng** (`3c23a55`): trang chi tiết có mô tả rỗng không còn thiếu meta description (Jest 8/9 → 9/9; Lighthouse SEO 92 → 100, đo ở trang khác).
 - **Backend**: `RecipeIngredientHttpTests` (4 test, Postgres thật): thêm/sửa/xoá giữ OrderIndex liên tục, tác giả khác 403, rowVersion sai 422,
   đổi nguyên liệu không đổi RowVersion recipe. Metric `culinary.recipes.created/updated` (`RecipeMetrics`, BCL) + 3 test.
 - **K19 JSON-LD Recipe (NFR-SEO-001)**: HTML thật trang chi tiết thiếu `image` và `author`. Test đỏ `5930a41` → xanh `f0cc239`:
@@ -73,6 +76,7 @@ Tay: `/dashboard/recipes/new` → bỏ trống tiêu đề → lỗi dưới ô;
 `c2d349a`, `adbf808`, `ce2a057`, `af534c1`, `14022ef`, `b2c83f5`, `34324e0`, `fc34f87`, `64b29c1`, `0d4c368`, `e01c5f8`,
 `b8a480b`, `e82cf0e`, `8f76f06`, `64e8f8b`, `1d64d66`, `5930a41`, `f0cc239`, `6050356`, `227fcb0`, `cbfdc01`, `b70f114`, `1b5c837`, `2b32e8c`.
 (`ce2a057` là bản E2E cũ dùng `E2E_PASSWORD`, được `0d4c368` viết lại.)
+Thêm ngày 05/10 chiều: `3c23a55`, `fb2dc56`, `8bf59fc` (bằng chứng), `1ae6ce4`, `08e64ce`, `548e4a7` (và commit docs trên nhánh SP).
 
 ### Ảnh hưởng / cần reviewer lưu ý
 - `Program.cs` (file dùng chung): **thêm** đăng ký `IRecipeDisplayNameReader` và `SlowQueryInterceptor` (singleton, đọc `Perf:SlowQueryMs`), và gắn interceptor
@@ -99,6 +103,7 @@ Bằng chứng: `docs/evidence/TV3/Tuan04/` (C7_E2E_va_loi_wizard, K19_jsonld_ch
 - [x] Không sửa code thành viên khác (lỗi header "Quản trị DM" của TV2 → handoff)
 - [x] Mật khẩu không nằm trong test, log, báo cáo Playwright
 - [x] Jest và Playwright tách riêng
-- [ ] NVDA kiểm tay (checklist `LAB_K18_checklist.md` trên nhánh lab, chưa làm)
-- [ ] Validator ngoài cho JSON-LD (validator.schema.org, Rich Results Test) — Trung chạy tay
-- [ ] Lighthouse trang chi tiết bản build — Trung đo tay
+- [ ] NVDA kiểm tay — **một phần** (05/10: bước 1–4 + dashboard, 3 lỗi đã sửa; chưa kiểm lỗi để trống tiêu đề, alt ảnh, sắp xếp cột, bước 5; chưa kiểm tay 320/768/1200 — chỉ có Playwright (h2) tự động: không cuộn ngang ở 320/768/1200 cả 5 bước)
+- [x] Validator ngoài cho JSON-LD — validator.schema.org 0 lỗi; Rich Results Test: localhost 2 lỗi URL ảnh, tên miền công khai hợp lệ; không `aggregateRating` (cố ý)
+- [x] Lighthouse trang chi tiết bản build — 1 lần mỗi bên, khác công thức: Performance 81 → 86, SEO 92 → 100 (chỉ tham khảo)
+- [ ] Review của Tâm (K24 giữ CHƯA tới khi có)
