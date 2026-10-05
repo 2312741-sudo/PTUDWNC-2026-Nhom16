@@ -7,6 +7,7 @@ using CulinaryBlog.API;
 using CulinaryBlog.Application;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Infrastructure;
+using CulinaryBlog.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -50,7 +51,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             try
             {
                 using var scope = Services.CreateScope();
-                scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.Migrate();
+                var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+                db.Database.Migrate();
+                // `Program.cs:343` bỏ qua cả Migrate lẫn DbSeeder khi môi trường là `Testing`,
+                // nên database của test từng không có dữ liệu mẫu. Test E2E nào kỳ vọng có sẵn
+                // dữ liệu seed (ví dụ Week5StagingAndE2ETests.E2E_Scenario_5 tìm "canh") sẽ đỏ
+                // trên CI với Postgres sạch. `DbSeeder` idempotent nên gọi ở đây là an toàn.
+                DbSeeder.SeedAsync(db).GetAwaiter().GetResult();
             }
             catch
             {

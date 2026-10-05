@@ -52,20 +52,36 @@ public sealed class TracingObservabilityTests : IClassFixture<ApiFactory>
         var randomPage = Random.Shared.Next(50, 1_000_000);
         var response = await client.GetAsync($"/api/v1/recipes?page={randomPage}&pageSize=5");
 
+        // Chờ span về tới trước khi kết luận: `ActivityStopped` được gọi ở thread dừng activity,
+        // và với span tầng HTTP đó là thread của Kestrel, chạy *sau* khi response đã trả về client.
+        // Đọc list ngay sau `GetAsync` là đọc trước khi callback tới ⇒ `httpSpan` null chập chờn.
+        // Test `Redis_health_check_produces_a_client_span` đã có mẫu chờ này; áp dụng cho cả hai.
+        var deadline = DateTime.UtcNow.AddSeconds(10);
         Activity? httpSpan;
         List<Activity> dbSpans;
         List<Activity> snapshot;
-        lock (activities)
+        while (true)
         {
-            httpSpan = activities.FirstOrDefault(a => a.Source.Name == "Microsoft.AspNetCore");
-            dbSpans = activities
-                .Where(a => a.Source.Name.Contains("EntityFrameworkCore", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            // Phải chụp bản sao trong `lock` rồi mới duyệt. Trước đây vòng `foreach` log bên dưới
-            // duyệt thẳng `activities` **ngoài** lock, trong khi thread của HTTP server / EF Core vẫn
-            // không ngừng `Add` ⇒ `InvalidOperationException: Collection was modified` ngẫu nhiên khi
-            // chạy song song, và im lặng xanh khi chạy riêng test này.
-            snapshot = activities.ToList();
+            lock (activities)
+            {
+                httpSpan = activities.FirstOrDefault(a => a.Source.Name == "Microsoft.AspNetCore");
+                dbSpans = activities
+                    .Where(a => a.Source.Name.Contains("EntityFrameworkCore", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                // Phải chụp bản sao trong `lock` rồi mới duyệt. Trước đây vòng `foreach` log bên dưới
+                // duyệt thẳng `activities` **ngoài** lock, trong khi thread của HTTP server / EF Core vẫn
+                // không ngừng `Add` ⇒ `InvalidOperationException: Collection was modified` ngẫu nhiên khi
+                // chạy song song, và im lặng xanh khi chạy riêng test này.
+                snapshot = activities.ToList();
+            }
+
+            // Chỉ thoát vòng lặp khi đã đủ cả span HTTP và ít nhất một span DB cùng TraceId —
+            // tức đúng điều kiện cần khẳng định, thay vì thoát sớm rồi assert fail.
+            if (httpSpan is not null && dbSpans.Any(a => a.TraceId == httpSpan.TraceId))
+                break;
+            if (DateTime.UtcNow >= deadline)
+                break;
+            await Task.Delay(100);
         }
 
         foreach (var a in snapshot)
@@ -74,10 +90,10 @@ public sealed class TracingObservabilityTests : IClassFixture<ApiFactory>
         Assert.True((int)response.StatusCode < 500, $"endpoint trả {response.StatusCode}, xem log test để biết nguyên nhân");
 
         // 1) Span tầng HTTP: instrumentation ASP.NET Core đang thật sự phát span.
-        Assert.NotNull(httpSpan);
+        Assert.True(httpSpan is not null, "không bắt được span ASP.NET Core sau 10s chờ");
 
         // 2) Span DB: truy vấn PostgreSQL đã được instrumentation EF Core bắt.
-        Assert.NotEmpty(dbSpans);
+        Assert.True(dbSpans.Count > 0, "không bắt được span EF Core sau 10s chờ");
 
         // 3) Quan trọng nhất — "trace từ HTTP xuống DB": span DB phải nằm trong CÙNG trace với
         // span HTTP. Chỉ có span DB rời rạc thì chưa chứng minh được gì về việc truy vết xuyên suốt.
