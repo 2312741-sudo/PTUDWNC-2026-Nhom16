@@ -29,7 +29,7 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems, ILogger
         }
         else if (exception is DbUpdateConcurrencyException or DbUpdateException)
         {
-            // RowVersion (D19), partial unique index ux_recipe_images_one_primary (IMAGE_CONTRACT §4) — tất cả trả 422.
+            // RowVersion (D19), partial unique index ux_recipe_images_one_primary (IMAGE_CONTRACT §7c) — tất cả trả 422.
             logger.LogError(exception, "DB update failed (422): {Message}", exception.InnerException?.Message ?? exception.Message);
             details = new() { Status = 422, Title = "Dữ liệu đã thay đổi ở nơi khác. Vui lòng tải lại.", Extensions = { ["code"] = "recipe.version_conflict" } };
         }

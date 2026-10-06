@@ -295,7 +295,16 @@ k6 **3/3 lần xanh**, `http_req_failed` **0.00%** ✅.
 **CI thật đã xanh** sau commit `8d9d62b`: `Backend week 1` run `37213966752` ✅ (`311/311` + `5/5`,
 coverage gate pass) và `Frontend CI` run `37213966761` ✅.
 
-**Trạng thái build mới nhất (05/10, sau merge `main` ở `72e4044`):** backend **316 + 5 = 321/321** ✅ ·
+**Trạng thái build mới nhất (05/10, sau merge `origin/main` `2961a22` → `fd90572`):** backend **421 + 5 = 426/426** ✅ ·
+`dotnet build CulinaryBlog.slnx -c Release` **0 warning / 0 error** ✅ · `dotnet format CulinaryBlog.slnx --verify-no-changes` exit `0` ✅ ·
+coverage gate `Application` **96.31%** ≥ 80% ✅ (`Domain` 85.19%) ·
+frontend Jest **85/85**, `tsc`/`lint`/`build` exit `0` ✅ (không đổi trong lần merge này) ·
+`JwtSigningKeyNotCommittedTests` 6/6 ✅.
++100 test so với `321/321` là test từ `main`, +2 là `DbSeederUserImageUrlTests` (TV4 thêm 05/10).
+⚠️ **Chưa có CI cho `fd90572`** vì commit chưa push — `8a585ef` (321/321) vẫn là run xanh mới nhất được xác nhận.
+Chỉ mục `ux_recipe_images_one_primary`: xem `docs/IMAGE_CONTRACT.md` §7c (mục mới 05/10).
+
+**Trạng thái build 05/10 (lần merge trước, `72e4044`):** backend **316 + 5 = 321/321** ✅ ·
 `dotnet build -c Release` **0 warning / 0 error** ✅ · `dotnet format --verify-no-changes` exit `0` ✅ ·
 `JwtSigningKeyNotCommittedTests` **6/6** ✅ — cần gỡ khoá khỏi `docker-compose.staging.yml` **và** khỏi
 2 file `.md` của TV4 vì test quét cả tài liệu.

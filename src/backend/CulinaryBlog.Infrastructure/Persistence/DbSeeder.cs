@@ -17,9 +17,16 @@ public static class DbSeeder
     {
         try { await db.Database.MigrateAsync(ct); } catch { /* Ignore migration errors if tables already exist */ }
 
-        // Cập nhật tất cả các ảnh món ăn sang đường dẫn ảnh thực tế local
+        // Ghi đè URL CHỈ với ảnh mẫu, không đụng ảnh người dùng đã tải lên.
+        //
+        // Điều kiện cũ là `Contains("photo-...") || !OriginalUrl.StartsWith("/images/recipes/")`.
+        // Vế thứ hai khớp LUÔN khoá ảnh do app tải lên (`recipes/{id}/{uuid}.ext`) và cả URL tuyệt
+        // đối qua proxy D27, nên **mỗi lần API khởi động lại ghi đè URL ảnh thật của người dùng**
+        // thành `/images/recipes/{slug}.jpg` ⇒ ảnh vỡ ở trang chi tiết. Báo bởi TV3 (`TV3_BAN_GIAO_TUAN4.md` §C.1).
         var placeholderImages = await db.RecipeImages
-            .Where(img => img.OriginalUrl.Contains("photo-1546069901-ba9599a7e63c") || !img.OriginalUrl.StartsWith("/images/recipes/"))
+            .Where(img => img.OriginalUrl.Contains("photo-1546069901-ba9599a7e63c")
+                       || (img.OriginalUrl.StartsWith("/images/")
+                           && !img.OriginalUrl.StartsWith("/images/recipes/")))
             .ToListAsync(ct);
         if (placeholderImages.Count > 0)
         {

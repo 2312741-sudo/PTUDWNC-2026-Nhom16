@@ -190,6 +190,54 @@ Mọi phản hồi lỗi dùng `Content-Type: application/problem+json` và head
 
 ---
 
+## 7c. Ràng buộc ở tầng DB: chỉ mục một-ảnh-chính (N2-E4)
+
+> ⚠️ Mục này bổ sung 05/10 sau khi nhận bàn giao của TV3 (`docs/evidence/TV3/TV3_BAN_GIAO_TUAN4.md` §E.3).
+> TV3 ghi "chỉ mục thuộc IMAGE_CONTRACT §4" nhưng §4 là *Quy ước Lỗi & Problem Details (RFC 7807)* — không
+> liên quan gì tới chỉ mục. Ở bản trước, hợp đồng này **không mô tả chỉ mục ở đâu cả**, dù migration đã
+> đổi nó. Sửa ở đây. Kết luận kỹ thuật của TV3 ở đây là **đúng**; chỉ có con trỏ tài liệu là sai.
+
+### Chỉ mục
+
+| Bước | Nội dung |
+|---|---|
+| Tên | `ux_recipe_images_one_primary` trên `RecipeImages(RecipeId)` |
+| Ràng buộc | `UNIQUE` |
+| Bộ lọc | `"IsPrimary" = true AND "IsDeleted" = false` |
+| Nguồn | `RecipeImageConfiguration.Configure`; migration `AddRecipeAggregate` (tạo) và `RecipeImageOnePrimaryIgnoresSoftDeleted` (05/10, thêm `IsDeleted = false`) |
+
+**Bộ lọc `IsDeleted = false` là bắt buộc, không phải phòng xa.** Xoá ảnh trong codebase này là **xoá mềm ở
+tầng DB**: `RecipeImageRepository.MarkImageDeleted` gọi `db.RecipeImages.Remove(image)`, nhưng
+`AuditableEntityInterceptor` (D08) chuyển `EntityState.Deleted → Modified` kèm `IsDeleted = true`
+(`Persistence/Interceptors/AuditableEntityInterceptor.cs`). Nên dòng ảnh vừa xoá **vẫn còn trong bảng
+và vẫn giữ `IsPrimary = true`**. Không có `AND IsDeleted = false` thì xoá ảnh chính rồi thêm ảnh mới sẽ
+vi phạm unique → `23505` → `422 recipe.version_conflict`.
+
+### Vì sao mọi thao tác đổi ảnh chính phải lưu nhiều lần trong một transaction
+
+Postgres kiểm tra unique index partial **ngay sau từng câu lệnh**, và không cho unique index partial
+`deferrable`. Trong khi đó EF **không** bảo đảm thứ tự phát lệnh `UPDATE` giữa các entity. Nên gộp
+"hạ ảnh chính cũ" và "bật ảnh chính mới" vào một lần `SaveChanges` có thể phát `UPDATE(bật ảnh mới)`
+trong khi dòng chính cũ **còn nằm trong bảng** → `23505` → API trả `422 recipe.version_conflict`.
+
+Vì vậy mọi thao tác sau đều là **nhiều lần lưu, trong cùng một transaction** (`ExecuteInTransactionAsync`):
+
+| Thao tác | Các pha |
+|---|---|
+| `PATCH .../{imageId}` với `isPrimary: true` | `ClearPrimaryImages()` → lưu (còn 0 ảnh chính) → `PromotePrimaryImage(id)` → lưu (đúng 1) |
+| `DELETE .../{imageId}` khi ảnh đang là chính | `ClearPrimaryImages()` → lưu → `PromotePrimaryImage(ảnh thay thế)` → lưu → `DELETE` dòng ảnh cũ |
+| `DELETE .../{imageId}` khi ảnh **không** phải chính | Không đụng cờ ảnh chính hiện tại — dùng `GetPrimaryReplacementCandidate` trả `null` để bỏ qua hai pha đầu |
+
+Cùng cơ chế này đã áp dụng cho `RecipeSteps` (`RecipeStepNumberUniqueIgnoresSoftDeleted`, lỗi `422` khi xoá bước).
+
+### Rủi ro còn mở (TV3 §E.2, chưa có test)
+
+Xoá ảnh đúng lúc job resize (D2/D23) vừa ghi `MediumUrl`/`ThumbnailUrl` có thể trả `422` vì job ghi đè
+`RowVersion` của dòng ảnh. Ca Playwright của TV3 đang **chờ resize xong rồi mới xoá** để né lỗi, tức là
+lỗi chưa được sửa mà chỉ được tránh. Cần test hồi quy riêng cho khoảng thời gian này.
+
+---
+
 ## 8. Tích hợp cho TV3 (Recipe editor)
 
 - TV3 gọi `POST /recipes/{id}/images` với `multipart/form-data` (field `file`, tùy chọn `altText`) → nhận `RecipeImageDto`.

@@ -275,8 +275,19 @@ _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
 {
     using var scope = app.Services.CreateScope();
-    try { await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync(); } catch { }
-    Console.WriteLine("Database migrations applied successfully.");
+    // KHÔNG nuốt lỗi rồi in "success": `catch { }` khiến DB dev lệch migration vẫn báo thành công,
+    // khiến người chạy tin là đã migrate xong trong khi schema chưa đúng. Báo bởi TV3
+    // (`docs/evidence/TV3/TV3_BAN_GIAO_TUAN4.md` §C.2). Giờ in lỗi thật + exit code khác 0.
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
+        Console.WriteLine("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Database migration FAILED: {ex.GetBaseException().Message}");
+        Environment.ExitCode = 1;
+    }
     return;
 }
 if (args.Contains("--seed") || args.Contains("--reseed") || args.Contains("--force-seed"))

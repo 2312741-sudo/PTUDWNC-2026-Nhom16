@@ -34,7 +34,7 @@ Tuần 4 đóng được **N2** và **N4-C**. **N3 gần đóng** — 05/10 đã
 
 | Hạng mục | Kết quả | Bằng chứng |
 |---|---|---|
-| Backend `dotnet test CulinaryBlog.sln` | ✅ **321/321** (`CulinaryBlog.Tests` **316/316** + `ConcurrencySpike` **5/5**) sau khi merge `main` 05/10 — trước merge tính **316/316** (311 + 5). `Skipped = 0` | log `dotnet test` mục §6 `SO_EVIDENCE_TUAN_4.md` |
+| Backend dotnet test CulinaryBlog.sln | ✅ **426/426** (CulinaryBlog.Tests **421/421** + ConcurrencySpike **5/5) sau merge origin/main 2961a22 → d90572 05/10. Skipped = 0 | xác nhận cục bộ 05/10 |
 | Coverage `CulinaryBlog.Application` | **84.13%** ≥ ngưỡng cổng **80%** | `deploy/check-coverage.sh 80 TestResults` |
 | `dotnet build` | 0 warning / 0 error | CI `Backend week 1` |
 | `dotnet format --verify-no-changes` | exit `0` | chạy cục bộ |

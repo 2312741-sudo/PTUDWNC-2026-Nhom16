@@ -288,24 +288,27 @@ dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
 dotnet test CulinaryBlog.sln
 
 # Coverage + ngưỡng cổng G5 (80%) — chính xác lệnh CI chạy
+# BẮT BUỘC có --results-directory, nếu không file coverage nằm trong tests/**/TestResults
+# và deploy/check-coverage.sh sẽ không đọc được.
 dotnet test CulinaryBlog.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
 bash deploy/check-coverage.sh 80 TestResults
 ```
 
-Kết quả chuẩn trên máy TV4 (**04/10/2026**, commit `8d9d62b` — cùng số đo đã xác nhận trên CI run `37213966752`):
+Kết quả chuẩn trên máy TV4 (**05/10/2026**, sau merge `origin/main` `2961a22` → commit `fd90572`):
 
 ```
-Passed!  - Failed: 0, Passed: 316, Skipped: 0, Total: 316 - CulinaryBlog.Tests.dll
+Passed!  - Failed: 0, Passed: 421, Skipped: 0, Total: 421 - CulinaryBlog.Tests.dll
 Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5 - ConcurrencySpike.dll
 ```
 
 | Hạng mục | Số đo |
 |---|---|
-| Backend | **316 + 5 = 321/321**, `Skipped = 0` *(trước khi merge `main`: 311 + 5 = 316/316 tại `8d9d62b`)* |
-| Coverage `CulinaryBlog.Application` | **84.13%** ≥ ngưỡng **80%** |
-| `dotnet format --verify-no-changes` | exit `0` |
+| Backend | **421 + 5 = 426/426**, `Skipped = 0` *(lần merge trước 05/10: 316 + 5 = 321/321 tại `72e4044`/`d4edfa2`)* |
+| Coverage `CulinaryBlog.Application` | **96.31%** ≥ ngưỡng **80%** *(cũ: 84.13%)* — `Domain` 85.19% |
+| `dotnet format CulinaryBlog.slnx --verify-no-changes` | exit `0` |
 | `dotnet build` | 0 warning / 0 error |
 | Playwright | **26/26**, 3 lần liên tiếp đều xanh |
+| Jest | **85/85** |
 | `npx tsc --noEmit` · `npm run lint` · `npm run build` | đều exit `0` |
 
 ### 6.1 Kiểm thử luồng publish (Playwright) và tải k6 — lệnh tuần 4
@@ -452,7 +455,7 @@ Biến dùng trong toàn bộ hướng dẫn — **khai trong `.env` ở thư m�
 | `pg_hba.conf` của `culinaryblog-pg` | `local ... trust`, `host ... 127.0.0.1/32 trust`, `host all all all scram-sha-256` → giải thích vì sao `psql` không có `-h` luôn "thành công" |
 | `dotnet build CulinaryBlog.sln --configuration Release` | 0 warning, 0 error |
 | `dotnet format CulinaryBlog.sln --verify-no-changes` | Sạch |
-| `dotnet test CulinaryBlog.sln` | `311/311 + 5/5` tại `8d9d62b` (04/10) · **`316/316 + 5/5` = 321/321** sau khi merge `main` (05/10), `Skipped=0` |
+| `dotnet test CulinaryBlog.sln` | `311/311 + 5/5` tại `8d9d62b` (04/10) · `316/316 + 5/5` = `321/321` sau khi merge `main` (05/10) · **`421/421 + 5/5` = `426/426` sau merge `origin/main` `2961a22` → `fd90572` (05/10), `Skipped=0` |
 | `npx tsc --noEmit` (frontend) | exit 0 |
 | `npm run build` (frontend) | exit 0, 16/16 trang |
 | CI sau khi push PR #16 | run `36391382819` — `172/172`, `Skipped=0` |

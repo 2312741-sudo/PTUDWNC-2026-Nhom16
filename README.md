@@ -221,29 +221,38 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 
 ### 4.5. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
 
-Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (321 / 321 tests pass)**:
+Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (426 / 426 tests pass)**:
 
 ```text
 Test run for ConcurrencySpike.dll (net10.0)
-Passed!  - Failed: 0, Passed:  5, Skipped: 0, Total:  5, Duration: 1 s
+Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5, Duration: 1 s
 
 Test run for CulinaryBlog.Tests.dll (net10.0)
-Passed!  - Failed: 0, Passed: 316, Skipped: 0, Total: 316, Duration: 28 s
+Passed!  - Failed: 0, Passed: 421, Skipped: 0, Total: 421, Duration: 12 m 38 s
 
-Total: 321/321 tests passed (100% Green).
+Total: 426/426 tests passed (100% Green).
 ```
 
-> **Đo gần nhất 05/10/2026** (sau khi merge `main` vào `2312739_NHTSon_D5-D6-D7` ở commit
-> `72e4044`, đo tại `d4edfa2`): `CulinaryBlog.Tests` **316/316** + `ConcurrencySpike` **5/5** =
-> **321/321**; build 0 warning / 0 error; `dotnet format --verify-no-changes` exit `0`;
-> coverage `CulinaryBlog.Application` **84.13%** ≥ ngưỡng cổng G5 **80%**.
+> **Đo gần nhất 05/10/2026** (sau khi merge `origin/main` ở `2961a22` vào
+> `2312739_NHTSon_D5-D6-D7` → commit `fd90572`): `CulinaryBlog.Tests` **421/421** +
+> `ConcurrencySpike` **5/5** = **426/426**; build 0 warning / 0 error;
+> `dotnet format CulinaryBlog.slnx --verify-no-changes` exit `0`;
+> coverage `CulinaryBlog.Application` **96.31%** ≥ ngưỡng cổng G5 **80%**
+> (`CulinaryBlog.Domain` 85.19%, `CulinaryBlog.API` 68.95%, `CulinaryBlog.Infrastructure` 8.43%).
+>
+> Tăng so với mốc 05/10 trước đó (`321/321` tại `d4edfa2`, Application 84.13%) là 100 test
+> mang vào từ `main` của TV1/TV3, cộng 2 test hồi quy mới của TV4
+> (`DbSeederUserImageUrlTests`, chặn seed ghi đè URL ảnh người dùng).
+>
+> **Đo trước đó 05/10/2026** (merge trước ở commit `72e4044`, đo tại `d4edfa2`):
+> `CulinaryBlog.Tests` **316/316** + `ConcurrencySpike` **5/5** = **321/321**.
 >
 > **Đo trước đó 04/10/2026** (commit `8d9d62b`, xác nhận trên CI run `37213966752`):
 > `CulinaryBlog.Tests` **311/311** + `ConcurrencySpike` **5/5** = **316/316**.
 > Số test tăng thêm 5 vì merge `main` mang vào 5 test tuần 5 của TV1
 > (`Week5_CommitVerificationTests`).
 >
-> **Frontend**: Playwright **26/26** (chạy 3 lần liên tiếp đều xanh), `npx tsc --noEmit` / `npm run lint` / `npm run build` đều exit `0`.
+> **Frontend** (không đổi trong lần merge này): Jest **85/85**, `npx tsc --noEmit` / `npm run lint` / `npm run build` đều exit `0`; Playwright **26/26** (chạy 3 lần liên tiếp đều xanh).
 >
 > **Tải (k6)**: `tests/performance/read-load.js` **3/3 lần xanh**, `http_req_failed` **0.00%**.
 >
@@ -381,7 +390,12 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
    - ✅ **Ba lỗi thật đã tìm và sửa kèm test hồi quy**: (1) DB chết trả `500` vì `ApiExceptionHandler` không dò `InnerException`; (2) DB chết lúc khởi động giết tiến trình vì lịch sitemap ném ra khỏi `Main`; (3) `GET /recipes/{slug}` trả `500` khi thiếu credential object storage vì `MinioClient.Build()` ném ngay trong constructor — **lỗi này do CI bắt, không phải do test local**, và đã khoá bằng 2 test hồi quy.
    - ✅ **N3-B/C1/C2 (05/10)**: Lab L5 7 phase chạy thật (63 check, **3/7 phase PASS** — `seo` 15/15, `observability` 10/10, `multi-instance` 7/7), Sổ K + 2 log, PR #28 đã mở rồi đóng theo quyết định nhóm. **4 phase lộ ra vấn đề thật**: ISR không hoạt động, ảnh không tối ưu 2 tầng, search trả `no-store`, RowVersion chưa kiểm chứng được.
    - 🔒 **Kiểm chứng báo cáo "Tuần 5" của TV1** (việc cuối GĐ3) — báo cáo đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) + tuyên bố RTO/RPO không có bản ghi chạy. Phát hiện và **đã sửa lỗi khoá JWT `R3`** trong `docker-compose.staging.yml`. Xem [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/KiemChung_Commit_Week5_TV1.md).
-   - 📊 **Số đo cuối tuần 4**: coverage `Application` **84.13%** ≥ 80%, Playwright **26/26**, k6 `http_req_failed` **0.00%**, `dotnet format` exit `0`. Backend **trước** khi merge `main`: **316/316** (311 + 5) tại `8d9d62b`, CI run `37213966752` xanh. **Sau** merge `main` (05/10): **321/321** (316 + 5), build 0 warning/0 error.
+    - 📊 **Số đo cuối tuần 4** (mới nhất 05/10, sau merge `origin/main` `2961a22` → `fd90572`): backend **426/426** (421 + 5), coverage `Application` **96.31%** ≥ 80% (`Domain` 85.19%), build 0 warning/0 error, `dotnet format` exit `0`; Playwright **26/26**, Jest **85/85**, k6 `http_req_failed` **0.00%**. CI xanh lần cuối xác nhận tại `8a585ef` (**321/321**) — run cho `fd90572` chưa có vì commit chưa push.
+    - 🔧 **Đối chiếu bàn giao TV3 (`TV3_BAN_GIAO_TUAN4.md`) 05/10** — 3 phát hiện, đã sửa:
+      (1) `DbSeeder` dùng `!OriginalUrl.StartsWith("/images/recipes/")` → mỗi lần API khởi động **ghi đè URL ảnh người dùng** thành ảnh seed (TV3 §C.1) — sửa lại chỉ đụng ảnh mẫu, khoá bằng `DbSeederUserImageUrlTests` (chứng minh đỏ 2/2 trên code cũ, xanh 2/2 sau sửa);
+      (2) `--migrate` nuốt lỗi bằng `catch { }` rồi vẫn in *"applied successfully"* (TV3 §C.2) — giờ in lỗi thật + exit code `1`;
+      (3) TV3 ghi *"chỉ mục thuộc IMAGE_CONTRACT §4"* nhưng §4 là RFC 7807 — hợp đồng **không hề mô tả** `ux_recipe_images_one_primary` — bổ sung `IMAGE_CONTRACT.md` §7c và sửa con trỏ trong `ApiExceptionHandler.cs`.
+    - ✅ **Kết luận kỹ thuật của TV3 về chỉ mục là đúng**: `AuditableEntityInterceptor` (D08) biến `Deleted → Modified` + `IsDeleted = true`, nên `MarkImageDeleted` = **xoá mềm ở tầng DB**; bộ lọc `IsDeleted = false` trong chỉ mục là **bắt buộc**, không phải phòng xa.
    - ⏭ **Còn lại**: N2-D3 (checklist WCAG/responsive — thuộc TV2), 3 luồng E2E còn lại (`register/login` TV1, `category` TV2, `create-recipe` TV3), runbook đầy đủ + deploy staging + TLS/HSTS (N4-A/N4-B), Zod/RHF (N3-A3), và Google OAuth2-PKCE (cần credentials).
     - ✅ **CI xanh trở lại (05/10)** tại `8a585ef`: `Backend week 1` run `37320431750` ✅ + `Frontend CI` run `37320431432` ✅. Sửa 2 nguyên nhân khiến backend đỏ 4 lần liên tiếp: (1) `.md` của TV4 chứa khoá JWT đã thu hồi (`JwtSigningKeyNotCommittedTests`); (2) `ApiFactory.EnsureMigrated()` chỉ `Migrate()` không seed, nên `E2E_Scenario_5` của TV1 không có dữ liệu; (3) race trong `TracingObservabilityTests` đọc span trước khi `ActivityStopped` gọi.
 
