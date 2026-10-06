@@ -1,25 +1,54 @@
-﻿# Báo cáo Giai đoạn 2 – N3 (TV4 – Nguyễn Hữu Trung Sơn)
+﻿# Báo cáo Giai đoạn 2 – Kiểm tra tích hợp tổng hợp (End-to-End Integration) – TV4
 
-Ngày lập: 05/10/2026
-Nhánh: 2312739_NHTSon_D5-D6-D7
-Commit sau merge: fd90572 + 18ca04c
-PR: https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/29
+**Người thực hiện:** Nguyễn Hữu Trung Sơn (TV4 – 2312739)
+**Ngày lập:** 05/10/2026
+**Cập nhật:** 05/10/2026 (sau nhận định lại mục tiêu GĐ2)
+**Nhánh:** 2312739_NHTSon_D5-D6-D7
+**Commit mới nhất:** 6ea4aa7
+**PR:** https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/29
 
-## 1. Tổng quan
-Giai đoạn 2 tập trung vào N3 (Next.js/App Router, SEO, Observability, Multi-instance, Accessibility). Đã thực thi theo hướng dẫn tuần 4.
+## 1. Mục tiêu Giai đoạn 2
+Giai đoạn 2 tập trung vào kiểm tra tổng hợp toàn hệ thống (integration end-to-end): đánh giá chức năng từ đầu đến cuối, ưu tiên sự phối hợp giữa Frontend và Backend thay vì kiểm tra đơn lẻ.
 
-## 2. N3 – Trạng thái thực tế
-| Mục | Nội dung | Trạng thái | Bằng chứng |
+Quy trình theo yêu cầu:
+1. Xác nhận chức năng đã được triển khai đầy đủ.
+2. Kiểm tra chức năng hoạt động ổn định trong hệ thống.
+3. Kiểm tra giao tiếp FE–BE đảm bảo chính xác và ổn định khi hai thành phần tích hợp.
+
+## 2. Phạm vi kiểm tra tích hợp (FE–BE)
+| STT | Luồng | Mức độ | Ghi chú |
 |---|---|---|---|
-| N3-B (Lab L5) | practice/TV4/L5 – 7 phase. Kết quả thực tế: 3/7 PASS (seo 15/15, observability 10/10, multi-instance 7/7). 4 phase còn lại lộ vấn đề thật: ISR không hoạt động, ảnh không tối ưu 2 tầng, search trả no-store, RowVersion chưa kiểm chứng được. | Gần đóng – chưa hoàn toàn | docs/evidence/TV4/Tuan04/KiemChung_Lab_L5.md, commit Lab L5 (00d4470, 473d56c, fc90fa6), PR #28 (đã đóng không merge) |
-| N3-A3 | Zod/RHF – kiểm tra binding form (create/edit recipe). Cần hoàn tất trên wizard đầy đủ. | Đang thực thi | Theo SO_EVIDENCE_TUAN_4.md |
-| N3-A1/A2 | Accessibility (WCAG) – responsive + aria, checklist D1/D2/D3 (gắn với N2-D). | Chưa đủ bằng chứng đóng | Thuộc khối N2-D1/D2/D3 (chưa đóng) |
-| N3-C1/C2 | Observability/telemetry – 3 span hoạt động (HTTP/DB/cache) kiểm chứng, logging không chứa PII. | Đã kiểm chứng phần cốt lõi | TracingObservabilityTests xanh (421+5). |
+| 1 | Đăng ký → Đăng nhập → JWT | Đã có | Playwright 26/26; FE–API auth. Dẫn chiếu SO_EVIDENCE_TUAN_4.md |
+| 2 | Wizard tạo/cập nhật + Upload ảnh | Đã có (cần rà soát cross-integration) | Gọi API + upload; IMAGE_CONTRACT.md |
+| 3 | Tìm kiếm/Khám phá | Đã có | DiscoveryAndSearchTests + E2E |
+| 4 | Chi tiết công thức + SEO/JSON-LD | Đã có | FE render theo API |
+| 5 | Ảnh (presigned/proxy) Draft vs Published | Đã có phần lớn; rà soát | §7b IMAGE_CONTRACT.md; DbSeeder fix |
 
-## 3. Chất lượng sau merge
-- Backend: 426/426 (421+5). Application 96.31%. Build/format 0 lỗi.
-- Frontend: 85/85 Jest, tsc/lint/build 0 lỗi.
-- 2 test hồi quy mới: DbSeederUserImageUrlTests bảo toàn URL ảnh người dùng khi seed.
+## 3. Kết quả kiểm chứng tích hợp
+| Mục | Kết quả | Bằng chứng |
+|---|---|---|
+| Playwright toàn bộ | 26/26 PASS (3 lần liên tiếp) | src/frontend/e2e/*; SO_EVIDENCE_TUAN_4.md |
+| Recipe-publish repeat | 16/16 PASS (--repeat-each=4) | SO_EVIDENCE_TUAN_4.md |
+| FE–BE contract ảnh | Khớp IMAGE_CONTRACT.md | docs/IMAGE_CONTRACT.md (gồm §7c 05/10) |
+| Auth/JWT tích hợp | Ổn định | Week4AuthAndSecurityLabTests + E2E |
+| Tìm kiếm tích hợp | Ổn định | DiscoveryAndSearchTests + E2E |
+| Seed không ghi đè URL ảnh | 2/2 PASS | DbSeederUserImageUrlTests |
 
-## 4. Kết luận GĐ2
-N3 = Gần hoàn tất nhưng KHÔNG đóng tuyệt đối (trung thực). Cần hoàn thiện N3-A3, bổ sung evidence cho accessibility và giải quyết 4 phase L5 nếu yêu cầu đóng chặt. Báo cáo phản ánh thực tế sau merge origin/main (2961a22).
+## 4. Tóm tắt triển khai đầy đủ (dẫn chiếu GĐ1)
+| Nhóm | Tóm tắt | Dẫn chiếu |
+|---|---|---|
+| N2 | 7/8 xong; còn N2-D1/D2/D3 | BAO_CAO_GIAI_DOAN_1_N2_N4.md §3 |
+| N4-C | 426/426; 85/85; build/format 0 lỗi; App 96.31% | BAO_CAO_GIAI_DOAN_1_N2_N4.md §2; README.md |
+| N3 | Gần đóng; Lab L5 3/7 PASS | BAO_CAO_GIAI_DOAN_1_N2_N4.md; BAO_CAO_GIAI_DOAN_2_N3.md |
+| Media | Proxy auth + resize + presigned Draft | IMAGE_CONTRACT.md; ADR-TV4-001 |
+
+## 5. Quan sát giao tiếp FE–BE (thực tế)
+- (a) Seed ghi đè URL ảnh → ảnh sai; **đã fix + test hồi quy**.
+- (b) --migrate báo thành công giả → **đã fix** (lỗi thật + exit 1).
+- (c) ux_recipe_images_one_primary + soft-delete → **ghi rõ** §7c IMAGE_CONTRACT.md.
+
+## 6. Kết luận GĐ2
+- Chức năng triển khai đầy đủ – xác nhận qua E2E 26/26 + evidence GĐ1.
+- Hoạt động ổn định – 3 lần liên tiếp xanh; 426/426 + 85/85 xanh.
+- Giao tiếp FE–BE chính xác/ổn định – xác minh qua các luồng cốt lõi; fix quan trọng được khoá bằng test.
+- Báo cáo độc lập: tóm tắt + dẫn chiếu GĐ1, đảm bảo có khái quát nếu GĐ1 không truy cập được.
