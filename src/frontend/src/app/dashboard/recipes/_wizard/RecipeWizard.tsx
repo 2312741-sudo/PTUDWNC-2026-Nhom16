@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, Nutrition, RecipeDetail, UnauthorizedError,
+  ApiError, BasicInfo, Category, DIFFICULTIES, NUTRITION_FIELDS, RecipeDetail, UnauthorizedError,
   createRecipe, getCategories, getRecipeDetail, isConflict, toBasicInfo, updateRecipe,
 } from "@/lib/recipe-editor";
+import { BasicInfoInput, BasicInfoOutput, basicInfoSchema, emptyToNull } from "@/lib/recipe-schemas";
+import { ariaOf, ErrorText } from "./FieldError";
 import IngredientsStep from "./IngredientsStep";
 import StepsStep from "./StepsStep";
 import ImagesStep from "./ImagesStep";
 import ReviewStep from "./ReviewStep";
 
 export const STEPS = ["Thông tin cơ bản", "Nguyên liệu", "Các bước", "Ảnh", "Xem lại & Xuất bản"] as const;
+const DESC_MAX = 2000; // khớp basicInfoSchema.description
 
 /**
  * Số bước hợp lệ để đọc từ query `?step=` — ngoài khoảng này thì coi như bước 0.
@@ -28,27 +34,30 @@ const STEPS_BASIC_TO_NEXT = 1;
 
 /** fn gọi API; optimistic (tuỳ chọn) cập nhật UI ngay, lỗi thì hoàn tác về snapshot. */
 export type RunFn = (fn: () => Promise<unknown>, optimistic?: (d: RecipeDetail) => RecipeDetail) => Promise<boolean>;
+type RunVars = { fn: () => Promise<unknown>; optimistic?: (d: RecipeDetail) => RecipeDetail };
+type RunContext = { key: readonly unknown[]; snapshot: RecipeDetail | undefined };
 
 export interface WizardState {
   step: number;
   recipeId: string | null;
   slug: string | null;
   rowVersion: string | null;
+  /** Chỉ dùng làm defaultValues cho form bước 1; sau đó React Hook Form giữ giá trị */
   info: BasicInfo;
+  /** Chỉ dùng làm initialData cho cache TanStack Query; sau đó cache giữ dữ liệu */
   detail: RecipeDetail | null;
   saving: boolean;
   error: string | null;
   conflict: boolean;
 }
 
+type ReducerState = Omit<WizardState, "info" | "detail">;
+
 type Action =
   | { type: "goto"; step: number }
-  | { type: "setInfo"; patch: Partial<BasicInfo> }
-  | { type: "resetInfo"; info: BasicInfo }
   | { type: "saving" }
-  | { type: "optimistic"; detail: RecipeDetail }
-  | { type: "detail"; detail: RecipeDetail }
-  | { type: "rollback"; detail: RecipeDetail | null; message: string }
+  | { type: "loaded"; detail: RecipeDetail }
+  | { type: "rollback"; message: string }
   | { type: "error"; message: string; conflict?: boolean };
 
 export const emptyInfo: BasicInfo = {
@@ -57,45 +66,63 @@ export const emptyInfo: BasicInfo = {
   difficulty: "Easy", categoryId: "", nutrition: null,
 };
 
-const emptyNutrition: Nutrition = { calories: null, protein: null, carbohydrates: null, fat: null, fiber: null, sodium: null };
-
-function reducer(s: WizardState, a: Action): WizardState {
+function reducer(s: ReducerState, a: Action): ReducerState {
   switch (a.type) {
     case "goto": return { ...s, step: a.step, error: null, conflict: false };
-    case "setInfo": return { ...s, info: { ...s.info, ...a.patch } };
-    case "resetInfo": return { ...s, info: a.info };
     case "saving": return { ...s, saving: true, error: null, conflict: false };
-    case "optimistic": return { ...s, detail: a.detail };
-    case "detail": return {
-      ...s, saving: false, detail: a.detail,
-      recipeId: a.detail.id, slug: a.detail.slug, rowVersion: a.detail.rowVersion,
+    case "loaded": return {
+      ...s, saving: false, recipeId: a.detail.id, slug: a.detail.slug, rowVersion: a.detail.rowVersion,
     };
-    case "rollback": return { ...s, saving: false, detail: a.detail, error: a.message };
+    case "rollback": return { ...s, saving: false, error: a.message };
     case "error": return { ...s, saving: false, error: a.message, conflict: !!a.conflict };
   }
 }
 
-// Khớp CreateRecipeValidator / NutritionValidator bên backend
-function validate(i: BasicInfo): string | null {
-  const t = i.title.trim().length;
-  if (t < 5 || t > 200) return "Tiêu đề phải từ 5 đến 200 ký tự";
-  if (i.description.length > 2000) return "Mô tả tối đa 2000 ký tự";
-  if (!i.categoryId) return "Vui lòng chọn danh mục";
-  if (!Number.isInteger(i.servings) || i.servings < 1) return "Khẩu phần phải là số nguyên ≥ 1";
-  if (i.prepTimeMinutes <= 0 || i.cookTimeMinutes <= 0) return "Thời gian sơ chế và nấu phải lớn hơn 0";
-  if (i.nutrition && Object.values(i.nutrition).some(v => v !== null && v < 0)) return "Giá trị dinh dưỡng không được âm";
-  return null;
-}
-
 const CONFLICT_MSG = "Công thức vừa được thay đổi ở nơi khác (tab hoặc thiết bị khác). Tải dữ liệu mới nhất rồi sửa lại.";
 
-export default function RecipeWizard({ initial }: { initial?: Partial<WizardState> }) {
+/** Khoá cache theo id (slug có thể đổi khi sửa tiêu đề bản nháp) */
+const detailKey = (id: string | null) => ["recipe-detail", id] as const;
+
+/**
+ * K17: TanStack Query quản lý dữ liệu công thức đang soạn. QueryClient riêng cho mỗi phiên wizard (không đặt ở
+ * app/layout dùng chung): chỉ refetch khi chính wizard yêu cầu (sau mỗi lần lưu), không tự refetch khi focus/retry
+ * để giữ đúng hành vi cũ và không ghi đè trạng thái optimistic.
+ */
+export default function RecipeWizard(props: { initial?: Partial<WizardState> }) {
+  const [client] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: { staleTime: Infinity, refetchOnWindowFocus: false, refetchOnReconnect: false, retry: false },
+      mutations: { retry: false },
+    },
+  }));
+  return <QueryClientProvider client={client}><WizardInner {...props} /></QueryClientProvider>;
+}
+
+function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
   const router = useRouter();
+  const { info: initialInfo, detail: initialDetail, ...initialState } = initial ?? {};
   const [s, dispatch] = useReducer(reducer, {
-    step: 0, recipeId: null, slug: null, rowVersion: null, detail: null,
-    info: emptyInfo, saving: false, error: null, conflict: false, ...initial,
+    step: 0, recipeId: null, slug: null, rowVersion: null,
+    saving: false, error: null, conflict: false, ...initialState,
   });
+  const queryClient = useQueryClient();
+  // enabled: false -> không tự fetch; wizard nạp lại bằng reload() sau mỗi lần lưu, useQuery chỉ đọc/theo dõi cache
+  const { data: detail = null } = useQuery({
+    queryKey: detailKey(s.recipeId),
+    queryFn: () => getRecipeDetail(s.recipeId!),
+    enabled: false,
+    initialData: initialDetail ?? undefined,
+  });
+  const form = useForm<BasicInfoInput, unknown, BasicInfoOutput>({
+    resolver: zodResolver(basicInfoSchema),
+    defaultValues: initialInfo ?? emptyInfo,
+  });
+  const { register, control, handleSubmit, formState: { errors } } = form;
+  const description = useWatch({ control, name: "description" });
+  const nutrition = useWatch({ control, name: "nutrition" });
   const [categories, setCategories] = useState<Category[]>([]);
+  // Số dòng nháp có nội dung chưa lưu ở bước đang mở (nguyên liệu hoặc các bước); rời bước sẽ mất chúng nên chặn chuyển bước
+  const [pendingDrafts, setPendingDrafts] = useState(0);
 
   useEffect(() => {
     if (!localStorage.getItem("accessToken")) { router.replace("/auth/login"); return; }
@@ -133,6 +160,11 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     dispatch({ type: "error", message: messageOf(e) });
   }
 
+  // Pathname lúc wizard mount. Ở /new, saveBasic đổi URL sang /{id}/edit bằng replaceState; nếu lúc đó router.refresh()
+  // thì Next render route edit -> EditRecipeClient mount lại -> wizard nhảy về bước 1 và mất state
+  const mountedPath = useRef<string | null>(null);
+  useEffect(() => { mountedPath.current = window.location.pathname; }, []);
+
   // Xoá cache ISR phía server + Router Cache phía trình duyệt -> trang công khai thấy thay đổi ngay
   function refreshPublic(...slugs: (string | null | undefined)[]) {
     const list = [...new Set(slugs.filter((x): x is string => !!x))];
@@ -144,49 +176,63 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
       body: JSON.stringify({ slugs: list }),
     })
       .catch(() => { /* revalidate lỗi không chặn wizard; ISR vẫn tự làm mới sau 5 phút */ })
-      .finally(() => router.refresh());
+      .finally(() => { if (window.location.pathname === mountedPath.current) router.refresh(); });
   }
 
-  async function reload(slug = s.slug) {
-    if (!slug) return;
-    dispatch({ type: "detail", detail: await getRecipeDetail(slug) });
+  // staleTime: 0 -> luôn gọi server (mặc định Infinity sẽ trả lại bản trong cache).
+  // Nạp theo id, không theo slug: slug bản nháp đổi khi sửa tiêu đề (ở tab/thiết bị khác thì slug đang giữ đã cũ -> 404)
+  async function reload(id = s.recipeId): Promise<RecipeDetail | null> {
+    if (!id) return null;
+    const d = await queryClient.fetchQuery({ queryKey: detailKey(id), queryFn: () => getRecipeDetail(id), staleTime: 0 });
+    dispatch({ type: "loaded", detail: d });
+    return d;
   }
 
   // Conflict reload: lấy bản mới nhất từ server, bỏ phần sửa dở ở bước 1
   async function reloadLatest() {
-    if (!s.slug) return;
+    if (!s.recipeId) return;
     dispatch({ type: "saving" });
     try {
-      const d = await getRecipeDetail(s.slug);
-      dispatch({ type: "detail", detail: d });
-      dispatch({ type: "resetInfo", info: toBasicInfo(d) });
+      const d = await reload();
+      if (d) form.reset(toBasicInfo(d));
     } catch (e) { handleError(e); }
   }
 
-  const run: RunFn = async (fn, optimistic) => {
-    const snapshot = s.detail;
-    dispatch({ type: "saving" });
-    if (optimistic && snapshot) dispatch({ type: "optimistic", detail: optimistic(snapshot) });
-    try { await fn(); await reload(); refreshPublic(s.slug); return true; }
-    catch (e) {
-      if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return false; }
+  // Mọi thao tác con (nguyên liệu, bước, ảnh, xuất bản) đi qua một useMutation:
+  // onMutate chụp snapshot cache + cập nhật lạc quan, onError hoàn tác về snapshot, thành công thì nạp lại từ server.
+  const mutation = useMutation<void, Error, RunVars, RunContext>({
+    mutationFn: async ({ fn }) => { await fn(); await reload(); },
+    onMutate: async ({ optimistic }) => {
+      const key = detailKey(s.recipeId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const snapshot = queryClient.getQueryData<RecipeDetail>(key);
+      if (optimistic && snapshot) queryClient.setQueryData(key, optimistic(snapshot));
+      return { key, snapshot };
+    },
+    onError: (e, { optimistic }, ctx) => {
+      if (e instanceof UnauthorizedError) { router.replace("/auth/login"); return; }
       if (optimistic) {
-        dispatch({ type: "rollback", detail: snapshot, message: `${messageOf(e)} — đã hoàn tác thay đổi.` });
+        if (ctx) queryClient.setQueryData(ctx.key, ctx.snapshot);
+        dispatch({ type: "rollback", message: `${messageOf(e)} — đã hoàn tác thay đổi.` });
         if (isConflict(e)) dispatch({ type: "error", message: CONFLICT_MSG, conflict: true });
       } else handleError(e);
-      return false;
-    }
+    },
+    onSuccess: () => refreshPublic(s.slug),
+  });
+
+  const run: RunFn = async (fn, optimistic) => {
+    dispatch({ type: "saving" });
+    return mutation.mutateAsync({ fn, optimistic }).then(() => true, () => false);
   };
 
-  async function saveBasic() {
-    const err = validate(s.info);
-    if (err) return dispatch({ type: "error", message: err });
+  // info là output đã parse của zodResolver (đã bỏ key thừa) -> gửi thẳng cho backend JSON strict
+  async function saveBasic(info: BasicInfoOutput) {
     dispatch({ type: "saving" });
     try {
       const saved = s.recipeId
-        ? await updateRecipe(s.recipeId, s.info, s.rowVersion!)
-        : await createRecipe(s.info);
-      await reload(saved.slug);
+        ? await updateRecipe(s.recipeId, info, s.rowVersion!)
+        : await createRecipe(info);
+      await reload(saved.id);
       refreshPublic(saved.slug, s.slug); // đổi tiêu đề có thể đổi slug -> làm mới cả slug cũ
       // Đổi URL sang trang edit: F5 hay bấm lại không tạo thêm bản nháp trùng
       const url =
@@ -197,17 +243,33 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
     } catch (e) { handleError(e); }
   }
 
-  const set = (patch: Partial<BasicInfo>) => dispatch({ type: "setInfo", patch });
-  const setNut = (key: keyof Nutrition, raw: string) =>
-    set({ nutrition: { ...(s.info.nutrition ?? emptyNutrition), [key]: raw === "" ? null : +raw } });
-  const canGo = (i: number) => i === 0 || !!s.detail;
-  const hasNutrition = !!s.info.nutrition && Object.values(s.info.nutrition).some(v => v !== null);
+  const canGo = (i: number) => i === 0 || !!detail;
+  function goto(step: number) {
+    if ((s.step === 1 || s.step === 2) && step !== s.step && pendingDrafts > 0)
+      return dispatch({ type: "error", message: `Còn ${pendingDrafts} dòng ${s.step === 1 ? "nguyên liệu" : "bước"} chưa lưu. Bấm Lưu hoặc Bỏ từng dòng trước khi chuyển bước.` });
+    dispatch({ type: "goto", step });
+  }
+  const hasNutrition = !!nutrition && Object.values(nutrition).some(v => v !== null);
+  const descLen = description?.length ?? 0;
+  const descLimitMsg = descLen >= DESC_MAX ? `Mô tả đã đạt giới hạn ${DESC_MAX} ký tự.`
+    : DESC_MAX - descLen < 100 ? "Mô tả còn dưới 100 ký tự." : "";
   const onError = (m: string) => dispatch({ type: "error", message: m });
   const last = STEPS.length - 1;
+
+  // K18 (WCAG 2.4.3, 4.1.3): đổi bước -> dời focus tới tiêu đề bước để trình đọc màn hình đọc bước mới
+  // (so với bước trước thay vì cờ "lần đầu" để StrictMode chạy effect 2 lần cũng không focus lúc mount)
+  const stepHeading = useRef<HTMLHeadingElement>(null);
+  const shownStep = useRef(s.step);
+  useEffect(() => {
+    if (shownStep.current === s.step) return;
+    shownStep.current = s.step;
+    stepHeading.current?.focus();
+  }, [s.step]);
 
   return (
     <div className="mx-auto max-w-3xl p-6">
       <h1 className="mb-4 text-2xl font-bold">{s.recipeId ? "Sửa công thức" : "Tạo công thức mới"}</h1>
+      <p role="status" className="sr-only">{s.saving ? "Đang lưu…" : ""}</p>
 
       <nav aria-label="Các bước soạn công thức">
         <ol className="mb-6 flex flex-wrap gap-2">
@@ -216,7 +278,7 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
               <button
                 disabled={!canGo(i) || s.saving}
                 aria-current={i === s.step ? "step" : undefined}
-                onClick={() => dispatch({ type: "goto", step: i })}
+                onClick={() => goto(i)}
                 className={`rounded px-3 py-1 text-sm ${i === s.step ? "bg-orange-500 text-white" : "bg-gray-100"} disabled:opacity-40`}
               >
                 {i + 1}. {label}
@@ -225,60 +287,77 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
           ))}
         </ol>
       </nav>
+      <h2 ref={stepHeading} tabIndex={-1} className="sr-only">Bước {s.step + 1}/{STEPS.length}: {STEPS[s.step]}</h2>
 
       {s.step === 0 && (
         <div className="space-y-3">
           <label className="block text-sm">Tiêu đề *
             <input className="w-full rounded border p-2" placeholder="VD: Canh chua cá lóc" maxLength={200}
-              value={s.info.title} onChange={e => set({ title: e.target.value })} /></label>
-          <label className="block text-sm">Mô tả <span className="text-gray-400">({s.info.description.length}/2000)</span>
-            <textarea className="w-full rounded border p-2" rows={3} maxLength={2000}
-              value={s.info.description} onChange={e => set({ description: e.target.value })} /></label>
+              {...register("title")} {...ariaOf("err-title", errors.title)} />
+            <ErrorText id="err-title" error={errors.title} /></label>
+          {/* K18 (NVDA): bộ đếm nằm ngoài nhãn -> tên ô luôn là "Mô tả"; chỉ nối bằng aria-describedby (đọc khi focus).
+              Vùng polite riêng chỉ đổi chữ khi qua ngưỡng còn < 100 ký tự / chạm giới hạn, không đọc theo từng phím */}
+          <div className="text-sm">
+            <label htmlFor="recipe-description" className="block">Mô tả</label>
+            <textarea id="recipe-description" className="w-full rounded border p-2" rows={3} maxLength={DESC_MAX}
+              {...register("description")} {...ariaOf("err-description", errors.description)}
+              aria-describedby={["description-count", errors.description && "err-description"].filter(Boolean).join(" ")} />
+            <p id="description-count" className="text-xs text-gray-600">{descLen}/{DESC_MAX} ký tự</p>
+            <p id="description-limit" aria-live="polite" className="sr-only">{descLimitMsg}</p>
+            <ErrorText id="err-description" error={errors.description} /></div>
           <label className="block text-sm">Hướng dẫn chung
-            <textarea className="w-full rounded border p-2" rows={4}
-              value={s.info.instructions} onChange={e => set({ instructions: e.target.value })} /></label>
+            <textarea className="w-full rounded border p-2" rows={4} {...register("instructions")} /></label>
           <div className="grid grid-cols-3 gap-3">
             <label className="text-sm">Sơ chế (phút) *
-              <input type="number" min={1} className="w-full rounded border p-2"
-                value={s.info.prepTimeMinutes} onChange={e => set({ prepTimeMinutes: +e.target.value })} /></label>
+              <input type="number" min={1} step={1} className="w-full rounded border p-2"
+                {...register("prepTimeMinutes", { valueAsNumber: true })} {...ariaOf("err-prep", errors.prepTimeMinutes)} />
+              <ErrorText id="err-prep" error={errors.prepTimeMinutes} /></label>
             <label className="text-sm">Nấu (phút) *
-              <input type="number" min={1} className="w-full rounded border p-2"
-                value={s.info.cookTimeMinutes} onChange={e => set({ cookTimeMinutes: +e.target.value })} /></label>
+              <input type="number" min={0} step={1} className="w-full rounded border p-2"
+                {...register("cookTimeMinutes", { valueAsNumber: true })} {...ariaOf("err-cook", errors.cookTimeMinutes)} />
+              <ErrorText id="err-cook" error={errors.cookTimeMinutes} /></label>
             <label className="text-sm">Khẩu phần *
               <input type="number" min={1} step={1} className="w-full rounded border p-2"
-                value={s.info.servings} onChange={e => set({ servings: +e.target.value })} /></label>
+                {...register("servings", { valueAsNumber: true })} {...ariaOf("err-servings", errors.servings)} />
+              <ErrorText id="err-servings" error={errors.servings} /></label>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="text-sm">Độ khó
-              <select className="w-full rounded border p-2" value={s.info.difficulty}
-                onChange={e => set({ difficulty: e.target.value as BasicInfo["difficulty"] })}>
+              <select className="w-full rounded border p-2"
+                {...register("difficulty")} {...ariaOf("err-difficulty", errors.difficulty)}>
                 {DIFFICULTIES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-              </select></label>
+              </select>
+              <ErrorText id="err-difficulty" error={errors.difficulty} /></label>
             <label className="text-sm">Danh mục *
-              <select className="w-full rounded border p-2" value={s.info.categoryId}
-                onChange={e => set({ categoryId: e.target.value })}>
-                <option value="">-- Chọn danh mục --</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select></label>
+              {/* Controller: option tải bất đồng bộ, select cần value có kiểm soát để hiện đúng danh mục đã chọn */}
+              <Controller control={control} name="categoryId" render={({ field }) => (
+                <select className="w-full rounded border p-2" {...field} {...ariaOf("err-category", errors.categoryId)}>
+                  <option value="">-- Chọn danh mục --</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              )} />
+              <ErrorText id="err-category" error={errors.categoryId} /></label>
           </div>
 
-          <details className="rounded border p-3" open={hasNutrition}>
+          <details className="rounded border p-3" open={hasNutrition || !!errors.nutrition}>
             <summary className="cursor-pointer text-sm font-semibold">Dinh dưỡng (mỗi khẩu phần, không bắt buộc)</summary>
             <div className="mt-3 grid grid-cols-3 gap-3">
               {NUTRITION_FIELDS.map(f => (
                 <label key={f.key} className="text-sm">{f.label} ({f.unit})
-                  <input type="number" min={0} step="any" className="w-full rounded border p-2"
-                    value={s.info.nutrition?.[f.key] ?? ""} onChange={e => setNut(f.key, e.target.value)} /></label>
+                  <input type="number" min={0} max={999999.99} step="any" className="w-full rounded border p-2"
+                    {...register(`nutrition.${f.key}`, { setValueAs: emptyToNull })}
+                    {...ariaOf(`err-nut-${f.key}`, errors.nutrition?.[f.key])} />
+                  <ErrorText id={`err-nut-${f.key}`} error={errors.nutrition?.[f.key]} /></label>
               ))}
             </div>
           </details>
         </div>
       )}
 
-      {s.step === 1 && s.detail && <IngredientsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
-      {s.step === 2 && s.detail && <StepsStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
-      {s.step === 3 && s.detail && <ImagesStep recipe={s.detail} busy={s.saving} run={run} onError={onError} />}
-      {s.step === 4 && s.detail && <ReviewStep recipe={s.detail} categories={categories} busy={s.saving} run={run} />}
+      {s.step === 1 && detail && <IngredientsStep recipe={detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
+      {s.step === 2 && detail && <StepsStep recipe={detail} busy={s.saving} run={run} onError={onError} onPendingChange={setPendingDrafts} />}
+      {s.step === 3 && detail && <ImagesStep recipe={detail} busy={s.saving} run={run} onError={onError} />}
+      {s.step === 4 && detail && <ReviewStep recipe={detail} categories={categories} busy={s.saving} run={run} />}
 
       {s.error && (
         <div role="alert" className="mt-4 rounded bg-red-50 p-3 text-red-700">
@@ -293,15 +372,15 @@ export default function RecipeWizard({ initial }: { initial?: Partial<WizardStat
       )}
 
       <div className="mt-6 flex justify-between">
-        <button disabled={s.step === 0 || s.saving} onClick={() => dispatch({ type: "goto", step: s.step - 1 })}
+        <button disabled={s.step === 0 || s.saving} onClick={() => goto(s.step - 1)}
           className="rounded border px-4 py-2 disabled:opacity-40">← Quay lại</button>
         {s.step === 0 ? (
-          <button onClick={saveBasic} disabled={s.saving}
+          <button onClick={handleSubmit(saveBasic)} disabled={s.saving}
             className="rounded bg-orange-500 px-4 py-2 text-white disabled:opacity-50">
             {s.saving ? "Đang lưu..." : "Lưu & tiếp →"}
           </button>
         ) : s.step < last ? (
-          <button onClick={() => dispatch({ type: "goto", step: s.step + 1 })} disabled={s.saving}
+          <button onClick={() => goto(s.step + 1)} disabled={s.saving}
             className="rounded bg-orange-500 px-4 py-2 text-white disabled:opacity-50">Tiếp →</button>
         ) : (
           <button onClick={() => router.push("/dashboard/recipes")}

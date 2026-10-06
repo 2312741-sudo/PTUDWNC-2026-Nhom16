@@ -206,9 +206,15 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         if (orderIndex is not null) target.SetOrderIndex(orderIndex.Value);
     }
 
-    public void RemoveImage(Guid imageId)
+    /// <param name="promoteNext">
+    /// false: chỉ gỡ ảnh, để người gọi lưu xong mới gọi <see cref="EnsurePrimaryImage"/>. Unique index một-ảnh-chính kiểm
+    /// tra ngay sau từng UPDATE, và EF không biết bộ lọc của index nên có thể đôn ảnh mới lên trước khi ảnh cũ được
+    /// đánh dấu xoá mềm -> 23505. Gỡ ảnh cũng bỏ cờ chính của nó để dòng xoá mềm không còn mang IsPrimary = true.
+    /// </param>
+    public void RemoveImage(Guid imageId, bool promoteNext = true)
     {
-        PromoteReplacement(RemoveImageCore(imageId));
+        var replacementId = RemoveImageCore(imageId);
+        if (promoteNext) PromoteReplacement(replacementId);
     }
 
     /// <summary>
@@ -232,6 +238,7 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         var img = _images.SingleOrDefault(i => i.Id == imageId)
                   ?? throw new DomainException("IMAGE_NOT_FOUND", "Ảnh không thuộc công thức này.");
         var wasPrimary = img.IsPrimary;
+        img.SetPrimary(false);
         _images.Remove(img);
         return wasPrimary && _images.Count > 0
             ? _images.OrderBy(i => i.OrderIndex).First().Id
@@ -241,6 +248,13 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
     private void PromoteReplacement(Guid? replacementId)
     {
         if (replacementId is { } id) SetPrimaryImage(id);
+    }
+
+    /// <summary>Còn ảnh mà chưa có ảnh chính thì ảnh có OrderIndex nhỏ nhất thành ảnh chính.</summary>
+    public void EnsurePrimaryImage()
+    {
+        if (_images.Count > 0 && !_images.Any(i => i.IsPrimary))
+            _images.OrderBy(i => i.OrderIndex).First().SetPrimary(true);
     }
 
     public void UpdateIngredient(Guid ingredientId, string name, decimal? quantity, string? unit, string? notes)

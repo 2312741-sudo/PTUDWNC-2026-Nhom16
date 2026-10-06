@@ -1,0 +1,48 @@
+Lenh: Get-Content -Raw tests/k6/recipe-detail.js | docker run --rm -i grafana/k6 run --quiet -e API=http://host.docker.internal:5080/api/v1 -e WEB=http://host.docker.internal:3000 -e SLUG=ga-lac-pho-mai-cay -
+May: Windows 11, RAM trong ~0.8 GB, API dotnet run (Debug) + next dev (KHONG phai ban build), Postgres 16 local DB culinary_blog. 02/10/2026 13:55
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration{target:api}
+    ✓ 'p(50)<150' p(50)=6.42ms
+    ✓ 'p(95)<500' p(95)=10.29ms
+
+    http_req_duration{target:page}
+    ✓ 'p(95)<2000' p(95)=821.04ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 24862   620.747761/s
+    checks_succeeded...: 100.00% 24862 out of 24862
+    checks_failed......: 0.00%   0 out of 24862
+
+    ✓ api 200
+    ✓ api co authorName
+    ✓ page 200
+    ✓ page co JSON-LD
+
+    HTTP
+    http_req_duration..............: avg=15.85ms  min=3.73ms  med=6.48ms   p(90)=9.54ms   p(95)=18.07ms  p(99)=130.05ms max=1.83s
+      { expected_response:true }...: avg=15.85ms  min=3.73ms  med=6.48ms   p(90)=9.54ms   p(95)=18.07ms  p(99)=130.05ms max=1.83s
+      { target:api }...............: avg=8.08ms   min=3.73ms  med=6.42ms   p(90)=8.85ms   p(95)=10.29ms  p(99)=26.15ms  max=1.83s
+      { target:page }..............: avg=249.46ms min=57.13ms med=107.74ms p(90)=805.45ms p(95)=821.04ms p(99)=1.05s    max=1.08s
+    http_req_failed................: 0.00%  0 out of 12431
+    http_reqs......................: 12431  310.37388/s
+
+    EXECUTION
+    iteration_duration.............: avg=16.08ms  min=3.9ms   med=6.67ms   p(90)=9.78ms   p(95)=18.36ms  p(99)=131.21ms max=1.84s
+    iterations.....................: 12431  310.37388/s
+    vus............................: 5      min=5          max=5 
+    vus_max........................: 10     min=10         max=10
+
+    NETWORK
+    data_received..................: 110 MB 2.7 MB/s
+    data_sent......................: 1.4 MB 35 kB/s
+
+

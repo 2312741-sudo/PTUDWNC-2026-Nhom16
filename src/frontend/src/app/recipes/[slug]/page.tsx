@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getRecipeBySlug } from '@/lib/api';
 import { mediaUrl } from '@/lib/recipe-editor';
+import { recipeMetaDescription } from '@/lib/recipe-meta';
 import { getRecipeImage } from '@/lib/recipeImages';
 import OwnerEditButton from '@/components/OwnerEditButton';
 import RecipeDetailImage from '@/components/RecipeDetailImage';
@@ -61,13 +62,21 @@ export async function generateMetadata({ params }: RecipeDetailPageProps): Promi
 
   const url = `${SITE_URL}/recipes/${encodeURIComponent(slug)}`;
   const image = getRecipeDetailImage(recipe, slug, (recipe as any).categoryName);
+  // K19: mô tả rỗng thì Next bỏ thẻ meta description -> dự phòng dựng từ dữ liệu thật (JSON-LD giữ nguyên)
+  const description = recipeMetaDescription(recipe);
   return {
     title: recipe.title,
-    description: recipe.description,
+    description,
     alternates: { canonical: url },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title: recipe.title,
+      description,
+      images: image ? [image] : undefined,
+    },
     openGraph: {
       title: recipe.title,
-      description: recipe.description,
+      description,
       type: 'article',
       url,
       images: image ? [{ url: image }] : [],
@@ -287,7 +296,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
                   key={step.id}
                   className="flex gap-4 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
                 >
-                  <span className="shrink-0 w-9 h-9 rounded-full bg-orange-600 text-white font-bold flex items-center justify-center">
+                  <span className="shrink-0 w-9 h-9 rounded-full bg-orange-700 text-white font-bold flex items-center justify-center">
                     {step.stepNumber}
                   </span>
                   <div className="min-w-0 space-y-1.5">

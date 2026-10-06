@@ -76,6 +76,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
     o.SerializerOptions.UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuditableEntityInterceptor>();
+// K22 / NFR-PERF-004: cảnh báo SLOW_SQL khi câu lệnh > Perf:SlowQueryMs (mặc định 100 ms)
+builder.Services.AddSingleton(sp => new SlowQueryInterceptor(
+    sp.GetRequiredService<ILogger<SlowQueryInterceptor>>(), sp.GetRequiredService<IConfiguration>().GetValue("Perf:SlowQueryMs", 100)));
 
 builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
 {
@@ -87,7 +90,7 @@ builder.Services.AddDbContext<AuthDbContext>((sp, options) =>
     options.UseNpgsql(
         connectionString,
         pg => pg.CommandTimeout(30));
-    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
+    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>(), sp.GetRequiredService<SlowQueryInterceptor>());
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -110,6 +113,7 @@ builder.Services.AddScoped<RecipeRepository>();
 builder.Services.AddScoped<IRecipeRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IRecipeDiscoveryRepository>(sp => sp.GetRequiredService<RecipeRepository>());
 builder.Services.AddScoped<IMyRecipesRepository, MyRecipesRepository>();
+builder.Services.AddScoped<IRecipeDisplayNameReader, RecipeDisplayNameReader>();
 builder.Services.AddScoped<IRecipeImageRepository, RecipeImageRepository>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AuthDbContext>());
@@ -227,6 +231,8 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddMeter("Microsoft.EntityFrameworkCore")
         .AddOtlpExporter());
+// K20 (TV3): metric nghiệp vụ culinary.recipes.created/updated vào cùng MeterProvider (đăng ký riêng, không sửa khối OTel của TV4)
+builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddMeter(RecipeMetrics.MeterName));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<JwtSettings>((options, jwt) =>

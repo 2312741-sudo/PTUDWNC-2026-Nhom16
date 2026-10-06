@@ -129,6 +129,9 @@ export default function DashboardRecipesPage() {
   const statuses = counts ? Object.keys(counts.byStatus) : [];
   const sortMark = (f: MyRecipesParams["sortBy"]) =>
     params.sortBy === f ? (params.sortOrder === "desc" ? " ↓" : " ↑") : "";
+  // K18: mũi tên chỉ là hình; aria-sort cho trình đọc màn hình biết cột nào đang sắp xếp, chiều nào
+  const ariaSort = (f: MyRecipesParams["sortBy"]) =>
+    params.sortBy === f ? (params.sortOrder === "desc" ? "descending" as const : "ascending" as const) : undefined;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -195,10 +198,10 @@ export default function DashboardRecipesPage() {
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-stone-50 text-stone-600">
                 <tr>
-                  <Th onClick={() => toggleSort("title")}>Công thức{sortMark("title")}</Th>
+                  <Th sort={ariaSort("title")} onClick={() => toggleSort("title")}>Công thức{sortMark("title")}</Th>
                   <th className="px-4 py-3 font-medium">Trạng thái</th>
                   <th className="px-4 py-3 font-medium">Nội dung</th>
-                  <Th onClick={() => toggleSort("updatedAt")}>Cập nhật{sortMark("updatedAt")}</Th>
+                  <Th sort={ariaSort("updatedAt")} onClick={() => toggleSort("updatedAt")}>Cập nhật{sortMark("updatedAt")}</Th>
                   <th className="px-4 py-3 font-medium"><span className="sr-only">Thao tác</span></th>
                 </tr>
               </thead>
@@ -236,18 +239,20 @@ export default function DashboardRecipesPage() {
                     </td>
                     <td className="px-4 py-3 text-stone-700">{fmtDate(r.updatedAt ?? r.createdAt)}</td>
                     <td className="px-4 py-3">
+                      {/* K18 (NVDA): mỗi hàng chỉ đọc "Sửa link" -> aria-label kèm tên công thức, chữ nhìn thấy đứng đầu tên (WCAG 2.5.3) */}
                       <div className="flex justify-end gap-3 whitespace-nowrap">
                         {r.status === "Published" && (
-                          <Link href={`/recipes/${r.slug}`} className="text-stone-700 underline-offset-2 hover:underline">
+                          <Link href={`/recipes/${r.slug}`} aria-label={`Xem công thức ${r.title}`} className="text-stone-700 underline-offset-2 hover:underline">
                             Xem
                           </Link>
                         )}
-                        <Link href={`/dashboard/recipes/${r.id}/edit?slug=${encodeURIComponent(r.slug)}`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
+                        <Link href={`/dashboard/recipes/${r.id}/edit?slug=${encodeURIComponent(r.slug)}`} aria-label={`Sửa công thức ${r.title}`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
                           Sửa
                         </Link>
                         <button
                           onClick={() => void onDelete(r)}
                           disabled={deletingId === r.id}
+                          aria-label={`${deletingId === r.id ? "Đang xoá" : "Xoá"} công thức ${r.title}`}
                           className="text-red-700 underline-offset-2 hover:underline disabled:opacity-50"
                         >
                           {deletingId === r.id ? "Đang xoá…" : "Xoá"}
@@ -297,9 +302,9 @@ function Count({ n }: { n: number }) {
   return <span className="ml-1 tabular-nums opacity-70">{n}</span>;
 }
 
-function Th({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function Th({ onClick, sort, children }: { onClick: () => void; sort?: "ascending" | "descending"; children: React.ReactNode }) {
   return (
-    <th className="px-4 py-3 font-medium">
+    <th className="px-4 py-3 font-medium" aria-sort={sort}>
       <button onClick={onClick} className="hover:text-stone-900">{children}</button>
     </th>
   );

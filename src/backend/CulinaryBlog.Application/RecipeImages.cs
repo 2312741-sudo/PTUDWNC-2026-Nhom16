@@ -261,6 +261,7 @@ public sealed class UpdateRecipeImageHandler(
     }
 }
 
+// uow tuỳ chọn: test đơn vị dựng handler bằng tay không cần transaction; DI luôn truyền EfUnitOfWork
 public sealed class DeleteRecipeImageHandler(
     IRecipeImageRepository repository,
     IUnitOfWork unitOfWork,
@@ -278,7 +279,6 @@ public sealed class DeleteRecipeImageHandler(
             ?? throw new AppException(404, "image.not_found", "Không tìm thấy ảnh thuộc công thức này.");
 
         var key = image.OriginalUrl;
-
         // N2-E4 — ba pha, mỗi pha đúng MỘT câu lệnh, tất cả trong một transaction.
         //
         // Lý do phải vậy: unique index partial `ux_recipe_images_one_primary` được Postgres kiểm
@@ -292,26 +292,27 @@ public sealed class DeleteRecipeImageHandler(
         //   3) xoá dòng ảnh cũ        → DELETE tường minh
         var replacementId = recipe.GetPrimaryReplacementCandidate(request.ImageId);
 
-        await unitOfWork.ExecuteInTransactionAsync(async innerCt =>
+        async Task RemoveThenPromote(CancellationToken c)
         {
             // Chỉ khi ảnh bị xoá ĐANG là primary mới cần dựng lại primary. Xoá ảnh thường thì
             // primary hiện tại giữ nguyên — hạ cờ nó đi sẽ để lại công thức không có ảnh chính.
             if (replacementId is not null)
             {
                 recipe.ClearPrimaryImages();
-                await repository.SaveChangesAsync(innerCt);          // 1) còn 0 primary
+                await repository.SaveChangesAsync(c);          // 1) còn 0 primary
 
                 recipe.PromotePrimaryImage(replacementId.Value);
-                await repository.SaveChangesAsync(innerCt);          // 2) đúng 1 primary
+                await repository.SaveChangesAsync(c);          // 2) đúng 1 primary
             }
 
             repository.MarkImageDeleted(image);
-            // Bỏ khỏi aggregate SAU khi đã bật ảnh thay thế, để RemoveImage không promote lần nữa
-            // (ảnh bị xoá lúc này đã IsPrimary = false).
-            recipe.RemoveImage(request.ImageId);
+            // Bỏ khỏi aggregate SAU khi đã bật ảnh thay thế, để RemoveImage không promote lần nữa.
+            recipe.RemoveImage(request.ImageId, promoteNext: false);
             // EfUnitOfWork tự SaveChanges ở cuối action → phát DELETE.
-        }, ct);
+        }
 
+        // `EfUnitOfWork` tự SaveChanges ở cuối action nên DELETE phát trong transaction.
+        await unitOfWork.ExecuteInTransactionAsync(RemoveThenPromote, ct);
         await storage.DeleteAsync(key, ct);
 
         // D2: xoá luôn object resize phái sinh (nếu job đã chạy hoặc chạy trễ vẫn sạch — idempotent).

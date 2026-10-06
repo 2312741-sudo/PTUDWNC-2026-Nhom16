@@ -20,7 +20,8 @@ public sealed class RecipeStepConfiguration : IEntityTypeConfiguration<RecipeSte
         b.Property(s => s.Id).ValueGeneratedNever();
         b.Property(s => s.RowVersion).HasColumnType("bytea").IsConcurrencyToken().IsRequired();
 
-        // Unique (RecipeId, StepNumber) - đảm bảo liên tục 1..N + chống race khi renumber
-        b.HasIndex(s => new { s.RecipeId, s.StepNumber }).IsUnique();
+        // Unique (RecipeId, StepNumber) - đảm bảo liên tục 1..N + chống race khi renumber.
+        // Partial: bước đã xoá mềm vẫn giữ StepNumber cũ nên không được chiếm chỗ trong index.
+        b.HasIndex(s => new { s.RecipeId, s.StepNumber }).IsUnique().HasFilter("\"IsDeleted\" = false");
     }
 }

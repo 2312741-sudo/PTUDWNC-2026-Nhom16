@@ -37,7 +37,8 @@ public sealed record RecipeDetailDto(
     IReadOnlyList<RecipeIngredientDto> Ingredients,
     IReadOnlyList<RecipeStepDto> Steps,
     IReadOnlyList<RecipeImageSummaryDto> Images,
-    string RowVersion, DateTime CreatedAt, DateTime? UpdatedAt);
+    string RowVersion, DateTime CreatedAt, DateTime? UpdatedAt,
+    string? AuthorName = null, string? CategoryName = null);   // K19: tên công khai cho JSON-LD (NFR-SEO-001)
 
 public sealed record NutritionDto(
     decimal? Calories, decimal? Protein, decimal? Carbohydrates,
@@ -88,7 +89,14 @@ internal static class RecipeMapper
     /// B5: danh sách ảnh đã bổ sung presignedUrl. <c>null</c> = dùng ảnh từ entity (không ký).
     /// Handler chỉ truyền list đã ký khi recipe chưa Published và người gọi là owner/Admin.
     /// </param>
-    public static RecipeDetailDto ToDetailDto(this Recipe r, IReadOnlyList<RecipeImageSummaryDto>? images = null) => new(
+    /// <param name="authorName">K19: tên tác giả hiển thị cho JSON-LD — lấy bằng subquery riêng
+    /// (không JOIN) để không nhân dòng với nguyên liệu × bước (xem <c>IRecipeDisplayNameReader</c>).</param>
+    /// <param name="categoryName">K19: tên danh mục hiển thị cho JSON-LD.</param>
+    public static RecipeDetailDto ToDetailDto(
+        this Recipe r,
+        IReadOnlyList<RecipeImageSummaryDto>? images = null,
+        string? authorName = null,
+        string? categoryName = null) => new(
         r.Id, r.Title, r.Slug, r.Description, r.Instructions,
         r.PrepTimeMinutes, r.CookTimeMinutes, r.Servings,
         r.PrepTimeMinutes + r.CookTimeMinutes,
@@ -100,7 +108,7 @@ internal static class RecipeMapper
             .Select(i => new RecipeImageSummaryDto(
                 i.Id, i.OriginalUrl, i.MediumUrl, i.ThumbnailUrl, i.AltText, i.IsPrimary, i.OrderIndex))
             .ToList(),
-        Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt);
+        Rv(r.RowVersion), r.CreatedAt, r.UpdatedAt, authorName, categoryName);
 
     public static RecipeIngredientDto ToDto(this RecipeIngredient i) =>
         new(i.Id, i.RecipeId, i.Name, i.Quantity, i.Unit, i.Notes, i.OrderIndex);
@@ -120,6 +128,12 @@ public interface IRecipeRepository
 
     /// <summary>Nạp recipe theo slug kèm toàn bộ con (chỉ đọc) cho màn chi tiết.</summary>
     Task<Recipe?> FindBySlugAsync(string slug, CancellationToken ct);
+
+    /// <summary>
+    /// Nạp recipe theo id kèm toàn bộ con (chỉ đọc) cho màn chi tiết — slug bản nháp đổi theo tiêu đề, id thì không.
+    /// Mặc định null: các repository giả trong test không cần cài, handler sẽ tra tiếp theo slug.
+    /// </summary>
+    Task<Recipe?> FindByIdAsync(Guid id, CancellationToken ct) => Task.FromResult<Recipe?>(null);
 
     /// <summary>Các slug đã dùng, kể cả bản ghi đã soft delete (vẫn chiếm unique index).</summary>
     Task<IReadOnlyList<string>> FindUsedSlugsAsync(string baseSlug, Guid? excludeRecipeId, CancellationToken ct);
@@ -254,6 +268,7 @@ public sealed class CreateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
 
         repo.Add(recipe);
         await repo.SaveChangesAsync(ct);   // unique index slug là chốt chặn cuối khi race
+        RecipeMetrics.Created.Add(1);
         return recipe.ToDto();
     }
 }
@@ -308,6 +323,7 @@ public sealed class UpdateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
                 n.Calories, n.Protein, n.Carbohydrates, n.Fat, n.Fiber, n.Sodium));
 
         await repo.SaveChangesAsync(ct);
+        RecipeMetrics.Updated.Add(1);
         return recipe.ToDto();
     }
 }
@@ -319,15 +335,26 @@ public sealed class UpdateRecipeHandler(IRecipeRepository repo, ICurrentUser cur
 /// <summary>Lấy theo slug. Draft/Archived chỉ owner hoặc Admin xem được (D12).</summary>
 public sealed record GetRecipeBySlugQuery(string Slug) : IRequest<RecipeDetailDto>;
 
+/// <summary>K19: tên công khai (tên hiển thị tác giả, tên danh mục) cho trang chi tiết và JSON-LD Recipe (NFR-SEO-001).</summary>
+public interface IRecipeDisplayNameReader
+{
+    Task<(string? AuthorName, string? CategoryName)> GetAsync(Guid recipeId, CancellationToken ct);
+}
+
+// names tuỳ chọn: test đơn vị dựng handler bằng tay không cần reader; DI luôn truyền bản thật
 public sealed class GetRecipeBySlugHandler(
     IRecipeRepository repo,
     ICurrentUser currentUser,
-    IRecipeImageDtoFactory imageDtos)
+    IRecipeImageDtoFactory? imageDtos = null,
+    IRecipeDisplayNameReader? names = null)
     : IRequestHandler<GetRecipeBySlugQuery, RecipeDetailDto>
 {
     public async Task<RecipeDetailDto> Handle(GetRecipeBySlugQuery q, CancellationToken ct)
     {
-        var recipe = await repo.FindBySlugAsync(q.Slug, ct)
+        // Khoá là id (wizard nạp lại theo id vì slug bản nháp đổi khi sửa tiêu đề) hoặc slug; id không thấy thì tra tiếp
+        // theo slug (slug sinh từ tiêu đề có thể trông như Guid)
+        var recipe = (Guid.TryParse(q.Slug, out var id) ? await repo.FindByIdAsync(id, ct) : null)
+            ?? await repo.FindBySlugAsync(q.Slug, ct)
             ?? throw new AppException(404, "recipe.not_found", "Không tìm thấy công thức.");
 
         // B5: ảnh chỉ private khi recipe chưa Published. Người xem công khai không cần (và không được
@@ -342,12 +369,18 @@ public sealed class GetRecipeBySlugHandler(
                 throw new AppException(404, "recipe.not_found", "Không tìm thấy công thức.");
         }
 
+        // B5: ảnh chỉ private khi recipe chưa Published → chỉ owner/Admin nhận URL có chữ ký.
         var includePresigned = recipe.Status != RecipeStatus.Published && (isOwner || isAdmin);
-        var images = includePresigned
-            ? await imageDtos.CreateSummariesAsync(recipe, includePresignedUrl: true, ct)
-            : null;
+        var images = imageDtos is null || !includePresigned
+            ? null
+            : await imageDtos.CreateSummariesAsync(recipe, includePresignedUrl: true, ct);
 
-        return recipe.ToDetailDto(images);
+        // K19: tên tác giả / tên danh mục cho JSON-LD (subquery riêng, không JOIN).
+        var (authorName, categoryName) = names is null
+            ? (null, null)
+            : await names.GetAsync(recipe.Id, ct);
+
+        return recipe.ToDetailDto(images, authorName, categoryName);
     }
 }
 

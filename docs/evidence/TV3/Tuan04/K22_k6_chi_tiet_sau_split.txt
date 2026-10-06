@@ -1,0 +1,48 @@
+Lenh: Get-Content -Raw tests/k6/recipe-detail.js | docker run --rm -i grafana/k6 run --quiet -e API=http://host.docker.internal:5080/api/v1 -e WEB=http://host.docker.internal:3000 -e SLUG=ga-lac-pho-mai-cay -
+Sau AsSplitQuery (b2789e4) + reader moi (e46f951), HEAD 085a25a. May: Windows 11, RAM trong ~1.4 GB truoc khi bat server, API dotnet run (Debug) + next dev. 02/10/2026 18:24
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration{target:api}
+    ✓ 'p(50)<150' p(50)=6.54ms
+    ✓ 'p(95)<500' p(95)=11.35ms
+
+    http_req_duration{target:page}
+    ✓ 'p(95)<2000' p(95)=829.74ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 21918   546.310338/s
+    checks_succeeded...: 100.00% 21918 out of 21918
+    checks_failed......: 0.00%   0 out of 21918
+
+    ✓ api 200
+    ✓ api co authorName
+    ✓ page 200
+    ✓ page co JSON-LD
+
+    HTTP
+    http_req_duration..............: avg=17.97ms min=3.55ms  med=6.6ms    p(90)=10.71ms  p(95)=15.54ms  p(99)=134.98ms max=4.39s
+      { expected_response:true }...: avg=17.97ms min=3.55ms  med=6.6ms    p(90)=10.71ms  p(95)=15.54ms  p(99)=134.98ms max=4.39s
+      { target:api }...............: avg=9.19ms  min=3.55ms  med=6.54ms   p(90)=9.57ms   p(95)=11.35ms  p(99)=16.73ms  max=4.39s
+      { target:page }..............: avg=241.2ms min=56.28ms med=103.18ms p(90)=803.45ms p(95)=829.74ms p(99)=1.07s    max=1.13s
+    http_req_failed................: 0.00%  0 out of 10959
+    http_reqs......................: 10959  273.155169/s
+
+    EXECUTION
+    iteration_duration.............: avg=18.27ms min=3.7ms   med=6.79ms   p(90)=10.95ms  p(95)=15.88ms  p(99)=135.89ms max=4.54s
+    iterations.....................: 10959  273.155169/s
+    vus............................: 5      min=5          max=5 
+    vus_max........................: 10     min=10         max=10
+
+    NETWORK
+    data_received..................: 103 MB 2.6 MB/s
+    data_sent......................: 1.2 MB 31 kB/s
+
+

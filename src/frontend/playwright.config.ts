@@ -11,6 +11,11 @@
 // Backend: mặc định http://localhost:5080. Muốn trỏ chỗ khác thì đặt E2E_API_URL.
 // Backend CẦN Postgres + Redis + S3 đã lên. Trong CI những dịch vụ đó do workflow bật sẵn và CI
 // tự bật backend (nên `E2E_START_BACKEND=0`); ngoài local thì Playwright tự bật — xem `webServer`.
+//
+// Về `E2E_START_SERVER` (biến của C7/TV3 trong `playwright.config.ts` cũ): không còn dùng.
+// Config này **luôn** tự bật frontend trừ khi đã đặt `E2E_BASE_URL` (tức là server bên ngoài),
+// nên đặt `E2E_START_SERVER=1` chỉ là thừa. Các spec của C7 dùng `E2E_API_URL`/`E2E_BASE_URL` —
+// hai biến này vẫn được giữ nguyên.
 import { defineConfig, devices } from '@playwright/test'
 
 const PORT = Number(process.env.E2E_PORT ?? 3000)

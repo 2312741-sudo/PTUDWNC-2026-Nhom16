@@ -28,17 +28,17 @@ Kỳ vọng: sinh file trong `Persistence/Migrations/` tạo các bảng AspNet*
 RecipeIngredients/RecipeSteps/RecipeImages + RefreshTokens, kèm FK/CHECK/partial index.
 
 ## 3. Áp lên DB sạch
-```bash
-export CONNECTIONSTRINGS__DEFAULT="Host=localhost;Port=5432;Database=culinaryblog;Username=postgres;Password=postgres"
-dotnet ef database update \
+```powershell
+$env:CONNECTIONSTRINGS__DEFAULT = "Host=localhost;Port=5432;Database=culinaryblog;Username=postgres;Password=$env:LAB_PG_PASSWORD"
+dotnet ef database update `
   --project CulinaryBlog.Infrastructure --startup-project CulinaryBlog.Infrastructure
 ```
 Kiểm tra nhanh: `docker exec -it culinaryblog-pg psql -U postgres -d culinaryblog -c "\dt"` → thấy đủ bảng.
 → **Evidence `TV3-K06`**: ảnh lệnh chạy thành công + `\d "Recipes"` cho thấy cột Nutrition_*, FK, CHECK.
 
 ## 4. Chạy concurrency spike (tiêu chí C1 quan trọng nhất)
-```bash
-export SPIKE_DB="Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=postgres"
+```powershell
+$env:SPIKE_DB = "Host=localhost;Port=5432;Database=culinary_spike;Username=postgres;Password=$env:LAB_PG_PASSWORD"
 dotnet test tests/concurrency-spike/ConcurrencySpike.csproj
 ```
 Kỳ vọng 4/4 PASS:
