@@ -33,5 +33,6 @@ commit + báo cáo của các thành viên khác nhằm đối chiếu xem có k
 | `BAO_CAO_TIEN_DO_2_TUAN_TV4_SRS.md` | Tiến độ 2 tuần (bản SRS) |
 | `BAO_CAO_TIEN_DO_TUAN_3_SO_VOI_TUAN_2.md` | Tiến độ tuần 3 so với tuần 2 |
 | `BAO_CAO_TIEN_DO_TUAN_3_TV4_SRS.md` | Tiến độ tuần 3 (bản SRS) |
+| `BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | Tiến độ tuần 4 (bản SRS) — gộp GĐ1/GĐ2/GĐ3 |
 
 Người thực hiện: **TV4 — Nguyễn Hữu Trung Sơn (2312739)**.
