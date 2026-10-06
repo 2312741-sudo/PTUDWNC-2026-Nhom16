@@ -226,3 +226,11 @@ Contains("photo-1546069901-ba9599a7e63c") || (StartsWith("/images/") && !StartsW
 **Sửa tham chiếu sai:** ApiExceptionHandler.cs comment cập nhật §4 → §7c.
 
 **File sửa:** docs/IMAGE_CONTRACT.md, src/backend/CulinaryBlog.API/ApiExceptionHandler.cs.
+
+### 8. GĐ2 – Kiểm tra tích hợp tổng hợp FE–BE (05/10/2026)
+
+Thực hiện theo định nghĩa GĐ2: xác nhận chức năng đầy đủ → kiểm tra ổn định → kiểm tra giao tiếp FE–BE.
+- Playwright: 26/26 PASS (3 lần liên tiếp), recipe-publish repeat 16/16 PASS.
+- Tích hợp: wizard+auth+search+media khớp IMAGE_CONTRACT.md (gồm §7c).
+- Fix tích hợp: (a) DbSeeder không ghi đè URL ảnh người dùng – khoá bằng DbSeederUserImageUrlTests 2/2; (b) --migrate không nuốt lỗi (exit 1); (c) làm rõ ux_recipe_images_one_primary + soft-delete qua interceptor.
+- Độc lập báo cáo: BAO_CAO_GIAI_DOAN_2_N3.md tóm tắt + dẫn chiếu GĐ1.
