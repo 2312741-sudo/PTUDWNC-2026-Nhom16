@@ -79,7 +79,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
           <p className="text-gray-500 text-sm mt-2">
             {query ? (
               <span>
-                Tìm thấy <strong>{meta.total}</strong> công thức cho từ khóa "<strong>{query}</strong>".
+                Tìm thấy <strong>{meta.total}</strong> công thức cho từ khóa &quot;<strong>{query}</strong>&quot;.
               </span>
             ) : (
               <span>Tìm thấy {meta.total} công thức đã được xuất bản và kiểm duyệt chất lượng.</span>
@@ -138,7 +138,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
               href={buildUrl({ q: undefined, page: 1 })}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition-colors shrink-0"
             >
-              <span>Xóa tìm kiếm "{query}"</span>
+              <span>Xóa tìm kiếm &quot;{query}&quot;</span>
             </Link>
           )}
         </div>

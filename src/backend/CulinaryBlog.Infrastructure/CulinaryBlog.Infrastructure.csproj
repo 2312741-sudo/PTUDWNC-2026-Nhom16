@@ -12,8 +12,12 @@
 <ProjectReference Include="../CulinaryBlog.Application/CulinaryBlog.Application.csproj" />
 <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
 <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
-<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-<PackageReference Include="Google.Apis.Auth" Version="1.76.0" />
+  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+  <PackageReference Include="Google.Apis.Auth" Version="1.76.0" />
+  <!-- N1-5 (tuần 4): cache phải dùng chung được giữa nhiều API instance, nên chuyển từ
+       ConcurrentDictionary trong tiến trình sang Redis thật. Cùng package này cung cấp
+       distributed lock cho sitemap (N1-6) và là nguồn cho /health/ready. -->
+  <PackageReference Include="StackExchange.Redis" Version="2.9.32" />
 </ItemGroup>
 <ItemGroup>
   <ProjectReference Include="..\CulinaryBlog.Domain\CulinaryBlog.Domain.csproj" />

@@ -3,6 +3,10 @@
 > **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B2
 > **Mức**: 🔴 Cao · **Nguồn**: §6 mục 1 của [`BAO_CAO_LOI_UPLOAD_ANH_500.md`](../report/BAO_CAO_LOI_UPLOAD_ANH_500.md)
 > **Cần ai quyết**: nhóm (quyết định này ảnh hưởng tới mọi thành viên)
+>
+> 🔵 **TRẠNG THÁI 03/10/2026: ĐÃ TRIỂN KHAI — chờ reviewer duyệt.** Commit `9e786e7`
+> (`MinioOptions.cs` — validate lúc khởi động, bỏ qua môi trường `Testing`).
+> Issue review: `#21`. Chưa có phản hồi từ nhóm.
 
 ---
 

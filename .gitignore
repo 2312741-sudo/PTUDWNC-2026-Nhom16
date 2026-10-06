@@ -7,6 +7,11 @@
 .local/
 .DS_Store
 
+# Bản sao lưu DB (deploy/backup.sh) — KHÔNG được commit: dump chứa toàn bộ dữ liệu người dùng
+# và tài khoản. Chỉ tạo ở máy/CI, nếu cần lưu lâu dài thì đẩy lên kho lưu trữ riêng có mã hoá.
+/backups/
+*.dump
+
 env.ps1
 .vscode/
 .vs/
@@ -18,7 +23,19 @@ env.ps1
 *.tsbuildinfo
 next-env.d.ts
 
-# Backups
+# Playwright (N2-A1): artifact chạy test sinh ra mỗi lần, không phải mã nguồn
+**/playwright-report/
+**/test-results/
+# Cache token đăng nhập của E2E (JWT tài khoản test, sống ~hạn token) - không phải mã nguồn
+**/.playwright/
+
+*.zip
+
+# Log chạy local
+run.log
+
+# Backups (TV1 tuần 5): dump CSDL và archive storage là dữ liệu sinh ra khi chạy,
+# không phải mã nguồn. Giữ .gitkeep để thư mục tồn tại trong repo.
 backups/**/*.sql*
 backups/**/*.tar*
 !backups/**/.gitkeep

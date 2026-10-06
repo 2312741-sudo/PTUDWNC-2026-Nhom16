@@ -47,7 +47,13 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
         // Child collections (aggregate quản lý qua backing field)
         b.HasMany(r => r.Ingredients).WithOne().HasForeignKey(i => i.RecipeId).OnDelete(DeleteBehavior.Cascade);
         b.HasMany(r => r.Steps).WithOne().HasForeignKey(s => s.RecipeId).OnDelete(DeleteBehavior.Cascade);
-        b.HasMany(r => r.Images).WithOne().HasForeignKey(i => i.RecipeId).OnDelete(DeleteBehavior.Cascade);
+        // N2-E4: ClientCascade để bỏ ảnh khỏi collection thực sự xoá dòng. Lưu ý: riêng ClientCascade
+        // KHÔNG đủ tin cậy — `Recipe.Images` chỉ expose IReadOnlyList qua backing field, đo thực tế cho
+        // thấy entity vẫn ở state `Unchanged` sau SaveChanges. Vì vậy handler gọi tường minh
+        // IRecipeImageRepository.MarkImageDeleted. Ngoài ra mọi thao tác đổi primary phải lưu nhiều
+        // lần trong một transaction, vì unique index partial ux_recipe_images_one_primary được
+        // Postgres kiểm từng câu lệnh và không deferrable được, còn EF không bảo đảm thứ tự lệnh.
+        b.HasMany(r => r.Images).WithOne().HasForeignKey(i => i.RecipeId).OnDelete(DeleteBehavior.ClientCascade);
         b.Navigation(r => r.Ingredients).UsePropertyAccessMode(PropertyAccessMode.Field);
         b.Navigation(r => r.Steps).UsePropertyAccessMode(PropertyAccessMode.Field);
         b.Navigation(r => r.Images).UsePropertyAccessMode(PropertyAccessMode.Field);

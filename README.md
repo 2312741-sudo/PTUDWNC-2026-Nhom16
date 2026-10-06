@@ -221,31 +221,58 @@ Toàn bộ dịch vụ phụ trợ được cấu hình tập trung trong file [
 
 ### 4.5. Chất lượng Mã nguồn & Báo cáo Kiểm thử Tự động (Testing Suite)
 
-Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (172 / 172 tests pass)**:
+Dự án duy trì bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua **100% (426 / 426 tests pass)**:
 
 ```text
 Test run for ConcurrencySpike.dll (net10.0)
-Passed!  - Failed: 0, Passed:  5, Skipped: 0, Total:  5, Duration: 535 ms
+Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5, Duration: 1 s
 
 Test run for CulinaryBlog.Tests.dll (net10.0)
-Passed!  - Failed: 0, Passed: 167, Skipped: 0, Total: 167, Duration: 2 s
+Passed!  - Failed: 0, Passed: 421, Skipped: 0, Total: 421, Duration: 12 m 38 s
 
-Total: 172/172 tests passed (100% Green).
+Total: 426/426 tests passed (100% Green).
 ```
 
-> Cập nhật 30/09/2026 (sau khi đồng bộ `origin/main`): `CulinaryBlog.Tests` **167/167** = 154 test nền + 3 `DevConfigParityTests` (TV4, chống hồi quy cấu hình storage/DB) + 10 test Search & Cache Tuần 3 (TV2). QA tích hợp Frontend–Backend bổ sung **41/41 PASS** — xem [`docs/evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md`](docs/evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md).
+> **Đo gần nhất 05/10/2026** (sau khi merge `origin/main` ở `2961a22` vào
+> `2312739_NHTSon_D5-D6-D7` → commit `fd90572`): `CulinaryBlog.Tests` **421/421** +
+> `ConcurrencySpike` **5/5** = **426/426**; build 0 warning / 0 error;
+> `dotnet format CulinaryBlog.slnx --verify-no-changes` exit `0`;
+> coverage `CulinaryBlog.Application` **96.31%** ≥ ngưỡng cổng G5 **80%**
+> (`CulinaryBlog.Domain` 85.19%, `CulinaryBlog.API` 68.95%, `CulinaryBlog.Infrastructure` 8.43%).
+>
+> Tăng so với mốc 05/10 trước đó (`321/321` tại `d4edfa2`, Application 84.13%) là 100 test
+> mang vào từ `main` của TV1/TV3, cộng 2 test hồi quy mới của TV4
+> (`DbSeederUserImageUrlTests`, chặn seed ghi đè URL ảnh người dùng).
+>
+> **Đo trước đó 05/10/2026** (merge trước ở commit `72e4044`, đo tại `d4edfa2`):
+> `CulinaryBlog.Tests` **316/316** + `ConcurrencySpike` **5/5** = **321/321**.
+>
+> **Đo trước đó 04/10/2026** (commit `8d9d62b`, xác nhận trên CI run `37213966752`):
+> `CulinaryBlog.Tests` **311/311** + `ConcurrencySpike` **5/5** = **316/316**.
+> Số test tăng thêm 5 vì merge `main` mang vào 5 test tuần 5 của TV1
+> (`Week5_CommitVerificationTests`).
+>
+> **Frontend** (không đổi trong lần merge này): Jest **85/85**, `npx tsc --noEmit` / `npm run lint` / `npm run build` đều exit `0`; Playwright **26/26** (chạy 3 lần liên tiếp đều xanh).
+>
+> **Tải (k6)**: `tests/performance/read-load.js` **3/3 lần xanh**, `http_req_failed` **0.00%**.
+>
+> Bằng chứng đầy đủ: [`docs/evidence/TV4/Tuan04/SO_EVIDENCE_TUAN_4.md`](docs/evidence/TV4/Tuan04/SO_EVIDENCE_TUAN_4.md).
 
 - **Kiểm định Kiến trúc (18 Architecture Tests)**: Bảo vệ ranh giới Clean Architecture, kiểm thử toàn bộ trường hợp biên của validator (XSS, ký tự điều khiển, độ dài chuỗi, URL scheme).
-- **Kiểm thử Xác thực & Bảo mật (18 Auth Tests)**: Kiểm tra luồng đăng ký/đăng nhập, ngăn chặn đăng ký email trùng, chặn client tự cấp role Admin, kiểm tra khóa tài khoản HTTP 423, cập nhật hồ sơ HTTP 200/400/401, và đăng xuất HTTP 204.
+- **Kiểm thử Xác thực & Bảo mật (18 Auth Tests)**: Kiểm tra luồng đăng ký/đăng nhập, chặn đăng ký email trùng, chặn client tự cấp role Admin, kiểm tra khóa tài khoản HTTP 423, cập nhật hồ sơ HTTP 200/400/401, và đăng xuất HTTP 204.
 - **Kiểm thử Khám phá, Tìm kiếm & Google Auth (6 Discovery & Search Tests)**: Kiểm tra lọc công thức AND, phân trang clamping, validator, FTS không dấu ("pho" -> "Phở Bò Gia Truyền") và Google OAuth Login.
-- **Kiểm thử Tuần 3: Refresh Token Rotation, Family Revocation, Cache & JSON-LD (7 Tests)**: Kiểm tra cấp phát token 512-bit, Token Rotation, Token Reuse Detection thu hồi toàn bộ token của phiên, Logout thu hồi token, Schema.org Recipe JSON-LD generator và Fallback Resilience khi Cache server down.
+- **Kiểm thử Tuần 3: Refresh Token Rotation, Family Revocation, Cache & JSON-LD (8 Tests)**: Kiểm tra cấp phát token 512-bit, Token Rotation, Token Reuse Detection thu hồi toàn bộ token của phiên, Logout thu hồi token, Schema.org Recipe JSON-LD generator và Fallback Resilience khi Cache server down.
 - **Kiểm thử Phân hệ Danh mục (12 Category Tests)**: Kiểm tra trọn vẹn nghiệp vụ Domain, thuật toán sinh slug tiếng Việt, CRUD CQRS Handlers, và phân trang.
-- **Kiểm thử Hạ tầng & Giám sát (2 Health Tests)**: Xác minh hoạt động của liveness và readiness probes.
-- **Kiểm thử Cấu hình Phát triển (3 DevConfigParityTests)**: Chống hồi quy cấu hình — đối chiếu `appsettings.Development.json`, biến môi trường và nội dung `.env` cho chuỗi kết nối PostgreSQL và object storage, phát hiện hồi quy gây lỗi `500` khi thiếu cấu hình (PR #19).
+- **Kiểm thử Tuần 4 — Resilience vận hành (N2-C)**:
+  - `ApiExceptionHandlerDbUnavailableTests` — dò **cả chuỗi `InnerException`**, map `Npgsql`/socket/timeout → `503 database.unavailable`, và giữ `DbUpdateConcurrencyException` ở **422** (không báo nhầm).
+  - `BackgroundJobRetryContractTests` — **4/4** hợp đồng retry: sitemap 2, resize 3, xoá ảnh 3, welcome 0/1/5/30 phút.
+  - `StorageFailureContractTests` — **9/9**: storage down/wrong credential → **503**, thiếu credential → endpoint đọc vẫn **200** còn upload mới **503**.
+  - `TracingObservabilityTests`, `RedisSharedCacheTests`, `SitemapLockTests`, `HealthTests` — trace HTTP→DB, cache dùng chung nhiều instance, distributed lock sitemap.
+- **Kiểm thử Luồng publish (N2-B1, Playwright — 26/26)**: đăng ký → đăng nhập → **wizard 5 bước** (basic/ingredients/steps/images/review) → publish → tra cứu tìm kiếm. Có regression test bắt lỗi wizard mất bước sau lần lưu draft đầu tiên.
 - **Kiểm thử Concurrency Spike (5 Tests)**: Đảm bảo kiểm soát xung đột dữ liệu đồng thời và tính toàn vẹn của transaction khi 2 writer cùng ghi hoặc cập nhật ảnh primary.
 - **Định dạng mã nguồn**: `dotnet format CulinaryBlog.sln --verify-no-changes` đạt 100% không phát sinh lỗi.
 
-> Các nhóm kiểm thử liệt kê ở trên là mô tả theo phân hệ và được ghi nhận tại các mốc Tuần 1–3, nên tổng của chúng không cộng lại bằng `172`; con số authoritative để nghiệm thu là tổng `dotnet test` ở khối trên.
+> Các nhóm kiểm thử liệt kê ở trên được ghi nhận theo từng mốc Tuần 1–4, nên tổng của chúng không cộng lại bằng `316`; con số authoritative để nghiệm thu là tổng `dotnet test` ở khối trên.
 
 ---
 
@@ -273,6 +300,9 @@ dotnet restore CulinaryBlog.sln --locked-mode
 
 # 2. Tạo .env cho máy này (giá trị thật, KHÔNG commit)
 cp .env.example .env
+#    BẮT BUỘC sinh khóa JWT rồi dán vào .env (app sẽ không khởi động nếu bỏ trống):
+#      Git Bash / WSL : openssl rand -base64 48
+#      PowerShell     : $b=New-Object byte[] 48; ([Security.Cryptography.RandomNumberGenerator]::Create()).GetBytes($b); [Convert]::ToBase64String($b)
 
 # 3. Áp dụng migration cơ sở dữ liệu
 dotnet run --project src/backend/CulinaryBlog.API -- --migrate
@@ -285,7 +315,12 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 ```
 > Không cần `export` gì thêm: `EnvFileLoader` nạp `.env` tự động (bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`).
 > Không có `.env` thì app dùng default trong `appsettings.Development.json` (`Password=postgres`) — khớp default của `docker-compose.dev.yml`.
-> Muốn dùng JWT key riêng thì sửa `Jwt__SigningKey` trong `.env` (≥ 64 bytes).
+>
+> 🔑 **`Jwt__SigningKey` là BẮT BUỘC (QD3-3b).** Khoá ký JWT không còn nằm trong `appsettings*.json`; app **fail-fast** khi
+> thiếu hoặc khoá < 64 byte (`InvalidOperationException` kèm hướng dẫn). Đổi khoá = mọi phiên đăng nhập cũ mất hiệu lực.
+> Khoá dev cũ từng bị commit vào repo đã bị **thu hồi** — app từ chối dùng lại nó.
+>
+> 👑 Cần tài khoản Admin? `dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email>` (chỉ Development, idempotent — xem `docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md` §6.1).
 
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
 
@@ -348,11 +383,21 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
 3. **TV3 (Quốc Trung)**:
    - Hoàn thiện giao diện Wizard tạo và chỉnh sửa công thức đa bước trên frontend.
    - Viết các bài test kiểm thử tích hợp giao dịch phân tán, kiểm tra rollback transaction khi xảy ra lỗi ở child entities (nguyên liệu, bước làm).
-4. **TV4 (Trung Sơn)**:
-   - ✅ **Đã xong 30/09 (PR #19, chờ review)**: gỡ bug upload ảnh trả `500` do thiếu cấu hình object storage; chuẩn hóa nạp `.env` cho local dev (B3 — gỡ block); thêm 3 test `DevConfigParityTests`; QA tích hợp 41/41; 172/172 test toàn hệ thống xanh sau khi sync `origin/main`.
-   - 🔄 Đang thực hiện: đề xuất B1 (đổi lỗi storage `500` → `503 storage.unavailable`) và B2 (fail-fast khi thiếu cấu hình) để tránh lỗi khó chẩn đoán như trên.
-   - Hoàn tất kiểm thử tải upload ảnh, xử lý kịch bản file-size attack và MIME spoofing attack.
-   - Kiểm tra khả năng tự động khôi phục dữ liệu (Backup & Restore) trên môi trường multi-container.
+4. **TV4 (Trung Sơn)** — **đã chốt Giai đoạn 1 ngày 04/10/2026**, cập nhật 05/10; Giai đoạn 3 (sửa lỗi) xong phần đã thực thi. Xem [`docs/evidence/TV4/Tuan04/report/BAO_CAO_GIAI_DOAN_1_N2_N4.md`](docs/evidence/TV4/Tuan04/report/BAO_CAO_GIAI_DOAN_1_N2_N4.md):
+   - ✅ **Tuần 3 (PR #16 đã merge)**: D23 Hangfire queue persistent + dashboard Admin, D27 media proxy công khai, D2 resize 300×300/800×600 idempotent, D4 sitemap/robots/OG/JSON-LD, D5 EXPLAIN + k6, D6 Lab L4 (`practice/TV4/L4`, 4 phase 39/39 check).
+   - ✅ **B1/B2 (chặn trước tuần 4)**: `503 storage.unavailable` cho storage down/sai credential; fail-fast lúc khởi động khi thiếu cấu hình; `503 database.unavailable` khi DB chết; gỡ secret khỏi `render.yaml` + secret scan trong CI. **216/216** test xanh.
+   - ✅ **N2 (tuần 4)**: resilience N2-C1/C1b/C1c/C2/C3/C4/C6 (outage drill Redis/S3/DB/worker, retry 2/3/3, sitemap 02:00 UTC + distributed lock, k6 `read-load.js` 3 lần xanh), N2-B1 (Playwright **26/26**, 3 lần liên tiếp), N2-B2/B3/B4 (file attack, MIME spoofing, quyền upload), N2-E (retry/race/security).
+   - ✅ **Ba lỗi thật đã tìm và sửa kèm test hồi quy**: (1) DB chết trả `500` vì `ApiExceptionHandler` không dò `InnerException`; (2) DB chết lúc khởi động giết tiến trình vì lịch sitemap ném ra khỏi `Main`; (3) `GET /recipes/{slug}` trả `500` khi thiếu credential object storage vì `MinioClient.Build()` ném ngay trong constructor — **lỗi này do CI bắt, không phải do test local**, và đã khoá bằng 2 test hồi quy.
+   - ✅ **N3-B/C1/C2 (05/10)**: Lab L5 7 phase chạy thật (63 check, **3/7 phase PASS** — `seo` 15/15, `observability` 10/10, `multi-instance` 7/7), Sổ K + 2 log, PR #28 đã mở rồi đóng theo quyết định nhóm. **4 phase lộ ra vấn đề thật**: ISR không hoạt động, ảnh không tối ưu 2 tầng, search trả `no-store`, RowVersion chưa kiểm chứng được.
+   - 🔒 **Kiểm chứng báo cáo "Tuần 5" của TV1** (việc cuối GĐ3) — báo cáo đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) + tuyên bố RTO/RPO không có bản ghi chạy. Phát hiện và **đã sửa lỗi khoá JWT `R3`** trong `docker-compose.staging.yml`. Xem [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/misc/KiemChung_Commit_Week5_TV1.md).
+    - 📊 **Số đo cuối tuần 4** (mới nhất 05/10, sau merge `origin/main` `2961a22` → `fd90572`): backend **426/426** (421 + 5), coverage `Application` **96.31%** ≥ 80% (`Domain` 85.19%), build 0 warning/0 error, `dotnet format` exit `0`; Playwright **26/26**, Jest **85/85**, k6 `http_req_failed` **0.00%**. CI xanh lần cuối xác nhận tại `8a585ef` (**321/321**) — run cho `fd90572` chưa có vì commit chưa push.
+    - 🔧 **Đối chiếu bàn giao TV3 (`TV3_BAN_GIAO_TUAN4.md`) 05/10** — 3 phát hiện, đã sửa:
+      (1) `DbSeeder` dùng `!OriginalUrl.StartsWith("/images/recipes/")` → mỗi lần API khởi động **ghi đè URL ảnh người dùng** thành ảnh seed (TV3 §C.1) — sửa lại chỉ đụng ảnh mẫu, khoá bằng `DbSeederUserImageUrlTests` (chứng minh đỏ 2/2 trên code cũ, xanh 2/2 sau sửa);
+      (2) `--migrate` nuốt lỗi bằng `catch { }` rồi vẫn in *"applied successfully"* (TV3 §C.2) — giờ in lỗi thật + exit code `1`;
+      (3) TV3 ghi *"chỉ mục thuộc IMAGE_CONTRACT §4"* nhưng §4 là RFC 7807 — hợp đồng **không hề mô tả** `ux_recipe_images_one_primary` — bổ sung `IMAGE_CONTRACT.md` §7c và sửa con trỏ trong `ApiExceptionHandler.cs`.
+    - ✅ **Kết luận kỹ thuật của TV3 về chỉ mục là đúng**: `AuditableEntityInterceptor` (D08) biến `Deleted → Modified` + `IsDeleted = true`, nên `MarkImageDeleted` = **xoá mềm ở tầng DB**; bộ lọc `IsDeleted = false` trong chỉ mục là **bắt buộc**, không phải phòng xa.
+   - ⏭ **Còn lại**: N2-D3 (checklist WCAG/responsive — thuộc TV2), 3 luồng E2E còn lại (`register/login` TV1, `category` TV2, `create-recipe` TV3), runbook đầy đủ + deploy staging + TLS/HSTS (N4-A/N4-B), Zod/RHF (N3-A3), và Google OAuth2-PKCE (cần credentials).
+    - ✅ **CI xanh trở lại (05/10)** tại `8a585ef`: `Backend week 1` run `37320431750` ✅ + `Frontend CI` run `37320431432` ✅. Sửa 2 nguyên nhân khiến backend đỏ 4 lần liên tiếp: (1) `.md` của TV4 chứa khoá JWT đã thu hồi (`JwtSigningKeyNotCommittedTests`); (2) `ApiFactory.EnsureMigrated()` chỉ `Migrate()` không seed, nên `E2E_Scenario_5` của TV1 không có dữ liệu; (3) race trong `TracingObservabilityTests` đọc span trước khi `ActivityStopped` gọi.
 
 ---
 

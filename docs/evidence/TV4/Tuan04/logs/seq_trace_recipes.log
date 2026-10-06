@@ -1,0 +1,41 @@
+﻿=== TV4-K20 N1-3: Trace HTTP -> DB that + Serilog -> Seq ===
+Ngay: 2026-09-30 18:55:54 +07:00
+Moi truong: Windows, .NET 10 SDK, native PostgreSQL 18 (127.0.0.1:5432), RustFS, Redis 7, Seq + otel-collector (docker-compose.dev.yml)
+
+--- 1. Khoi dong collector (nhan OTLP 4317/4318, forward sang Seq, xoa db.statement) ---
+NAME                IMAGE                                          COMMAND                  SERVICE          CREATED          STATUS          PORTS
+culinaryblog-otel   otel/opentelemetry-collector-contrib:0.116.1   "/otelcol-contrib --ΓÇª"   otel-collector   17 minutes ago   Up 17 minutes   0.0.0.0:4317-4318->4317-4318/tcp, [::]:4317-4318->4317-4318/tcp
+culinaryblog-seq    datalust/seq:2026.1                            "/bin/seqentry"          seq              2 days ago       Up 17 minutes   0.0.0.0:5341->80/tcp, [::]:5341->80/tcp
+
+--- 2. API chay that voi OTEL_EXPORTER_OTLP_ENDPOINT + Seq__Url, 3 request co doc DB ---
+GET /health/live            -> 200
+GET /api/v1/recipes?page=106&pageSize=5 -> 200
+GET /api/v1/recipes?page=159&pageSize=5 -> 200
+GET /health/ready           -> 200
+
+--- 3. Span nhan duoc tu collector (debug exporter) ---
+2026-09-30T11:46:08Z Traces {resource spans: 1, spans: 15}
+2026-09-30T11:46:38Z Traces {resource spans: 1, spans: 3}
+  GET /api/v1/recipes/   b19ee91b6746a491fbf8d79640262639 9d7ddb716fbcfc7d http.request.method=GET
+  culinary_test          b19ee91b6746a491fbf8d79640262639 ebbcf9ea9e68d854 db.system=postgresql
+  culinary_test          b19ee91b6746a491fbf8d79640262639 fb98717000deffc5 db.system=postgresql peer.service=127.0.0.1
+  GET /api/v1/recipes/   21dbe4a7938bcf25ffed1bf912eba92f 2253b05936a3e0c1 http.request.method=GET
+  culinary_test          21dbe4a7938bcf25ffed1bf912eba92f 748a2b454cdd9a9c db.system=postgresql
+  culinary_test          21dbe4a7938bcf25ffed1bf912eba92f b9450ade1a052b98 db.system=postgresql peer.service=127.0.0.1
+  => Cung mot TraceId, span HTTP cha va span DB con. db.statement bi attributes/redact xoa.
+
+--- 4. Seq nhan log app (Serilog sink) + khop TraceId voi span ---
+[Information] HTTP   responded  in  ms
+    Application=CulinaryBlog.API ConnectionId=0HNOUT6QA18OF CorrelationId=2ffa419c22da4c1bbf45f78d698fbd7c Elapsed=51.2211 Environment=Development RequestId=0HNOUT6QA18OF:00000003 RequestMethod=GET RequestPath=/health/ready SourceContext=Serilog.AspNetCore.RequestLoggingMiddleware StatusCode=200 TraceId=5a87d8d33236bc758de7f011919a6e2d UserId=anonymous
+[Information] HTTP   responded  in  ms
+    Application=CulinaryBlog.API ConnectionId=0HNOUT6QA18OF CorrelationId=717ef4758a86463cb5ee41a9073a9815 Elapsed=86.1849 Environment=Development RequestId=0HNOUT6QA18OF:00000002 RequestMethod=GET RequestPath=/api/v1/recipes SourceContext=Serilog.AspNetCore.RequestLoggingMiddleware StatusCode=200 TraceId=a52518d1826ff3d3c833b0c229e22f60 UserId=anonymous
+[Information] Handled  in  ms
+    Application=CulinaryBlog.API ConnectionId=0HNOUT6QA18OF CorrelationId=717ef4758a86463cb5ee41a9073a9815 ElapsedMs=80.5323 Environment=Development RequestId=0HNOUT6QA18OF:00000002 RequestPath=/api/v1/recipes RequestType=GetRecipesQuery SourceContext=CulinaryBlog.Application.LoggingBehavior TraceId=a52518d1826ff3d3c833b0c229e22f60
+[Information] HTTP   responded  in  ms
+    Application=CulinaryBlog.API ConnectionId=0HNOUT6QA18OF CorrelationId=8530a2bf286a4f3d884c3c4404bf8f92 Elapsed=325.8174 Environment=Development RequestId=0HNOUT6QA18OF:00000001 RequestMethod=GET RequestPath=/api/v1/recipes SourceContext=Serilog.AspNetCore.RequestLoggingMiddleware StatusCode=200 TraceId=428d8ea85d1b0e4400f6bae37f6519b9 UserId=anonymous
+[Information] Handled  in  ms
+    Application=CulinaryBlog.API ConnectionId=0HNOUT6QA18OF CorrelationId=8530a2bf286a4f3d884c3c4404bf8f92 ElapsedMs=285.8757 Environment=Development RequestId=0HNOUT6QA18OF:00000001 RequestPath=/api/v1/recipes RequestType=GetRecipesQuery SourceContext=CulinaryBlog.Application.LoggingBehavior TraceId=428d8ea85d1b0e4400f6bae37f6519b9
+[Information] HTTP   responded  in  ms
+    Application=CulinaryBlog.API ConnectionId=0HNOUT6QA18OE CorrelationId=df7505a443de4456b7e76ac0a6453573 Elapsed=62.2809 Environment=Development RequestId=0HNOUT6QA18OE:00000001 RequestMethod=GET RequestPath=/health/live SourceContext=Serilog.AspNetCore.RequestLoggingMiddleware StatusCode=200 TraceId=eb05fab68f91ba56ebaee1d00e529dfe UserId=anonymous
+  => 'HTTP GET /api/v1/recipes responded 200' co TraceId=a52518d1826ff3d3c833b0c229e22f60,
+     giong TraceId cua span HTTP cua chinh request do: log <-> trace lien ket.

@@ -20,21 +20,33 @@ public sealed class WelcomeEmailQueue : IWelcomeEmailQueue
 }
 public sealed class WelcomeEmailWorker(WelcomeEmailQueue queue, IConfiguration config, ILogger<WelcomeEmailWorker> logger) : BackgroundService
 {
+    /// <summary>
+    /// Lịch thử lại gửi email chào mừng (N2-C1c: retry 3 lần tại 1 / 5 / 30 phút).
+    /// Phần tử đầu là 0 vì lần gửi đầu tiên không chờ. Tổng cộng <see cref="RetryDelays"/> đây
+    /// là 4 lần thử = 1 lần gửi + 3 lần retry.
+    ///
+    /// Tách ra khỏi thân <c>ExecuteAsync</c> để test được mà không phải chờ tới 36 phút thật:
+    /// nếu để hằng nội tuyến thì cách duy nhất kiểm chứng là đọc IL hoặc chạy thật — cả hai đều tệ.
+    /// </summary>
+    public static readonly TimeSpan[] RetryDelays =
+    {
+        TimeSpan.Zero, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(30)
+    };
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await foreach (var email in queue.ReadAllAsync(stoppingToken))
         {
-            var delays = new[] { TimeSpan.Zero, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(30) };
-            for (var attempt = 0; attempt < delays.Length; attempt++)
+            for (var attempt = 0; attempt < RetryDelays.Length; attempt++)
             {
                 try
                 {
-                    if (delays[attempt] > TimeSpan.Zero) await Task.Delay(delays[attempt], stoppingToken);
+                    if (RetryDelays[attempt] > TimeSpan.Zero) await Task.Delay(RetryDelays[attempt], stoppingToken);
                     await SendAsync(email, stoppingToken);
                     logger.LogInformation("Welcome email sent to {Email}", email.Email);
                     break;
                 }
-                catch (Exception ex) when (attempt < delays.Length - 1)
+                catch (Exception ex) when (attempt < RetryDelays.Length - 1)
                 {
                     logger.LogWarning("Welcome email attempt {Attempt} failed for {Email}: {ErrorType}", attempt + 1, email.Email, ex.GetType().Name);
                 }

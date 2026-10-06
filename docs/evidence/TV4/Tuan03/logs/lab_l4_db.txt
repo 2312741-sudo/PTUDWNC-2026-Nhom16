@@ -1,0 +1,61 @@
+LAB L4 (TV4) — bang chung truy van truc tiep database lab culinary_lab
+Run id: 20260927-183242 · Ghi luc: 2026-09-27 18:32:42 UTC
+Nguon: Ngsql (Npgsql) trong chinh process .NET 10 cua lab — khong dung psql.
+Luu y: KHONG ghi user/mat khau/connection string vao file nay (lay tu bien moi truong ngoai).
+
+== 1) Hangfire schema duoc tao tu dong trong culinary_lab ==
+  12
+  hash
+  job
+  jobqueue
+  server
+  state
+
+== 2) Job da enqueue (3 job moi nhat) ==
+Luu y: Hangfire xoa dong khoi hangfire.jobqueue ngay khi job bat dau chay, nen queue = '-'
+voi job da Succeeded la dung thoi (khong phai job mat noi).
+hangfire.job.statename la trang thai HIEN TAI (bang state la log lich su, khong dung de dem trang thai con lai).
+so_lan_chay dem tu cac dong state='Processing' cua job.
+id | statename | queue | so_lan_chay | createdat
+  44 | Succeeded | - | 1 | 2026-09-28 01:32:36.296674+07
+  43 | Succeeded | - | 1 | 2026-09-28 01:32:31.279847+07
+  42 | Succeeded | - | 3 | 2026-09-28 01:32:16.712192+07
+
+== 3) Lich su trang thai 4 job cuoi (bang state — log lich su ap dung) ==
+jobid | state | reason | createdat
+  41 | Scheduled | - | 2026-09-28 01:31:53.169352+07
+  41 | Processing | - | 2026-09-28 01:32:16.216802+07
+  41 | Succeeded | - | 2026-09-28 01:32:16.232887+07
+  42 | Enqueued | - | 2026-09-28 01:32:16.714308+07
+  42 | Processing | - | 2026-09-28 01:32:16.719776+07
+  42 | Failed | An exception occurred during performance of the job. | 2026-09-28 01:32:16.736561+07
+  42 | Scheduled | Retry attempt 1 of 5: Lab cố tình hỏng lần 1/2 để minh hoạ retry. | 2026-09-28 01:32:16.760733+07
+  42 | Processing | - | 2026-09-28 01:32:21.23094+07
+  42 | Failed | An exception occurred during performance of the job. | 2026-09-28 01:32:21.242111+07
+  42 | Scheduled | Retry attempt 2 of 5: Lab cố tình hỏng lần 2/2 để minh hoạ retry. | 2026-09-28 01:32:21.243906+07
+  42 | Processing | - | 2026-09-28 01:32:26.244193+07
+  42 | Succeeded | - | 2026-09-28 01:32:26.25003+07
+  43 | Enqueued | Triggered by recurring job scheduler | 2026-09-28 01:32:31.284453+07
+  43 | Processing | - | 2026-09-28 01:32:31.291534+07
+  43 | Succeeded | - | 2026-09-28 01:32:31.332434+07
+  44 | Enqueued | Triggered by recurring job scheduler | 2026-09-28 01:32:36.298904+07
+  44 | Processing | - | 2026-09-28 01:32:36.304239+07
+  44 | Succeeded | - | 2026-09-28 01:32:36.318509+07
+
+== 4) Trang thai HIEN TAI cua moi job (bang hangfire.job.statename) ==
+  Succeeded | 20
+Cac job o trang thai Enqueued/Scheduled deu la job CHUA duoc worker xu ly (con nam trong jobqueue).
+Neu con so > 0 sau khi lab dung worker, do nguyen nhan queue mismatch (worker nghe queue khac job).
+  so_job_Failed_cuoi | 0
+  hangfire.jobqueue_con_lai | 0
+
+== 5) Recurring hash sau khi don dep (RemoveIfExists) ==
+(bang hangfire.hash trong — RemoveIfExists('lab-sitemap') da chay)
+
+== 6) Cot that cua hangfire.job (de kiem chung so lieu o tren) ==
+  id, stateid, statename, invocationdata, arguments, createdat, expireat, updatecount
+
+== 7) Sitemap lay tu recipe Published trong culinary_test (chi doc) ==
+  Archived | 24
+  Draft | 190
+  Published | 93

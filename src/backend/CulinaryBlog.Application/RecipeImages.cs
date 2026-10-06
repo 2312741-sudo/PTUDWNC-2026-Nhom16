@@ -1,6 +1,7 @@
 using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
+using CulinaryBlog.Domain.Enums;
 using FluentValidation;
 using MediatR;
 // main có thêm class CulinaryBlog.Domain.Recipe (discovery) nên phải chỉ định tường minh
@@ -20,7 +21,8 @@ public sealed record RecipeImageDto(
     bool IsPrimary,
     int OrderIndex,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
+    DateTimeOffset UpdatedAt,
+    string? PresignedUrl = null)
 {
     public static RecipeImageDto From(RecipeImage image) => new(
         image.Id,
@@ -33,6 +35,83 @@ public sealed record RecipeImageDto(
         image.OrderIndex,
         new DateTimeOffset(DateTime.SpecifyKind(image.CreatedAt, DateTimeKind.Utc)),
         new DateTimeOffset(DateTime.SpecifyKind(image.UpdatedAt ?? image.CreatedAt, DateTimeKind.Utc)));
+}
+
+/// <summary>
+/// B5 (issue #24): bổ sung <see cref="RecipeImageDto.PresignedUrl"/> khi ảnh còn PRIVATE.
+/// Chỉ 2 endpoint ảnh trả DTO này (POST upload + PATCH update) — cả hai đều <c>RequireAuthorization</c>
+/// + <c>EnsureCanManage</c> (owner hoặc Admin) nên không thể rò sang response công khai của
+/// GET /recipes/{slug} (endpoint đó dùng DTO riêng, không có trường PresignedUrl).
+/// </summary>
+public interface IRecipeImageDtoFactory
+{
+    /// <param name="image">Ảnh vừa lưu.</param>
+    /// <param name="includePresignedUrl">
+    /// true khi recipe CHƯA Published (ảnh còn private). Recipe Published đã phục vụ công khai qua
+    /// proxy D27 nên không ký — giữ response công khai sạch và tránh rải bearer token không cần thiết.
+    /// </param>
+    Task<RecipeImageDto> CreateAsync(RecipeImage image, bool includePresignedUrl, CancellationToken ct = default);
+
+    /// <summary>
+    /// B5: biến thể dùng cho detail (<c>RecipeDetailDto.Images</c>). Endpoint này phục vụ CẢ owner lẫn
+    /// người xem công khai, nên <paramref name="includePresignedUrl"/> do handler quyết định
+    /// (chỉ owner/Admin + recipe chưa Published) chứ không tự suy ra.
+    /// </summary>
+    Task<IReadOnlyList<RecipeImageSummaryDto>> CreateSummariesAsync(
+        Recipe recipe, bool includePresignedUrl, CancellationToken ct = default);
+}
+
+/// <summary>
+/// Chọn biến thể ảnh để ký và trả DTO kèm URL có chữ ký.
+/// Ưu tiên thumbnail → medium → original, và CHỈ ký biến thể mà DB đã ghi (nghĩa là object resize đã tồn tại).
+/// Không cần gọi ExistsAsync: <c>ThumbnailUrl</c>/<c>MediumUrl</c> chỉ được ghi sau khi job resize xong
+/// (D23/D2) ⇒ có giá trị là bằng chứng object đã tồn tại, tránh ký cho object không có (ảnh vỡ).
+/// </summary>
+public sealed class RecipeImageDtoFactory(IObjectStorageUrlSigner signer) : IRecipeImageDtoFactory
+{
+    public async Task<RecipeImageDto> CreateAsync(RecipeImage image, bool includePresignedUrl, CancellationToken ct = default)
+    {
+        var dto = RecipeImageDto.From(image);
+        if (!includePresignedUrl)
+            return dto;
+
+        var key = FirstExistingVariantKey(image);
+        if (key is null)
+            return dto;
+
+        var presigned = await signer.CreatePresignedUrlAsync(key, ct).ConfigureAwait(false);
+        return presigned is null ? dto : dto with { PresignedUrl = presigned };
+    }
+
+    private static string? FirstExistingVariantKey(RecipeImage image) =>
+        FirstNonBlank(image.ThumbnailUrl) ?? FirstNonBlank(image.MediumUrl) ?? FirstNonBlank(image.OriginalUrl);
+
+    private static string? FirstNonBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    public async Task<IReadOnlyList<RecipeImageSummaryDto>> CreateSummariesAsync(
+        Recipe recipe, bool includePresignedUrl, CancellationToken ct = default)
+    {
+        var summaries = new List<RecipeImageSummaryDto>(recipe.Images.Count);
+        foreach (var image in recipe.Images.OrderBy(i => i.OrderIndex))
+        {
+            var summary = new RecipeImageSummaryDto(
+                image.Id, image.OriginalUrl, image.MediumUrl, image.ThumbnailUrl,
+                image.AltText, image.IsPrimary, image.OrderIndex);
+            summaries.Add(includePresignedUrl ? await WithPresignedUrlAsync(summary, image, ct) : summary);
+        }
+        return summaries;
+    }
+
+    private async Task<RecipeImageSummaryDto> WithPresignedUrlAsync(
+        RecipeImageSummaryDto summary, RecipeImage image, CancellationToken ct)
+    {
+        var key = FirstExistingVariantKey(image);
+        if (key is null)
+            return summary;
+
+        var presigned = await signer.CreatePresignedUrlAsync(key, ct).ConfigureAwait(false);
+        return presigned is null ? summary : summary with { PresignedUrl = presigned };
+    }
 }
 
 public sealed record UploadRecipeImageCommand(
@@ -59,6 +138,15 @@ public interface IRecipeImageRepository
 {
     Task<Recipe?> GetRecipeWithImagesAsync(Guid recipeId, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
+
+    /// <summary>
+    /// N2-E4: đánh dấu xoá hẳn dòng ảnh. Không được dựa vào việc bỏ ảnh khỏi collection của
+    /// aggregate: `Recipe.Images` chỉ expose `IReadOnlyList` qua backing field nên EF không
+    /// nhận ra orphan trong cách đáng tin (bài kiểm chứng: entity vẫn ở state `Unchanged` sau
+    /// SaveChanges, và `DeleteBehavior.Cascade` trên quan hệ bắt buộc khiến DB tự xoá chỉ khi
+    /// xoá chính recipe — mà recipe là soft-delete). Vì vậy xoá phải được yêu cầu tường minh.
+    /// </summary>
+    void MarkImageDeleted(RecipeImage image);
 }
 
 /// <summary>
@@ -93,7 +181,8 @@ public sealed class UploadRecipeImageHandler(
     IRecipeImageRepository repository,
     IFileStorageService storage,
     ICurrentUser currentUser,
-    IImageResizeQueue resizeQueue)
+    IImageResizeQueue resizeQueue,
+    IRecipeImageDtoFactory dtoFactory)
     : IRequestHandler<UploadRecipeImageCommand, RecipeImageDto>
 {
     public async Task<RecipeImageDto> Handle(UploadRecipeImageCommand request, CancellationToken ct)
@@ -119,7 +208,8 @@ public sealed class UploadRecipeImageHandler(
         // D23: enqueue resize original -> 300x300 + 800x600 (Hangfire ngoài request / inline trong Testing).
         await resizeQueue.EnqueueAsync(recipe.Id, image.Id, stored.Key, ct);
 
-        return RecipeImageDto.From(image);
+        // B5: ảnh vừa upload còn private (recipe Draft) -> kèm URL có chữ ký để thẻ <img> tải được.
+        return await dtoFactory.CreateAsync(image, RecipeImageAccess.NeedsPresignedUrls(recipe), ct);
     }
 
     private static string? DetectMime(Stream content)
@@ -133,7 +223,9 @@ public sealed class UploadRecipeImageHandler(
 
 public sealed class UpdateRecipeImageHandler(
     IRecipeImageRepository repository,
-    ICurrentUser currentUser)
+    IUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
+    IRecipeImageDtoFactory dtoFactory)
     : IRequestHandler<UpdateRecipeImageCommand, RecipeImageDto>
 {
     public async Task<RecipeImageDto> Handle(UpdateRecipeImageCommand request, CancellationToken ct)
@@ -146,22 +238,35 @@ public sealed class UpdateRecipeImageHandler(
             throw new AppException(404, "image.not_found", "Không tìm thấy ảnh thuộc công thức này.");
 
         if (request.IsPrimary is true)
-            recipe.SetPrimaryImage(request.ImageId);
-
-        recipe.UpdateImageMetadata(request.ImageId, request.AltText, request.OrderIndex);
-        await repository.SaveChangesAsync(ct);
+        {
+            // N2-E4: hạ toàn bộ primary rồi mới bật ảnh mới, hai lần lưu trong một transaction.
+            // Gộp làm một lần lưu thì EF có thể phát UPDATE(bật ảnh mới) trước UPDATE(hạ ảnh cũ)
+            // → DB thấy hai primary cùng lúc → 23505 ux_recipe_images_one_primary → 422.
+            await unitOfWork.ExecuteInTransactionAsync(async innerCt =>
+            {
+                recipe.ClearPrimaryImages();
+                await repository.SaveChangesAsync(innerCt);   // lần 1: còn 0 primary
+                recipe.PromotePrimaryImage(request.ImageId);  // lần 2: đúng 1 primary
+                recipe.UpdateImageMetadata(request.ImageId, request.AltText, request.OrderIndex);
+            }, ct);
+        }
+        else
+        {
+            recipe.UpdateImageMetadata(request.ImageId, request.AltText, request.OrderIndex);
+            await repository.SaveChangesAsync(ct);
+        }
 
         var image = recipe.Images.First(i => i.Id == request.ImageId);
-        return RecipeImageDto.From(image);
+        return await dtoFactory.CreateAsync(image, RecipeImageAccess.NeedsPresignedUrls(recipe), ct);
     }
 }
 
 // uow tuỳ chọn: test đơn vị dựng handler bằng tay không cần transaction; DI luôn truyền EfUnitOfWork
 public sealed class DeleteRecipeImageHandler(
     IRecipeImageRepository repository,
+    IUnitOfWork unitOfWork,
     IFileStorageService storage,
-    ICurrentUser currentUser,
-    IUnitOfWork? uow = null)
+    ICurrentUser currentUser)
     : IRequestHandler<DeleteRecipeImageCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteRecipeImageCommand request, CancellationToken ct)
@@ -174,20 +279,40 @@ public sealed class DeleteRecipeImageHandler(
             ?? throw new AppException(404, "image.not_found", "Không tìm thấy ảnh thuộc công thức này.");
 
         var key = image.OriginalUrl;
-        // Hai lần lưu trong một transaction (như ReorderSteps): xoá mềm ảnh trước để nhả chỗ trong
-        // ux_recipe_images_one_primary, rồi mới đôn ảnh còn lại lên chính — Postgres kiểm unique ngay sau từng UPDATE.
+        // N2-E4 — ba pha, mỗi pha đúng MỘT câu lệnh, tất cả trong một transaction.
+        //
+        // Lý do phải vậy: unique index partial `ux_recipe_images_one_primary` được Postgres kiểm
+        // tra ngay TỪNG câu lệnh, và Postgres không cho unique index partial deferrable. Trong khi
+        // đó EF KHÔNG bảo đảm thứ tự phát lệnh giữa các entity. Gộp "xoá ảnh primary" và "bật ảnh
+        // thay thế" vào một lần SaveChanges thì EF có thể phát UPDATE(bật ảnh mới) khi dòng primary
+        // cũ còn nằm trong bảng → 23505 → API trả 422 và ảnh cũ không bị xoá.
+        //
+        //   1) hạ tất cả primary      → DB còn 0 dòng IsPrimary = true  (hợp lệ với index)
+        //   2) bật ảnh thay thế       → DB có đúng 1 dòng              (hợp lệ với index)
+        //   3) xoá dòng ảnh cũ        → DELETE tường minh
+        var replacementId = recipe.GetPrimaryReplacementCandidate(request.ImageId);
+
         async Task RemoveThenPromote(CancellationToken c)
         {
+            // Chỉ khi ảnh bị xoá ĐANG là primary mới cần dựng lại primary. Xoá ảnh thường thì
+            // primary hiện tại giữ nguyên — hạ cờ nó đi sẽ để lại công thức không có ảnh chính.
+            if (replacementId is not null)
+            {
+                recipe.ClearPrimaryImages();
+                await repository.SaveChangesAsync(c);          // 1) còn 0 primary
+
+                recipe.PromotePrimaryImage(replacementId.Value);
+                await repository.SaveChangesAsync(c);          // 2) đúng 1 primary
+            }
+
+            repository.MarkImageDeleted(image);
+            // Bỏ khỏi aggregate SAU khi đã bật ảnh thay thế, để RemoveImage không promote lần nữa.
             recipe.RemoveImage(request.ImageId, promoteNext: false);
-            await repository.SaveChangesAsync(c);
-            recipe.EnsurePrimaryImage();
+            // EfUnitOfWork tự SaveChanges ở cuối action → phát DELETE.
         }
-        if (uow is null)
-        {
-            await RemoveThenPromote(ct);
-            await repository.SaveChangesAsync(ct);
-        }
-        else await uow.ExecuteInTransactionAsync(RemoveThenPromote, ct); // EfUnitOfWork lưu lần 2 rồi commit
+
+        // `EfUnitOfWork` tự SaveChanges ở cuối action nên DELETE phát trong transaction.
+        await unitOfWork.ExecuteInTransactionAsync(RemoveThenPromote, ct);
         await storage.DeleteAsync(key, ct);
 
         // D2: xoá luôn object resize phái sinh (nếu job đã chạy hoặc chạy trễ vẫn sạch — idempotent).
@@ -212,6 +337,12 @@ internal static class RecipeImageAccess
         if (!currentUser.IsInRole(Roles.Admin) && !string.Equals(userId, recipe.AuthorId, StringComparison.OrdinalIgnoreCase))
             throw new AppException(403, "recipe.forbidden", "Bạn không có quyền chỉnh sửa công thức này.");
     }
+
+    /// <summary>
+    /// B5: recipe CHƯA Published thì ảnh còn private (proxy D27 chỉ owner/Admin) -> cần URL có chữ ký.
+    /// Published đã phục vụ công khai, không ký.
+    /// </summary>
+    public static bool NeedsPresignedUrls(Recipe recipe) => recipe.Status != RecipeStatus.Published;
 }
 
 public sealed class UploadRecipeImageValidator : AbstractValidator<UploadRecipeImageCommand>

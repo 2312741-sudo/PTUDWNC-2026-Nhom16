@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RecipeDetail, UnauthorizedError, getRecipeDetail, toBasicInfo } from "@/lib/recipe-editor";
-import RecipeWizard, { WizardState } from "../../_wizard/RecipeWizard";
+import RecipeWizard, { WizardState, parseStepParam } from "../../_wizard/RecipeWizard";
 
 export default function EditRecipeClient() {
   const { id } = useParams<{ id: string }>();
+  // Chỉ dùng `step` để khôi phục bước đang làm dở. Không còn đọc `?slug=` vì API tra theo `id`
+  // (slug bản nháp đổi theo tiêu đề nên đọc theo slug sẽ 404 sau lần sửa đầu).
+  const search = useSearchParams();
   const router = useRouter();
   const [initial, setInitial] = useState<Partial<WizardState> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,12 @@ export default function EditRecipeClient() {
         const d: RecipeDetail = await getRecipeDetail(id);
         if (d.id !== id) throw new Error("Không khớp công thức cần sửa");
         setInitial({
-          step: 0, recipeId: d.id, slug: d.slug, rowVersion: d.rowVersion,
+          // Khôi phục đúng bước đang làm dở. Bắt buộc vì lần lưu đầu tiên sẽ đổi URL sang route
+          // `edit`, khiến wizard cũ bị remount — nếu cứ đặt `step: 0` thì người dùng bị quay
+          // về bước cơ bản sau khi vừa bấm "Lưu & tiếp". Chi tiết: `RecipeWizard` (tiêu đề "sống sót
+          // qua lần remount").
+          step: parseStepParam(search.get("step")),
+          recipeId: d.id, slug: d.slug, rowVersion: d.rowVersion,
           detail: d, info: toBasicInfo(d),
         });
       } catch (e) {
@@ -28,7 +36,7 @@ export default function EditRecipeClient() {
         setError(e instanceof Error ? e.message : "Không tải được công thức");
       }
     })();
-  }, [id, router]);
+}, [id, search, router]);
 
   if (error) return (
     <div className="mx-auto max-w-3xl p-6">

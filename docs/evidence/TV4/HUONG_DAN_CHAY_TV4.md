@@ -215,6 +215,33 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 > 💡 API **tự migrate + seed lúc khởi động** (trừ khi chạy `--no-auto-migrate` hoặc môi trường `Testing`),
 > nên bước 3/4 ở trên chỉ cần khi muốn chủ động chạy trước.
 
+### 6.1. Cần tài khoản Admin? Dùng `--promote-admin` (B6, ✅ chốt 28/09: PA-A)
+
+Tài khoản đăng ký qua UI/API mặc định là **Author**. Lệnh này nâng một tài khoản **đã tồn tại** lên role `Admin` mà **không cần mật khẩu**:
+
+```powershell
+# Nâng lên Admin (đăng nhập lại để nhận claim mới)
+dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email-cua-ban>
+# Cũng chấp nhận dạng --promote-admin=<email> và không phân biệt hoa/thường
+```
+
+| Trường hợp | Kết quả | Exit code |
+|---|---|---|
+| Thiếu email | `Thieu email. Cach dung: ...` | `2` |
+| Email sai định dạng | `Email khong hop le: '...'` | `2` |
+| Chạy ở `Testing` / `Production` / bất kỳ môi trường nào khác `Development` | `Tu choi chay o moi truong '...'. Chi chay o Development.` | `2` |
+| Email không tồn tại | `Khong tim thay tai khoan '...'` | `1` |
+| Lần đầu | `Da them role Admin cho '<user>' (<id>).` | `0` |
+| Chạy lại (đã là Admin) | `'<user>' da co role Admin. Khong thay doi gi.` | `0` |
+
+Lưu ý an toàn:
+- **Chỉ chạy ở `Development`.** Muốn kiểm tra ở môi trường khác phải bỏ launch profile để không bị ép `Development`:
+  `dotnet run --project src/backend/CulinaryBlog.API --no-launch-profile -- --promote-admin <email>`.
+- **Idempotent** — chạy bao nhiêu lần cũng chỉ có đúng **một** bản ghi role trong `UserRoles`.
+- Không sửa `DbSeeder`, không sinh mật khẩu mới, không nhân bản account admin mặc định.
+- Chỉ cần role `Admin` **đã có sẵn trong DB** (do `HasData`/seed tạo) — lệnh không tự tạo role.
+- Sau khi nâng, **đăng xuất và đăng nhập lại** để JWT mới chứa claim role.
+
 ---
 
 ## 7. Bước 4 — Chạy Frontend (Next.js 15)
@@ -259,14 +286,61 @@ dotnet format CulinaryBlog.sln --verify-no-changes --no-restore
 
 # Toàn bộ test
 dotnet test CulinaryBlog.sln
+
+# Coverage + ngưỡng cổng G5 (80%) — chính xác lệnh CI chạy
+# BẮT BUỘC có --results-directory, nếu không file coverage nằm trong tests/**/TestResults
+# và deploy/check-coverage.sh sẽ không đọc được.
+dotnet test CulinaryBlog.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
+bash deploy/check-coverage.sh 80 TestResults
 ```
 
-Kết quả chuẩn trên máy TV4 (28/09/2026, sau khi merge `origin/main` cho PR #16):
+Kết quả chuẩn trên máy TV4 (**05/10/2026**, sau merge `origin/main` `2961a22` → commit `fd90572`):
 
 ```
-Passed!  - Failed: 0, Passed: 154, Skipped: 0, Total: 154 - CulinaryBlog.Tests.dll
+Passed!  - Failed: 0, Passed: 421, Skipped: 0, Total: 421 - CulinaryBlog.Tests.dll
 Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5 - ConcurrencySpike.dll
 ```
+
+| Hạng mục | Số đo |
+|---|---|
+| Backend | **421 + 5 = 426/426**, `Skipped = 0` *(lần merge trước 05/10: 316 + 5 = 321/321 tại `72e4044`/`d4edfa2`)* |
+| Coverage `CulinaryBlog.Application` | **96.31%** ≥ ngưỡng **80%** *(cũ: 84.13%)* — `Domain` 85.19% |
+| `dotnet format CulinaryBlog.slnx --verify-no-changes` | exit `0` |
+| `dotnet build` | 0 warning / 0 error |
+| Playwright | **26/26**, 3 lần liên tiếp đều xanh |
+| Jest | **85/85** |
+| `npx tsc --noEmit` · `npm run lint` · `npm run build` | đều exit `0` |
+
+### 6.1 Kiểm thử luồng publish (Playwright) và tải k6 — lệnh tuần 4
+
+```powershell
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
+npm ci
+npx playwright install chromium
+
+# API + frontend đã chạy sẵn; E2E_START_BACKEND=0 để không tự bật lại backend
+$env:E2E_START_BACKEND = "0"
+npx playwright test --retries=0                 # 26/26
+
+# Chỉ luồng publish, lặp 4 lần để bắt trường hợp chập chờn
+npx playwright test recipe-publish --repeat-each=4 --retries=0
+```
+
+> 🔁 **Cách bắt lỗi chập chờn thật:** `recipe-publish` từng đỏ 2/3 lần vì wizard chuyển bước
+> chưa kịp render. Không phải "flaky test" mà là **lỗi sản phẩm** — sửa bằng `?step=` ở
+> `RecipeWizard.tsx` và `settleStep()` trong `recipe-publish.spec.ts`. Sau khi sửa: 3 lần full
+> suite liên tiếp đều 26/26, `--repeat-each=4` là 16/16.
+
+```powershell
+Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
+k6 run tests/performance/read-load.js      # ~3606 request, ~120 req/s, http_req_failed = 0.00%
+pwsh -File deploy/outage-drill.ps1         # dừng Redis/S3/DB/worker, đo thời gian phục hồi
+```
+
+> ⚠️ **Outage drill chỉ là mô phỏng**: PostgreSQL chạy bằng dịch vụ native `postgresql-x64-18` trên
+> máy TV4 nên **không dừng được** (thiếu quyền Administrator). Phần DB trong script trỏ một
+> instance sang port đã chết để giả lập mất kết nối — **không phải failover thật**. Xem phần
+> "Giới hạn" trong `SO_EVIDENCE_TUAN_4.md`.
 
 > 🚨 **Quy tắc của nhóm (không được phá):** CI xanh mà `Skipped > 0` là **xanh giả**.
 > Test E2E storage cố tình *skip an toàn* khi không kết nối được object storage —
@@ -276,6 +350,11 @@ Passed!  - Failed: 0, Passed:   5, Skipped: 0, Total:   5 - ConcurrencySpike.dll
 > ```powershell
 > docker compose -f docker-compose.dev.yml ps s3
 > ```
+
+> 🔴 **Bài học từ lỗi CI `8d9d62b` (đọc trước khi chạy test):** test local xanh **không** bảo chứng
+> CI xanh. Lỗi `GET /recipes/{slug}` trả `500` khi thiếu credential object storage chỉ lộ ra trên CI
+> vì máy dev có `Minio__*` trong `.env` còn CI không có file `.env`. Khi sửa lỗi hạ tầng, kiểm lại
+> bằng cách **dựng lại đúng điều kiện CI** (xoá `Minio__*`, thêm `Redis__Instance=ci`).
 
 ---
 
@@ -320,7 +399,7 @@ docker exec culinaryblog-pg psql -U postgres -tAc "select 1"                  # 
 Invoke-WebRequest http://localhost:5080/health/ready -UseBasicParsing | Select-Object StatusCode   # 200
 Invoke-WebRequest http://localhost:9000/health -UseBasicParsing | Select-Object StatusCode         # 200 (RustFS)
 Invoke-WebRequest http://localhost:3000 -UseBasicParsing | Select-Object StatusCode                # 200
-dotnet test CulinaryBlog.sln                                                  # 154 + 5, Skipped=0
+dotnet test CulinaryBlog.sln                                                  # 316 + 5, Skipped=0
 ```
 
 ---
@@ -376,7 +455,9 @@ Biến dùng trong toàn bộ hướng dẫn — **khai trong `.env` ở thư m�
 | `pg_hba.conf` của `culinaryblog-pg` | `local ... trust`, `host ... 127.0.0.1/32 trust`, `host all all all scram-sha-256` → giải thích vì sao `psql` không có `-h` luôn "thành công" |
 | `dotnet build CulinaryBlog.sln --configuration Release` | 0 warning, 0 error |
 | `dotnet format CulinaryBlog.sln --verify-no-changes` | Sạch |
-| `dotnet test CulinaryBlog.sln` | 154/154 + 5/5, `Skipped=0` |
+| `dotnet test CulinaryBlog.sln` | `311/311 + 5/5` tại `8d9d62b` (04/10) · `316/316 + 5/5` = `321/321` sau khi merge `main` (05/10) · **`421/421 + 5/5` = `426/426` sau merge `origin/main` `2961a22` → `fd90572` (05/10), `Skipped=0` |
 | `npx tsc --noEmit` (frontend) | exit 0 |
 | `npm run build` (frontend) | exit 0, 16/16 trang |
-| CI sau khi push PR #16 | run `36391382819` — `154/154 + 5/5`, `Skipped=0` |
+| CI sau khi push PR #16 | run `36391382819` — `172/172`, `Skipped=0` |
+| CI sau khi push commit `8d9d62b` (04/10) | `Backend week 1` run `37213966752` — `311/311 + 5/5`, `Skipped=0`, coverage gate 80% pass · `Frontend CI` run `37213966761` — thành công |
+| Playwright `npx playwright test --retries=0` | `26/26`, chạy **3 lần liên tiếp** đều xanh |

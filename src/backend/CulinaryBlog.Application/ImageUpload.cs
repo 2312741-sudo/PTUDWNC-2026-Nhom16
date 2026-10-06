@@ -10,6 +10,20 @@ public static class ImageFormats
 {
     public const long MaxBytes = 5 * 1024 * 1024; // 5 MiB (FR-FILE-002)
 
+    /// <summary>
+    /// Ngưỡng kích thước tối thiểu (byte).
+    ///
+    /// Vì sao cần: chữ ký magic bytes chỉ là **tiền tố**. Chữ ký JPEG chỉ dài 3 byte (`FF D8 FF`)
+    /// nên một file 3 byte — rõ ràng là file rỗng bị cắt cụt — vẫn khớp chữ ký và được nhận.
+    /// File như vậy đi qua được biên API rồi mới chết ở job resize, lỗi nằm ngoài request nên
+    /// không trả được mã lỗi có nghĩa cho người dùng.
+    ///
+    /// Con số 64 không phải ngẫu nhiên: **PNG hợp lệ nhỏ nhất cần 67 byte**
+    /// (8 byte signature + 25 byte chunk IHDR + 12 byte chunk IEND), còn JPEG hợp lệ nhỏ nhất
+    /// khoảng 125 byte. 64 byte nằm dưới cả hai nên không loại o bất kỳ ảnh thật nào.
+    /// </summary>
+    public const long MinBytes = 64;
+
     public static readonly IReadOnlyList<AllowedImageFormat> Allowed =
     [
         new("image/jpeg", ".jpg", [[0xFF, 0xD8, 0xFF]]),
@@ -70,6 +84,11 @@ public static class ImageUploadValidator
             return (false, "file.empty", "File rỗng không được chấp nhận.");
         if (length > ImageFormats.MaxBytes)
             return (false, "file.too_large", "File vượt quá giới hạn 5 MiB.");
+
+        // Nhỏ hơn mọi ảnh hợp lệ thì chắc chắn là file hỏng/cắt cụt — chặn ở đây để trả mã lỗi
+        // rõ ràng thay vì đẩy xuống job resize rồi hỏng ngoài tầm request.
+        if (length < ImageFormats.MinBytes)
+            return (false, "file.too_small", "File quá nhỏ để là ảnh hợp lệ.");
 
         var head = new byte[12];
         var read = content.Read(head, 0, head.Length);

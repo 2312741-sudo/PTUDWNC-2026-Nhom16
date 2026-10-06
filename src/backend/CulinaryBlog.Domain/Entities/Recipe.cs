@@ -174,6 +174,29 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
         foreach (var img in _images) img.SetPrimary(img.Id == target.Id);
     }
 
+    /// <summary>N2-E4: bỏ cờ primary khỏi mọi ảnh — nửa đầu của <see cref="SetPrimaryImage"/>,
+    /// tách riêng để use case lưu hai lần trong một transaction.</summary>
+    /// <remarks>
+    /// Unique index partial <c>ux_recipe_images_one_primary</c> được Postgres kiểm tra ngay từng
+    /// statement, và EF không bảo đảm thứ tự phát lệnh UPDATE giữa các entity. Nên "hạ ảnh primary
+    /// cũ" và "bật ảnh primary mới" phải là hai lần lưu riêng: lần này đưa DB về 0 primary (hợp lệ),
+    /// lần sau mới bật ảnh mới. Trạng thái 0 primary chỉ tồn tại trong transaction.
+    /// </remarks>
+    public void ClearPrimaryImages()
+    {
+        foreach (var img in _images) img.SetPrimary(false);
+    }
+
+    /// <summary>
+    /// N2-E4: ảnh sẽ thay thế ảnh <paramref name="imageId"/> khi ảnh đó là primary và bị xoá —
+    /// cùng quy tắc chọn với <see cref="RemoveImage"/> (OrderIndex nhỏ nhất còn lại).
+    /// Chỉ đọc, không thay đổi aggregate.
+    /// </summary>
+    public Guid? GetPrimaryReplacementCandidate(Guid imageId) =>
+        _images.FirstOrDefault(i => i.Id == imageId)?.IsPrimary == true
+            ? _images.Where(i => i.Id != imageId).OrderBy(i => i.OrderIndex).Select(i => (Guid?)i.Id).FirstOrDefault()
+            : null;
+
     /// <summary>Cập nhật metadata ảnh (altText, orderIndex) qua aggregate — D17. isPrimary đi qua SetPrimaryImage.</summary>
     public void UpdateImageMetadata(Guid imageId, string? altText, int? orderIndex)
     {
@@ -190,11 +213,41 @@ public sealed class Recipe : BaseEntity, IAggregateRoot
     /// </param>
     public void RemoveImage(Guid imageId, bool promoteNext = true)
     {
+        var replacementId = RemoveImageCore(imageId);
+        if (promoteNext) PromoteReplacement(replacementId);
+    }
+
+    /// <summary>
+    /// N2-E4: xoá ảnh primary **không** promote ngay, trả về id ảnh sẽ được thay thế (null nếu
+    /// không còn ảnh nào, hoặc ảnh bị xoá không phải primary).
+    ///
+    /// Vì sao tách ra: unique index partial <c>ux_recipe_images_one_primary</c> không deferrable
+    /// trong Postgres, nên DB không được thấy hai dòng IsPrimary = true cùng lúc — kể cả tạm thời.
+    /// EF ghi lệnh UPDATE (ảnh thay thế → true) **trước** lệnh DELETE (ảnh primary cũ), tạo ra
+    /// trạng thái trung gian hai primary và sinh lỗi 23505. Use case xoá ảnh vì vậy lưu hai lần:
+    /// (1) xoá, (2) bật primary mới — cùng một transaction.
+    /// </summary>
+    public Guid? RemoveImageDeferringPromotion(Guid imageId) => RemoveImageCore(imageId);
+
+    /// <summary>Bật ảnh <paramref name="imageId"/> thành primary (dùng sau
+    /// <see cref="RemoveImageDeferringPromotion"/>).</summary>
+    public void PromotePrimaryImage(Guid imageId) => SetPrimaryImage(imageId);
+
+    private Guid? RemoveImageCore(Guid imageId)
+    {
         var img = _images.SingleOrDefault(i => i.Id == imageId)
                   ?? throw new DomainException("IMAGE_NOT_FOUND", "Ảnh không thuộc công thức này.");
+        var wasPrimary = img.IsPrimary;
         img.SetPrimary(false);
         _images.Remove(img);
-        if (promoteNext) EnsurePrimaryImage();
+        return wasPrimary && _images.Count > 0
+            ? _images.OrderBy(i => i.OrderIndex).First().Id
+            : null;
+    }
+
+    private void PromoteReplacement(Guid? replacementId)
+    {
+        if (replacementId is { } id) SetPrimaryImage(id);
     }
 
     /// <summary>Còn ảnh mà chưa có ảnh chính thì ảnh có OrderIndex nhỏ nhất thành ảnh chính.</summary>

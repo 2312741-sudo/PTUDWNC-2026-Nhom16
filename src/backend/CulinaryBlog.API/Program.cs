@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using OpenTelemetry.Metrics;
@@ -25,7 +26,7 @@ using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Context;
-
+using StackExchange.Redis;
 // Nạp .env (giá trị thật của máy) TRƯỚC khi dựng builder, vì CreateBuilder đọc biến môi trường.
 // Default nằm trong appsettings*.json; .env chỉ override, và bị bỏ qua khi Production.
 EnvFileLoader.Load();
@@ -38,10 +39,32 @@ if (!string.IsNullOrEmpty(envPort))
     builder.WebHost.UseUrls($"http://0.0.0.0:{envPort}");
 }
 
-builder.Host.UseSerilog((context, config) => config.MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error)
-    .Enrich.FromLogContext().WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}"));
+// N1-3 (tuần 4): log vào Seq khi có cấu hình trỏ tới Seq (docker-compose.dev.yml hoặc
+// dịch vụ log của Render). Console LUÔN bật vì đó là nơi duy nhất còn lại khi Seq không sống —
+// sink Seq hỏng không được làm mất log.
+builder.Host.UseSerilog((context, config) =>
+{
+    config.MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", "CulinaryBlog.API")
+        .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}");
+
+    // Sink Seq phải nằm TRONG logger của UseSerilog. Trước đây nó được gán riêng vào
+    // Log.Logger, nhưng UseSerilog lập tức thay thế logger đó — Seq nhận 0 event của app.
+    var url = context.Configuration["Seq:Url"];
+    if (!string.IsNullOrWhiteSpace(url))
+    {
+        try { config.WriteTo.Seq(url); }
+        catch (Exception ex)
+        {
+            // Seq hỏng KHÔNG được làm app không khởi động; console vẫn còn log.
+            Console.Error.WriteLine($"Khong duoc gan Seq sink ({ex.Message}). Chi ghi log ra console.");
+        }
+    }
+});
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IConfiguration>().GetSection("Jwt").Get<JwtSettings>() ?? new();
@@ -118,15 +141,47 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddApplication();
-builder.Services.AddSingleton<IRecipeCacheService, RecipeCacheService>();
-builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
+
+// N1-5 (tuần 4): cache phải dùng chung giữa các API instance nên dùng Redis thật thay vì
+// ConcurrentDictionary trong tiến trình. Connection là singleton (nhiều thread dùng chung) và
+// AbortOnConnectFail=false để Redis chết không làm app không khởi động — /health/ready lo việc báo.
+var redisOptions = builder.Configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>() ?? new RedisOptions();
+builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection(RedisOptions.SectionName));
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(RecipeCacheService.BuildConfiguration(redisOptions)));
+builder.Services.AddSingleton<IRecipeCacheService>(sp => new RecipeCacheService(
+    sp.GetRequiredService<ILogger<RecipeCacheService>>(),
+    sp.GetRequiredService<IConnectionMultiplexer>(),
+    sp.GetRequiredService<IOptions<RedisOptions>>()));
+// B2 (issue #21, N1-7): validate lúc khởi động — AccessKey/SecretKey rỗng thì fail-fast,
+// không đợi tới lúc người dùng bấm "Tải lên" mới nhận 503/500. Bỏ qua môi trường Testing
+// vì ApiFactory không nạp cấu hình Minio (không có storage thật) — nếu validate, toàn bộ test đỏ.
+var minioOptions = builder.Services.AddOptions<MinioOptions>();
+minioOptions.Bind(builder.Configuration.GetSection("Minio"));
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddSingleton<IValidateOptions<MinioOptions>, MinioOptionsValidator>();
+    minioOptions.ValidateOnStart();
+}
 builder.Services.AddScoped<MinioStorageService>();
 builder.Services.AddScoped<IFileStorageService>(sp => sp.GetRequiredService<MinioStorageService>());
 builder.Services.AddScoped<IObjectStorageReader>(sp => sp.GetRequiredService<MinioStorageService>());
 // D23 (TV4): resize ảnh 300x300/800x600 ngoài request qua Hangfire (queue PostgreSQL, retry 3).
 // IObjectStorageWriter tách riêng IFileStorageService: cần ghi object với key phái sinh CHỦ ĐỘNG (HANDOFF 5.1).
 builder.Services.AddScoped<IObjectStorageWriter>(sp => sp.GetRequiredService<MinioStorageService>());
+// B5 (TV4, issue #24): cấp URL có chữ ký cho ảnh private (PA-3) — thẻ <img> không gửi được header Bearer
+// nên proxy D27 trả 403 với ảnh recipe Draft trong wizard.
+builder.Services.AddScoped<IObjectStorageUrlSigner>(sp => sp.GetRequiredService<MinioStorageService>());
+builder.Services.AddScoped<IRecipeImageDtoFactory, RecipeImageDtoFactory>();
 builder.Services.AddScoped<ResizeImageJob>();
+// N1-6: đăng ký SitemapGenerator ở NGOÀI if/else trên. Nếu chỉ đăng ký trong nhánh non-Testing
+// thì ở môi trường Testing kiểu này không phải service đã biết, và minimal API sẽ coi tham số
+// của /sitemap.xml là body → app không khởi động được ("Body was inferred...").
+builder.Services.Configure<SitemapOptions>(builder.Configuration.GetSection(SitemapOptions.SectionName));
+builder.Services.AddScoped<SitemapGenerator>();
+builder.Services.AddScoped<SitemapGenerationJob>();
+// Cron sitemap chỉ có ý nghĩa khi Hangfire thật sự chạy; Testing/E2E dùng nhánh inline ở trên.
+var sitemapCron = new SitemapOptions().Cron;
 if (builder.Environment.IsEnvironment("Testing"))
 {
     // Testing/E2E: không bật worker nền — chạy job inline để assert DB/MinIO deterministic.
@@ -149,11 +204,18 @@ else
         options.ShutdownTimeout = TimeSpan.FromSeconds(30);
     });
     builder.Services.AddScoped<IImageResizeQueue, HangfireImageResizeQueue>();
+    sitemapCron = builder.Configuration.GetSection(SitemapOptions.SectionName).Get<SitemapOptions>()?.Cron
+        ?? new SitemapOptions().Cron;
 }
+// B4 (issue #22): "object-storage" kiểm tra CREDENTIAL THẬT (StatObject) và thuộc tag "ready" ⇒
+// /health/ready trả 503 khi AccessKey sai, thay vì Healthy rồi mới nổ 500 lúc upload.
+// "minio" giữ làm check PHỤ chỉ TCP (tag "all") để vẫn thấy cổng có mở hay không khi chẩn đoán.
+builder.Services.AddSingleton<ObjectStorageCredentialProbe>();
 builder.Services.AddHealthChecks()
     .AddCheck<LivenessHealthCheck>("liveness", tags: ["live"])
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready", "all"])
     .AddCheck<RedisHealthCheck>("redis", tags: ["ready", "all"])
+    .AddCheck<ObjectStorageHealthCheck>("object-storage", tags: ["ready", "all"])
     .AddCheck<MinIOHealthCheck>("minio", tags: ["all"]);
 
 // OpenTelemetry (D5/TV4): trace HTTP -> ASP.NET -> EF Core -> DB; metrics request/DB (FR-OBS-001/003).
@@ -213,8 +275,19 @@ _ = app.Services.GetRequiredService<JwtSettings>();
 if (args.Contains("--migrate"))
 {
     using var scope = app.Services.CreateScope();
-    try { await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync(); } catch { }
-    Console.WriteLine("Database migrations applied successfully.");
+    // KHÔNG nuốt lỗi rồi in "success": `catch { }` khiến DB dev lệch migration vẫn báo thành công,
+    // khiến người chạy tin là đã migrate xong trong khi schema chưa đúng. Báo bởi TV3
+    // (`docs/evidence/TV3/TV3_BAN_GIAO_TUAN4.md` §C.2). Giờ in lỗi thật + exit code khác 0.
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
+        Console.WriteLine("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Database migration FAILED: {ex.GetBaseException().Message}");
+        Environment.ExitCode = 1;
+    }
     return;
 }
 if (args.Contains("--seed") || args.Contains("--reseed") || args.Contains("--force-seed"))
@@ -224,6 +297,64 @@ if (args.Contains("--seed") || args.Contains("--reseed") || args.Contains("--for
     await DbSeeder.SeedAsync(authDb, forceUpdate: args.Contains("--reseed") || args.Contains("--force-seed"));
     Console.WriteLine("Database seeded and synchronized successfully: 25 categories, 100 recipes (each with >=10 ingredients, >=5 steps).");
     return;
+}
+// B6 (TV4, PA-2): nâng một tài khoản ĐÃ TỒN TẠI lên role Admin.
+//   dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin admin@local.test
+// PA-A: idempotent; chỉ Development (từ chối Testing/Production); KHÔNG sửa DbSeeder, không sinh mật khẩu.
+if (args.Any(a => a != null && a.StartsWith(PromoteAdminCommand.SwitchName, StringComparison.OrdinalIgnoreCase)))
+{
+    var email = PromoteAdminCommand.ExtractEmail(args);
+    var decision = PromoteAdminCommand.Decide(email, builder.Environment.EnvironmentName);
+    if (decision.Outcome != PromoteAdminOutcome.Allowed)
+    {
+        Console.Error.WriteLine(decision.Message);
+        Environment.ExitCode = 2;
+        return;
+    }
+
+    using var promoteScope = app.Services.CreateScope();
+    try
+    {
+        var result = await PromoteAdminCommand.ExecuteAsync(
+            promoteScope.ServiceProvider.GetRequiredService<AuthDbContext>(), email!);
+        Console.WriteLine(result.Message);
+        if (!result.Succeeded)
+            Environment.ExitCode = 1;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Khong nang duoc role Admin: {ex.GetType().Name}: {ex.Message}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
+// N1-6: đăng lịch sitemap 02:00 UTC.
+// Phải đăng SAU khi đã Build() và thông qua IRecurringJobManager lấy từ DI. Gọi static API
+// RecurringJob.AddOrUpdate lúc đang đăng ký service sẽ ném "Current JobStorage instance has not
+// been initialized yet" và làm app KHÔNG KHỞI ĐỘNG ĐƯỢC ở mọi môi trường thật (chỉ lộ ra khi
+// chạy ngoài test, vì Testing không bật Hangfire).
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    using var sitemapScope = app.Services.CreateScope();
+    var recurringJobs = sitemapScope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    // N2-C1: bọc try/catch. AddOrUpdate phải ghi vào chính PostgreSQL (bảng hangfire.*), nên khi DB
+    // chết lúc khởi động nó ném NpgsqlException ra khỏi Main và GIẾT CẢ TIẾN TRÌNH — tức mất luôn
+    // cả các endpoint đọc không cần DB. Ở đây chỉ mất lịch sitemap; /health/ready vẫn trả 503
+    // (PostgreSQL unreachable) nên orchestrator sẽ restart pod khi DB trở lại, lúc đó lịch được
+    // đăng ký lại. Giá đổi được chấp nhận: sống nhưng không có sitemap tốt hơn chết hẳn.
+    try
+    {
+        recurringJobs.AddOrUpdate<SitemapGenerationJob>(
+            "sitemap-daily",
+            job => job.RunAsync(default),
+            sitemapCron,
+            new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Đăng ký lịch sitemap bị bỏ qua: {Message}. /health/ready sẽ 503 cho tới khi DB trở lại và app restart.", ex.Message);
+    }
 }
 
 if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("Testing"))
@@ -271,6 +402,16 @@ app.UseSerilogRequestLogging(options =>
 {
     options.EnrichDiagnosticContext = (log, context) => log.Set("UserId", context.User.FindFirstValue("sub") ?? "anonymous");
 });
+// N1-5: đánh dấu bản chạy. Khi có nhiều tiến trình API sau load balancer, log của chúng trộn
+// vào nhau và rất khó biết request rơi vào máy nào; header này (và property Instance trong log)
+// là thứ duy nhất chứng minh được traffic thật sự được chia giữa các instance.
+var instanceId = builder.Configuration["InstanceId"] ?? Environment.MachineName;
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Served-By"] = instanceId;
+    await next();
+});
+Log.Information("Dang chay tren instance {InstanceId}", instanceId);
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors();
@@ -373,6 +514,22 @@ recipes.MapGet("/search", async ([AsParameters] SearchRecipesQuery query, ISende
 recipes.MapGet("/sitemap", async (ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetSitemapQuery(), ct) }))
     .WithName("GetSitemapRecipes").Produces<object>(200);
+
+// N1-6 (tuần 4): sitemap.xml do cron 02:00 UTC sinh, lưu trong Redis để mọi API instance
+// (và lần chạy sau) đọc chung một bản. Nếu chưa có bản nào thì sinh tại chỗ để không bao giờ
+// trả 404 cho crawler.
+app.MapGet("/sitemap.xml", async (SitemapGenerator generator, ILogger<SitemapGenerator> log, CancellationToken ct) =>
+{
+    var xml = await generator.GetCachedXmlAsync(ct);
+    if (xml is null)
+    {
+        var result = await generator.GenerateAsync(ct);
+        xml = await generator.GetCachedXmlAsync(ct) ?? string.Empty;
+        if (!result.Acquired)
+            log.LogWarning("sitemap.xml chưa có bản cache và lock đang bị giữ ({Reason}); trả nội dung rỗng tạm thời", result.Reason);
+    }
+    return Results.Content(xml, "application/xml; charset=utf-8");
+}).WithName("GetSitemapXml").Produces<string>(200, "application/xml");
 
 recipes.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetRecipeBySlugQuery(slug), ct) }))

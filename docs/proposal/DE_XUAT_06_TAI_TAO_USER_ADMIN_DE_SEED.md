@@ -2,7 +2,20 @@
 
 > **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B6
 > **Mức**: 🟢 Thấp · **Phát hiện**: [`TEST_CASE_TICH_HOP_FE_BE.md`](../evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md) B03, §8
-> **Cần ai quyết**: nhóm (chốt tài khoản seed + cách chia mật khẩu) + TV1 (quản lý dữ liệu seed)
+> **Cần ai quyết**: ✅ **ĐÃ CHỐT** — TV4 (Nguyễn Hữu Trung Sơn), ngày 03/10/2026 → chọn **phương án A**
+>
+> ✅ **TRẠNG THÁI 03/10/2026: ĐÃ QUYẾT — phương án A (CLI `--promote-admin`).** Xem
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2.
+> ⏳ **Chưa có code** — chờ triển khai B6-1…B6-4.
+>
+> ```powershell
+> dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email>
+> ```
+> ⛔ Không seed mật khẩu cứng · chỉ chạy ở `Development` · idempotent.
+>
+> **Quyết định của TV4 về phần việc của TV1:** `DbSeeder` là phần của **TV1**, nhưng do **TV4** đã
+> chốt phương án nên **TV4 tự làm** (theo nguyên tắc "ngoài contact"). ⛔ **Không sửa seed data** của
+> TV1 — chỉ thêm nhánh CLI trong `Program.cs` (file của TV4). TV1 **được thông báo trước** để biết.
 
 ---
 
@@ -98,6 +111,24 @@ Nguoi dung can xem job resize / tao danh muc
 
 ## 7. Quyết định cần chốt
 
-1. Chọn A (lệnh `--promote-admin`), B (seed admin + mật khẩu dev) hay C (chỉ tài liệu)?
-2. Nếu B: đặt tài khoản ở đâu và ai chịu trách nhiệm cảnh báo "không dùng ở production"?
-3. Có cần AI hỗ trợ phân quyền (endpoint quản lý vai trò) trong phạm vi dự án không, hay để ngoài?
+✅ **ĐÃ CHỐT 03/10/2026 — TV4 chọn phương án A.** Mục này giữ lại để đối chiếu, không cần hỏi lại.
+
+| # | Câu hỏi | Quyết định |
+|---|---|---|
+| 1 | Chọn phương án nào? | ✅ **A** — CLI `--promote-admin`. B bị loại vì đặt mật khẩu trong git; C không gỡ được block |
+| 2 | Nếu B: tài khoản ở đâu, ai cảnh báo? | ⛔ Không áp dụng — không chọn B |
+| 3 | Cần endpoint quản lý vai trò trong dự án không? | ⛔ **Không** — ngoài phạm vi tuần 4. Chỉ CLI local, chỉ `Development` |
+
+### Phần còn lại để theo dõi
+
+| Việc | Trạng thái |
+|---|---|
+| B6-1…B6-4 triển khai | ⏳ Chưa làm |
+| Lệnh **bị từ chối** ở `Testing`/`Production` | 🔲 Test khi làm B6-1 |
+| Chạy lại 2 lần không nhân bản role | 🔲 Test idempotent |
+| ⛔ **Không** thêm user Admin vào `DbSeeder` | 🔲 Kiểm tra khi review |
+| **N2-E7** chạy được sau khi có Admin | ⏳ Đang chờ B6 |
+| Hướng dẫn dùng trong `docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md` | 🔲 Chưa viết |
+
+Xem kế hoạch chi tiết và nguyên tắc "ngoài contact":
+[`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2.

@@ -16,6 +16,11 @@ public sealed class FakeRecipeImageRepository : IRecipeImageRepository
         Task.FromResult(Store.FirstOrDefault(r => r.Id == recipeId));
 
     public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
+
+    /// <summary>N2-E4: xoá tường minh — fake không có DbContext nên chỉ ghi nhận.</summary>
+    public readonly List<Domain.Entities.RecipeImage> MarkedDeleted = [];
+
+    public void MarkImageDeleted(Domain.Entities.RecipeImage image) => MarkedDeleted.Add(image);
 }
 
 public sealed class FakeFileStorageService : IFileStorageService
@@ -56,6 +61,21 @@ public sealed class FakeImageResizeQueue : IImageResizeQueue
     }
 }
 
+/// <summary>B5: signer giả — ghi lại key được ký để assert thứ tự ưu tiên variant.</summary>
+public sealed class FakeObjectStorageUrlSigner : IObjectStorageUrlSigner
+{
+    public readonly List<string> SignedKeys = [];
+
+    /// <summary>Đặt null để mô phỏng RustFS/MinIO hỏng lúc ký (B5 yêu cầu fail-soft).</summary>
+    public string? Result { get; set; } = "https://storage.local/presigned";
+
+    public Task<string?> CreatePresignedUrlAsync(string key, CancellationToken ct = default)
+    {
+        SignedKeys.Add(key);
+        return Task.FromResult(Result);
+    }
+}
+
 public sealed class RecipeImageApiTests
 {
     private static Recipe NewDraftRecipe(string authorId = "author-1") =>
@@ -73,11 +93,18 @@ public sealed class RecipeImageApiTests
 
     private static MemoryStream JpegStream()
     {
-        var bytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        // Đệm tới `ImageFormats.MinBytes`: validator chặn `file.too_small` trước khi đối chiếu
+        // magic bytes, nên fixture 16 byte sẽ bị chặn ở ngưỡng kích thước thay vì tới bước JPEG.
+        var bytes = new byte[Math.Max(16, (int)ImageFormats.MinBytes)];
+        new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }.CopyTo(bytes, 0);
         var stream = new MemoryStream(bytes);
         stream.Position = 0;
         return stream;
     }
+
+    /// <summary>B5: factory thật + signer giả để handler đi đúng luồng production.</summary>
+    private static RecipeImageDtoFactory DtoFactory(IObjectStorageUrlSigner? signer = null)
+        => new(signer ?? new FakeObjectStorageUrlSigner());
 
     [Fact]
     public async Task Upload_adds_image_and_uploads_to_storage()
@@ -87,10 +114,10 @@ public sealed class RecipeImageApiTests
         repo.Store.Add(recipe);
         var storage = new FakeFileStorageService();
         var queue = new FakeImageResizeQueue();
-        var handler = new UploadRecipeImageHandler(repo, storage, new FakeCurrentUser("author-1"), queue);
+        var handler = new UploadRecipeImageHandler(repo, storage, new FakeCurrentUser("author-1"), queue, DtoFactory());
 
         var dto = await handler.Handle(new UploadRecipeImageCommand(
-            recipe.Id, "anh.jpg", "image/jpeg", "Ảnh phở", 16, JpegStream()), CancellationToken.None);
+            recipe.Id, "anh.jpg", "image/jpeg", "Ảnh phở", ImageFormats.MinBytes, JpegStream()), CancellationToken.None);
 
         Assert.True(dto.IsPrimary, "Ảnh đầu tiên phải tự động thành primary.");
         Assert.Equal("Ảnh phở", dto.AltText);
@@ -114,11 +141,15 @@ public sealed class RecipeImageApiTests
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
         var queue = new FakeImageResizeQueue();
-        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-1"), queue);
-        var gif = new MemoryStream([0x47, 0x49, 0x46, 0x38]); // GIF
+        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-1"), queue, DtoFactory());
+        // GIF không thuộc danh sách MIME cho phép. Đệm tới `MinBytes` để bị chặn đúng ở nhánh
+        // "sai MIME" chứ không phải nhánh `file.too_small` (test chỉ assert là throw + không enqueue).
+        var gifBytes = new byte[(int)ImageFormats.MinBytes];
+        new byte[] { 0x47, 0x49, 0x46, 0x38 }.CopyTo(gifBytes, 0);
+        var gif = new MemoryStream(gifBytes);
 
         await Assert.ThrowsAsync<AppException>(() => handler.Handle(
-            new UploadRecipeImageCommand(recipe.Id, "a.gif", "image/gif", null, 4, gif), CancellationToken.None));
+            new UploadRecipeImageCommand(recipe.Id, "a.gif", "image/gif", null, gif.Length, gif), CancellationToken.None));
 
         Assert.Empty(queue.Enqueued);
     }
@@ -147,10 +178,10 @@ public sealed class RecipeImageApiTests
         var recipe = NewDraftRecipe();
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
-        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-2"), new FakeImageResizeQueue());
+        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-2"), new FakeImageResizeQueue(), DtoFactory());
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
-            new UploadRecipeImageCommand(recipe.Id, "a.jpg", "image/jpeg", null, 16, JpegStream()), CancellationToken.None));
+            new UploadRecipeImageCommand(recipe.Id, "a.jpg", "image/jpeg", null, ImageFormats.MinBytes, JpegStream()), CancellationToken.None));
         Assert.Equal(403, ex.Status);
         Assert.Equal("recipe.forbidden", ex.Code);
     }
@@ -161,10 +192,10 @@ public sealed class RecipeImageApiTests
         var recipe = NewDraftRecipe();
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
-        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("admin-1", isAdmin: true), new FakeImageResizeQueue());
+        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("admin-1", isAdmin: true), new FakeImageResizeQueue(), DtoFactory());
 
         var dto = await handler.Handle(
-            new UploadRecipeImageCommand(recipe.Id, "a.jpg", "image/jpeg", null, 16, JpegStream()), CancellationToken.None);
+            new UploadRecipeImageCommand(recipe.Id, "a.jpg", "image/jpeg", null, ImageFormats.MinBytes, JpegStream()), CancellationToken.None);
         Assert.True(dto.IsPrimary);
     }
 
@@ -172,10 +203,10 @@ public sealed class RecipeImageApiTests
     public async Task Upload_recipe_not_found_throws_404()
     {
         var repo = new FakeRecipeImageRepository(); // empty
-        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-1"), new FakeImageResizeQueue());
+        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-1"), new FakeImageResizeQueue(), DtoFactory());
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
-            new UploadRecipeImageCommand(Guid.NewGuid(), "a.jpg", "image/jpeg", null, 16, JpegStream()), CancellationToken.None));
+            new UploadRecipeImageCommand(Guid.NewGuid(), "a.jpg", "image/jpeg", null, ImageFormats.MinBytes, JpegStream()), CancellationToken.None));
         Assert.Equal(404, ex.Status);
         Assert.Equal("recipe.not_found", ex.Code);
     }
@@ -186,11 +217,16 @@ public sealed class RecipeImageApiTests
         var recipe = NewDraftRecipe();
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
-        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-1"), new FakeImageResizeQueue());
-        var gif = new MemoryStream([0x47, 0x49, 0x46, 0x38]); // GIF
+        var handler = new UploadRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-1"), new FakeImageResizeQueue(), DtoFactory());
+        // GIF không nằm trong danh sách MIME cho phép. Đệm tới `MinBytes` để lỗi đến tay đúng
+        // nhánh "sai MIME" thay vì bị chặn sớm bởi nhánh `file.too_small`.
+        var gifBytes = new byte[(int)ImageFormats.MinBytes];
+        new byte[] { 0x47, 0x49, 0x46, 0x38 }.CopyTo(gifBytes, 0);
+        var gif = new MemoryStream(gifBytes);
+        gif.Position = 0;
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
-            new UploadRecipeImageCommand(recipe.Id, "a.gif", "image/gif", null, 4, gif), CancellationToken.None));
+            new UploadRecipeImageCommand(recipe.Id, "a.gif", "image/gif", null, gif.Length, gif), CancellationToken.None));
         Assert.Equal(400, ex.Status);
         Assert.Equal("file.invalid_type", ex.Code);
     }
@@ -203,7 +239,7 @@ public sealed class RecipeImageApiTests
         var second = recipe.AddImage("recipes/r1/b.jpg", null);
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
-        var handler = new UpdateRecipeImageHandler(repo, new FakeCurrentUser("author-1"));
+        var handler = new UpdateRecipeImageHandler(repo, new FakeUnitOfWork(), new FakeCurrentUser("author-1"), DtoFactory());
 
         var dto = await handler.Handle(
             new UpdateRecipeImageCommand(recipe.Id, second.Id, IsPrimary: true, AltText: "Ảnh mới", OrderIndex: 0), CancellationToken.None);
@@ -228,7 +264,7 @@ public sealed class RecipeImageApiTests
         recipe.AddImage("recipes/r1/a.jpg", null);
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
-        var handler = new UpdateRecipeImageHandler(repo, new FakeCurrentUser("author-1"));
+        var handler = new UpdateRecipeImageHandler(repo, new FakeUnitOfWork(), new FakeCurrentUser("author-1"), DtoFactory());
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
             new UpdateRecipeImageCommand(recipe.Id, Guid.NewGuid(), IsPrimary: true), CancellationToken.None));
@@ -245,7 +281,7 @@ public sealed class RecipeImageApiTests
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
         var storage = new FakeFileStorageService();
-        var handler = new DeleteRecipeImageHandler(repo, storage, new FakeCurrentUser("author-1"));
+        var handler = new DeleteRecipeImageHandler(repo, new FakeUnitOfWork(), storage, new FakeCurrentUser("author-1"));
 
         var imageToDelete = recipe.Images.First(i => !i.IsPrimary);
         await handler.Handle(new DeleteRecipeImageCommand(recipe.Id, imageToDelete.Id), CancellationToken.None);
@@ -264,7 +300,7 @@ public sealed class RecipeImageApiTests
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
         var storage = new FakeFileStorageService();
-        var handler = new DeleteRecipeImageHandler(repo, storage, new FakeCurrentUser("author-1"));
+        var handler = new DeleteRecipeImageHandler(repo, new FakeUnitOfWork(), storage, new FakeCurrentUser("author-1"));
 
         await handler.Handle(new DeleteRecipeImageCommand(recipe.Id, derived.Id), CancellationToken.None);
 
@@ -283,7 +319,7 @@ public sealed class RecipeImageApiTests
         var image = recipe.AddImage("recipes/r1/a.jpg", null);
         var repo = new FakeRecipeImageRepository();
         repo.Store.Add(recipe);
-        var handler = new DeleteRecipeImageHandler(repo, new FakeFileStorageService(), new FakeCurrentUser("author-9"));
+        var handler = new DeleteRecipeImageHandler(repo, new FakeUnitOfWork(), new FakeFileStorageService(), new FakeCurrentUser("author-9"));
 
         var ex = await Assert.ThrowsAsync<AppException>(() => handler.Handle(
             new DeleteRecipeImageCommand(recipe.Id, image.Id), CancellationToken.None));
@@ -295,7 +331,7 @@ public sealed class RecipeImageApiTests
     {
         var validator = new UploadRecipeImageValidator();
         var result = await validator.ValidateAsync(new UploadRecipeImageCommand(
-            Guid.NewGuid(), "a.jpg", "image/jpeg", new string('a', 201), 16, JpegStream()));
+            Guid.NewGuid(), "a.jpg", "image/jpeg", new string('a', 201), ImageFormats.MinBytes, JpegStream()));
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(UploadRecipeImageCommand.AltText));
     }
@@ -323,3 +359,4 @@ public sealed class RecipeImageApiTests
         Assert.Equal(3, dto.OrderIndex);
     }
 }
+

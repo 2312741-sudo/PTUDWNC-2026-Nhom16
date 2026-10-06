@@ -2,8 +2,16 @@
 
 > **Block**: [`TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md`](../evidence/TV4/Tuan03/Report/TONG_HOP_BLOCK_SUA_BUG_UPLOAD_ANH.md) §2 B5
 > **Mức**: 🟡 Trung bình · **Phát hiện**: [`TEST_CASE_TICH_HOP_FE_BE.md`](../evidence/TV4/Tuan03/Report/TEST_CASE_TICH_HOP_FE_BE.md) §4 (D03/D04)
-> **Cần ai quyết**: nhóm + **TV3 (Huỳnh Quốc Trung — chủ sở hữu UI wizard `ImagesStep.tsx`)**
-> **Đụng quyết định**: D27 / PA-2 trong `docs/IMAGE_CONTRACT.md` §5
+> **Cần ai quyết**: ✅ **ĐÃ CHỐT** — TV4 (Nguyễn Hữu Trung Sơn), ngày 03/10/2026 → chọn **phương án A**
+> **Đụng quyết định**: D27 / PA-2 trong `docs/IMAGE_CONTRACT.md` §5 (PA-2 **giữ nguyên** cho recipe Published; thêm **PA-3 presigned** cho recipe Draft)
+>
+> ✅ **TRẠNG THÁI 03/10/2026: ĐÃ QUYẾT — phương án A (presigned URL).** Xem
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §1.
+> ⏳ **Chưa có code** — chờ triển khai B5-1…B5-7.
+>
+> **Quyết định của TV4 về phần việc của TV3:** `ImagesStep.tsx` + `lib/recipe-editor.ts` là file của
+> **TV3**, nhưng do **TV4** đã chốt phương án nên **TV4 tự sửa** (theo nguyên tắc "ngoài contact").
+> TV3 **được thông báo trước** để biết, ⛔ **không phải chờ TV3 phản hồi** mới bắt đầu.
 
 ---
 
@@ -116,6 +124,22 @@ Nguoi dung mo wizard buoc "Anh" voi recipe Draft
 
 ## 7. Quyết định cần chốt
 
-1. Chọn phương án A (presigned), B (token trong query), C (fetch + blob, chỉ wizard) hay D (chấp nhận)?
-2. `IMAGE_CONTRACT.md` §1 có được cập nhật để thêm trường/URL đã ký không (A) — ai chịu phần tài liệu?
-3. Ai phụ trách sửa `ImagesStep.tsx` (TV3) và khi nào review?
+✅ **ĐÃ CHỐT 03/10/2026 — TV4 chọn phương án A.** Mục này giữ lại để đối chiếu, không cần hỏi lại.
+
+| # | Câu hỏi | Quyết định |
+|---|---|---|
+| 1 | Chọn phương án nào? | ✅ **A** — presigned URL, hạn **≤ 10 phút**. B (token trong query) bị loại vì rò vào access log; C/D không dùng |
+| 2 | `IMAGE_CONTRACT.md` ai cập nhật? | ✅ **TV4** — task B5-5, sửa §3 (DTO) + §5 (thêm PA-3), **cùng PR** với code |
+| 3 | Ai sửa `ImagesStep.tsx`? | ✅ **TV4 tự sửa** (file của TV3). TV3 được thông báo trước, ⛔ không chờ phản hồi |
+
+### Phần còn lại để theo dõi
+
+| Việc | Trạng thái |
+|---|---|
+| B5-1…B5-7 triển khai | ⏳ Chưa làm |
+| Presigned **không** lộ trong response public recipe Published | 🔲 Kiểm tra khi làm B5-3 |
+| Cập nhật `IMAGE_CONTRACT.md` §1/§3/§5 | 🔲 Cùng PR B5 |
+| Test case §5 chạy xanh (`Skipped=0`) | 🔲 Chưa chạy |
+
+Xem kế hoạch chi tiết và nguyên tắc "ngoài contact":
+[`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §1.

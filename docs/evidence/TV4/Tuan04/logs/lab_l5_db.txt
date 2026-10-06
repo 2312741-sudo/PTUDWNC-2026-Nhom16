@@ -1,0 +1,33 @@
+=== LAB L5 - BANG CHUNG DU LIEU (2026-10-05, run 20261005-101129) ===
+
+[1] Tong so cong thuc
+  meta.total = 101   totalPages = 3
+
+[2] Phan bo trang thai (quet ca 3 trang x 50)
+  so ban ghi doc duoc : 101
+  status=Published -> 101
+
+[3] Cong thuc co anh / khong co anh
+  co primaryImageUrl : 101 / 101
+  kieu duong dan     : /images/recipes/<slug>.jpg
+  => day la duong dan TINH phia frontend, KHONG phai object key cua MinIO.
+  => endpoint proxy /api/v1/resources/images/{key} khong duoc dung voi du lieu that.
+  vi du             : /images/recipes/khoai-lang-lac-pho-mai.jpg
+
+[4] Chi tiet 1 cong thuc (anh + rowVersion)
+  slug        : khoai-lang-lac-pho-mai
+  so anh      : 1
+  originalUrl : /images/recipes/khoai-lang-lac-pho-mai.jpg
+  isPrimary   : True
+  rowVersion  : DRJ/EDxS/UiqjOAAXasFOA==
+  => khong co bien the medium/large nao duoc sinh ra.
+
+[5] Hangfire server
+  Phase multi-instance DA BO QUA check nay vi thieu LAB_APP_DB de doc bang HangFireServer.
+  Chua co bang chung so server nen dang active khi chay 2 tien trinh.
+  KHONG duoc phep ket luan 'job nen khong chay trung lap' khi thieu du lieu nay.
+
+[6] Hang chung ha tang
+  database         Healthy   PostgreSQL reachable.
+  redis            Healthy   localhost:6379 reachable.
+  object-storage   Healthy   Object storage OK: endpoint=localhost:9000, bucket='culinary-blog', credential hợp lệ.

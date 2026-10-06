@@ -38,8 +38,28 @@ public sealed class MinIOHealthCheck(IConfiguration cfg) : IHealthCheck
     private readonly string _host = cfg["HealthChecks:Minio:Host"] ?? "localhost";
     private readonly int _port = int.Parse(cfg["HealthChecks:Minio:Port"] ?? "9000");
 
+    /// <summary>
+    /// Check PHỤ (chỉ tag "all"): xác nhận cổng storage mở. Không dùng làm tiêu chí readiness vì
+    /// TCP mở không có nghĩa là credential đúng — việc đó do <see cref="ObjectStorageHealthCheck"/> lo.
+    /// </summary>
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct)
         => TcpHealthCheckHelper.CheckTcpAsync(_host, _port, ct);
+}
+
+/// <summary>
+/// B4 (issue #22, N1-7): readiness của object storage dựa trên CREDENTIAL THẬT (ListObjects),
+/// nên phân biệt được "cổng mở nhưng AccessKey sai" — tình huống mà TCP probe báo Healthy và
+/// chỉ lộ ra lúc người dùng bấm "Tải lên".
+/// </summary>
+public sealed class ObjectStorageHealthCheck(ObjectStorageCredentialProbe probe) : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct)
+    {
+        var result = await probe.ProbeAsync(ct);
+        return result.Ok
+            ? HealthCheckResult.Healthy(result.Message)
+            : HealthCheckResult.Unhealthy(result.Message, result.Error);
+    }
 }
 
 public sealed class LivenessHealthCheck : IHealthCheck

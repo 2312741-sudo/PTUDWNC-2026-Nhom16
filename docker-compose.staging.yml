@@ -78,7 +78,12 @@ services:
       Minio__AccessKey: "minioadmin"
       Minio__SecretKey: "minioadmin"
       Minio__UseSsl: "false"
-      Jwt__SigningKey: "development-secret-key-that-is-at-least-64-bytes-long-for-jwt-signing-256-bits-security"
+      # Khoá ký JWT KHÔNG được hardcode trong repo. Sinh riêng cho staging:
+      #   openssl rand -base64 48      -> 64 ký tự, đúng yêu cầu >= 64 byte
+      # rồi đặt vào .env.staging (không commit) hoặc export khi chạy compose.
+      # JwtSettings.Validate() từ chối khoá dev đã thu hồi, nên không có default ở đây:
+      # để trống giá trị sẽ làm container fail-fast, tốt hơn là chạy bằng khoá đã biết.
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?chua dat JWT_SIGNING_KEY - sinh bang openssl rand -base64 48}
       Jwt__Issuer: "culinary-blog"
       Jwt__Audience: "culinary-blog-client"
     ports:

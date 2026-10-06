@@ -88,13 +88,15 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 | 5 — D5, D7 | Tự deploy/restore/test2 API; Nguyễn Thanh Tâm (Nhóm trưởng) review; HTTPS/CORS/volumes, load/SEO/runbook | Staging đầy đủ; trace HTTP→DB; Nginx/health đúng; số đo và giới hạn được ghi rõ |
 | 6 — D7 | Regression/release, demo publish/media/ops và lab; chốt evidence | Reviewer Nguyễn Thanh Tâm xác nhận; 5 E2E pass; runbook, backup/restore và secrets instructions bàn giao |
 
-**Tình hình hiện tại của TV4 (cập nhật 30/09/2026, Tuần 4)**:
+**Tình hình hiện tại của TV4 (cập nhật 03/10/2026, Tuần 4)**:
 
 - ✅ **Tuần 3 đã đóng** và merge vào `main` qua PR #16: D23 (Hangfire queue persistent + dashboard Admin), D27 (media proxy có auth, Published công khai / Draft-Archived giới hạn owner), D2 (resize 300×300/800×600 idempotent), D4 (sitemap/robots/OG/JSON-LD), D5 (EXPLAIN + k6), D6 (Lab L4 — 4 phase · 39/39 check PASS trên nhánh `practice/TV4/L4`); kèm gỡ sự cố CI 5 run đỏ do image MinIO bị gỡ khỏi registry → chuyển `rustfs/rustfs` và ghim tag + digest.
-- ✅ **Tuần 4 — phần đã xong (30/09)**: phát hiện và sửa bug upload ảnh trả `500` (`storage` thiếu cấu hình `Minio`/S3 → credential rỗng → RustFS trả `401` → bị bọc thành `500 server.error`); chuẩn hóa nạp `.env` cho local dev (B3) bằng `DotNetEnv`, kèm `.env.example`; thêm 3 test `DevConfigParityTests` chống hồi quy; chuẩn hóa default PostgreSQL; QA tích hợp Frontend–Backend **41/41 PASS**; toàn hệ thống **172/172 test xanh** sau khi sync `origin/main`. Đóng gói trong **PR #19**, đang chờ review.
-- 🔄 **Tuần 4 — phần đang làm**: chờ review/merge PR #19; chuẩn bị đề xuất **B1** (đổi lỗi storage `500` → `503 storage.unavailable` có mã lỗi rõ ràng) và **B2** (semantics fail-fast khi thiếu cấu hình) để không lặp lại lỗi khó chẩn đoán.
-- ⛔ **Còn block, chờ quyết định nhóm**: **B4** (health check storage phải xác thực credential thay vì chỉ TCP probe), **B5** (cơ chế xem ảnh Draft trong wizard — phụ thuộc IMAGE_CONTRACT D27 đã chốt PA-2), **B6** (tạo/distribute tài khoản Admin — phụ thuộc seed data của TV1).
-- ⏳ **Chưa bắt đầu ở Tuần 4**: retry/race/publish E2E, backup & restore trên multi-container, shared cache/multi-worker, kịch bản file-size attack và MIME spoofing — cần hoàn thành để đạt 24/24 ô kỹ năng (hiện 9/24).
+- ✅ **Tuần 4 — phần đã xong (30/09)**: phát hiện và sửa bug upload ảnh trả `500` (`storage` thiếu cấu hình `Minio`/S3 → credential rỗng → RustFS trả `401` → bị bọc thành `500 server.error`); chuẩn hóa nạp `.env` cho local dev (B3) bằng `DotNetEnv`, kèm `.env.example`; thêm 3 test `DevConfigParityTests` chống hồi quy; chuẩn hóa default PostgreSQL; QA tích hợp Frontend–Backend **41/41 PASS**; đóng gói trong **PR #19**.
+- ✅ **Tuần 4 — N0 + N1 xong (8/8 việc)**: health probe xác thực credential thật; OTEL + Seq trace HTTP→DB; `pg_dump`/`pg_restore` có drill 14 bảng; cache dùng chung nhiều instance qua Redis; sitemap theo lịch + khoá phân tán; B1 `503 storage.unavailable` + B2 validate lúc khởi động; bỏ secret khỏi `render.yaml` + secret scan trong CI. **Toàn hệ thống `210/210` test xanh** (`205` + `5`), build 0 warning, `dotnet format` exit 0. Bằng chứng: `docs/evidence/TV4/Tuan04/HANDOFF_TV4_TUAN4_N1.md`.
+- 🔄 **Đang chờ reviewer duyệt** (đã có code + test, ⛔ chưa merge): **B1** (`#20`), **B2** (`#21`), **B4** (`#22` — `/health/ready` gồm probe credential, commit `a1311fa`), cùng mapping K01–K24 (8 ô có bằng chứng mới).
+- 🔴 **Block còn mở — chỉ 2 mục**: **B5** (xem ảnh Draft trong wizard — cần TV3 phản hồi `ImagesStep.tsx`) và **B6** (tài khoản Admin — cần TV1). Ngoài ra cần Tâm chốt **nơi đặt lịch backup** và **kho lưu 30 ngày** (artifact GitHub chỉ giữ 7 ngày), và **rotate khoá JWT** đã lộ trong git history.
+- ⏳ **Chưa bắt đầu ở Tuần 4**: retry/race/publish E2E, kịch bản file-size attack và MIME spoofing, Playwright, k6 p95/p99, CI frontend — cần hoàn thành để đạt 24/24 ô kỹ năng.
+- 📄 **Kế hoạch thực thi tuần 4 đã tách 3 giai đoạn** (chỉ lập kế hoạch, chưa thực thi): [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](evidence/TV4/Tuan04/plan/PLAN_TRIEN_KHAI_TV4_TUAN4.md) · [`PLAN_GIAI_DOAN_1_N2_N4.md`](evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md) · [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_2_D0_XET_LOI.md) · [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_3_SUA_LOI.md). Lỗi gom ở [`BAO_CAO_LOI_TUAN_4_TV4.md`](evidence/TV4/Tuan04/report/BAO_CAO_LOI_TUAN_4_TV4.md).
 
 ## 4. Phụ thuộc, bàn giao và cân bằng khối lượng
 
@@ -177,15 +179,19 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 | TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 18/24 (K01, K02, K04, K05, K06, K08, K10, K11, K12, K14, K15, K16, K17, K19, K20, K21, K23, K24) | Đạt kiểm thử CI/Dev | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1, 2 & 3 (A1–A5, A7) |
 | TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 20/24 (K01, K02, K03, K04, K05, K06, K07, K08, K09, K10, K11, K12, K13, K16, K17, K18, K19, K20, K21, K24) | Chờ Staging | Hoàn thành Tuần 1, 2 & 3 | ✅ Hoàn thành Tuần 1, 2 & 3 (B1–B7) — PR #18 đã merge vào `main` |
 | TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 8/24 (K01, K02, K03, K05, K06, K07, K08, K21) | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 (Recipe Aggregate, RowVersion, RefreshTokens) |
-| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 9/24 (K01, K05, K08, K11, K12, K13, K20, K23, K24) | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 — PR #16 đã merge; 🔄 Tuần 4 đang thực hiện (PR #19 chờ review) |
+| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 9/24 đã được reviewer xác nhận (K01, K05, K08, K11, K12, K13, K20, K23, K24) · **+8 ô có bằng chứng mới từ N1, đang chờ duyệt** | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 — PR #16 đã merge; ✅ N0+N1 xong (03/10); ⏳ Tuần 4: N2–N4 **đã lập kế hoạch, chưa thực thi** |
 
 > **Cập nhật tiến độ 30/09/2026 (Tuần 4)**: số `x / 24` bằng đúng số mã K liệt kê trong cột trên — chỉ tính ô đã có minh chứng và được reviewer xác nhận. Trạng thái "Hoàn thành Tuần N" nghĩa là đã có code + test + evidence trên nhánh đã merge; `Kỹ năng xác nhận` mới là phần nghiệm thu 24/24 của G4.
 >
-> **Kết quả kiểm chứng chung tính đến 30/09/2026**: `dotnet build` Release 0 warning/0 error; `dotnet format --verify-no-changes` exit 0; `dotnet test` **172/172 pass** (167 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Skipped=0`); QA tích hợp Frontend–Backend **41/41 PASS**; `tsc --noEmit` và `next build` exit 0; `docker compose config --quiet` exit 0.
+> **Kết quả kiểm chứng chung tính đến 03/10/2026**: `dotnet build` Release 0 warning/0 error; `dotnet format --verify-no-changes` exit 0; `dotnet test` **210/210 pass** (205 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Skipped=0`); QA tích hợp Frontend–Backend **41/41 PASS**; `tsc --noEmit` và `next build` exit 0; `docker compose config --quiet` exit 0; secret scan pass.
+>
+> **Đính chính 03/10**: con số `172/172` ở bản cập nhật trước là **đã lỗi thời** — hiện là `210/210`. Số `214/214` là của **nhánh lab `lab/TV4-audit-tuan4`** (thêm 4 test hồi quy cho BUG-W4-01/02/03), ⛔ **chưa merge**, không dùng làm số chính.
 >
 > **Việc mới hoàn thành trong Tuần 4**: TV4 gỡ bug upload ảnh trả `500` do thiếu cấu hình `Minio`/S3, chuẩn hóa nạp `.env` (gỡ block B3), thêm 3 test `DevConfigParityTests`, ghi báo cáo trước/sau và 6 đề xuất B1–B6 — đóng gói trong **PR #19** đang chờ review. TV2 hoàn tất Search & Cache Tuần 3 qua **PR #18** (đã merge). PR #16 của TV4 đã merge gồm D23 (Hangfire queue + dashboard Admin), D27 (media proxy có auth), D2 (resize 300×300/800×600), D4 (sitemap/robots/OG/JSON-LD), D5 (EXPLAIN + k6) và D6 (Lab L4 — 39/39 check PASS); kèm gỡ sự cố CI 5 run đỏ do image MinIO bị gỡ khỏi registry (chuyển sang `rustfs/rustfs`).
 >
-> **Chưa đạt G4 (cổng cuối Tuần 4)**: ô kỹ năng còn thiếu — TV1 6/24, TV2 4/24, TV3 16/24, TV4 15/24; line coverage chưa đo tới 80%; 5 E2E flows Playwright chưa có; mọi thành viên đều chưa tự deploy/restore staging. Các block B1, B2, B4, B5, B6 của TV4 còn **chờ quyết định nhóm**.
+> **Chưa đạt G4 (cổng cuối Tuần 4)** — cập nhật 03/10: ô kỹ năng còn thiếu — TV1 6/24, TV2 4/24, TV3 16/24, **TV4 còn 15/24 chưa có minh chứng** (9/24 đã duyệt + 8 ô N1 chờ duyệt); line coverage chưa đo tới 80%; E2E Playwright chưa có; mọi thành viên đều chưa tự deploy/restore staging. Với TV4: block còn mở là **B5, B6**; **B1, B2, B4 đã có code + test, chờ reviewer duyệt** (không còn là block).
+>
+> **Kế hoạch N2–N4 của TV4 đã lược theo tuần**: runbook đầy đủ, deploy staging, HTTPS và 5 E2E flows **thuộc tuần 5**; `responsive/a11y` thuộc TV2, frontend unit test thuộc TV1. Chi tiết ở `docs/evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md` §0.2.
 
 Mẫu một bản ghi:
 
