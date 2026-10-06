@@ -234,3 +234,52 @@ Thực hiện theo định nghĩa GĐ2: xác nhận chức năng đầy đủ �
 - Tích hợp: wizard+auth+search+media khớp IMAGE_CONTRACT.md (gồm §7c).
 - Fix tích hợp: (a) DbSeeder không ghi đè URL ảnh người dùng – khoá bằng DbSeederUserImageUrlTests 2/2; (b) --migrate không nuốt lỗi (exit 1); (c) làm rõ ux_recipe_images_one_primary + soft-delete qua interceptor.
 - Độc lập báo cáo: BAO_CAO_GIAI_DOAN_2_N3.md tóm tắt + dẫn chiếu GĐ1.
+
+---
+
+## 9. GĐ3 – Rà soát và đóng GitHub Issues (05/10/2026)
+
+### 9.1 Tổng quan 5 issues đã sửa và đóng
+
+| # | Issue | Trạng thái sau sửa | Test hồi quy | File chính |
+|---|---|---|---|---|
+| 20 | [B1] Storage lỗi trả 500 server.error thay vì 503 storage.unavailable | ✅ Đã sửa + đóng | StorageFailureContractTests | MinioStorageService.cs (GuardAsync → AppException 503) |
+| 21 | [B2] API khởi động thành công khi thiếu cấu hình storage | ✅ Đã sửa + đóng | StorageFailureContractTests (B2 fail-fast) | Program.cs:156 (validate AccessKey/SecretKey) |
+| 22 | [B4] /health trả Healthy dù credential sai (chỉ TCP probe) | ✅ Đã sửa + đóng | HealthTests | ObjectStorageCredentialProbe.cs + Health.cs (StatObject probe) |
+| 23 | [B5] Wizard không xem được ảnh Draft (img không gửi Bearer) | ✅ Đã sửa + đóng | RecipeImagePresignedB5Tests + RecipeDetailPresignedB5Tests | FE ImagesStep.tsx (presignedUrl + isPresignedStale) + IMAGE_CONTRACT.md §7b |
+| 24 | [B6] Không có Admin nên không test được /hangfire | ✅ Đã sửa + đóng | PromoteAdminCommandTests + ImageConcurrencyE7Tests (E7 hangfire) | DbSeeder.cs (masterchef@culinary.local) + PromoteAdminCommand CLI |
+
+### 9.2 Chi tiết sửa
+
+**#20 B1 – Storage 503:**
+- Fix: MinioStorageService.GuardAsync bọc MinioException / HttpRequestException / SocketException / IOException / TimeoutException → AppException(503, "storage.unavailable", ...). Không bọc ObjectNotFoundException (→ 404) và OperationCanceledException khi ct.IsCancellationRequested (tránh báo 503 nhầm).
+- Test: StorageFailureContractTests (7 test case: upload → 503, proxy → 503, validator → 400 file.too_large, recipe → 404, ...).
+
+**#21 B2 – Fail-fast:**
+- Fix: Program.cs:156 validate AccessKey/SecretKey lúc khởi động; rỗng → throw fail-fast (trước đó chỉ log + khởi động tiếp).
+- Test: StorageFailureContractTests — B2 "fail-fast lúc khởi động".
+
+**#22 B4 – Health check credential:**
+- Fix: Thêm ObjectStorageCredentialProbe (Infrastructure) — StatObject trên key ProbeKey; phân biệt AccessDeniedException (credential sai → Unhealthy), BucketNotFoundException → Unhealthy, ObjectNotFoundException (404 sau xác thực) → Healthy, lỗi mạng → Unhealthy. Đăng ký trong Program.cs:218.
+- Test: HealthTests — /health/ready có check object-storage; port mở + AccessKey sai → 503 Unhealthy; credential đúng → Healthy.
+
+**#23 B5 – Draft images presigned:**
+- Fix: Draft images hiển thị qua presigned URL (PA-3) thay vì proxy (trả 403 vì thẻ <img> không gửi Bearer). FE imageSrc() ưu tiên presignedUrl; isPresignedStale() phát hiện URL hết hạn → hiện nút "Tải lại liên kết ảnh" (PATCH lấy URL mới).
+- Hợp đồng: docs/IMAGE_CONTRACT.md §7b — trường presignedUrl (nullable).
+- Test: RecipeImagePresignedB5Tests + RecipeDetailPresignedB5Tests — Draft owner/Admin có URL, Published → null, signer fail-soft, URL hết hạn 15 phút, không lọt log.
+
+**#24 B6 – Admin user:**
+- Fix: DbSeeder seed user masterchef@culinary.local role Admin, password User@123456. Thêm CLI --promote-admin nâng tài khoản hiện có lên Admin.
+- Test: PromoteAdminCommandTests (ExtractEmail parse, promote role) + ImageConcurrencyE7Tests (E7 Hangfire dashboard không public).
+
+### 9.3 Kết luận GĐ3
+- **5/5 issues đã sửa, có test hồi quy, đã đóng trên GitHub.**
+- Các fix đều được khoá bằng test tích hợp/unit; không phát hiện issue còn sót.
+- **GĐ3 hoàn tất**: kết hợp kết quả GĐ1 (N2/N4 evidence, 426/426, 96.31%) + GĐ2 (integration FE–BE 26/26, contract khớp) + đóng 5 issues.
+
+---
+
+**Báo cáo GĐ1:** BAO_CAO_GIAI_DOAN_1_N2_N4.md
+**Báo cáo GĐ2:** BAO_CAO_GIAI_DOAN_2_N3.md
+**Báo cáo GĐ3:** BAO_CAO_GIAI_DOAN_3_SUA_LOI.md (file này)
+**PR:** https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/29
