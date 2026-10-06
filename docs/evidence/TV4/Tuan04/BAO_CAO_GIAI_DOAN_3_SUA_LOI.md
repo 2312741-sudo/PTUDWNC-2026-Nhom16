@@ -186,3 +186,43 @@ TV4 **không sửa** `TUAN_5.md`, `BAO_CAO_LAB_05.md` hay các file `.docx` củ
 | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo GĐ1 — **đã cập nhật 05/10** |
 | [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) | Trạng thái từng mục — **đã cập nhật 05/10** |
 | [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md) | Sổ evidence — **đã cập nhật 05/10** |
+### 5. Fix DbSeeder – không ghi đè URL ảnh người dùng (TV3 §C.1) — 05/10/2026
+
+**Vấn đề:** DbSeeder.SeedAsync dùng điều kiện
+img.OriginalUrl.Contains("photo-1546069901-ba9599a7e63c") || !img.OriginalUrl.StartsWith("/images/recipes/")
+→ vế thứ hai khớp **mọi** URL không bắt đầu /images/recipes/ (kể cả khoá MinIO/ảnh upload người dùng ecipes/{id}/{uuid}.ext và URL tuyệt đối qua proxy D27) → mỗi lần khởi động lại ghi đè URL ảnh thật thành /images/recipes/{slug}.jpg.
+
+**Fix:** Chỉ coi là ảnh mẫu khi OriginalUrl bắt đầu bằng /images/ **và KHÔNG** bắt đầu bằng /images/recipes/ (các ảnh placeholder dạng /images/categories/..., /images/authors/... nếu có), hoặc rõ ràng là ảnh placeholder Unsplash. Điều kiện mới:
+Contains("photo-1546069901-ba9599a7e63c") || (StartsWith("/images/") && !StartsWith("/images/recipes/"))
+
+**Bằng chứng:** 	ests/CulinaryBlog.Tests/DbSeederUserImageUrlTests.cs (mới, 2 test)
+- Test 1: Upload ảnh PNG qua API → OriginalUrl có dạng ecipes/{recipeId}/{uuid}.png → chạy DbSeeder.SeedAsync 2 lần → URL **không đổi**.
+- Test 2: Giả lập URL tuyệt đối qua proxy http://localhost:5080/api/v1/resources/images/{uuid} → seed lại → URL **không đổi**.
+→ Chứng minh đỏ/xanh: tạm thời khôi phục điều kiện cũ → 2/2 FAIL, khôi phục fix → 2/2 PASS.
+
+**File sửa:** src/backend/CulinaryBlog.Infrastructure/Persistence/DbSeeder.cs.
+
+---
+
+### 6. Fix Program.cs --migrate – không nuốt lỗi (TV3 §C.2) — 05/10/2026
+
+**Vấn đề:** if (args.Contains("--migrate")) có 	ry { ...MigrateAsync(); } catch { } rồi vẫn Console.WriteLine("Database migrations applied successfully.") → báo thành công giả khi migration thất bại.
+
+**Fix:** Bỏ catch { }, bắt Exception ex, in Console.Error.WriteLine($"Database migration FAILED: {ex.GetBaseException().Message}"), set Environment.ExitCode = 1, **không** in thông báo thành công khi có lỗi.
+
+**File sửa:** src/backend/CulinaryBlog.API/Program.cs.
+
+---
+
+### 7. Rà soát IMAGE_CONTRACT.md – bổ sung §7c + sửa tham chiếu (TV3 §E.3) — 05/10/2026
+
+**Vấn đề:** TV3 ghi *"chỉ mục thuộc IMAGE_CONTRACT §4"* nhưng §4 là "Quy ước Lỗi & Problem Details (RFC 7807)". Hợp đồng trước đây **không mô tả** ux_recipe_images_one_primary.
+
+**Thay đổi:** Bổ sung §7c. Ràng buộc ở tầng DB: chỉ mục một-ảnh-chính (N2-E4):
+- Mô tả rõ tên, UNIQUE, bộ lọc "IsPrimary" = true AND "IsDeleted" = false", nguồn (Configuration + migrations).
+- **Giải thích kỹ thuật đúng:** AuditableEntityInterceptor (D08) chuyển Deleted → Modified + IsDeleted = true (soft-delete ở tầng DB), nên MarkImageDeleted vẫn để dòng trong bảng giữ IsPrimary=true → **bộ lọc IsDeleted=false là BẮT BUỘC**, không phải phòng xa.
+- Giải thích lý do phải lưu nhiều lần trong transaction (Postgres unique partial không deferrable; EF không đảm bảo thứ tự UPDATE).
+
+**Sửa tham chiếu sai:** ApiExceptionHandler.cs comment cập nhật §4 → §7c.
+
+**File sửa:** docs/IMAGE_CONTRACT.md, src/backend/CulinaryBlog.API/ApiExceptionHandler.cs.
