@@ -133,12 +133,12 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
    — thuộc cổng G6 tuần 5.
 7. **Jest/RTL chưa có** (thuộc TV1) ⇒ K21 mới đủ một phần.
 8. **Rotate khóa JWT thật chưa làm** — nằm ngoài repo, xem
-   [`DE_XUAT_09`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md).
+   [`DE_XUAT_09`](../../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md).
 9. **Nơi đặt lịch backup 03:00 ICT chưa chốt** — xem
-   [`DE_XUAT_07`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md).
+   [`DE_XUAT_07`](../../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md).
 10. **2 API instance mới đo thủ công qua Nginx**, chưa có compose profile dùng sẵn ⇒ K23 chưa đạt.
 11. **Kho backup 30 ngày chưa có** — xem
-    [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md).
+    [`DE_XUAT_08`](../../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md).
 12. `npm audit` còn **10** vulnerability (`9 high`, `1 critical`).
 13. **Google OAuth2/PKCE còn chờ credentials** — không có mock nào được tính là hoàn thành.
 
@@ -160,7 +160,7 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 | 10 | 04/10 | Tool | Dùng PowerShell `Get-Content`/`Set-Content` sửa source tiếng Việt đã làm hỏng encoding UTF-8 (`đ` → `?`) | S2 | Khôi phục bằng `git checkout` rồi sửa lại bằng tool edit; đã ghi cảnh báo cho các phiên sau |
 | 11 | 05/10 | N3-B/C1/C2 | Lab L5 7 phase đã làm xong; 4/7 phase lộ ra vấn đề thật (ISR không hoạt động, ảnh không tối ưu 2 tầng, search `no-store`, RowVersion chưa kiểm chứng) | S2 | Ghi Sổ K + log; **chuyển sang sửa ở GĐ3/GĐ4**, không sửa trong GĐ1 |
 | 12 | 05/10 | Merge | Merge `main` mang vào `docker-compose.staging.yml` **hardcode khoá JWT đã thu hồi** — test `JwtSigningKeyNotCommittedTests` đỏ 1/316 | S2 | Sửa ở **GĐ3** (`03564c4`): `${JWT_SIGNING_KEY:?}`; test 6/6 xanh |
-| 13 | 05/10 | TV1 | Báo cáo "Tuần 5" của TV1 có 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) | S2 | Hồ sơ [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md); **không sửa báo cáo của TV1** |
+| 13 | 05/10 | TV1 | Báo cáo "Tuần 5" của TV1 có 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) | S2 | Hồ sơ [`KiemChung_Commit_Week5_TV1.md`](../misc/KiemChung_Commit_Week5_TV1.md); **không sửa báo cáo của TV1** |
 
 ---
 
@@ -176,7 +176,7 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 6. **Lab L5 lộ ra 4 vấn đề thật** (ISR, ảnh, `no-store`, RowVersion) — xác nhận có đưa vào
    sửa ở GĐ3/GĐ4 hay để kỳ sau. Chi tiết `SOK_LAB_L5.md`.
 7. **Báo cáo "Tuần 5" của TV1 đánh dấu không đáng tin** — xem
-   [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md). Đề nghị TV1 đính chính
+   [`KiemChung_Commit_Week5_TV1.md`](../misc/KiemChung_Commit_Week5_TV1.md). Đề nghị TV1 đính chính
    6 điểm §5 của hồ sơ đó.
 8. ✅ **CI đã xanh trở lại** ở `8a585ef` (05/10): `Backend week 1` run `37320431750` ✅ + `Frontend CI` run
    `37320431432` ✅. Đã xử lý cả 3 nguyên nhân đỏ: khoá JWT còn sót trong `.md` của TV4 · `ApiFactory` không seed
@@ -186,12 +186,12 @@ Wizard **mất bước sau lần lưu draft đầu tiên**: lưu xong không chu
 
 | Tài liệu | Vai trò |
 |---|---|
-| [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md) | Evidence chi tiết từng K + log đính kèm |
-| [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) | Trạng thái từng mục N2/N3/N4 |
-| [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) | Kế hoạch + lý do loại bớt phạm vi |
-| [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) | Quyết định đưa B5/B6 lên trước N2 |
+| [`SO_EVIDENCE_TUAN_4.md`](../SO_EVIDENCE_TUAN_4.md) | Evidence chi tiết từng K + log đính kèm |
+| [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](../TRANG_THAI_THUC_HIEN_TUAN_4.md) | Trạng thái từng mục N2/N3/N4 |
+| [`PLAN_GIAI_DOAN_1_N2_N4.md`](../plan/PLAN_GIAI_DOAN_1_N2_N4.md) | Kế hoạch + lý do loại bớt phạm vi |
+| [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) | Quyết định đưa B5/B6 lên trước N2 |
 | [`SOK_LAB_L5.md`](SOK_LAB_L5.md) | Sổ K Lab L5 — 63 check, 3/7 phase PASS |
 | [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) | Báo cáo GĐ3 — gồm việc cuối: kiểm chứng báo cáo TV1 |
-| [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md) | Hồ sơ kiểm chứng báo cáo "Tuần 5" của TV1 |
-| [`../HUONG_DAN_CHAY_TV4.md`](../HUONG_DAN_CHAY_TV4.md) | Lệnh cài đặt/chạy + số đo mới |
-| [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md) | Mapping 24 dòng K ↔ FR/NFR ↔ ADR ↔ evidence |
+| [`KiemChung_Commit_Week5_TV1.md`](../misc/KiemChung_Commit_Week5_TV1.md) | Hồ sơ kiểm chứng báo cáo "Tuần 5" của TV1 |
+| [`../HUONG_DAN_CHAY_TV4.md`](../../HUONG_DAN_CHAY_TV4.md) | Lệnh cài đặt/chạy + số đo mới |
+| [`../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md`](../../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md) | Mapping 24 dòng K ↔ FR/NFR ↔ ADR ↔ evidence |

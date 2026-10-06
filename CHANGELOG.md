@@ -28,7 +28,7 @@ Nhánh `2312739_NHTSon_D5-D6-D7`.
 - **Vai trò**: cả 5 bản ghi đều tự xác nhận — người xác nhận là chính người thực hiện.
 - **Công nhận**: mục "Bản ghi 5" liệt kê đề xuất B1 (`500` → `503 storage.unavailable`) thuộc TV4,
   đã được TV4 triển khai trước.
-- Hồ sơ: [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/KiemChung_Commit_Week5_TV1.md).
+- Hồ sơ: [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/misc/KiemChung_Commit_Week5_TV1.md).
   **Không sửa báo cáo của TV1** — giữ nguyên bản ghi gốc để TV1 tự đính chính.
 
 ### Đóng N3-B / N3-C1 / N3-C2

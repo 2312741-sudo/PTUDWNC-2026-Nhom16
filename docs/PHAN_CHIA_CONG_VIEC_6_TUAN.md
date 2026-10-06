@@ -96,7 +96,7 @@ Mỗi ô tuần bao gồm code/cấu hình, test tương ứng và PR được r
 - 🔄 **Đang chờ reviewer duyệt** (đã có code + test, ⛔ chưa merge): **B1** (`#20`), **B2** (`#21`), **B4** (`#22` — `/health/ready` gồm probe credential, commit `a1311fa`), cùng mapping K01–K24 (8 ô có bằng chứng mới).
 - 🔴 **Block còn mở — chỉ 2 mục**: **B5** (xem ảnh Draft trong wizard — cần TV3 phản hồi `ImagesStep.tsx`) và **B6** (tài khoản Admin — cần TV1). Ngoài ra cần Tâm chốt **nơi đặt lịch backup** và **kho lưu 30 ngày** (artifact GitHub chỉ giữ 7 ngày), và **rotate khoá JWT** đã lộ trong git history.
 - ⏳ **Chưa bắt đầu ở Tuần 4**: retry/race/publish E2E, kịch bản file-size attack và MIME spoofing, Playwright, k6 p95/p99, CI frontend — cần hoàn thành để đạt 24/24 ô kỹ năng.
-- 📄 **Kế hoạch thực thi tuần 4 đã tách 3 giai đoạn** (chỉ lập kế hoạch, chưa thực thi): [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](evidence/TV4/Tuan04/PLAN_TRIEN_KHAI_TV4_TUAN4.md) · [`PLAN_GIAI_DOAN_1_N2_N4.md`](evidence/TV4/Tuan04/PLAN_GIAI_DOAN_1_N2_N4.md) · [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](evidence/TV4/Tuan04/PLAN_GIAI_DOAN_2_D0_XET_LOI.md) · [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](evidence/TV4/Tuan04/PLAN_GIAI_DOAN_3_SUA_LOI.md). Lỗi gom ở [`BAO_CAO_LOI_TUAN_4_TV4.md`](evidence/TV4/Tuan04/BAO_CAO_LOI_TUAN_4_TV4.md).
+- 📄 **Kế hoạch thực thi tuần 4 đã tách 3 giai đoạn** (chỉ lập kế hoạch, chưa thực thi): [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](evidence/TV4/Tuan04/plan/PLAN_TRIEN_KHAI_TV4_TUAN4.md) · [`PLAN_GIAI_DOAN_1_N2_N4.md`](evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md) · [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_2_D0_XET_LOI.md) · [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_3_SUA_LOI.md). Lỗi gom ở [`BAO_CAO_LOI_TUAN_4_TV4.md`](evidence/TV4/Tuan04/report/BAO_CAO_LOI_TUAN_4_TV4.md).
 
 ## 4. Phụ thuộc, bàn giao và cân bằng khối lượng
 
@@ -191,7 +191,7 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 >
 > **Chưa đạt G4 (cổng cuối Tuần 4)** — cập nhật 03/10: ô kỹ năng còn thiếu — TV1 6/24, TV2 4/24, TV3 16/24, **TV4 còn 15/24 chưa có minh chứng** (9/24 đã duyệt + 8 ô N1 chờ duyệt); line coverage chưa đo tới 80%; E2E Playwright chưa có; mọi thành viên đều chưa tự deploy/restore staging. Với TV4: block còn mở là **B5, B6**; **B1, B2, B4 đã có code + test, chờ reviewer duyệt** (không còn là block).
 >
-> **Kế hoạch N2–N4 của TV4 đã lược theo tuần**: runbook đầy đủ, deploy staging, HTTPS và 5 E2E flows **thuộc tuần 5**; `responsive/a11y` thuộc TV2, frontend unit test thuộc TV1. Chi tiết ở `docs/evidence/TV4/Tuan04/PLAN_GIAI_DOAN_1_N2_N4.md` §0.2.
+> **Kế hoạch N2–N4 của TV4 đã lược theo tuần**: runbook đầy đủ, deploy staging, HTTPS và 5 E2E flows **thuộc tuần 5**; `responsive/a11y` thuộc TV2, frontend unit test thuộc TV1. Chi tiết ở `docs/evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md` §0.2.
 
 Mẫu một bản ghi:
 

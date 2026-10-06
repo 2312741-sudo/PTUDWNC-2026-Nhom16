@@ -221,7 +221,7 @@ Sau khi đọc 5 tài liệu cũ, ba kết luận của bản đầu bị sửa:
 
 ## 8. Ghi chú cuối
 
-- Rà soát này **không sửa file nguồn nào**. Chỉ tạo file báo cáo tạm trong `docs/evidence/TV4/TamKiem/`.
+- Rà soát này **không sửa file nguồn nào**. Chỉ tạo file báo cáo tạm trong `docs/evidence/TV4/Report/`.
 - **Nguồn đối chiếu:** 5 tài liệu cũ trong `docs/evidence/TV4/Temp/` đã được đọc, khai thác và **xóa khỏi project** theo kế hoạch. Nội dung có giá trị đã được hợp nhất vào đây (mục 3.0, 3.3, 4.1, 6, 7.1).
 - **Noted:** TV4 luôn giữ backup riêng của các file này ngoài project, nên xóa trong repo không mất dữ liệu gốc.
 - Chi tiết đầy đủ theo từng thành viên nằm ở `BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md` cùng thư mục.

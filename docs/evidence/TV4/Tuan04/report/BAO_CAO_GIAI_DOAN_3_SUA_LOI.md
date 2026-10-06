@@ -20,7 +20,7 @@ GĐ3 gồm **02 việc sửa lỗi**, cả hai đều có test hồi quy chứng
 | 1 | `docker-compose.staging.yml` hardcode **khoá JWT đã thu hồi** | `R3` | Commit `21aa722` của TV1 chép nguyên khoá dev mà `JwtSettings.Validate()` đã cấm, vào file compose | `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` **FAIL 1/316** trước → **PASS 6/6** sau | ✅ Đã sửa |
 | 2 | Xung đột `.gitignore` khi merge `main` | `R1` | Nhánh tuần và `21aa722` cùng sửa `.gitignore` ở hai vùng khác nhau | `git merge` báo `CONFLICT (content)`. Sau khi ghép cả hai: dump `.sql.gz` bị ignore, `.gitkeep` vẫn được theo dõi | ✅ Đã giải quyết |
 
-**Việc cuối của GĐ3 — kiểm chứng báo cáo "Tuần 5" của TV1** — phát hiện **4 sai lệch đã xác nhận được** trong báo cáo và đó là lý do tìm ra lỗi ở bảng trên. Hồ sơ: [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md).
+**Việc cuối của GĐ3 — kiểm chứng báo cáo "Tuần 5" của TV1** — phát hiện **4 sai lệch đã xác nhận được** trong báo cáo và đó là lý do tìm ra lỗi ở bảng trên. Hồ sơ: [`KiemChung_Commit_Week5_TV1.md`](../misc/KiemChung_Commit_Week5_TV1.md).
 
 ---
 
@@ -181,11 +181,11 @@ TV4 **không sửa** `TUAN_5.md`, `BAO_CAO_LAB_05.md` hay các file `.docx` củ
 
 | Tài liệu | Vai trò |
 |---|---|
-| [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md) | Hồ sơ kiểm chứng commit "Tuần 5" của TV1 — **việc cuối của GĐ3** |
-| [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](PLAN_GIAI_DOAN_3_SUA_LOI.md) | Kế hoạch GĐ3 |
+| [`KiemChung_Commit_Week5_TV1.md`](../misc/KiemChung_Commit_Week5_TV1.md) | Hồ sơ kiểm chứng commit "Tuần 5" của TV1 — **việc cuối của GĐ3** |
+| [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](../plan/PLAN_GIAI_DOAN_3_SUA_LOI.md) | Kế hoạch GĐ3 |
 | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo GĐ1 — **đã cập nhật 05/10** |
-| [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) | Trạng thái từng mục — **đã cập nhật 05/10** |
-| [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md) | Sổ evidence — **đã cập nhật 05/10** |
+| [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](../TRANG_THAI_THUC_HIEN_TUAN_4.md) | Trạng thái từng mục — **đã cập nhật 05/10** |
+| [`SO_EVIDENCE_TUAN_4.md`](../SO_EVIDENCE_TUAN_4.md) | Sổ evidence — **đã cập nhật 05/10** |
 ### 5. Fix DbSeeder – không ghi đè URL ảnh người dùng (TV3 §C.1) — 05/10/2026
 
 **Vấn đề:** DbSeeder.SeedAsync dùng điều kiện

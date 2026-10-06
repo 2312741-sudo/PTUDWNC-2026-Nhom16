@@ -12,7 +12,7 @@
 > WCAG), **N3-B/C1/C2 xong** (Lab L5 63 check, 3/7 phase PASS), **N4-C xong**; còn `N3-A3`
 > (Zod/RHF) và `N3-A5` (Google OAuth — chờ credentials).
 > Xem [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) và
-> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md).
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](report/BAO_CAO_GIAI_DOAN_1_N2_N4.md).
 
 ---
 
@@ -61,7 +61,7 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
 ## 4. Hạn chế đã biết — chưa được tính là đạt
 
 > ⭐ **Cập nhật 03/10 (sau N1):** các hạn chế **2, 3, 7** dưới đây giờ đã có **đề xuất riêng** và **một
-> quyết định đã chốt** — xem [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md)
+> quyết định đã chốt** — xem [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md)
 > và `docs/proposal/DE_XUAT_07/08/09`. **TV4 không tự quyết** vì cả ba nằm ngoài hạ tầng dự án.
 
 1. **Hai tiến trình API thật đã kiểm chứng** (nginx round-robin, 5/5 mỗi instance, cache dùng chung
@@ -105,7 +105,7 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
 3. Máy này có **native PostgreSQL 18 và container PostgreSQL cùng nhận cổng 5432**. `localhost:5432` trỏ
    tới native; database có dữ liệu thật nằm ở native, không nằm trong container. `pg_dump`/`pg_restore`
    phải dùng client tại `E:\PostgreSQL\bin`.
-4. `docs/evidence/TV4/TamKiem/` là **do chính TV4 tạo** (tự rà soát nội dung commit + báo cáo của
+4. `docs/evidence/TV4/Report/` là **do chính TV4 tạo** (tự rà soát nội dung commit + báo cáo của
    cả 4 thành viên) và chỉ dành cho TV4 đọc đối chiếu — **không** stage, không commit, không sửa,
    không dùng làm minh chứng hay căn cứ chấm điểm cho bất kỳ ai.
    *(Đính chính 03/10: dòng này trước đây ghi nhầm "là việc của TV1". Tác giả đúng là TV4.)*
@@ -116,19 +116,19 @@ test phụ thuộc dịch vụ sẽ thoát sớm (guard) chứ không fail — �
 ## 6. Bước tiếp theo đề xuất
 
 > **Cập nhật 03/10:** các bước dưới đây đã được tách thành kế hoạch 3 giai đoạn —
-> [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](PLAN_TRIEN_KHAI_TV4_TUAN4.md) (tổng),
-> [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md),
-> [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](PLAN_GIAI_DOAN_2_D0_XET_LOI.md),
-> [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](PLAN_GIAI_DOAN_3_SUA_LOI.md). **Chưa thực thi gì.**
+> [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](plan/PLAN_TRIEN_KHAI_TV4_TUAN4.md) (tổng),
+> [`PLAN_GIAI_DOAN_1_N2_N4.md`](plan/PLAN_GIAI_DOAN_1_N2_N4.md),
+> [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](plan/PLAN_GIAI_DOAN_2_D0_XET_LOI.md),
+> [`PLAN_GIAI_DOAN_3_SUA_LOI.md`](plan/PLAN_GIAI_DOAN_3_SUA_LOI.md). **Chưa thực thi gì.**
 >
-> ⭐ **Bổ sung 03/10:** [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) —
+> ⭐ **Bổ sung 03/10:** [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) —
 > TV4 đã **chốt** B5 (→ PA-A) và B6 (→ PA-A), và **tự thực hiện** luôn phần việc sinh ra cho TV3/TV1
 > theo nguyên tắc "ngoài contact" (báo trước, ⛔ không chờ trả lời). B5/B6 là **điều kiện tiên quyết**
 > của N2: B6 mở khoá N2-E7. 3 việc hạ tầng còn lại **không tự quyết** — đã tách thành đề xuất 07/08/09.
 
 1. Reviewer duyệt mapping + B1/B2/B4, rồi cập nhật issue `#20`, `#21`, `#22`.
 2. ⭐ **Trước tiên: triển khai B5 → B6 → QD3-3a/3b/3c** (điều kiện tiên quyết của N2) — xem
-   [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §4.1.
+   [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §4.1.
 3. Hoàn thiện nốt K23 ở mức triển khai: đóng gói 2 API vào profile docker-compose dùng chung *(tuần 5)*.
 4. Chốt 3 việc hạ tầng với Tâm + TV2 — dựa trên đề xuất 07/08/09, **không** tự quyết:
    [`DE_XUAT_07`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) (nơi đặt lịch),

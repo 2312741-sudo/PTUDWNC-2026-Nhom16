@@ -146,7 +146,7 @@ Jwt__SigningKey: "<khoá dev đã bị thu hồi — xem danh sách chặn trong
 > ⛔ **Không chép lại giá trị khoá thật vào tài liệu.** Hồ sơ này là file text mà test
 > `JwtSigningKeyNotCommittedTests.Revoked_key_appears_only_in_the_blocklist` quét; danh sách cho
 > phép chỉ gồm `JwtService.cs` và chính file test. Chép khoá vào đây làm CI đỏ y hệt lỗi gốc —
-> **đã xảy ra và đã được sửa 05/10**, xem [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md).
+> **đã xảy ra và đã được sửa 05/10**, xem [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md).
 
 Ý nghĩa: nếu ai đó chạy staging bằng file này, toàn bộ JWT của staging được ký bằng khoá đã bị cấm trong codebase — và khoá đó đang nằm công khai trong git. Đây đúng là vi phạm bất biến bảo mật mà test của nhóm đã viết để chặn.
 
@@ -172,7 +172,7 @@ Chỉ có **một** xung đột, tại `.gitignore`: nhánh tuần thêm quy t�
 | `dotnet test CulinaryBlog.sln` | **316/316** `CulinaryBlog.Tests` + **5/5** `ConcurrencySpike`, Skipped 0 |
 | Trước khi sửa khoá JWT | 315 pass / **1 fail** |
 | `docker compose -f docker-compose.staging.yml config` | exit 0 khi có `JWT_SIGNING_KEY`, exit 1 kèm thông báo khi thiếu |
-| `docs/evidence/TV4/Tuan04/SOK_LAB_L5.md` + 2 log L5 | nguyên vẹn sau merge |
+| `docs/evidence/TV4/Tuan04/report/SOK_LAB_L5.md` + 2 log L5 | nguyên vẹn sau merge |
 | `docs/evidence/TV4/Tuan03/SOK_LAB_L4.md` | nguyên vẹn sau merge |
 | File bảo vệ `docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md` | nguyên vẹn, hash `93661aa13e6fa2e081b9a89b2517eca5d0df083c` không đổi |
 

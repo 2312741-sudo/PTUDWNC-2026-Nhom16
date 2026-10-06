@@ -4,7 +4,7 @@
 |---|---|
 | **Người quyết** | Nguyễn Hữu Trung Sơn (2312739 — **TV4**) |
 | **Ngày quyết** | 03/10/2026 |
-| **Phạm vi** | Bổ sung vào [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) |
+| **Phạm vi** | Bổ sung vào [`PLAN_GIAI_DOAN_1_N2_N4.md`](../plan/PLAN_GIAI_DOAN_1_N2_N4.md) |
 | **Nhánh** | `2312739_NHTSon_D5-D6-D7` — ⛔ không push `main`, không commit khi chưa được yêu cầu |
 | **Reviewer** | Nguyễn Thanh Tâm (Nhóm trưởng) |
 | **Trạng thái** | ✅ **Quyết định có hiệu lực** — kế hoạch GĐ1 cập nhật theo file này |
@@ -50,7 +50,7 @@ Ba quyết định dưới đây **do TV4 chốt** và có hiệu lực ngay:
 
 ## 1. QD1 — B5 chọn **phương án A**: presigned URL cho ảnh Draft
 
-**Nguồn**: [`DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md`](../../../proposal/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) §3 phương án A
+**Nguồn**: [`DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md`](../../../../proposal/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) §3 phương án A
 **Vấn đề**: `<img src>` không gửi header `Authorization` ⇒ ảnh recipe **Draft** luôn `403` trong wizard.
 
 ### 1.1. Thiết kế được chốt
@@ -107,7 +107,7 @@ Ghi trong PR hoặc handoff, **trước khi merge**:
 
 ## 2. QD2 — B6 chọn **phương án A**: CLI `--promote-admin`
 
-**Nguồn**: [`DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md`](../../../proposal/DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) §3 phương án A
+**Nguồn**: [`DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md`](../../../../proposal/DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) §3 phương án A
 
 ### 2.1. Thiết kế được chốt
 
@@ -141,7 +141,7 @@ dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email>
 | ⛔ Không ai tạo được danh mục mới bằng UI | ✅ `POST /categories` ⇒ `201` khi đã nâng quyền |
 
 > 📌 N2-E7 **chuyển từ "chờ B6" sang "làm được"**. Cập nhật đã ghi trong
-> [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) khối N2-E.
+> [`PLAN_GIAI_DOAN_1_N2_N4.md`](../plan/PLAN_GIAI_DOAN_1_N2_N4.md) khối N2-E.
 
 ### 2.4. Cảnh báo bắt buộc
 
@@ -160,9 +160,9 @@ Cả 3 đều liên quan tới **hạ tầng ngoài phạm vi dự án** ⇒ kh�
 
 | # | Task lock | Đề xuất | TV4 tự làm? |
 |---|---|---|---|
-| 1 | **Nơi đặt lịch backup 03:00** — GitHub Actions có thể bỏ qua job khi repo lâu không commit | [`DE_XUAT_07_NOI_DAT_LICH_BACKUP.md`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) | ❌ Chờ Tâm |
-| 2 | **Kho lưu backup 30 ngày** — artifact GitHub chỉ giữ **7 ngày** | [`DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) | ❌ Chờ Tâm + TV2 |
-| 3 | **Rotate khoá JWT đã lộ trong git history** | [`DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md) | ⚠️ Một phần (xem 3.1) |
+| 1 | **Nơi đặt lịch backup 03:00** — GitHub Actions có thể bỏ qua job khi repo lâu không commit | [`DE_XUAT_07_NOI_DAT_LICH_BACKUP.md`](../../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) | ❌ Chờ Tâm |
+| 2 | **Kho lưu backup 30 ngày** — artifact GitHub chỉ giữ **7 ngày** | [`DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md`](../../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) | ❌ Chờ Tâm + TV2 |
+| 3 | **Rotate khoá JWT đã lộ trong git history** | [`DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md`](../../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md) | ⚠️ Một phần (xem 3.1) |
 
 ### 3.1. Phần TV4 **được** làm ngay cho task lock 3
 
@@ -222,7 +222,7 @@ B5 (7 task) ──▶ B6 (4 task) ──▶ QD3-3a/3b/3c
 | Rotate khoá JWT ở môi trường thật | Ngoài repo, thiếu phối hợp ⇒ dừng dịch vụ |
 | Xoá git history | Không hoàn tác được, phá PR đang mở |
 | Tạo bucket backup / đổi lịch backup | Ngoài repo, có chi phí |
-| Cấu hình TLS, `docker-compose.prod.yml`, profile 2 API | **Thuộc tuần 5** — xem [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) §0.2 |
+| Cấu hình TLS, `docker-compose.prod.yml`, profile 2 API | **Thuộc tuần 5** — xem [`PLAN_GIAI_DOAN_1_N2_N4.md`](../plan/PLAN_GIAI_DOAN_1_N2_N4.md) §0.2 |
 
 ---
 
@@ -246,12 +246,12 @@ Ngoài checklist đã có trong plan GĐ1, thêm:
 
 | File | Cập nhật |
 |---|---|
-| [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) | Thêm B5/B6 vào thứ tự thực hiện; N2-E7 bỏ trạng thái "chờ B6"; §5.2 cập nhật block |
-| [`DE_XUAT_05...`](../../../proposal/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) | Trạng thái → **đã quyết PA-A** |
-| [`DE_XUAT_06...`](../../../proposal/DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) | Trạng thái → **đã quyết PA-A** |
-| [`DE_XUAT_07/08/09`](../../../proposal/) | Tạo mới |
-| [`docs/IMAGE_CONTRACT.md`](../../../IMAGE_CONTRACT.md) | Sẽ cập nhật ở **task B5-5** khi code xong — ⚠️ chưa sửa trong file quyết định này để tránh mô tả contract chưa có hiệu lực |
-| [`HANDOFF_TV4_TUAN4_N1.md`](HANDOFF_TV4_TUAN4_N1.md) §6 | Bổ sung link file quyết định |
+| [`PLAN_GIAI_DOAN_1_N2_N4.md`](../plan/PLAN_GIAI_DOAN_1_N2_N4.md) | Thêm B5/B6 vào thứ tự thực hiện; N2-E7 bỏ trạng thái "chờ B6"; §5.2 cập nhật block |
+| [`DE_XUAT_05...`](../../../../proposal/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) | Trạng thái → **đã quyết PA-A** |
+| [`DE_XUAT_06...`](../../../../proposal/DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) | Trạng thái → **đã quyết PA-A** |
+| [`DE_XUAT_07/08/09`](../../../../proposal/) | Tạo mới |
+| [`docs/IMAGE_CONTRACT.md`](../../../../IMAGE_CONTRACT.md) | Sẽ cập nhật ở **task B5-5** khi code xong — ⚠️ chưa sửa trong file quyết định này để tránh mô tả contract chưa có hiệu lực |
+| [`HANDOFF_TV4_TUAN4_N1.md`](../HANDOFF_TV4_TUAN4_N1.md) §6 | Bổ sung link file quyết định |
 
 > 📌 **Thứ tự đúng:** sửa `IMAGE_CONTRACT.md` **cùng PR** với code B5, **không** sửa trước.
 > Contract mô tả trạng thái đã có hiệu lực, không mô tả ý định.

@@ -27,8 +27,8 @@
 của việc EF đánh dấu entity sai** — không phải cơ chế che lỗi. Chỉ cần một luồng gọi khác (không đi qua
 interceptor, hoặc entity không được tracked như kỳ vọng) là 422 hiện ra ngay.
 
-**Nguồn đầy đủ:** [`../evidence/TV4/Tuan04/BAO_CAO_LOI_TUAN_4_TV4.md`](../evidence/TV4/Tuan04/BAO_CAO_LOI_TUAN_4_TV4.md)
-mục `BUG-W4-01` · [`../evidence/TV4/Tuan04/BAO_CAO_LAB_TUAN4_V2.md`](../evidence/TV4/Tuan04/BAO_CAO_LAB_TUAN4_V2.md)
+**Nguồn đầy đủ:** [`../evidence/TV4/Tuan04/report/BAO_CAO_LOI_TUAN_4_TV4.md`](../evidence/TV4/Tuan04/report/BAO_CAO_LOI_TUAN_4_TV4.md)
+mục `BUG-W4-01` · [`../evidence/TV4/Tuan04/report/BAO_CAO_LAB_TUAN4_V2.md`](../evidence/TV4/Tuan04/report/BAO_CAO_LAB_TUAN4_V2.md)
 
 > ⚠️ **Bài học**: báo cáo kết luận "không phải lỗi" là loại kết luận **nguy hiểm nhất** — vì nó khiến
 > người đọc tin là đã xong và đóng mục. Chỉ nên kết luận "không phải lỗi" sau khi đã **tái hiện thất bại

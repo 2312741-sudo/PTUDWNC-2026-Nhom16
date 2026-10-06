@@ -13,8 +13,8 @@
 > **Chưa làm**, trừ phần đã được kiểm chứng thật ở mục 2 (có đường dẫn/commit/số liệu).
 
 > [!NOTE]
-> **📌 Bản gốc — ĐÃ ĐƯỢC THỰC THI. Đọc [`KE_HOACH_TUAN_4_TV4_V2.md`](KE_HOACH_TUAN_4_TV4_V2.md) và
-> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) trước.**
+> **📌 Bản gốc — ĐÃ ĐƯỢC THỰC THI. Đọc [`KE_HOACH_TUAN_4_TV4_V2.md`](../KE_HOACH_TUAN_4_TV4_V2.md) và
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](../report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) trước.**
 >
 > Tài liệu này là **ảnh chụp kế hoạch bản gốc**, giữ nguyên để đối chiếu xem V2 đã đổi gì.
 > Mọi dòng ghi "⬜ Chưa làm" bên dưới là **đúng tại thời điểm lập kế hoạch**, không phải trạng
@@ -166,7 +166,7 @@
 |---|---|---|
 | 1 | **Bù mục 2 L4** (Identity/Google/refresh/forms/FTS) — phần `PHAN_CHIA` xếp tuần 3, nay bù tuần 4 | Nếu thiếu Google credentials → ghi rõ "integration ngoài còn chờ", **không coi mock là hoàn thành** |
 | 2 | **Lab L5** (`practice/TV4/L5`): SSR search + ISR published detail + CSR editor; TanStack Query optimistic/rollback; `next/image`; metadata/JSON-LD/robots/redirect; Serilog/OTEL/metrics/health; **2 API instance + shared cache/jobs** | 1 phase có check thật cho từng ý, **giống cách L4 chấm 39/39** để reviewer đối chiếu được |
-| 3 | Sổ K cho lab: `Tuan04/SOK_LAB_L5.md` — kỹ thuật con nào có/không, giới hạn, lỗi gặp | Ô K chỉ được tính khi có code + test + log, **không tính khi chỉ đọc** |
+| 3 | Sổ K cho lab: `Tuan04/report/SOK_LAB_L5.md` — kỹ thuật con nào có/không, giới hạn, lỗi gặp | Ô K chỉ được tính khi có code + test + log, **không tính khi chỉ đọc** |
 | 4 | Mở **PR cho nhánh lab** (yêu cầu `PHAN_CHIA` mục 3.4 — hiện `practice/TV4/L4` mới chỉ có branch, chưa có PR) | Reviewer có đường vào để xem |
 
 ### N4 — D7: Runbook, release, bàn giao

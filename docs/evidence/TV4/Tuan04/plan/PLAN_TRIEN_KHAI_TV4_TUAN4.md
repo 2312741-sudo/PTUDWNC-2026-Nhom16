@@ -13,9 +13,9 @@
 >
 > | Giai đoạn | Trạng thái | Báo cáo |
 > |---|---|---|
-> | **GĐ1** — N2/N3/N4 | 🟡 Xong phần đủ điều kiện: **N2 7/8** (dở dang `D1/D2/D3`), **N3-B/C1/C2 xong**, N4-C xong. Còn `N3-A3` (Zod/RHF) và `N3-A5` (Google OAuth — chờ credentials) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) |
+> | **GĐ1** — N2/N3/N4 | 🟡 Xong phần đủ điều kiện: **N2 7/8** (dở dang `D1/D2/D3`), **N3-B/C1/C2 xong**, N4-C xong. Còn `N3-A3` (Zod/RHF) và `N3-A5` (Google OAuth — chờ credentials) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](../report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) |
 > | **GĐ2** — D0 xét lỗi | ⬜ **Chưa thực thi** | [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](PLAN_GIAI_DOAN_2_D0_XET_LOI.md) (chỉ là plan) |
-> | **GĐ3** — sửa lỗi | 🟡 Đã thực thi **2 lỗi** (`BUG-W4-M1` khoá JWT `R3`, `BUG-W4-M2` conflict `.gitignore`) + **việc cuối: kiểm chứng báo cáo TV1**. Còn `BUG-W4-01/02/03` (đã sửa trên lab, **chưa merge**) và các lỗi chờ quyết định | [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
+> | **GĐ3** — sửa lỗi | 🟡 Đã thực thi **2 lỗi** (`BUG-W4-M1` khoá JWT `R3`, `BUG-W4-M2` conflict `.gitignore`) + **việc cuối: kiểm chứng báo cáo TV1**. Còn `BUG-W4-01/02/03` (đã sửa trên lab, **chưa merge**) và các lỗi chờ quyết định | [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
 
 ---
 
@@ -77,9 +77,9 @@ GĐ1 (N2→N3→N4) ──phát sinh──> BÁO CÁO LỖI (mục A) + HANDOFF 
 
 | Mã | Loại | Định nghĩa | Nơi ghi | Điều kiện |
 |---|---|---|---|---|
-| **T1** | **Bug** | Lỗi/error dẫn tới failure hoặc kết quả sai | [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md) mục A | **Ghi báo cáo lỗi** nếu nó **thật sự làm block task**: ảnh hưởng thành viên khác, đổi kế cấu project, đổi công cụ/thư viện |
+| **T1** | **Bug** | Lỗi/error dẫn tới failure hoặc kết quả sai | [`BAO_CAO_LOI_TUAN_4_TV4.md`](../report/BAO_CAO_LOI_TUAN_4_TV4.md) mục A | **Ghi báo cáo lỗi** nếu nó **thật sự làm block task**: ảnh hưởng thành viên khác, đổi kế cấu project, đổi công cụ/thư viện |
 | | | | *Sửa ngay tại chỗ* | Nếu **ít nghiêm trọng**: sai thông số, lỗi thiếu/thừa code → sửa luôn, chỉ ghi 1 dòng vào sổ |
-| **T2** | **Block** | Cần quyết định, có nhiều hướng giải quyết, hoặc liên quan giữa các thành viên | [`HANDOFF_TV4_TUAN4_N1.md`](HANDOFF_TV4_TUAN4_N1.md) | Là **quyết định của nhóm** hoặc **phối hợp giữa các thành viên** → ghi vào **handoff** |
+| **T2** | **Block** | Cần quyết định, có nhiều hướng giải quyết, hoặc liên quan giữa các thành viên | [`HANDOFF_TV4_TUAN4_N1.md`](../HANDOFF_TV4_TUAN4_N1.md) | Là **quyết định của nhóm** hoặc **phối hợp giữa các thành viên** → ghi vào **handoff** |
 | | | | **Câu hỏi cho TV1** | Là **lựa chọn thuộc quyền TV4** → tạo câu hỏi **tại thời điểm đã xác định được mức độ** (không để cuối tuần) |
 | **T3** | **Khác** | Không thuộc T1/T2, quá đa dạng để liệt kê hết | Thử giải quyết trước | **Giải quyết được** → làm ngay, ghi sổ. **Không** giải quyết được → **tách thành file riêng**, không nhét vào báo cáo lỗi |
 
@@ -139,11 +139,11 @@ Tổng: **10 khối nhỏ** thay cho 3 khối lớn. Chi tiết trong plan GĐ1.
 | `docs/KE_HOACH_DU_AN.md` | Task D1–D7, **K01–K24**, **NFR-001..004**, checklist |
 | `docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md` | Lịch 6 tuần, mốc nghiệm thu G4/G5, phân công TV4 |
 | `docs/root/SRS_Culinary_Blog_v1.1.1.md` | SRS chuẩn (FR/NFR/CONS) |
-| `docs/evidence/TV4/Tuan04/KE_HOACH_TUAN_4_TV4.md` | Kế hoạch tuần 4 gốc (N0–N4) — **giữ nguyên, không sửa** |
+| `docs/evidence/TV4/Tuan04/misc/KE_HOACH_TUAN_4_TV4.md` | Kế hoạch tuần 4 gốc (N0–N4) — **giữ nguyên, không sửa** |
 | `docs/evidence/TV4/Tuan04/KE_HOACH_TUAN_4_TV4_V2.md` | Kế hoạch tuần 4 V2 (đã đối chiếu báo cáo 3 tuần + kết quả lab) |
 | `docs/evidence/TV4/Tuan04/HANDOFF_TV4_TUAN4_N1.md` | Bàn giao N0/N1 — nơi ghi **block** cần nhóm quyết |
-| `docs/evidence/TV4/Tuan04/BAO_CAO_LOI_TUAN_4_TV4.md` | **10 lỗi đã biết** — GĐ2 không cần test lại |
-| `docs/evidence/TV4/Tuan04/BAO_CAO_LAB_TUAN4_V2.md` | Kết quả kiểm chứng thực tế đã có (BUG-01/02/03 tái hiện + sửa) |
+| `docs/evidence/TV4/Tuan04/report/BAO_CAO_LOI_TUAN_4_TV4.md` | **10 lỗi đã biết** — GĐ2 không cần test lại |
+| `docs/evidence/TV4/Tuan04/report/BAO_CAO_LAB_TUAN4_V2.md` | Kết quả kiểm chứng thực tế đã có (BUG-01/02/03 tái hiện + sửa) |
 | `docs/evidence/TV4/Tuan04/SO_EVIDENCE_TUAN_4.md` | Sổ K hiện tại — nền cho đối chiếu |
 | `docs/evidence/TV4/Tuan04/TRANG_THAI_THUC_HIEN_TUAN_4.md` | Trạng thái thực hiện tuần 4 |
 | `docs/evidence/TV4/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` | Bảng mapping K01 — 24 dòng, chờ TV1 duyệt |

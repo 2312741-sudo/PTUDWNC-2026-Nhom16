@@ -7,7 +7,7 @@
 | Nhánh | `2312739_NHTSon_D5-D6-D7` — **không push `main`** |
 | Nguồn | `KE_HOACH_TUAN_4_TV4.md` mục 3 (`N2`, `N3`, `N4`) + `KE_HOACH_TUAN_4_TV4_V2.md` |
 | Trạng thái | 🟡 **Đã thực thi — đủ điều kiện chặn tiếp, còn `D1/D2/D3` + `N3-A3` + `N3-A5`** |
-| Quyết định bổ sung | [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) (03/10) — B5 → **PA-A**, B6 → **PA-A**, 3 task lock hạ tầng → đề xuất 07/08/09 |
+| Quyết định bổ sung | [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) (03/10) — B5 → **PA-A**, B6 → **PA-A**, 3 task lock hạ tầng → đề xuất 07/08/09 |
 | Quy tắc phát sinh | [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](PLAN_TRIEN_KHAI_TV4_TUAN4.md) mục 2 |
 
 ---
@@ -28,7 +28,7 @@
 > |---|---|---|
 > | **N2 / N3 / N4** | ⬜ Chưa làm | 🟡 **N2 7/8** (dở dang `D1/D2/D3` — progress upload, UI unpublish/archive, WCAG) · **N3 3/4** (còn `A3` Zod/RHF và `A5` Google OAuth — chờ credentials) · **N4-C xong** (runbook + deploy staging → tuần 5) |
 >
-> Nguồn: [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) · [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md)
+> Nguồn: [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](../report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) · [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](../TRANG_THAI_THUC_HIEN_TUAN_4.md)
 
 ### 0.1. NFR của riêng TV4 — dùng để tự kiểm mỗi khối có phục vụ NFR không
 
@@ -160,7 +160,7 @@ mục 6. Kết luận: plan này **chỉ giữ phần thuộc tuần 4**.
 
 > ✅ **Phụ thuộc chéo đã gỡ (03/10):** các test này cần **tài khoản Admin**. **B6 đã được quyết**
 > theo phương án A — CLI `--promote-admin` xem
-> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2. Làm **B6 trước**,
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2. Làm **B6 trước**,
 > sau đó E3/E4/E7 chạy được. ⛔ Vẫn **không** tự tạo admin để làm xanh: phải nâng quyền tài khoản
 > thật bằng lệnh đã chốt, rồi mới chạy test.
 
@@ -204,7 +204,7 @@ mục 6. Kết luận: plan này **chỉ giữ phần thuộc tuần 4**.
 
 | # | Việc |
 |---|---|
-| C1 | `Tuan04/SOK_LAB_L5.md` — kỹ thuật con nào có/không, giới hạn, lỗi gặp |
+| C1 | `Tuan04/report/SOK_LAB_L5.md` — kỹ thuật con nào có/không, giới hạn, lỗi gặp |
 | C2 | Mở **PR cho nhánh lab** (`practice/TV4/L5`) — hiện L4 mới chỉ có branch, chưa có PR |
 | C3 | Đính chính `SO_EVIDENCE_TUAN_4.md`: ô K chỉ tính khi có **code + test + log** |
 
@@ -279,7 +279,7 @@ N2-A  ──▶  N2-B  ──▶  N2-E  ──▶  N2-C  ──▶  N2-D
 ```
 
 > ⭐ **Vì sao B5/B6 chèn trước N2** (quyết định 03/10, xem
-> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md)):
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md)):
 > **B6** mở khoá **N2-E7**; **B5** là điều kiện để xem ảnh Draft trong wizard (N2-D1/D2) chạy được
 > với dữ liệu thật. Nếu làm N2 trước thì các test này phải chờ hoặc bỏ, rồi làm lại.
 

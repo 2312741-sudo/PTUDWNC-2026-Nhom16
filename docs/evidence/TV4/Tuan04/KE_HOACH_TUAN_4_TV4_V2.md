@@ -1,9 +1,9 @@
 # KẾ HOẠCH TUẦN 4 — BẢN V2 (TV4 · Nguyễn Hữu Trung Sơn · 2312739)
 
 > **Bản V2** = kế hoạch viết lại, lấy căn cứ là **báo cáo tự rà soát 3 tuần**
-> (`docs/evidence/TV4/TamKiem/BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md`) **đối chiếu lại với repo thật**.
+> (`docs/evidence/TV4/Report/BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md`) **đối chiếu lại với repo thật**.
 >
-> **Bản gốc [`KE_HOACH_TUAN_4_TV4.md`](KE_HOACH_TUAN_4_TV4.md) giữ nguyên, không sửa** — dùng để đối chiếu
+> **Bản gốc [`KE_HOACH_TUAN_4_TV4.md`](misc/KE_HOACH_TUAN_4_TV4.md) giữ nguyên, không sửa** — dùng để đối chiếu
 > xem V2 đã đổi gì và vì sao. Hai bản cùng hiệu lực cho tới khi Tâm chốt chọn một.
 >
 > - **Ngày lập V2**: 03/10/2026 · **Baseline đo**: `origin/main` = `3d0695d`, nhánh `2312739_NHTSon_D5-D6-D7` = `55b4c2b`
@@ -12,7 +12,7 @@
 >
 > **Nguyên tắc của V2**
 > 1. Chỉ việc **của TV4**. Việc của thành viên khác nêu ở mục 7, **không tính** vào tiến độ tuần 4.
-> 2. **Lỗi / bug không nằm trong kế hoạch này.** Mọi lỗi ghi ở [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md).
+> 2. **Lỗi / bug không nằm trong kế hoạch này.** Mọi lỗi ghi ở [`BAO_CAO_LOI_TUAN_4_TV4.md`](report/BAO_CAO_LOI_TUAN_4_TV4.md).
 > 3. Mỗi "đã làm" đều kèm `file:line` hoặc log. Không có "nên làm".
 > 4. Ô kỹ năng chỉ chuyển ✅ khi **có code/config + test + kết quả thật + Tâm xác nhận và ghi ngày**.
 
@@ -28,7 +28,7 @@
 > | §4.2 N3 — 4 việc | 4 việc chưa làm | 🟢 **3/4 xong** (Lab L5 **63 check / 3 phase PASS**, `SOK_LAB_L5.md`, PR #28). ⬜ Còn: bù mục 2 L4; N3-A3 (Zod/RHF), N3-A5 (Google OAuth — chờ credentials) |
 > | §4.3 N4 — 4 việc | 4 việc chưa làm | 🟢 **N4-C xong** (HUONG_DAN, README, CHANGELOG, sổ 24 ô). ⛔ Còn: runbook đầy đủ, deploy staging, TLS/HSTS → tuần 5 |
 >
-> Nguồn sự thật hiện tại: [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) và
+> Nguồn sự thật hiện tại: [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) và
 > [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md).
 
 ---
@@ -36,7 +36,7 @@
 ## 🧪 CẬP NHẬT SAU KIỂM CHỨNG THỰC TẾ (03/10/2026)
 
 Kế hoạch V2 ban đầu lập **chỉ bằng đọc code**. Đã chạy thật trên branch lab `lab/TV4-audit-tuan4`
-(2 API instance + Nginx + PostgreSQL/Redis thật). Bằng chứng: [`BAO_CAO_LAB_TUAN4_V2.md`](BAO_CAO_LAB_TUAN4_V2.md).
+(2 API instance + Nginx + PostgreSQL/Redis thật). Bằng chứng: [`BAO_CAO_LAB_TUAN4_V2.md`](report/BAO_CAO_LAB_TUAN4_V2.md).
 
 **Việc nào trong kế hoạch đã được chứng minh bằng chạy thật:**
 
@@ -345,9 +345,9 @@ Báo cáo 3 tuần mục 9 chỉ ra **3 ô trong 9 ô đó không đứng vững
 
 | Tài liệu | Vai trò |
 |---|---|
-| [`KE_HOACH_TUAN_4_TV4.md`](KE_HOACH_TUAN_4_TV4.md) | **Bản gốc**, giữ nguyên để đối chiếu — không sửa |
-| [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md) | **Lỗi/bug** — tách riêng, không nằm trong kế hoạch |
-| `../TamKiem/BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md` | Nguồn đối chiếu của V2. **Tài liệu tạm của TV4, không dùng để chấm điểm**; mọi kết luận trong V2 đều dẫn lại `file:line` trong repo để kiểm chứng độc lập |
+| [`KE_HOACH_TUAN_4_TV4.md`](misc/KE_HOACH_TUAN_4_TV4.md) | **Bản gốc**, giữ nguyên để đối chiếu — không sửa |
+| [`BAO_CAO_LOI_TUAN_4_TV4.md`](report/BAO_CAO_LOI_TUAN_4_TV4.md) | **Lỗi/bug** — tách riêng, không nằm trong kế hoạch |
+| `../Report/BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md` | Nguồn đối chiếu của V2. **Tài liệu tạm của TV4, không dùng để chấm điểm**; mọi kết luận trong V2 đều dẫn lại `file:line` trong repo để kiểm chứng độc lập |
 | [`HANDOFF_TV4_TUAN4_N1.md`](HANDOFF_TV4_TUAN4_N1.md) | Bàn giao N0+N1, số đo 210/210, các bẫy đã vấp |
 | [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) · [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md) · [`MO_TA_CONG_VIEC_TUAN_4.md`](MO_TA_CONG_VIEC_TUAN_4.md) | Bộ tài liệu tuần 4 chuẩn (dùng N4-4 để cập nhật theo V2) |
 | `../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` | Mapping 24 dòng K01 — đã lập 30/09, chờ Tâm xác nhận |

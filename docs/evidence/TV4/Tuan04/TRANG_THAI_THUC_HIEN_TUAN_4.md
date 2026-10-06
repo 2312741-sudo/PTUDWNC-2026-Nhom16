@@ -2,7 +2,7 @@
 
 - **SRS**: v1.1.1 (Approved 16/09/2026) · **Reviewer**: Nguyễn Thanh Tâm (Nhóm trưởng)
 - **Nhánh**: `2312739_NHTSon_D5-D6-D7` từ `origin/main` = `7fe8fc2`
-- **Kế hoạch**: [`KE_HOACH_TUAN_4_TV4.md`](KE_HOACH_TUAN_4_TV4.md) · **Mô tả việc**: [`MO_TA_CONG_VIEC_TUAN_4.md`](MO_TA_CONG_VIEC_TUAN_4.md) · **Sổ evidence**: [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md)
+- **Kế hoạch**: [`KE_HOACH_TUAN_4_TV4.md`](misc/KE_HOACH_TUAN_4_TV4.md) · **Mô tả việc**: [`MO_TA_CONG_VIEC_TUAN_4.md`](MO_TA_CONG_VIEC_TUAN_4.md) · **Sổ evidence**: [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md)
 - **Cổng nghiệm thu**: **G4** 24/24 ô kỹ năng K01–K24 · **G5** coverage ≥ 80% + sửa lỗi chặn/bảo mật + CI xanh
 
 ---
@@ -19,8 +19,8 @@
 | **B6** | ⏳ chờ quyết định | ✅ **Đã xong B6-1…B6-4** (PA-A): `PromoteAdminCommand` + `--promote-admin <email>` (`= <email>` cũng nhận, không phân biệt hoa/thường), **chỉ chạy ở `Development`**, idempotent, không đụng `DbSeeder`; `Program.cs` trả exit `2` usage/môi trường, `1` lỗi nghiệp vụ, `0` thành công; test `PromoteAdminCommandTests` + kiểm chứng tay từ chối ở `Testing`/`Production`. ⚠️ kiểm chứng tay đã promote `masterchef@culinary.local` và `trung.huynh@culinary.local` thành `Admin` trong DB local |
 | **QD3** | ⏳ chờ quyết định | ✅ **Đã xong 3a/3b/3c trong repo**: xoá khoá khỏi cả `appsettings*.json`, `JwtSettings.Validate()` fail-fast + **từ chối khoá dev đã thu hồi**, `JwtSigningKeyNotCommittedTests` (6 test, đã cấy khoá thật để chứng minh bắt lỗi) chặn tái phát, `.env.example`/`README.md`/`HUONG_DAN_TEST_APP.md`/`HUONG_DAN_CAI_DAT_VA_CHAY_CHUONG_TRINH.md` hướng dẫn `openssl rand -base64 48`. ⚠️ khoá `.env` local đã đổi ⇒ **phiên đăng nhập cũ mất hiệu lực** |
 | Block còn mở | B1, B2, B4, B5, B6 | **B5/B6/QD3-3a/3b/3c đã gỡ** và đã có code (03/10, PA-A). Còn lại **3 việc hạ tầng ngoài dự án**, mỗi việc 1 đề xuất: [`DE_XUAT_07`](../../../proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) · [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) · [`DE_XUAT_09`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md) — ⛔ TV4 **không** tự quyết (đề xuất 09: phần trong repo đã xong, phần rotate/xoá history nằm ngoài repo) |
-| N2 / N3 / N4 | 0% | **Vẫn 0% — chưa thực thi.** Đã lập kế hoạch 3 giai đoạn, xem [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](PLAN_TRIEN_KHAI_TV4_TUAN4.md) |
-| Phạm vi N4 | Runbook + release + bàn giao (4 việc) | ⛔ Đã lược: **runbook đầy đủ + deploy staging + TLS thuộc tuần 5**. Tuần 4 chỉ còn tài liệu + evidence. Xem [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) §0.2 |
+| N2 / N3 / N4 | 0% | **Vẫn 0% — chưa thực thi.** Đã lập kế hoạch 3 giai đoạn, xem [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](plan/PLAN_TRIEN_KHAI_TV4_TUAN4.md) |
+| Phạm vi N4 | Runbook + release + bàn giao (4 việc) | ⛔ Đã lược: **runbook đầy đủ + deploy staging + TLS thuộc tuần 5**. Tuần 4 chỉ còn tài liệu + evidence. Xem [`PLAN_GIAI_DOAN_1_N2_N4.md`](plan/PLAN_GIAI_DOAN_1_N2_N4.md) §0.2 |
 
 > ⚠️ **Số `214/214` là của nhánh lab** `lab/TV4-audit-tuan4` (thêm 4 test hồi quy), ⛔ chưa merge.
 > Baseline của nhánh này là **`210/210`**. Bảng dưới giữ nguyên số liệu gốc để làm căn cứ đối chiếu.
@@ -137,8 +137,8 @@ test tay** — bản sửa đã có trên `main`; việc lấy bằng chứng `/
 | 1 | `docs/RUNBOOK.md` có số liệu thật | ⛔ **Thuộc tuần 5** | — | `N4-A` đã loại khỏi phạm vi GĐ1 (6-tuần L88: "load/SEO/**runbook**") |
 | 2 | Deploy lặp lại được (compose prod hoặc checklist Render) | ⛔ **Thuộc tuần 5** | — | `N4-B` đã loại khỏi phạm vi GĐ1 |
 | 3 | Cập nhật `HUONG_DAN_CHAY_TV4.md` + `README.md` + `CHANGELOG.md` | ✅ **Xong 04/10** | commit docs | HUONG_DAN: 154 → **311**, thêm lệnh coverage/E2E/k6/outage + bài học từ lỗi CI · README §4.5: 172 → **316/316** · CHANGELOG thêm `0.4.0` và `0.3.0` |
-| 4 | Chốt sổ 24/24 K + nộp review Tâm | ✅ **Xong 04/10**, cập nhật 05/10 (chờ Tâm xác nhận) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo ghi rõ **2 ô còn thiếu thật** (K09/K18) và **8 ô có nền nhưng thiếu phần lab/đo lại**. Không ô nào tự đánh dấu đạt |
-| 5 | **Kiểm chứng báo cáo của thành viên khác** (việc cuối GĐ3) | ✅ **Xong 05/10** | [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md), [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) | Báo cáo "Tuần 5" của TV1 (`21aa722`) đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận + thiếu minh chứng chạy. Trong lúc kiểm chứng phát hiện và **đã sửa lỗi khoá JWT** (`R3`) trong compose staging |
+| 4 | Chốt sổ 24/24 K + nộp review Tâm | ✅ **Xong 04/10**, cập nhật 05/10 (chờ Tâm xác nhận) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) | Báo cáo ghi rõ **2 ô còn thiếu thật** (K09/K18) và **8 ô có nền nhưng thiếu phần lab/đo lại**. Không ô nào tự đánh dấu đạt |
+| 5 | **Kiểm chứng báo cáo của thành viên khác** (việc cuối GĐ3) | ✅ **Xong 05/10** | [`KiemChung_Commit_Week5_TV1.md`](misc/KiemChung_Commit_Week5_TV1.md), [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) | Báo cáo "Tuần 5" của TV1 (`21aa722`) đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận + thiếu minh chứng chạy. Trong lúc kiểm chứng phát hiện và **đã sửa lỗi khoá JWT** (`R3`) trong compose staging |
 
 ---
 
@@ -168,7 +168,7 @@ Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 —
 | Chưa có backup/restore | 🔴 Cao | ✅ Đã xong N1-4 — script chạy được, drill 14 bảng. ⛔ Còn thiếu: kho giữ **30 ngày** (artifact GitHub chỉ **7 ngày**) và job canh lịch. Xem [`DE_XUAT_08`](../../../proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) |
 | Cache in-process ⇒ số đo 2 instance không đáng tin | 🟡 | ✅ N1 đã dùng Redis shared; lab phát hiện **rate limit nhân theo số instance** + thiếu `UseForwardedHeaders` → phải ghi hạn chế khi đo |
 | B1/B2/B4 chưa có quyết định nhóm | 🟡 | ✅ Đề xuất 01/02/04 đã có code + test; ⏳ chờ duyệt `#20`/`#21`/`#22` |
-| B5/B6 chưa có quyết định nhóm | — | ✅ **Đã gỡ 03/10** — TV4 tự chốt PA-A và **tự thực hiện**, kể cả phần việc của TV3/TV1 (báo trước, không chờ). Xem [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) |
+| B5/B6 chưa có quyết định nhóm | — | ✅ **Đã gỡ 03/10** — TV4 tự chốt PA-A và **tự thực hiện**, kể cả phần việc của TV3/TV1 (báo trước, không chờ). Xem [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) |
 | 3 việc hạ tầng (lịch backup, kho 30 ngày, rotate JWT) chưa có quyết định | 🔴 Cao | 🔴 **Không tự quyết** — ngoài repo, có chi phí thật. Đã tách 3 đề xuất 07/08/09, chờ Tâm (+TV2). ⏳ TV4 làm được 3a/3b/3c trong repo |
 | Chưa có tài khoản Admin để test `/hangfire`, DevConfigParityTests | 🟡 | ⏳ Chờ **B6** triển khai CLI `--promote-admin`; ⛔ không tự tạo admin để làm xanh |
 | 15 ô kỹ năng trong 1 tuần | 🟡 | N2 và N3 làm song song; ô thiếu thì ghi thiếu, không đánh dấu đủ |
@@ -193,8 +193,8 @@ Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 —
 
 > ⭐ **Đính chính 03/10:** các mục 3–7 dưới đây **đã xong** trong N1 (xem §3). Thứ tự thực thi mới
 > của GĐ1 là **B5 → B6 → QD3-3a/3b/3c → N2 → N3 → N4-C** — xem
-> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §4.1 và
-> [`PLAN_GIAI_DOAN_1_N2_N4.md`](PLAN_GIAI_DOAN_1_N2_N4.md) §4.
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §4.1 và
+> [`PLAN_GIAI_DOAN_1_N2_N4.md`](plan/PLAN_GIAI_DOAN_1_N2_N4.md) §4.
 >
 > ⭐ **Đính chính 05/10:** mục 0, 7 và các mục N3 **đã xong**. Việc đầu tiên của kỳ tiếp theo là
 > **chạy lại CI** cho commit `03564c4` rồi **chờ Tâm xác nhận** các ô kỹ năng.
@@ -273,7 +273,7 @@ Cập nhật 05/10/2026 (sau N3-B + việc cuối GĐ3) theo quy tắc N3-C3 —
     cập nhật 05/10. ⛔ Còn: Runbook đầy đủ, deploy staging, TLS/HSTS, 5 E2E flows,
     responsive/a11y, Jest/RTL → **tuần 5**.
 13. **Kiểm chứng báo cáo "Tuần 5" của TV1** (việc cuối GĐ3) — **xong 05/10**:
-    [`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md). Kết quả: báo cáo đánh dấu
+    [`KiemChung_Commit_Week5_TV1.md`](misc/KiemChung_Commit_Week5_TV1.md). Kết quả: báo cáo đánh dấu
     **không đáng tin**; tìm ra và sửa lỗi khoá JWT `R3` trong compose staging.
 
 **Trạng thái build sau việc cuối GĐ3 (05/10):** backend **316/316** + `ConcurrencySpike` **5/5** ✅ ·

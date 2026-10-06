@@ -6,7 +6,7 @@
 > **Đụng quyết định**: D27 / PA-2 trong `docs/IMAGE_CONTRACT.md` §5 (PA-2 **giữ nguyên** cho recipe Published; thêm **PA-3 presigned** cho recipe Draft)
 >
 > ✅ **TRẠNG THÁI 03/10/2026: ĐÃ QUYẾT — phương án A (presigned URL).** Xem
-> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §1.
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §1.
 > ⏳ **Chưa có code** — chờ triển khai B5-1…B5-7.
 >
 > **Quyết định của TV4 về phần việc của TV3:** `ImagesStep.tsx` + `lib/recipe-editor.ts` là file của
@@ -142,4 +142,4 @@ Nguoi dung mo wizard buoc "Anh" voi recipe Draft
 | Test case §5 chạy xanh (`Skipped=0`) | 🔲 Chưa chạy |
 
 Xem kế hoạch chi tiết và nguyên tắc "ngoài contact":
-[`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §1.
+[`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §1.

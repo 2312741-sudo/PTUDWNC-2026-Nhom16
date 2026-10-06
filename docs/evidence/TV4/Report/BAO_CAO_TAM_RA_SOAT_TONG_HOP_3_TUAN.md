@@ -429,7 +429,7 @@ Phần này **chỉ có trong tài liệu cũ** — là bằng chứng TV4 đã 
 
 ## 11. Ghi chú cuối
 
-- Rà soát này **không sửa file nguồn nào**. Chỉ tạo 2 file báo cáo tạm trong `docs/evidence/TV4/TamKiem/`.
+- Rà soát này **không sửa file nguồn nào**. Chỉ tạo 2 file báo cáo tạm trong `docs/evidence/TV4/Report/`.
 - **Nguồn đối chiếu:** 5 tài liệu cũ trong `docs/evidence/TV4/Temp/` đã được đọc, khai thác và **xóa khỏi project** theo kế hoạch. Nội dung có giá trị đã được hợp nhất vào đây (mục 2.1, 2.3, 6.1a, 6.1b, 7.3, 11.1).
 - **Noted:** TV4 luôn giữ backup riêng của các file này ngoài project, nên xóa trong repo không mất dữ liệu gốc.
 - Các mục chưa kiểm chứng được đã ghi rõ `CHƯA XÁC MINH ĐƯỢC` (GitHub Actions history, lịch sử k6 p99, Google Rich Results Test, TTL refresh token 7 ngày, deploy staging).

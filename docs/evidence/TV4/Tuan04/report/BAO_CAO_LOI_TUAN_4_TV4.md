@@ -6,7 +6,7 @@
 >
 > - **Ngày lập**: 03/10/2026 · **Baseline**: nhánh `2312739_NHTSon_D5-D6-D7` = `55b4c2b`
 > - **Phạm vi:** lỗi của **TV4** (phần lớn) + lỗi ảnh hưởng tới TV4 nhưng thuộc thành viên khác (ghi rõ chủ sở hữu)
-> - **Không liên quan:** [`KE_HOACH_TUAN_4_TV4_V2.md`](KE_HOACH_TUAN_4_TV4_V2.md) — kế hoạch, không phải lỗi
+> - **Không liên quan:** [`KE_HOACH_TUAN_4_TV4_V2.md`](../KE_HOACH_TUAN_4_TV4_V2.md) — kế hoạch, không phải lỗi
 
 **Ký hiệu mức độ**: 🔴 chặn luồng / rủi ro bảo mật · 🟠 sai hành vi nhưng chưa chặn · 🟡 nợ kỹ thuật
 
@@ -72,7 +72,7 @@ Bằng chứng đầy đủ: [`BAO_CAO_LAB_TUAN4_V2.md`](BAO_CAO_LAB_TUAN4_V2.md
 |---|---|
 | **Chủ sở hữu** | **TV4** (`RecipeImage` là phần D1 của TV4) · phần schema là TV3 |
 | **Trạng thái** | ✅ **Đã tái hiện + đã sửa trên lab** — ⛔ **chưa merge** nhánh chính |
-| **Nguồn** | Báo cáo của TV3 gửi TV4 → [`docs/report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md`](../../../report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md) |
+| **Nguồn** | Báo cáo của TV3 gửi TV4 → [`docs/report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md`](../../../../report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md) |
 
 **Nguyên nhân gốc:** `RecipeImageConfiguration.cs` **không** có `b.Property(i => i.Id).ValueGeneratedNever();`,
 khác `RecipeIngredientConfiguration.cs:20` và `RecipeStepConfiguration.cs:20`. Vì `Id` để `ValueGeneratedOnAdd`

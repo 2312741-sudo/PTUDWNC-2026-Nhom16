@@ -15,7 +15,7 @@
 > | Baseline nhánh | `7fe8fc2` | Đã merge `origin/main` (`3d0695d`); HEAD = **`55b4c2b`** |
 > | Số test | đo lúc mở tuần | **`210/210`** pass · build 0 warning · `dotnet format` exit 0 |
 > | Tổng K của TV4 | — | **9/24 đã được reviewer xác nhận** + **8 ô có bằng chứng mới từ N1, đang chờ duyệt** |
-> | Trạng thái N2–N4 | — | **N2 gần đóng** (7/8 việc xong, dở dang `D1/D2/D3` UI) · **N3 gần đóng** (B/C1/C2 xong 05/10, còn A3/A5) · **N4-C xong** (runbook + deploy → tuần 5). Chi tiết [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md) |
+> | Trạng thái N2–N4 | — | **N2 gần đóng** (7/8 việc xong, dở dang `D1/D2/D3` UI) · **N3 gần đóng** (B/C1/C2 xong 05/10, còn A3/A5) · **N4-C xong** (runbook + deploy → tuần 5). Chi tiết [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) |
 >
 > **Nguyên tắc bổ sung (rút từ lab 03/10):**
 >
@@ -24,7 +24,7 @@
 > 2. ⚠️ **Có bằng chứng ≠ đã được duyệt.** 8 ô K của N1 có code + test + log nhưng **chưa** ô nào
 >    reviewer xác nhận → vẫn ghi "chờ duyệt", không đánh ✅.
 > 3. ⚠️ **Lỗi đã sửa trên lab vẫn tính là lỗi đang mở** cho tới khi merge. Chi tiết:
->    [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md).
+>    [`BAO_CAO_LOI_TUAN_4_TV4.md`](report/BAO_CAO_LOI_TUAN_4_TV4.md).
 
 > [!IMPORTANT]
 > **Không lấy 4 file `Lab 04` ở `docs/evidence/TV4/` làm minh chứng của sổ này.**
@@ -440,7 +440,7 @@ Theo chỉ đạo 30/09: **không tự gỡ lỗi**, dùng bản sửa đã có 
 
 > ⛔ **Không ô nào tự đánh dấu đạt.** Toàn bộ 24 ô đang chờ **Nguyễn Thanh Tâm** xác nhận và ghi ngày.
 > Ô nào cuối tuần vẫn thiếu đã ghi rõ ở `TRANG_THAI_THUC_HIEN_TUAN_4.md` và trong
-> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md).
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](report/BAO_CAO_GIAI_DOAN_1_N2_N4.md).
 
 > **Thay đổi so với 04/10:** `K17` chuyển từ ⬜ sang 🟡 (lab L5 đã đo: optimistic rollback có
 > thật, `next/image` 0 file). `K19` và `K20` lên 🟢 (phase `seo` 15/15, `observability` 10/10).
@@ -807,8 +807,8 @@ Reviewer + ngày: ⬜
 | Lab | Nhánh | Phase | Check | Kỹ thuật con | Sổ chi tiết | Trạng thái |
 |---|---|---|---|---|---|---|
 | L4 | `practice/TV4/L4` | `media` 25 · `email` 3 · `xml` 3 · `jobs` 8 | **39/39 PASS** (28/09) | K13, K14, K15 | `Tuan03/SOK_LAB_L4.md` ⚠️ *chỉ có trên nhánh `origin/practice/TV4/L4`, chưa có trong `main`* | ✅ Xong tuần 3 (chưa mở PR) |
-| L4 mục 2 | `practice/TV4/L4` | Identity/Google/refresh/forms/FTS | ⬜ | K08, K09, K10, K11 | `Tuan04/SOK_LAB_L4_MUC2.md` | ⬜ Chưa làm (bù nợ tuần 3) |
-| L5 | `practice/TV4/L5` | 7 phase: `search-ssr`, `isr-detail`, `query-rollback`, `image-opt`, `seo`, `observability`, `multi-instance` | **63 check** · 41 đạt · **3/7 PASS** (05/10) | K04, K05, K16, K17, K19, K20, K23 | `Tuan04/SOK_LAB_L5.md` + `logs/lab_l5_run.log` + `logs/lab_l5_db.txt` | 🟡 Đã chạy (commit `6c90ad8`, evidence `870d6e3`, PR #28 đã đóng). **4 phase lộ vấn đề thật**: ISR không hoạt động · ảnh không tối ưu 2 tầng · search `no-store` · RowVersion chưa kiểm chứng |
+| L4 mục 2 | `practice/TV4/L4` | Identity/Google/refresh/forms/FTS | ⬜ | K08, K09, K10, K11 | `Tuan04/report/SOK_LAB_L4_MUC2.md` | ⬜ Chưa làm (bù nợ tuần 3) |
+| L5 | `practice/TV4/L5` | 7 phase: `search-ssr`, `isr-detail`, `query-rollback`, `image-opt`, `seo`, `observability`, `multi-instance` | **63 check** · 41 đạt · **3/7 PASS** (05/10) | K04, K05, K16, K17, K19, K20, K23 | `Tuan04/report/SOK_LAB_L5.md` + `logs/lab_l5_run.log` + `logs/lab_l5_db.txt` | 🟡 Đã chạy (commit `6c90ad8`, evidence `870d6e3`, PR #28 đã đóng). **4 phase lộ vấn đề thật**: ISR không hoạt động · ảnh không tối ưu 2 tầng · search `no-store` · RowVersion chưa kiểm chứng |
 
 > Quy tắc: mock chỉ dùng cho unit/error test, **không** thay thế integration thật (DB/Redis/
 > storage/provider). Thiếu Google credentials ⇒ ghi "integration ngoài còn chờ".

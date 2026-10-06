@@ -2,7 +2,7 @@
 
 > Tài liệu mô tả **chi tiết việc cần làm trong tuần 4** dựa trên SRS v1.1.1, task **D5, D6, D7**
 > (`docs/KE_HOACH_DU_AN.md` mục 8) và giao việc tuần 4 của TV4 (`docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md` mục 3.4).
-> Kế hoạch tổng quan: [`KE_HOACH_TUAN_4_TV4.md`](KE_HOACH_TUAN_4_TV4.md) ·
+> Kế hoạch tổng quan: [`KE_HOACH_TUAN_4_TV4.md`](misc/KE_HOACH_TUAN_4_TV4.md) ·
 > Sổ minh chứng: [`SO_EVIDENCE_TUAN_4.md`](SO_EVIDENCE_TUAN_4.md) ·
 > Trạng thái: [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md)
 
@@ -21,7 +21,7 @@
 > | N4 — Runbook, release, bàn giao | 4 việc chưa làm | 🟢 **N4-C xong**; ⛔ runbook đầy đủ + deploy staging + TLS/HSTS → tuần 5 |
 >
 > Nguồn sự thật: [`TRANG_THAI_THUC_HIEN_TUAN_4.md`](TRANG_THAI_THUC_HIEN_TUAN_4.md) ·
-> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](BAO_CAO_GIAI_DOAN_1_N2_N4.md)
+> [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](report/BAO_CAO_GIAI_DOAN_1_N2_N4.md)
 
 ---
 
@@ -259,7 +259,7 @@ Ghi bảng số liệu vào `SO_EVIDENCE_TUAN_4.md`, log vào `Tuan04/logs/`.
 | 8 | `resilience` | Dừng dependency, đo phục hồi | Số liệu |
 
 Cách chấm giống L4: **đếm check** (`media 25/25`, `jobs 8/8` …), exit code khác 0 khi fail,
-ghi sổ `Tuan04/SOK_LAB_L5.md` nêu **giới hạn** (không nói bằng chứng bằng không).
+ghi sổ `Tuan04/report/SOK_LAB_L5.md` nêu **giới hạn** (không nói bằng chứng bằng không).
 
 #### 2.3.3. Mở PR cho nhánh lab
 

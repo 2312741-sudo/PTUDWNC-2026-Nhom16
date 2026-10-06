@@ -5,7 +5,7 @@
 | Người lập | Nguyễn Hữu Trung Sơn (TV4 · 2312739) |
 | Ngày lập | 03/10/2026 |
 | Điều kiện bắt đầu | GĐ2 xong **và** `BAO_CAO_GIAI_DOAN_2_D0_XET_LOI.md` đã viết |
-| Trạng thái | 🟡 **Đã thực thi phần đủ điều kiện** — 02 lỗi đã sửa (01 do merge `main`, 01 phát sinh từ việc kiểm chứng TV1). Xem [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
+| Trạng thái | 🟡 **Đã thực thi phần đủ điều kiện** — 02 lỗi đã sửa (01 do merge `main`, 01 phát sinh từ việc kiểm chứng TV1). Xem [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
 
 ---
 
@@ -44,8 +44,8 @@ Hai lỗi dưới đây **không nằm trong ba nguồn ở mục 1** — phát 
 | 2 | `BUG-W4-M2` | Xung đột `.gitignore` khi merge `21aa722` | `R1` | ✅ Đã giải quyết — ghép cả hai vùng, không trùng lặp |
 
 Lỗi 1 được phát hiện nhờ **việc cuối của GĐ3**: kiểm chứng báo cáo "Tuần 5" của TV1
-([`KiemChung_Commit_Week5_TV1.md`](KiemChung_Commit_Week5_TV1.md)). Chi tiết ở
-[`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) mục 2.
+([`KiemChung_Commit_Week5_TV1.md`](../misc/KiemChung_Commit_Week5_TV1.md)). Chi tiết ở
+[`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) mục 2.
 
 ---
 
@@ -232,7 +232,7 @@ Các mục chưa làm của GĐ3 được giữ nguyên để kỳ sau tiếp t�
 - [x] Lỗi chờ quyết định đã ghi handoff, không tự sửa
 - [ ] `BAO_CAO_DOI_CHIEU_3_KE_HOACH.md` trả lời được đủ / thiếu / dư cho cả 3 kế hoạch
 - [ ] Có bảng đối chiếu riêng cho K01–K24 và NFR của TV4
-- [x] Báo cáo GĐ3 viết xong — [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](BAO_CAO_GIAI_DOAN_3_SUA_LOI.md)
+- [x] Báo cáo GĐ3 viết xong — [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md)
 - [x] Việc cuối của GĐ3 — kiểm chứng báo cáo "Tuần 5" của TV1
 - [ ] **CI chạy lại cho commit sửa lỗi khoá JWT**
 - [ ] **Dừng lại chờ TV1 kiểm tra và quyết định bước tiếp theo**

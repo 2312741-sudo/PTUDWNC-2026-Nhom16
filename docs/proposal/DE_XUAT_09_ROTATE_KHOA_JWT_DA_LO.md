@@ -1,6 +1,6 @@
 # Đề xuất gỡ block — Rotate khoá ký JWT đã lộ trong git history
 
-> **Block**: [`HANDOFF_TV4_TUAN4_N1.md`](../evidence/TV4/Tuan04/HANDOFF_TV4_TUAN4_N1.md) §4.7 · [`BAO_CAO_LOI_TUAN_4_TV4.md`](../evidence/TV4/Tuan04/BAO_CAO_LOI_TUAN_4_TV4.md) `BUG-W4-02`
+> **Block**: [`HANDOFF_TV4_TUAN4_N1.md`](../evidence/TV4/Tuan04/HANDOFF_TV4_TUAN4_N1.md) §4.7 · [`BAO_CAO_LOI_TUAN_4_TV4.md`](../evidence/TV4/Tuan04/report/BAO_CAO_LOI_TUAN_4_TV4.md) `BUG-W4-02`
 > **Mức**: 🔴 **Cao — rủi ro bảo mật** · `NFR-SEC-007` (no secrets trong repo) · K24
 > **Người lập**: Nguyễn Hữu Trung Sơn (2312739 — TV4) · **Ngày**: 03/10/2026
 > **Cần ai quyết**: Nguyễn Thanh Tâm (TV1 — Nhóm trưởng) vì **xoá history là thao tác không thể hoàn tác** và ảnh hưởng mọi thành viên

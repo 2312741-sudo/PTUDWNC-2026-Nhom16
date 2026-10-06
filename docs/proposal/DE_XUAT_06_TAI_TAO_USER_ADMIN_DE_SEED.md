@@ -5,7 +5,7 @@
 > **Cần ai quyết**: ✅ **ĐÃ CHỐT** — TV4 (Nguyễn Hữu Trung Sơn), ngày 03/10/2026 → chọn **phương án A**
 >
 > ✅ **TRẠNG THÁI 03/10/2026: ĐÃ QUYẾT — phương án A (CLI `--promote-admin`).** Xem
-> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2.
+> [`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2.
 > ⏳ **Chưa có code** — chờ triển khai B6-1…B6-4.
 >
 > ```powershell
@@ -131,4 +131,4 @@ Nguoi dung can xem job resize / tao danh muc
 | Hướng dẫn dùng trong `docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md` | 🔲 Chưa viết |
 
 Xem kế hoạch chi tiết và nguyên tắc "ngoài contact":
-[`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2.
+[`QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md`](../evidence/TV4/Tuan04/misc/QUYET_DINH_THUC_HIEN_GIAI_DOAN_1.md) §2.
