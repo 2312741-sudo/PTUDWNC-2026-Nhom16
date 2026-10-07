@@ -194,18 +194,19 @@ TraceId · A7 tìm log Seq. **Mục nào chưa đo được ghi "chưa đo" kèm
 
 ---
 
-## 4. Thứ tự và ngày dự kiến
+## 4. Thứ tự và ngày dự kiến — từng mục N
 
-> Nhóm **chưa chốt ngày bắt đầu/kết thúc tuần 5** trong tài liệu chung; bảng dưới dùng ngày dương lịch
-> tham chiếu từ 07/10, nếu nhóm chốt lịch khác thì cập nhật lại.
+> Nhóm **chưa chốt ngày bắt đầu/kết thúc tuần 5** trong tài liệu chung; ngày dưới dùng dương lịch
+> tham chiếu từ 07/10, nếu nhóm chốt lịch khác thì cập nhật lại. Làm lần lượt **N1 → N5**; mỗi mục N
+> là một ngày, xong mới sang mục sau.
 
-| Ngày | Việc | Lý do xếp ở đây |
-|---|---|---|
-| **07/10** | W5-1 baseline + mở PR sớm · bắt W5-2 · **W5-10**: mở PR `practice/TV4/L4` ngay + bắt dọn secret A1 (P0) | PR càng sớm càng tốt (DoD 12.3); staging là điều kiện của mọi việc sau; A1 + PR L4 là việc tuần 4 đã ghi "không cắt" |
-| **08/10** | W5-2 ×2 lần + drill restore · W5-3 profile 2 API · W5-10: mở rộng `scan-secrets.sh` + test | Số liệu cần chạy lặp, làm sớm để có chỗ sửa |
-| **09/10** | W5-4 HTTPS/HSTS/CORS · bắt W5-6 (D4-UI) · W5-10: ADR soft-delete + path traversal | `NFR-SEC-005` đang 20%; D4-UI chặn luồng gỡ xuất bản |
-| **10/10** | W5-5 runbook · W5-6 xong · W5-9 | Runbook lấy số liệu đã có của 07–09/10 |
-| **11/10** | W5-7 5 E2E trên staging · W5-8 số đo (k6 + SEO + EXPLAIN + cache-hit + metrics) · W5-10: đối chiếu `BUG-W4-01` + báo Tâm · chốt sổ, nộp review | Cổng **G6** cuối tuần |
+| Mục | Ngày dự kiến | Việc | Lý do xếp ở đây |
+|---|---|---|---|
+| **N1** | 07/10 | W5-1 baseline + mở PR sớm · bắt W5-2 · **W5-10**: mở PR `practice/TV4/L4` ngay + bắt dọn secret A1 (P0) | PR càng sớm càng tốt (DoD 12.3); staging là điều kiện của mọi việc sau; A1 + PR L4 là việc tuần 4 đã ghi "không cắt" |
+| **N2** | 08/10 | W5-2 ×2 lần + drill restore · W5-3 profile 2 API · W5-10: mở rộng `scan-secrets.sh` + test | Số liệu cần chạy lặp, làm sớm để có chỗ sửa |
+| **N3** | 09/10 | W5-4 HTTPS/HSTS/CORS · bắt W5-6 (D4-UI) · W5-10: ADR soft-delete + path traversal | `NFR-SEC-005` đang 20%; D4-UI chặn luồng gỡ xuất bản |
+| **N4** | 10/10 | W5-5 runbook · W5-6 xong · W5-9 | Runbook lấy số liệu đã có của 07–09/10 |
+| **N5** | 11/10 | W5-7 5 E2E trên staging · W5-8 số đo (k6 + SEO + EXPLAIN + cache-hit + metrics) · W5-10: đối chiếu `BUG-W4-01` + báo Tâm · chốt sổ, nộp review | Cổng **G6** cuối tuần |
 
 **Cắt nếu trượt tiến độ** — theo thứ tự: (1) W5-9 `npm audit` → `cqrs-behavior` → ADR/path-traversal → sửa 4 phase
 Lab L5 → tuần 6 · (2) W5-8 phần nâng cao (giữ k6 + SEO, cắt EXPLAIN/cache-hit/metrics) · (3) W5-6 nút Xóa.

@@ -1,0 +1,13 @@
+﻿Test run for D:\WNC\PTUDWNC-2026-Nhom16\tests\concurrency-spike\bin\Release\net10.0\ConcurrencySpike.dll (.NETCoreApp,Version=v10.0)
+Test run for D:\WNC\PTUDWNC-2026-Nhom16\tests\CulinaryBlog.Tests\bin\Release\net10.0\CulinaryBlog.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+Data collection : Unable to find a datacollector with friendly name 'XPlat Code Coverage'.
+Data collection : Could not find data collector 'XPlat Code Coverage'
+
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 1 s - ConcurrencySpike.dll (net10.0)
+
+Passed!  - Failed:     0, Passed:   421, Skipped:     0, Total:   421, Duration: 48 s - CulinaryBlog.Tests.dll (net10.0)
+
+Attachments:
+  D:\WNC\PTUDWNC-2026-Nhom16\TestResults\af9ec78b-1d60-4a36-9be5-21d53687c11a\coverage.cobertura.xml

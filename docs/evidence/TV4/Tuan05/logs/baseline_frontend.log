@@ -1,0 +1,122 @@
+﻿=== npx tsc --noEmit 19:15:37 ===
+tsc exit=0
+=== npm run lint ===
+
+> culinary-blog-frontend@1.0.0 lint
+> next lint
+
+
+./src/app/auth/login/page.tsx
+64:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/auth/register/page.tsx
+83:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/dashboard/profile/page.tsx
+74:6  Warning: React Hook useEffect has a missing dependency: 'loadProfile'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+232:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/Footer.tsx
+13:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/Header.tsx
+35:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/RecipeCard.tsx
+38:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/RecipeDetailImage.tsx
+40:7  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+lint exit=0
+=== npm run build ===
+
+> culinary-blog-frontend@1.0.0 build
+> next build
+
+   Γû▓ Next.js 15.1.11
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/auth/login/page.tsx
+64:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/auth/register/page.tsx
+83:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/dashboard/profile/page.tsx
+74:6  Warning: React Hook useEffect has a missing dependency: 'loadProfile'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+232:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/Footer.tsx
+13:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/Header.tsx
+35:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/RecipeCard.tsx
+38:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/RecipeDetailImage.tsx
+40:7  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/15) ...
+   Generating static pages (3/15) 
+node.exe : [TypeError: fetch failed] {
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([TypeError: fetch failed] {:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+[TypeError: fetch failed] {
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+   Generating static pages (7/15) 
+[TypeError: fetch failed] {
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+[TypeError: fetch failed] {
+  [cause]: [AggregateError: ] { code: 'ECONNREFUSED' }
+}
+   Generating static pages (11/15) 
+ Γ£ô Generating static pages (15/15)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Γöî Γùï /                                    172 B           109 kB
+Γö£ Γùï /_not-found                          979 B           106 kB
+Γö£ ╞Æ /api/revalidate                      139 B           106 kB
+Γö£ Γùï /auth/login                          2.12 kB         116 kB
+Γö£ Γùï /auth/register                       2.51 kB         117 kB
+Γö£ Γùï /categories                          172 B           109 kB
+Γö£ ╞Æ /categories/[slug]                   2.88 kB         112 kB
+Γö£ Γùï /dashboard/categories                4.7 kB          110 kB
+Γö£ Γùï /dashboard/profile                   4.8 kB          112 kB
+Γö£ Γùï /dashboard/recipes                   4.11 kB         113 kB
+Γö£ ╞Æ /dashboard/recipes/[id]/edit         821 B           171 kB
+Γö£ Γùï /dashboard/recipes/new               175 B           170 kB
+Γö£ ╞Æ /recipes                             3.65 kB         113 kB
+Γö£ ╞Æ /recipes/[slug]                      2.59 kB         112 kB
+Γö£ Γùï /robots.txt                          0 B                0 B
+Γö£ ╞Æ /search                              3.06 kB         112 kB
+Γöö ╞Æ /sitemap.xml                         0 B                0 B
++ First Load JS shared by all            105 kB
+  Γö£ chunks/4bd1b696-f296fa4c9be4b724.js  52.9 kB
+  Γö£ chunks/517-066e7f65544b6bd7.js       50.5 kB
+  Γöö other shared chunks (total)          1.98 kB
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
+build exit=0
