@@ -299,7 +299,8 @@ docker compose -f docker-compose.dev.yml ps
 dotnet restore CulinaryBlog.sln --locked-mode
 
 # 2. Tạo .env cho máy này (giá trị thật, KHÔNG commit)
-cp .env.example .env
+#    -n = KHÔNG ghi đè nếu .env đã có (tránh mất cấu hình máy đang dùng):
+cp -n .env.example .env
 #    BẮT BUỘC sinh khóa JWT rồi dán vào .env (app sẽ không khởi động nếu bỏ trống):
 #      Git Bash / WSL : openssl rand -base64 48
 #      PowerShell     : $b=New-Object byte[] 48; ([Security.Cryptography.RandomNumberGenerator]::Create()).GetBytes($b); [Convert]::ToBase64String($b)

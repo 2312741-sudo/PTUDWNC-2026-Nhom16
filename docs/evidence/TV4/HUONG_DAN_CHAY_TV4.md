@@ -16,7 +16,7 @@
 | Tầng | Ở đâu | Có commit? | Vai trò |
 |---|---|:---:|---|
 | **Default** | `src/backend/CulinaryBlog.API/appsettings*.json`, `docker-compose.dev.yml` | ✅ | Giá trị **chuẩn** để máy mới clone chạy được ngay, không cần làm gì thêm |
-| **Giá trị thật của máy** | `.env` ở thư mục gốc | ❌ (`.gitignore`) | **Override** default. Tạo bằng `cp .env.example .env` |
+| **Giá trị thật của máy** | `.env` ở thư mục gốc | ❌ (`.gitignore`) | **Override** default. Tạo bằng lệnh không ghi đè ở mục 0.1 (`if (Test-Path .env) …`) |
 | **Mẫu** | `.env.example` | ✅ | Chỉ là template, **không** chứa giá trị thật |
 
 Cả hai tầng **đều được đọc**:
@@ -37,8 +37,9 @@ Cả hai tầng **đều được đọc**:
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16"
 
 # 1) Tạo .env cho máy này (copy từ mẫu, KHÔNG commit)
-Copy-Item .env.example .env
-#    -> sửa .env: POSTGRES_PASSWORD + ConnectionStrings__Database + TEST_DATABASE
+#    CHỈ tạo khi chưa có — Copy-Item thường sẽ GHI ĐÈ .env đang có và mất cấu hình máy:
+if (Test-Path .env) { ".env đã có — giữ nguyên" } else { Copy-Item .env.example .env }
+#    -> nếu vừa tạo mới thì sửa .env: POSTGRES_PASSWORD + ConnectionStrings__Database + TEST_DATABASE
 #       cùng dùng MỘT mật khẩu. Máy TV4 giữ admin123 (volume cũ).
 
 # 2) Bật hạ tầng Docker (Postgres, Redis, RustFS, Mailhog, Seq, Nginx)
@@ -54,7 +55,7 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 
 # 5) Mở cửa sổ PowerShell THỨ HAI cho frontend (giữ nguyên cửa sổ API đang chạy)
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
-Copy-Item ..\..\.env.example .env.local   # rồi sửa .env.local phần Frontend ở cuối file
+if (!(Test-Path .env.local)) { Copy-Item ..\..\.env.example .env.local }   # CHỈ khi chưa có .env.local (không ghi đè); rồi sửa .env.local phần Frontend ở cuối file
 npm install
 npm run dev
 ```
@@ -250,7 +251,8 @@ Lưu ý an toàn:
 Set-Location "D:\WNC\PTUDWNC-2026-Nhom16\src\frontend"
 
 # Next.js KHÔNG đọc .env ở thư mục gốc — cần .env.local riêng cho frontend
-Copy-Item ..\..\.env.example .env.local
+# CHỈ tạo khi chưa có — copy thường sẽ ghi đè .env.local đang có:
+if (Test-Path .env.local) { ".env.local đã có — giữ nguyên" } else { Copy-Item ..\..\.env.example .env.local }
 # Trong .env.local, sửa khối "Frontend" cuối file:
 #   NEXT_PUBLIC_API_URL=http://localhost:5080/api/v1
 #   NEXT_PUBLIC_MEDIA_URL=http://localhost:5080/api/v1/resources/images
