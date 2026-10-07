@@ -1,0 +1,104 @@
+[1mdiff --git a/src/frontend/package-lock.json b/src/frontend/package-lock.json[m
+[1mindex 5de602e..2020664 100644[m
+[1m--- a/src/frontend/package-lock.json[m
+[1m+++ b/src/frontend/package-lock.json[m
+[36m@@ -2986,9 +2986,6 @@[m
+         "arm64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3003,9 +3000,6 @@[m
+         "arm64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3020,9 +3014,6 @@[m
+         "loong64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3037,9 +3028,6 @@[m
+         "loong64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3054,9 +3042,6 @@[m
+         "ppc64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3071,9 +3056,6 @@[m
+         "riscv64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3088,9 +3070,6 @@[m
+         "riscv64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3105,9 +3084,6 @@[m
+         "s390x"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3122,9 +3098,6 @@[m
+         "x64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "glibc"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m
+[36m@@ -3139,9 +3112,6 @@[m
+         "x64"[m
+       ],[m
+       "dev": true,[m
+[31m-      "libc": [[m
+[31m-        "musl"[m
+[31m-      ],[m
+       "license": "MIT",[m
+       "optional": true,[m
+       "os": [[m

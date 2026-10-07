@@ -219,6 +219,12 @@ public sealed class FakeIdentityServiceForGoogle : IIdentityService
 
     public Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct) =>
         Task.CompletedTask;
+
+    public Task RequestChangePasswordCodeAsync(string userId, CancellationToken ct) =>
+        Task.CompletedTask;
+
+    public Task ForgotPasswordAsync(string email, CancellationToken ct) =>
+        Task.CompletedTask;
 }
 
 public sealed class DiscoveryAndSearchTests
