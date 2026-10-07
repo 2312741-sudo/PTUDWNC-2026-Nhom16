@@ -129,9 +129,9 @@ TV4 **không sửa** `TUAN_5.md`, `BAO_CAO_LAB_05.md` hay các file `.docx` củ
 
 | Mã lỗi | Lỗi | Vì sao không sửa |
 |---|---|---|
-| BUG-W4-01 | `422 recipe.version_conflict` khi thêm ảnh vào recipe đã có ảnh | ✅ **Đã sửa trên lab** `lab/TV4-audit-tuan4` nhưng ⛔ **chưa merge** nhánh tuần — đã kiểm chứng lại 05/10: `RecipeImageConfiguration.cs` **vẫn thiếu** `ValueGeneratedNever()`. ⏳ Cần **Tâm chốt C1 hay C2** (đụng schema của TV3, không tự quyết) |
-| BUG-W4-02 | Secret còn trong file tracked, `scan-secrets.sh` không bắt được | ✅ Đã sửa trên lab nhưng ⛔ **chưa merge** |
-| BUG-W4-03 | 2 IP khác nhau dùng chung 1 bucket | ✅ Đã sửa trên lab nhưng ⛔ **chưa merge** |
+| BUG-W4-01 | `422 recipe.version_conflict` khi thêm ảnh vào recipe đã có ảnh | 🟠 Đã tái hiện + sửa cục bộ 03/10 — **07/10: đã vào `main`** (PR #29 `c624b9f`, migration `20261001112029`); còn viết test hồi quy + ⏳ cần **Tâm chốt C1 hay C2** (đụng schema của TV3) — tuần 5, W5-10 |
+| BUG-W4-02 | Secret còn trong file tracked, `scan-secrets.sh` không bắt được | 🔴 **Chưa có bản vá trong dự án** (chỉ kiểm tra cục bộ 03/10) — **sửa trực tiếp tuần 5** (W5-10) |
+| BUG-W4-03 | 2 IP khác nhau dùng chung 1 bucket | 🔴 **Chưa có bản vá trong dự án** (chỉ kiểm tra cục bộ 03/10) — **sửa trực tiếp tuần 5** (W5-10) |
 | BUG-W4-04 | Số liệu mâu thuẫn trong README | ✅ Đã xác định (README đã cập nhật 05/10) — cần Tâm đối chiếu |
 | BUG-W4-05 | `CHANGELOG.md` thiếu mục | ✅ Đã sửa — nay có `0.3.0`, `0.4.0`, `0.4.1` |
 | BUG-W4-06 | Phải đính chính | ⛔ **Không được xoá soft delete của `Recipe`** — đã xác nhận đang dùng, chỉ sửa tên test + ADR |
@@ -146,9 +146,9 @@ TV4 **không sửa** `TUAN_5.md`, `BAO_CAO_LAB_05.md` hay các file `.docx` củ
 > **Ba lỗi GĐ1 đã đóng KHÁC với BUG-W4-01/02/03.** Ba lỗi trong báo cáo GĐ1 là: DB chết trả
 > `500`, DB chết lúc khởi động giết tiến trình, và `GET /recipes/{slug}` trả `500` khi thiếu
 > credential storage — cả ba **đã merge** vào nhánh tuần ở commit `8d9d62b` và khoá bằng test hồi
-> quy. `BUG-W4-01/02/03` của [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md) là lỗi khác,
-> bản vá vẫn nằm trên nhánh lab `lab/TV4-audit-tuan4` và **chưa merge**. Không được tính chồng hai
-> danh sách này.
+> quy. `BUG-W4-01/02/03` của [`BAO_CAO_LOI_TUAN_4_TV4.md`](BAO_CAO_LOI_TUAN_4_TV4.md) là lỗi khác —
+> 05/10 bản vá **chưa có trong dự án** (chỉ cục bộ, không push); 07/10 `BUG-W4-01` đã vào `main` (PR #29),
+> `02`/`03` **sửa trực tiếp tuần 5**. Không được tính chồng hai danh sách này.
 
 ---
 

@@ -55,11 +55,13 @@ Rà toàn bộ tài liệu trong `docs/evidence/TV4/Tuan04/` để loại mâu t
   `D1/D2/D3` (progress upload, UI unpublish/archive, checklist WCAG). Sửa ở
   `TRANG_THAI_THUC_HIEN_TUAN_4.md`, `SO_EVIDENCE_TUAN_4.md` và báo cáo GĐ1.
 - **Sửa lỗi báo cáo GĐ3 về danh sách lỗi.** Trước đó ghi "BUG-W4-01/02/03 đã sửa và kiểm chứng ở
-  GĐ1 — không sửa lần nữa". Đã kiểm chứng lại: `RecipeImageConfiguration.cs` **vẫn thiếu**
-  `ValueGeneratedNever()`, bản vá vẫn nằm trên nhánh lab `lab/TV4-audit-tuan4` và **chưa merge**
-  ⇒ 3 lỗi này **còn mở**. Ba lỗi đã đóng ở GĐ1 là lỗi **khác** (DB chết trả `500`, DB chết lúc
+  GĐ1 — không sửa lần nữa". Đã kiểm chứng lại 05/10: `RecipeImageConfiguration.cs` **vẫn thiếu**
+  `ValueGeneratedNever()` và 3 bản vá **chưa có trong dự án** (chỉ TV4 kiểm tra trên bản vá cục bộ,
+  không push) ⇒ 3 lỗi này **còn mở**. Ba lỗi đã đóng ở GĐ1 là lỗi **khác** (DB chết trả `500`, DB chết lúc
   khởi động, storage `500`) và đã merge ở `8d9d62b`. Bổ sung bảng phân biệt ở GĐ3, GĐ1,
   `BAO_CAO_LOI_TUAN_4_TV4.md` và `BAO_CAO_LAB_TUAN4_V2.md`.
+  → *Cập nhật 07/10: `BUG-W4-01` đã vào `main` (PR #29, `c624b9f`); `BUG-W4-02/03` chưa có bản vá nào
+  trong repo và được đưa vào **sửa trực tiếp trong tuần 5** (`KE_HOACH_TUAN_5_TV4.md` W5-10).*
 - **Bổ sung 2 lỗi bị thiếu** trong danh sách lỗi còn mở của GĐ3: `BUG-W4-08` (chưa kiểm tra sâu)
   và TLS chưa bắt của `BUG-W4-07`.
 - **Thêm banner "ảnh chụp lịch sử"** cho các tài liệu kế hoạch để dòng "chưa làm" trong đó không bị

@@ -12,16 +12,17 @@
 
 ---
 
-## 🧪 TRẠNG THÁI KIỂM CHỨNG THỰC TẾ (cập nhật 03/10/2026)
+## 🧪 TRẠNG THÁI KIỂM CHỨNG THỰC TẾ (kiểm chứng 03/10/2026, rà lại 07/10)
 
-Báo cáo này ban đầu được lập **chỉ bằng đọc code**. Đã mở branch lab `lab/TV4-audit-tuan4` để chạy thật.
+Báo cáo này ban đầu được lập **chỉ bằng đọc code**. Sau đó TV4 đã **chạy thật trên một bản kiểm tra
+cục bộ** (local, không push, không thuộc dự án) để kiểm chứng.
 Bằng chứng đầy đủ: [`BAO_CAO_LAB_TUAN4_V2.md`](BAO_CAO_LAB_TUAN4_V2.md).
 
 | Mã | Trạng thái sau kiểm chứng | Kết quả |
 |---|---|---|
-| BUG-W4-01 | 🔴 **Đã tái hiện + đã sửa trên lab** | Test RED→GREEN trên PostgreSQL thật; `214/214` pass |
-| BUG-W4-02 | 🔴 **Đã tái hiện + đã sửa trên lab** | Scanner cũ bỏ sót JWT key và secret literal; scanner mới bắt đúng |
-| BUG-W4-03 | 🔴 **Đã tái hiện + đã sửa trên lab** | 2 IP khác nhau dùng chung 1 bucket; sau fix mỗi IP 1 bucket |
+| BUG-W4-01 | 🟠 Đã tái hiện 03/10 — **07/10: đã vào `main`** (PR #29 `c624b9f`) | Test RED→GREEN trên PostgreSQL thật; test hồi quy + chốt C1/C2 còn lại ở tuần 5 (W5-10) |
+| BUG-W4-02 | 🔴 **Đã tái hiện — chưa có bản vá trong dự án** | Scanner cũ bỏ sót JWT key và secret literal; **sửa trực tiếp tuần 5** (W5-10) |
+| BUG-W4-03 | 🔴 **Đã tái hiện — chưa có bản vá trong dự án** | 2 IP khác nhau dùng chung 1 bucket; **sửa trực tiếp tuần 5** (W5-10) |
 | BUG-W4-04 | 🟠 Số liệu đã đo thực tế | `210/210`; 4 con số mâu thuẫn trong README đã xác định |
 | BUG-W4-05 | 🟡 Xác nhận | `CHANGELOG.md` chỉ có `0.1.0` |
 | BUG-W4-06 | 🟡 **Phải đính chính** | Xem mục — **không được xoá soft delete của Recipe** |
@@ -39,25 +40,29 @@ Bằng chứng đầy đủ: [`BAO_CAO_LAB_TUAN4_V2.md`](BAO_CAO_LAB_TUAN4_V2.md
 2. 🟡 **Ghi công "15 ô ✅" là số tự khai.** `KE_HOACH_TUAN_4_TV4_V2.md` phải nói rõ đây là kết quả
    báo cáo ba tuần, không phải số đếm trực tiếp của TV4.
 
-> **Lưu ý về phạm vi:** toàn bộ bản vá nằm trên branch lab, **chưa merge** vào `2312739_NHTSon_D5-D6-D7`
-> hay `main`. Baseline đo được trên nhánh gốc là `210/210` (`205` + `5`); con số `214` là của lab
-> (thêm 4 test hồi quy), **không** dùng để cập nhật README của nhánh gốc.
+> **Lưu ý về phạm vi (đính chính 07/10):** các bản vá BUG-W4-02/03 **không tồn tại trong repo** — TV4 chỉ
+> kiểm tra trên bản vá cục bộ, không push. Baseline đo được trên nhánh gốc là `210/210` (`205` + `5`);
+> con số `214` lấy từ bản vá cục bộ (các test hồi quy kèm theo **không có trong repo**) → **không** dùng
+> để cập nhật README. Riêng `BUG-W4-01` đã vào `main` qua PR #29 (`c624b9f`) — phần test hồi quy + chốt
+> C1/C2 còn lại ở tuần 5 (W5-10).
 
 ---
 
 ## A. Lỗi đang mở
 
 > **Nghĩa của mục A:** lỗi **chưa có bản vá trên nhánh chính** `2312739_NHTSon_D5-D6-D7` / `main`.
-> Lỗi 01/02/03 **đã có bản vá và test hồi quy trên nhánh lab** `lab/TV4-audit-tuan4`, nhưng bản vá
-> **chưa merge** — nên vẫn tính là đang mở. Xem bảng trạng thái ở mục trên.
+> Lỗi 01/02/03 khi lập báo cáo **chưa có bản vá nào trong dự án** (TV4 chỉ kiểm chứng trên bản vá cục bộ,
+> không push) — nên tính là đang mở. *Cập nhật 07/10: `BUG-W4-01` đã vào `main` (PR #29); `02`/`03` sửa
+> trực tiếp trong tuần 5 (W5-10).* Xem bảng trạng thái ở mục trên.
 
 > [!WARNING]
-> **Kiểm chứng lại 05/10/2026 — vẫn đúng, nhưng dễ nhầm với lỗi GĐ1.**
+> **Kiểm chứng lại 05/10/2026 — dễ nhầm với lỗi GĐ1** *(rà lại 07/10)*.
 >
 > | Kiểm tra | Kết quả 05/10 |
 > |---|---|
 > | `RecipeImageConfiguration.cs` có `ValueGeneratedNever()`? | ❌ **Không** — vẫn lệch với `RecipeIngredientConfiguration.cs:20` và `RecipeStepConfiguration.cs:20` ⇒ BUG-W4-01 **chưa merge** |
-> | Nhánh `lab/TV4-audit-tuan4` còn tồn tại? | ✅ Còn |
+>
+> *(07/10: `main` **đã có** `ValueGeneratedNever()` + migration `20261001112029` — vào qua PR #29 `c624b9f`.)*
 >
 > ⛔ **Ba lỗi đã đóng ở GĐ1 là lỗi KHÁC**, không phải 01/02/03: DB chết trả `500`, DB chết lúc
 > khởi động giết tiến trình, `GET /recipes/{slug}` trả `500` khi thiếu credential storage. Cả ba
@@ -71,7 +76,7 @@ Bằng chứng đầy đủ: [`BAO_CAO_LAB_TUAN4_V2.md`](BAO_CAO_LAB_TUAN4_V2.md
 | | |
 |---|---|
 | **Chủ sở hữu** | **TV4** (`RecipeImage` là phần D1 của TV4) · phần schema là TV3 |
-| **Trạng thái** | ✅ **Đã tái hiện + đã sửa trên lab** — ⛔ **chưa merge** nhánh chính |
+| **Trạng thái** | 🟠 Đã tái hiện 03/10 — **07/10: đã vào `main`** (PR #29 `c624b9f`) — còn test hồi quy + chốt C1/C2 (W5-10) |
 | **Nguồn** | Báo cáo của TV3 gửi TV4 → [`docs/report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md`](../../../../report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md) |
 
 **Nguyên nhân gốc:** `RecipeImageConfiguration.cs` **không** có `b.Property(i => i.Id).ValueGeneratedNever();`,
@@ -107,7 +112,7 @@ mà domain lại gán `Guid.NewGuid()` (non-empty) ngay khi `recipe.AddImage()`,
 | | |
 |---|---|
 | **Chủ sở hữu** | **TV4** — `KE_HOACH_DU_AN.md` giao "bỏ secret hardcode + secret scan CI"; N1-8 đã làm một phần |
-| **Trạng thái** | ✅ **Đã tái hiện + đã sửa trên lab** (scanner mới bắt đúng, allowlist có lý do) — ⛔ **chưa merge** nhánh chính. N1-8 mới chỉ xử lý `render.yaml` |
+| **Trạng thái** | 🟠 Đã tái hiện 03/10 (scanner mới bắt đúng, allowlist có lý do) — **chưa có bản vá trong dự án** → sửa trực tiếp tuần 5 (W5-10). N1-8 mới chỉ xử lý `render.yaml` |
 
 N1-8 (`0c692d3`, 30/09) bỏ JWT key khỏi `render.yaml` (`sync: false`) và thêm `deploy/scan-secrets.sh`.
 Nhưng còn sót:
@@ -144,7 +149,7 @@ cũng sẽ tin là đã xong.
 | | |
 |---|---|
 | **Chủ sở hữu** | **TV1** (`Program.cs`) — TV4 giữ phần nginx |
-| **Trạng thái** | ✅ **Đã tái hiện + đã sửa trên lab** (`UseForwardedHeaders` + mỗi IP một bucket) — ⛔ **chưa merge** nhánh chính, **đề xuất gửi nhóm** vì `Program.cs` là phần TV1 |
+| **Trạng thái** | 🟠 Đã tái hiện 03/10 (`UseForwardedHeaders` + mỗi IP một bucket, xác minh trên bản cục bộ) — **chưa có bản vá trong dự án** → sửa trực tiếp tuần 5 (W5-10); `Program.cs` là phần TV1 → PR riêng, báo trước |
 
 `Program.cs:120-125`: `AddRateLimiter` chỉ có **một** policy `auth`, dùng `RateLimitPartition.GetFixedWindowLimiter`
 (**fixed window**, không phải sliding), khoá theo `http.Connection.RemoteIpAddress`. Toàn repo **không** có `UseForwardedHeaders`.
@@ -205,7 +210,7 @@ Nhưng `CategoryRepository.DeleteAsync` dùng `db.Categories.Remove()` = **hard 
 > #### 🧪 ĐÍNH CHÍNH SAU KIỂM CHỨNG THỰC TẾ (03/10/2026, lab)
 >
 > Phần "Việc cần làm" ở bản đầu của mục này **đề xuất xoá `MarkDeleted`/`SoftDelete`/`IsDeleted`**.
-> Kiểm chứng trên branch `lab/TV4-audit-tuan4` cho thấy đề xuất đó **sẽ phá vỡ tính năng đang chạy**:
+> Kiểm chứng thực tế cho thấy đề xuất đó **sẽ phá vỡ tính năng đang chạy**:
 >
 > | Kiểm tra | Kết quả |
 > |---|---|

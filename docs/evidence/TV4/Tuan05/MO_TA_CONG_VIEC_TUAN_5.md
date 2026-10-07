@@ -23,7 +23,7 @@
 | W5-7 5 E2E flows (G6) | `FR-RCP-007` | `NFR-MAINT-002` | K21 | D7 |
 | W5-8 Số đo load/SEO + EXPLAIN + cache-hit + metrics | **`FR-OBS-003`** | `NFR-PERF-002`, `NFR-SEO-003`, `NFR-REL-001` | K22, K19, K06, K11, K12 | D7 |
 | W5-9 Lab còn thiếu + `npm audit` + `cqrs-behavior` (K04) | — | — | K05, K16, K17, K04 | D6 (nợ tuần 4) |
-| **W5-10** Đóng bản vá lab + nợ nhỏ P1/P2 | — | `NFR-SEC-004`, `NFR-MAINT-003` | K10, K24, K13 | A1, A2, N3-4, BUG-W4-01/02/03/06/09 |
+| **W5-10** Đóng `BUG-W4-01/02/03` + nợ nhỏ P1/P2 | — | `NFR-SEC-004`, `NFR-MAINT-003` | K10, K24, K13 | A1, A2, N3-4, BUG-W4-01/02/03/06/09 |
 
 ---
 
@@ -95,9 +95,9 @@ Nginx ngừng gửi traffic khi instance không ready, số Hangfire server đư
 **DoD**: có cấu hình + đo được header; **phải ghi rõ** chứng thư tự ký ≠ TLS production. `NFR-SEC-005`
 chỉ chuyển "đạt" khi nhóm chốt hạ tầng TLS thật (câu hỏi Q3 của tuần 4 — chưa có trả lời).
 
-> **Bản vá sẵn chưa merge**: `BUG-W4-03` (thiếu `UseForwardedHeaders` + rate limit chung sau Nginx) **đã có
-> patch trên nhánh `lab/TV4-audit-tuan4`** nhưng chưa merge; `Program.cs` là của TV1 → ghi mục 6, chờ Tâm giao
-> (xem kế hoạch §6). Nếu chưa merge thì mục 4 ở trên phải ghi rõ hạn chế khi đo k6.
+> **`BUG-W4-03` sửa trực tiếp trong tuần 5**: lỗi thiếu `UseForwardedHeaders` + rate limit chung sau Nginx
+> **chưa từng có bản vá trong dự án** — TV4 tái hiện và sửa ở W5-4/W5-10; `Program.cs` là của TV1 → mở PR
+> riêng, báo trước. Nếu chưa xong trước khi đo k6 thì mục 4 ở trên phải ghi rõ hạn chế khi đo.
 
 ---
 
@@ -181,14 +181,14 @@ ghi trong `SO_EVIDENCE_TUAN_5.md`. Không nhận phần của thành viên khác
 
 ---
 
-### W5-10 — Đóng bản vá lab + nợ nhỏ P1/P2 (không cắt phần A1 + PR L4)
+### W5-10 — Đóng `BUG-W4-01/02/03` + nợ nhỏ P1/P2 (không cắt phần A1 + PR L4)
 
 | # | Việc | Trạng thái đầu tuần (đo 07/10) | Bằng chứng DoD |
 |---|---|---|---|
 | 1 | Đối chiếu + chốt `BUG-W4-01` | `main` **đã có** `RecipeImageConfiguration.cs:21` `ValueGeneratedNever()` + migration `20261001112029_RecipeImageIdValueGeneratedNever` (commit `c624b9f`) — khác với báo cáo 05/10 ghi "chưa merge"; cần chạy test hồi quy + báo Tâm chọn C1/C2 (đụng schema TV3) | Log test + reply Tâm |
 | 2 | Dọn secret còn lại (A1 phần cuối) | `appsettings.json:3` + `appsettings.Development.json:3` còn `Password=postgres`; `appsettings.Development.json` + `.github/workflows/backend.yml:47,48,67,68` còn `minioadmin`; `Jwt:SigningKey` đã rỗng ✅ | `git grep` 0 khi chạy lại + CI xanh |
 | 3 | Mở rộng `deploy/scan-secrets.sh` + test | Script (commit cuối `0c692d3`) **chỉ** quét `render.yaml`/compose — chưa quét `appsettings*.json` và `env:` workflow | Script chạy pass/đúng regex + có test |
-| 4 | `BUG-W4-03` — ghi chờ nhóm | Bản vá `UseForwardedHeaders` + bucket theo IP đã có trên `lab/TV4-audit-tuan4`, **chưa merge**; `Program.cs` của TV1 | Mục 6 của kế hoạch + log khi được giao |
+| 4 | `BUG-W4-03` — sửa trực tiếp | Chưa từng có bản vá trong dự án; tái hiện + sửa `UseForwardedHeaders` + bucket theo IP; `Program.cs` của TV1 → PR riêng, báo trước | Test log mỗi IP 1 bucket + link PR |
 | 5 | **Mở PR `practice/TV4/L4`** | Nhánh có sẵn, `gh pr list` **không có PR nào cho L4** (P1 "nâng lên bắt buộc" — `KE_HOACH_V2` §4.2; cut-list §4.4: "để tuần 5") | Link PR (K24) |
 | 6 | ADR soft-delete + đổi tên test | `Recipe` soft delete, `Category` không → viết ADR; đổi tên test cho khớp (P2 `BUG-W4-06`) | File ADR + test đổi tên, CI xanh |
 | 7 | Header `X-Sitemap-Generated` | `BUG-W4-09` — trả `false` khi lock + 1 dòng runbook | Header trả về + dòng runbook |

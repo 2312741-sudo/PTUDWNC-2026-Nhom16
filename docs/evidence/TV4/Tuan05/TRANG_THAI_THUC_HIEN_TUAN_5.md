@@ -90,7 +90,7 @@
 | `npm audit` 10 vulnerability (9 high, 1 critical) | `Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-9** |
 | **A1 secret còn lại** — `Password=postgres`/`minioadmin` trong `appsettings*.json` + `backend.yml`; `scan-secrets.sh` chưa quét appsettings/workflow | `report/BAO_CAO_LOI_TUAN_4_TV4.md` A1 | **W5-10** (P0, không cắt) |
 | **PR cho `practice/TV4/L4`** chưa có (P1 "nâng lên bắt buộc") | `KE_HOACH_V2` §4.2 + §4.4 cut-list | **W5-10** (K24) |
-| `BUG-W4-01/02/03` (bản vá lab chưa merge / đối chiếu) · `BUG-W4-06` ADR · `BUG-W4-09` header sitemap | `report/BAO_CAO_LOI_TUAN_4_TV4.md` | **W5-10** |
+| `BUG-W4-01/02/03` (đối chiếu + sửa trong W5-10) · `BUG-W4-06` ADR · `BUG-W4-09` header sitemap | `report/BAO_CAO_LOI_TUAN_4_TV4.md` | **W5-10** |
 | **ADR soft-delete `Recipe` vs `Category`** + đổi tên test; test path traversal `../` (`NFR-SEC-004`) | `GĐ3` + `GĐ1` §7 | **W5-10** |
 | Số Hangfire server khi 2 API chưa xác nhận | `Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-3** |
 | 3 việc hạ tầng chờ chốt (lịch backup · kho 30 ngày · rotate JWT) | đề xuất 07/08/09 | ⛔ **Không tự quyết** — §5 |
@@ -120,7 +120,6 @@
 | Rotate/xoá khoá JWT ngoài repo (đề xuất 09) | 🟡 | Tâm | 03/10 |
 | Google OAuth credentials (K09) | 🟡 | Nhóm | từ tuần 3 |
 | Tâm xác nhận 24 ô K + mapping | 🟡 | Tâm | 30/09 |
-| `BUG-W4-03` / G1 rate limit phân tán — bản vá trên `lab/TV4-audit-tuan4` chưa merge (`Program.cs` của TV1) | 🔴 | TV1 + Tâm | 07/10 |
 | Chốt `BUG-W4-01` C1/C2 (đụng schema TV3) | 🟡 | Tâm + TV3 | 07/10 |
 | `query-rollback` — cần tài khoản E2E **sở hữu** công thức (hoặc `GetRecipesQuery` filter chủ sở hữu) | 🟡 | TV3/Tâm | 07/10 |
 | K11 EXPLAIN FTS phụ thuộc TV2 sửa `to_tsquery` | 🟡 | TV2 | 07/10 |

@@ -146,14 +146,14 @@
 | Phase `cqrs-behavior` (K04) | ⬜ | |
 | `npm audit` | ⬜ | |
 
-### 3.10. W5-10 — Đóng bản vá lab + nợ nhỏ P1/P2 *(bổ sung 07/10)*
+### 3.10. W5-10 — Đóng `BUG-W4-01/02/03` + nợ nhỏ P1/P2 *(bổ sung 07/10)*
 
 | Việc | Kết quả | Bằng chứng |
 |---|---|---|
 | Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ⬜ | |
 | Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ⬜ | |
 | Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ⬜ | |
-| `BUG-W4-03` — bản vá trên `lab/TV4-audit-tuan4`, chờ Tâm giao | ⬜ (chờ nhóm) | |
+| `BUG-W4-03` — sửa trực tiếp trong W5-10 (chưa từng có bản vá trong dự án; `Program.cs` của TV1 → PR riêng) | ⬜ | |
 | Mở PR cho `practice/TV4/L4` | ⬜ | |
 | ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ⬜ | |
 | Header `X-Sitemap-Generated` (`BUG-W4-09`) | ⬜ | |
@@ -186,7 +186,7 @@ phù hợp · test và CI pass · docs cập nhật · **Tâm duyệt** · có e
 | Luồng E2E `category` | TV2 | W5-7 — thiếu thì G6 chưa đủ 5 luồng |
 | Checklist WCAG/responsive | TV2 | G6 có mục a11y — số đo do TV2, TV4 ghi dẫn chiếu |
 | Jest/RTL frontend unit test | TV1 | Không chặn việc nào của TV4 |
-| Rate limit phân tán (`BUG-W4-03` = `UseForwardedHeaders`) — bản vá trên `lab/TV4-audit-tuan4` chưa merge | TV1 + Tâm | Ảnh hưởng số k6 (W5-8) — chưa sửa thì phải ghi giới hạn |
+| Rate limit phân tán (`BUG-W4-03` = `UseForwardedHeaders`) — TV4 sửa trực tiếp W5-10, cần Tâm review PR (đụng `Program.cs`) | Tâm (review) | Ảnh hưởng số k6 (W5-8) — chưa sửa xong thì phải ghi giới hạn |
 | Chốt `BUG-W4-01` C1/C2 (đụng schema TV3) | Tâm + TV3 | W5-10 — đối chiếu trạng thái trên `main` trước khi chốt |
 | `query-rollback` (RowVersion): cần account E2E **sở hữu** công thức / `GetRecipesQuery` filter chủ sở hữu | TV3/Tâm | W5-9 — thiếu thì phase thứ 4 của L5 không chạy được |
 | K11 EXPLAIN FTS phụ thuộc sửa `to_tsquery` (ADR 0003) | TV2 | W5-8 — phần EXPLAIN FTS chưa đo được |

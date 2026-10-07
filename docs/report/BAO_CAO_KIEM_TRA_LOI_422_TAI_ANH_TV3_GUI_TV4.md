@@ -21,7 +21,8 @@
 | Lý do bác bỏ | Cho rằng `AuditableEntityInterceptor` đã "workaround được" nên 422 không xảy ra | Workaround **không đáng tin** — nó chỉ che lỗi ở một đường gọi, và **vỡ khi** gặp đúng điều kiện thật |
 | Kết quả thực tế | Không tái hiện được trên `main` | **Đã tái hiện được** trên PostgreSQL thật: `DbUpdateConcurrencyException` |
 | Nguyên nhân gốc | — | `RecipeImageConfiguration.cs` thiếu `b.Property(i => i.Id).ValueGeneratedNever();` |
-| Đã sửa chưa | — | ✅ **Đã sửa trên nhánh lab `lab/TV4-audit-tuan4`** + 4 test hồi quy. ⛔ **Chưa merge** vào `2312739_NHTSon_D5-D6-D7` / `main` |
+| Đã sửa chưa | — | ✅ **Đã sửa trên máy TV4** (bản vá cục bộ, không push — không thuộc dự án; "4 test hồi quy" ghi kèm **không tồn tại trong repo**, đối chiếu 07/10). ⛔ **Chưa merge** vào `2312739_NHTSon_D5-D6-D7` / `main` **tại thời điểm 03/10** |
+| Cập nhật 07/10 | — | ✅ **`BUG-W4-01` đã vào `main`** (PR #29, commit `c624b9f`, migration `20261001112029`); còn lại test hồi quy + chốt C1/C2 → tuần 5, `KE_HOACH_TUAN_5_TV4.md` W5-10 |
 
 **Vì sao bản gốc bác bỏ sai:** trạng thái `Added` mà `AuditableEntityInterceptor` tạo ra chỉ là **triệu chứng
 của việc EF đánh dấu entity sai** — không phải cơ chế che lỗi. Chỉ cần một luồng gọi khác (không đi qua

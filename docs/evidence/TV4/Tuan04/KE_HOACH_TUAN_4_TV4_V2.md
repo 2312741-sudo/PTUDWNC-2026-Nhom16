@@ -35,16 +35,16 @@
 
 ## 🧪 CẬP NHẬT SAU KIỂM CHỨNG THỰC TẾ (03/10/2026)
 
-Kế hoạch V2 ban đầu lập **chỉ bằng đọc code**. Đã chạy thật trên branch lab `lab/TV4-audit-tuan4`
-(2 API instance + Nginx + PostgreSQL/Redis thật). Bằng chứng: [`BAO_CAO_LAB_TUAN4_V2.md`](report/BAO_CAO_LAB_TUAN4_V2.md).
+Kế hoạch V2 ban đầu lập **chỉ bằng đọc code**. Sau đó đã chạy thật trên bản kiểm tra cục bộ của TV4
+(local, không push, không thuộc dự án; 2 API instance + Nginx + PostgreSQL/Redis thật). Bằng chứng: [`BAO_CAO_LAB_TUAN4_V2.md`](report/BAO_CAO_LAB_TUAN4_V2.md).
 
 **Việc nào trong kế hoạch đã được chứng minh bằng chạy thật:**
 
 | Hạng mục | Kết quả kiểm chứng |
 |---|---|
-| **BUG-W4-01** (`422` khi thêm ảnh) | 🔴 Tái hiện được trên PostgreSQL thật; sửa 1 dòng ở `RecipeImageConfiguration.cs`; `214/214` test pass |
-| **BUG-W4-03** (rate limit chung bucket) | 🔴 Tái hiện rõ; sửa bằng `UseForwardedHeaders`; xác minh mỗi IP có bucket riêng |
-| **BUG-W4-02** (scanner bỏ sót secret) | 🔴 Scanner cũ **bỏ sót** JWT key và secret literal; scanner mới bắt đúng 2 vị trí |
+| **BUG-W4-01** (`422` khi thêm ảnh) | 🔴 Tái hiện được trên PostgreSQL thật; sửa 1 dòng ở `RecipeImageConfiguration.cs` — **07/10: đã vào `main`** (PR #29); số `214/214` không dùng (test hồi quy không có trong repo) |
+| **BUG-W4-03** (rate limit chung bucket) | 🔴 Tái hiện rõ; sửa bằng `UseForwardedHeaders`; xác minh mỗi IP có bucket riêng — bản vá **chưa vào repo** → sửa trực tiếp tuần 5 (W5-10) |
+| **BUG-W4-02** (scanner bỏ sót secret) | 🔴 Scanner cũ **bỏ sót** JWT key và secret literal; scanner mới bắt đúng 2 vị trí — bản vá **chưa vào repo** → sửa trực tiếp tuần 5 (W5-10) |
 | **A3** (multi-instance + failover) | 🟠 Round-robin, failover, trả `502` khi cả 2 node chết, tự phục hồi sau `fail_timeout` — **đều đạt**. **TLS chưa bật** |
 | **A6** (tài liệu) | 🟠 Số test thực đo: **`210/210`** (205 + 5). `CHANGELOG.md` bổ sung Tuần 2–4 |
 | **A5** (`docker compose --profile`) | 🔴 **Chưa đạt** — compose không có `profiles:`, `container_name` cứng, **không có API service** |
@@ -60,8 +60,9 @@ Kế hoạch V2 ban đầu lập **chỉ bằng đọc code**. Đã chạy thậ
    chính thức trước khi dùng làm căn cứ chấm điểm. Vì vậy nguyên tắc 4 ở trên **giữ nguyên**: ô kỹ năng
    chưa đủ căn cứ để chuyển ✅.
 
-> **Trạng thái tích hợp:** toàn bộ bản vá nằm trên branch lab, **chưa merge** vào `2312739_NHTSon_D5-D6-D7`
-> hay `main`. Con số `210/210` là baseline của **nhánh gốc**; `214/214` là của lab (thêm 4 test hồi quy).
+> **Trạng thái tích hợp (rà lại 07/10):** `BUG-W4-01` **đã vào `main`** (PR #29 `c624b9f`); `BUG-W4-02/03`
+> **chưa có bản vá trong dự án** → sửa trực tiếp tuần 5 (W5-10). Con số `210/210` là baseline của **nhánh gốc**;
+> `214/214` là số đo bản cục bộ (test hồi quy kèm theo không có trong repo) — không dùng.
 > Vì nguyên tắc 4, các ô kỹ năng **giữ nguyên trạng thái** cho tới khi Tâm xác nhận.
 
 ---> [!IMPORTANT]

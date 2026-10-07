@@ -91,7 +91,7 @@ Nguồn: `Tuan04/TRANG_THAI_THUC_HIEN_TUAN_4.md` §7 + `../MAPPING_K01_FR_NFR_AD
 | **W5-7** | **5 E2E flows — cổng G6** | Đối chiếu 5 luồng (register · login · category · draft · publish) với spec hiện có: `create-recipe.spec.ts`, `recipe-publish.spec.ts`, `search.spec.ts`; bổ sung luồng còn thiếu; chạy trọn bộ trên staging | `N2-B1` (nợ G6) | K21 | `FR-RCP-007`, `NFR-MAINT-002` |
 | **W5-8** | **Số đo load/SEO trên staging** | k6 ≥100 VU có p50/p95/p99 **trên staging**; SEO: sitemap/robots/metadata/JSON-LD + kiểm 301; **EXPLAIN re-run** (bị cắt ở tuần 4); **cache-hit ratio** (K12 gap); **metrics scrape thật** (FR-OBS-003 mới có trace); ghi **giới hạn** | D5/D7 + `N2-6`, `N2-5` (bị cắt) | K22, K19, K06, K11, K12 | `NFR-PERF-002`, `NFR-SEO-003`, `NFR-REL-001`, `FR-OBS-003` |
 | **W5-9** | **Lab còn thiếu + nợ kỹ thuật** | `N3-A3` Zod/RHF · `N3-A5` Google OAuth (**chờ credentials**) · sửa **4** phase Lab L5 chưa PASS (`isr-detail`, `image-opt`, `search-ssr`, `query-rollback`) · chạy phase **`cqrs-behavior`** (K04 — chưa từng chạy) · `npm audit` | `N3-A3`, `N3-A5`, báo cáo tuần 4 | K05, K16, K17, K04 | — |
-| **W5-10** | **Đóng bản vá lab + nợ nhỏ P1/P2** | Merge/chốt `BUG-W4-01` (C1/C2 — **chờ Tâm**, đụng schema TV3) + `BUG-W4-02` (mở rộng scanner quét `appsettings*.json` + `env:` workflow + test cho script) + `BUG-W4-03` (đề xuất nhóm — `Program.cs` của TV1) · **mở PR cho `practice/TV4/L4`** (P1, K24) · ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`/A2) · header `X-Sitemap-Generated` (`BUG-W4-09`) · test path traversal `../` (`NFR-SEC-004`) | A1, A2, N3-4, BUG-W4-01/02/03/06/09 | K10, K24, K13 | `NFR-SEC-004`, `NFR-SEC-007`, `NFR-MAINT-003` |
+| **W5-10** | **Đóng `BUG-W4-01/02/03` + nợ nhỏ P1/P2** | Chốt `BUG-W4-01` (đã ở `main` qua PR #29 — viết test hồi quy; C1/C2 — **chờ Tâm**, đụng schema TV3) + `BUG-W4-02` (dọn secret + mở rộng scanner quét `appsettings*.json` + `env:` workflow + test cho script) + `BUG-W4-03` (**sửa trực tiếp** — `UseForwardedHeaders` + bucket theo IP; `Program.cs` của TV1 → PR riêng, báo trước) · **mở PR cho `practice/TV4/L4`** (P1, K24) · ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`/A2) · header `X-Sitemap-Generated` (`BUG-W4-09`) · test path traversal `../` (`NFR-SEC-004`) | A1, A2, N3-4, BUG-W4-01/02/03/06/09 | K10, K24, K13 | `NFR-SEC-004`, `NFR-SEC-007`, `NFR-MAINT-003` |
 
 > **Không thuộc TV4 trong tuần 5** (ghi rõ để không tính vào tiến độ): checklist WCAG/responsive (**TV2**),
 > Jest/RTL frontend unit test (**TV1**), xoá lịch/kho backup 30 ngày và rotate khoá JWT (**Tâm + TV2**,
@@ -180,13 +180,13 @@ TraceId · A7 tìm log Seq. **Mục nào chưa đo được ghi "chưa đo" kèm
 | Chạy phase **`cqrs-behavior`** (K04) | Sổ K04 ghi "phần tự viết behavior trong lab L5 → tuần 5"; L5 tuần 4 chỉ chạy 7 phase, **thiếu phase này** |
 | `npm audit` | 10 vulnerability (9 high, 1 critical) — rà và ghi kết quả, phần cần nâng major thì ghi đề xuất |
 
-#### W5-10 — Đóng bản vá lab + nợ nhỏ P1/P2 (ngày 1–4, không cắt)
+#### W5-10 — Đóng `BUG-W4-01/02/03` + nợ nhỏ P1/P2 (ngày 1–4, không cắt)
 
 | Việc | Ghi chú | Nguồn |
 |---|---|---|
-| Chốt + merge `BUG-W4-01` | Trên `main` hiện **đã có** `RecipeImageConfiguration.cs:21` `ValueGeneratedNever()` + migration `20261001112029` (commit `c624b9f`) — đối chiếu với báo cáo 05/10 ghi "chưa merge", chạy test hồi quy, báo Tâm chọn C1/C2 (đụng schema TV3) | `BAO_CAO_LOI_TUAN_4_TV4.md` A1 |
+| Chốt + viết test hồi quy `BUG-W4-01` | Trên `main` hiện **đã có** `RecipeImageConfiguration.cs:21` `ValueGeneratedNever()` + migration `20261001112029` (commit `c624b9f`, vào qua PR #29) — đối chiếu với báo cáo 05/10 ghi "chưa merge", viết test hồi quy (báo cáo cũ ghi "+4 test" nhưng **không có trong repo**), báo Tâm chọn C1/C2 (đụng schema TV3) | `BAO_CAO_LOI_TUAN_4_TV4.md` A1 |
 | Đóng `BUG-W4-02` (A1 phần còn lại) | Dọn `Password=postgres` ở `appsettings.json:3`/`appsettings.Development.json:3` + `minioadmin` ở `appsettings.Development.json` + `.github/workflows/backend.yml:47,48,67,68`; **mở rộng `deploy/scan-secrets.sh`** quét `appsettings*.json` và `env:` của workflow (hiện script chỉ quét `render.yaml`/compose) + **có test** cho script; `Jwt:SigningKey` đã rỗng ✅ | A1 (P0), `scan-secrets.sh` |
-| `BUG-W4-03` — đề xuất nhóm | Bản vá `UseForwardedHeaders` + rate-limit bucket theo IP **đã có trên nhánh `lab/TV4-audit-tuan4` nhưng chưa merge**; `Program.cs` của TV1 → ghi vào §6 chờ Tâm giao | `BAO_CAO_LOI` A3 |
+| `BUG-W4-03` — sửa trực tiếp | Tái hiện + sửa `UseForwardedHeaders` + rate-limit bucket theo IP trong tuần 5 (bản vá **chưa từng có trong dự án**); `Program.cs` là của TV1 → mở PR riêng, báo trước; nếu chưa xong trước khi đo k6 (W5-8) phải ghi giới hạn | `BAO_CAO_LOI` A3 |
 | **Mở PR cho `practice/TV4/L4`** | Nhánh có sẵn, **chưa có PR** (P1 — "nâng lên bắt buộc" ở `KE_HOACH_V2` §4.2; cut-list §4.4 ghi "để tuần 5"); K24 phụ thuộc | `KE_HOACH_V2` mục 4 |
 | ADR soft-delete + đổi tên test | ADR ghi `Recipe` soft delete + vì sao `CategoryTests` **không** soft delete; đổi tên test cho khớp (P2) | `BUG-W4-06`, `GĐ3` |
 | Header `X-Sitemap-Generated` | Thêm header khi lock sitemap + 1 dòng runbook (N4-1) | `BUG-W4-09` |
@@ -239,7 +239,6 @@ tuần 4 đã ghi "chuyển tuần 5"/"không cắt" và là điều kiện G6.
 | Rotate/xoá khoá JWT đã lộ trong git history | 🟡 Trong repo đã xong 3a/3b/3c; phần ngoài repo chờ | Tâm | [`DE_XUAT_09`](../../../proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md) |
 | Google OAuth credentials (K09, `N3-A5`) | ⬜ Chờ credentials | Nhóm | `Tuan04/SO_EVIDENCE_TUAN_4.md` |
 | Xác nhận 24 ô K + mapping (K01) | ⏳ Chờ Tâm xác nhận và ghi ngày | Tâm | `../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` |
-| Rate limit phân tán sau Nginx (G1 = `BUG-W4-03`) — ảnh hưởng số đo k6 | 🔴 Việc của **TV1** (`Program.cs`); bản vá `UseForwardedHeaders` + bucket theo IP **đã có trên `lab/TV4-audit-tuan4` chưa merge** — nếu chưa sửa phải ghi hạn chế khi đo | TV1 + Tâm | `BAO_CAO_LOI_TUAN_4_TV4.md` A3 |
 | Chốt `BUG-W4-01` chọn C1/C2 (đụng schema TV3 — `RecipeImageId`) | 🟡 Trên `main` đã thấy `ValueGeneratedNever()` + migration; cần Tâm đối chiếu với báo cáo 05/10 và chốt | Tâm + TV3 | `BAO_CAO_LOI_TUAN_4_TV4.md` A1 |
 | `query-rollback` (RowVersion) — tài khoản E2E không sở hữu công thức | 🟡 Cần account E2E **sở hữu** 1 công thức (có thể phải seed thêm) hoặc sửa `GetRecipesQuery` filter chủ sở hữu (việc TV3) | TV3/Tâm | `GĐ3` §5, `SOK_LAB_L5` #5 |
 | K11 FTS EXPLAIN phụ thuộc TV2 sửa `to_tsquery` (ADR 0003) | 🟡 Chờ TV2 — EXPLAIN re-run W5-8 chỉ đo được phần không phụ thuộc | TV2 | `GĐ1` §6.4 |
