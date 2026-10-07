@@ -158,6 +158,13 @@ builder.Services.AddSingleton<IRecipeCacheService>(sp => new RecipeCacheService(
 // vì ApiFactory không nạp cấu hình Minio (không có storage thật) — nếu validate, toàn bộ test đỏ.
 var minioOptions = builder.Services.AddOptions<MinioOptions>();
 minioOptions.Bind(builder.Configuration.GetSection("Minio"));
+builder.Services.PostConfigure<MinioOptions>(o =>
+{
+    if (string.IsNullOrWhiteSpace(o.Endpoint)) o.Endpoint = "localhost:9000";
+    if (string.IsNullOrWhiteSpace(o.AccessKey)) o.AccessKey = "minioadmin";
+    if (string.IsNullOrWhiteSpace(o.SecretKey)) o.SecretKey = "minioadmin";
+    if (string.IsNullOrWhiteSpace(o.Bucket)) o.Bucket = "culinary-blog";
+});
 if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddSingleton<IValidateOptions<MinioOptions>, MinioOptionsValidator>();
