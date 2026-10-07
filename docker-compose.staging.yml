@@ -1,5 +1,9 @@
 # Docker Compose Staging Environment - CulinaryBlog (TV1 - Tuần 5)
 # Sử dụng: docker compose -f docker-compose.staging.yml up -d --build
+#
+# Port host cố tình KHÁC docker-compose.dev.yml (W5-2, TV4 07/10): staging phải chạy song song
+# được với stack dev trên cùng máy (idempotent, không giành port 5432/6379/9000/9001).
+#   db 5433 (dev: service Postgres Windows 5432) · redis 6380 · s3 9002/9003
 
 services:
   culinary-db:
@@ -11,7 +15,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - staging_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -26,7 +30,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - staging_redisdata:/data
     healthcheck:
@@ -45,8 +49,8 @@ services:
       RUSTFS_CONSOLE_ENABLE: 'true'
       RUSTFS_VOLUMES: /data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9002:9000"
+      - "9003:9001"
     volumes:
       - staging_s3data:/data
     healthcheck:
@@ -54,6 +58,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # Tạo bucket idempotent trước khi API trả /health/ready (W5-2, TV4 07/10):
+  # ObjectStorageCredentialProbe (readiness) yêu cầu bucket có thật, còn MinioStorageService
+  # chỉ tạo bucket láz khi upload đầu tiên → stack mới luôn ready=503 cho tới khi ai đó upload.
+  # minio/mc đã bị gỡ khỏi Docker Hub (repo archived 07/2026) nên dùng aws-cli
+  # (đóng vai S3 client, pin digest như rustfs). mb thất bại (đã tồn tại) -> head-bucket xác nhận lại.
+  culinary-init:
+    image: amazon/aws-cli:latest@sha256:3dacc5db57c923c4223e949795f538ecf1f2212b2b7d5a028b47b97f91564c0d
+    container_name: staging-culinary-init
+    restart: "no"
+    depends_on:
+      culinary-s3:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY:-minioadmin}
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c", "aws --endpoint-url http://culinary-s3:9000 s3 mb s3://culinary-blog || aws --endpoint-url http://culinary-s3:9000 s3api head-bucket --bucket culinary-blog"]
 
   culinary-api:
     build:
@@ -68,15 +90,27 @@ services:
         condition: service_healthy
       culinary-s3:
         condition: service_healthy
+      culinary-init:
+        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       ASPNETCORE_HTTP_PORTS: "8080"
-      ConnectionStrings__Database: "Host=culinary-db;Port=5432;Database=culinary_blog;Username=postgres;Password=postgres"
-      ConnectionStrings__Redis: "culinary-redis:6379"
+      # Credential lấy bằng substitution cùng nguồn với hạ tầng (W5-2, TV4 07/10):
+      # run 1 fail 28P01 vì hardcode Password=postgres trong khi POSTGRES_PASSWORD trong .env khác giá trị.
+      ConnectionStrings__Database: "Host=culinary-db;Port=5432;Database=culinary_blog;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      # App đọc section "Redis" (RedisOptions.SectionName; appsettings.json:14 mặc định localhost) —
+      # ConnectionStrings:Redis không có code nào đọc được (W5-2, TV4 07/10): thiếu key này thì
+      # sitemap/cache kết nối localhost:6379 trong container -> /sitemap.xml 500.
+      Redis__Host: culinary-redis
+      Redis__Port: "6379"
+      Redis__Instance: staging
+      # RedisHealthCheck đọc HealthChecks:Redis:Host/Port riêng, default localhost (Health.cs:29-30)
+      HealthChecks__Redis__Host: culinary-redis
+      HealthChecks__Redis__Port: "6379"
       Minio__Endpoint: "culinary-s3:9000"
       Minio__Bucket: "culinary-blog"
-      Minio__AccessKey: "minioadmin"
-      Minio__SecretKey: "minioadmin"
+      Minio__AccessKey: "${RUSTFS_ACCESS_KEY:-minioadmin}"
+      Minio__SecretKey: "${RUSTFS_SECRET_KEY:-minioadmin}"
       Minio__UseSsl: "false"
       # Khoá ký JWT KHÔNG được hardcode trong repo. Sinh riêng cho staging:
       #   openssl rand -base64 48      -> 64 ký tự, đúng yêu cầu >= 64 byte
@@ -86,6 +120,13 @@ services:
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?chua dat JWT_SIGNING_KEY - sinh bang openssl rand -base64 48}
       Jwt__Issuer: "culinary-blog"
       Jwt__Audience: "culinary-blog-client"
+      # W5-2.5 trace HTTP->DB: Seq dev chạy trên máy host (docker-compose.dev.yml, port 5341).
+      # Trên server thật thay bằng URL Seq của môi trường staging.
+      Seq__Url: "http://host.docker.internal:5341"
+      # Cho W5-2.5 thấy span EFCore->Postgres trên Seq: default non-Development filter Microsoft.* = Warning.
+      # Lưu ý: `__` là phân cách cấp; category giữ dấu '.' (không thay bằng '_').
+      # Program.cs override EF qua config (mặc định Error) — đặt Information ở đây để hiện span.
+      Logging__LogLevel__Microsoft.EntityFrameworkCore: Information
     ports:
       - "5080:8080"
     healthcheck:

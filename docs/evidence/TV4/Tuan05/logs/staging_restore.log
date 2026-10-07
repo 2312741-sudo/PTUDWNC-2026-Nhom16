@@ -1,0 +1,118 @@
+﻿=== Restore drill staging (W5-2.4) ===
+ Container staging-culinary-db Removed 
+ Network ptudwnc-2026-nhom16_default Removing 
+ Network ptudwnc-2026-nhom16_default Resource is still in use 
+down exit=0
+drill voi: culinary_20261007T144728Z.dump
+bash.exe : psql: error: connection to server at "127.0.0.1", port 5433 failed: Connection refused (0x0000274D/10061)
+At line:1 char:689
++ ... oding utf8; & "C:\Program Files\Git\bin\bash.exe" deploy/restore.sh " ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql: error: co...0000274D/10061):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+	Is the server running on that host and accepting TCP/IP connections?
+[restore] tß║ío database 'culinary_blog'
+createdb: error: connection to server at "127.0.0.1", port 5433 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+=== Chay lai: chi dung culinary-db de restore ===
+ Container staging-culinary-db Starting 
+ Container staging-culinary-db Started 
+db healthy=True sau 1 lan
+drill voi: culinary_20261007T144728Z.dump
+[restore] database 'culinary_blog' ─æ├ú tß╗ôn tß║íi v├á --allow-existing ─æ╞░ß╗úc truyß╗ün: sß║╜ ghi ─æ├¿
+[restore] kh├┤i phß╗Ñc backups/culinary_20261007T144728Z.dump -> culinary_blog
+bash.exe : pg_restore: error: could not execute query: ERROR:  unrecognized configuration parameter 
+"transaction_timeout"
+At line:1 char:931
++ ... oding utf8; & "C:\Program Files\Git\bin\bash.exe" deploy/restore.sh " ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (pg_restore: err...action_timeout":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Command was: SET transaction_timeout = 0;
+[restore] Lß╗ûI: pg_restore thß║Ñt bß║íi ΓÇö database ─æ├¡ch c├│ thß╗â ─æang dß╗ƒ dang, cß║ºn kiß╗âm tra thß╗º c├┤ng
+=== Restore lan 2: container postgres:16, dump pg16 ===
+ Network ptudwnc-2026-nhom16_default Removing 
+ Network ptudwnc-2026-nhom16_default Resource is still in use 
+down exit=0
+ Container staging-culinary-db Started 
+db healthy=True
+[restore] database 'culinary_blog' ─æ├ú tß╗ôn tß║íi v├á --allow-existing ─æ╞░ß╗úc truyß╗ün: sß║╜ ghi ─æ├¿
+[restore] kh├┤i phß╗Ñc /tmp/backups/culinary_20261007T145532Z.dump -> culinary_blog
+docker : pg_restore: error: could not execute query: ERROR:  schema "hangfire" already exists
+At line:1 char:1016
++ ... WORD=',''); docker exec -e PGPASSWORD=$pgpass pgtool-16 bash /tmp/res ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (pg_restore: err... already exists:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Command was: CREATE SCHEMA hangfire;
+
+
+[restore] Lß╗ûI: pg_restore thß║Ñt bß║íi ΓÇö database ─æ├¡ch c├│ thß╗â ─æang dß╗ƒ dang, cß║ºn kiß╗âm tra thß╗º c├┤ng
+=== Xoa culinary_blog (stack dang ha, khong ket noi) truoc khi restore ===
+docker : ERROR:  DROP DATABASE cannot run inside a transaction block
+At line:1 char:310
++ ... WORD=',''); docker exec -e PGPASSWORD=$pgpass pgtool-16 psql -h host. ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR:  DROP DA...ansaction block:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[restore] database 'culinary_blog' ─æ├ú tß╗ôn tß║íi v├á --allow-existing ─æ╞░ß╗úc truyß╗ün: sß║╜ ghi ─æ├¿
+[restore] kh├┤i phß╗Ñc /tmp/backups/culinary_20261007T145532Z.dump -> culinary_blog
+docker : pg_restore: error: could not execute query: ERROR:  schema "hangfire" already exists
+At line:1 char:570
++ ... utf8; $out; docker exec -e PGPASSWORD=$pgpass pgtool-16 bash /tmp/res ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (pg_restore: err... already exists:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Command was: CREATE SCHEMA hangfire;
+
+
+[restore] Lß╗ûI: pg_restore thß║Ñt bß║íi ΓÇö database ─æ├¡ch c├│ thß╗â ─æang dß╗ƒ dang, cß║ºn kiß╗âm tra thß╗º c├┤ng
+DROP DATABASE
+0
+[restore] tß║ío database 'culinary_blog'
+[restore] kh├┤i phß╗Ñc /tmp/backups/culinary_20261007T145532Z.dump -> culinary_blog
+[restore] kiß╗âm chß╗⌐ng sau kh├┤i phß╗Ñc:
+[restore]   sß╗æ bß║úng trong schema public: 14
+  RecipeIngredients              1200
+  RecipeSteps                    600
+  RecipeImages                   101
+  Recipes                        101
+  Categories                     24
+  __EFMigrationsHistory          8
+  AspNetUserRoles                7
+  AspNetUsers                    7
+  AspNetRoles                    3
+  RefreshTokens                  3
+[restore] kh├┤i phß╗Ñc th├ánh c├┤ng v├áo database 'culinary_blog'
+ Container staging-culinary-frontend Started 
+ Container staging-culinary-nginx Starting 
+ Container staging-culinary-nginx Started 
+up exit=0 thoi_gian=23s
+GET /health/ready -> HTTP 200
+{"status":"Healthy","checks":{"database":{"status":"Healthy","description":"PostgreSQL reachable.","durationMs":31.3931},"redis":{"status":"Healthy","description":"culinary-redis:6379 reachable.","durationMs":3.8479},"object-storage":{"status":"Healthy","description":"Object storage OK: endpoint=culinary-s3:9000, bucket='culinary-blog', credential há»£p lá»‡.","durationMs":55.9074}}}
+GET FE / -> HTTP 200
+truy van sau restore - so bang + 3 category:
+staging-culinary-nginx | Up 8 seconds
+staging-culinary-frontend | Up 8 seconds
+staging-culinary-api | Up 19 seconds (healthy)
+staging-culinary-redis | Up 25 seconds (healthy)
+staging-culinary-s3 | Up 26 seconds (healthy)
+staging-culinary-db | Up 59 minutes (healthy)
+truy van sau restore:
+so bang public = 14
+3 category dau:
+truy van lai sau restore:
+so bang public = 14
+3 category dau:
+da xoa pgtool
+=== Truy van sau restore (psql18 -> staging PG16) ===
+so bang public: 14
+3 category dau:
+M├│n khai vß╗ï | mon-khai-vi
+M├│n ch├¡nh | mon-chinh
+M├│n canh & s├║p | mon-canh-sup

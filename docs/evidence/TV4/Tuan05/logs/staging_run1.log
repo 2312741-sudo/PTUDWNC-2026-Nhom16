@@ -1,0 +1,543 @@
+﻿docker :  Image ptudwnc-2026-nhom16-culinary-api Building 
+At line:1 char:42
++ ... StartNew(); docker compose -f docker-compose.staging.yml up -d --buil ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Image ptudwnc-...y-api Building :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Image ptudwnc-2026-nhom16-culinary-frontend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.08kB done
+#1 DONE 0.0s
+
+#2 [culinary-api internal] load build definition from Dockerfile
+#2 transferring dockerfile: 904B 0.0s done
+#2 DONE 0.0s
+
+#3 [culinary-frontend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 719B done
+#3 DONE 0.0s
+
+#4 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#4 ...
+
+#5 [culinary-api internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#5 DONE 0.4s
+
+#6 [culinary-api internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#6 DONE 0.4s
+
+#7 [culinary-api internal] load .dockerignore
+#7 transferring context: 352B done
+#7 DONE 0.0s
+
+#8 [culinary-api runtime 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:222759b391a1aaf241166672c8f99b2d4ada452e7b5319f3c6e8f265a37b5ad4
+#8 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:222759b391a1aaf241166672c8f99b2d4ada452e7b5319f3c6e8f265a37b5ad4 0.0s done
+#8 DONE 0.0s
+
+#9 [culinary-api runtime 2/4] WORKDIR /app
+#9 CACHED
+
+#10 [culinary-api build 1/5] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317
+#10 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 0.0s done
+#10 DONE 0.0s
+
+#11 [culinary-api internal] load build context
+#11 transferring context: 9.33kB done
+#11 DONE 0.0s
+
+#12 [culinary-api build 2/5] WORKDIR /src
+#12 CACHED
+
+#13 [culinary-api build 4/5] COPY src/backend/ src/backend/
+#13 CACHED
+
+#14 [culinary-api build 3/5] COPY Directory.Build.props ./
+#14 CACHED
+
+#15 [culinary-api build 5/5] RUN dotnet publish src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj -c Release -o /app/publish /p:UseAppHost=false
+#15 CACHED
+
+#16 [culinary-api runtime 3/4] RUN apt-get update     && apt-get install -y --no-install-recommends curl     && rm -rf /var/lib/apt/lists/*
+#16 0.671 Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+#16 1.347 Get:2 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+#16 ...
+
+#4 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#4 DONE 1.9s
+
+#17 [culinary-frontend internal] load .dockerignore
+#17 transferring context: 2B done
+#17 DONE 0.0s
+
+#18 [culinary-frontend deps 1/4] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#18 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.0s done
+#18 DONE 0.0s
+
+#19 [culinary-frontend internal] load build context
+#19 transferring context: 2.66MB 1.1s done
+#19 DONE 1.1s
+
+#20 [culinary-frontend runner 3/6] COPY --from=builder /app/public ./public
+#20 CACHED
+
+#21 [culinary-frontend runner 4/6] COPY --from=builder /app/.next ./.next
+#21 CACHED
+
+#22 [culinary-frontend runner 5/6] COPY --from=builder /app/node_modules ./node_modules
+#22 CACHED
+
+#23 [culinary-frontend deps 2/4] WORKDIR /app
+#23 CACHED
+
+#24 [culinary-frontend deps 3/4] COPY package*.json ./
+#24 CACHED
+
+#25 [culinary-frontend deps 4/4] RUN npm ci
+#25 CACHED
+
+#26 [culinary-frontend builder 3/5] COPY --from=deps /app/node_modules ./node_modules
+#26 CACHED
+
+#27 [culinary-frontend builder 4/5] COPY . .
+#27 CACHED
+
+#28 [culinary-frontend builder 5/5] RUN npm run build
+#28 CACHED
+
+#29 [culinary-frontend runner 6/6] COPY --from=builder /app/package.json ./package.json
+#29 CACHED
+
+#30 [culinary-frontend] exporting to image
+#30 exporting layers done
+#30 exporting manifest sha256:79a28981d6f4492666b7c336d7d7dd617932db699d86d997c33ba69b54e32807 done
+#30 exporting config sha256:1c7d3155694a4b0335afc0a5d98f47d9f533fa0e882c225c8665d490be054fdb done
+#30 exporting attestation manifest sha256:188e15eb826355b75533c9a3a7a3d362222d9ff82dbe627609c653581ab887f6 0.0s done
+#30 exporting manifest list sha256:72d9d10623f3cd73e2ea253bf6c6e8ec3561bea2a0999e978e329d65567f47af 0.0s done
+#30 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest
+#30 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest done
+#30 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest done
+#30 DONE 0.1s
+
+#31 [culinary-frontend] resolving provenance for metadata file
+#31 DONE 0.0s
+
+#16 [culinary-api runtime 3/4] RUN apt-get update     && apt-get install -y --no-install-recommends curl     && rm -rf /var/lib/apt/lists/*
+#16 2.010 Get:3 http://archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+#16 2.323 Get:4 http://archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+#16 2.638 Get:5 http://archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+#16 2.912 Get:6 http://archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+#16 5.640 Get:7 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+#16 5.695 Get:8 http://archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+#16 5.697 Get:9 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2165 kB]
+#16 5.799 Get:10 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1701 kB]
+#16 5.890 Get:11 http://archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [56.2 kB]
+#16 5.892 Get:12 http://archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [2138 kB]
+#16 5.981 Get:13 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1943 kB]
+#16 6.032 Get:14 http://archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [49.0 kB]
+#16 6.034 Get:15 http://archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [671 B]
+#16 6.034 Get:16 http://archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [36.0 kB]
+#16 17.56 Get:17 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1545 kB]
+#16 28.42 Get:18 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1323 kB]
+#16 30.84 Get:19 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [50.0 kB]
+#16 31.18 Fetched 33.2 MB in 31s (1072 kB/s)
+#16 31.18 Reading package lists...
+#16 31.87 Reading package lists...
+#16 32.47 Building dependency tree...
+#16 32.62 Reading state information...
+#16 32.80 The following additional packages will be installed:
+#16 32.80   libbrotli1 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkeyutils1 libkrb5-3
+#16 32.80   libkrb5support0 libldap2 libnghttp2-14 libpsl5t64 librtmp1 libsasl2-2
+#16 32.80   libsasl2-modules-db libssh-4
+#16 32.80 Suggested packages:
+#16 32.80   krb5-doc krb5-user
+#16 32.80 Recommended packages:
+#16 32.80   krb5-locales libldap-common publicsuffix libsasl2-modules
+#16 32.83 The following NEW packages will be installed:
+#16 32.83   curl libbrotli1 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkeyutils1
+#16 32.83   libkrb5-3 libkrb5support0 libldap2 libnghttp2-14 libpsl5t64 librtmp1
+#16 32.83   libsasl2-2 libsasl2-modules-db libssh-4
+#16 34.11 0 upgraded, 15 newly installed, 0 to remove and 0 not upgraded.
+#16 34.11 Need to get 2168 kB of archives.
+#16 34.11 After this operation, 6009 kB of additional disk space will be used.
+#16 34.11 Get:1 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libkrb5support0 amd64 1.20.1-6ubuntu2.10 [34.9 kB]
+#16 51.71 Get:2 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libk5crypto3 amd64 1.20.1-6ubuntu2.10 [81.9 kB]
+#16 62.20 Get:3 http://archive.ubuntu.com/ubuntu noble/main amd64 libkeyutils1 amd64 1.6.3-3build1 [9490 B]
+#16 69.76 Get:4 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libkrb5-3 amd64 1.20.1-6ubuntu2.10 [348 kB]
+#16 76.88 Get:5 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgssapi-krb5-2 amd64 1.20.1-6ubuntu2.10 [143 kB]
+#16 82.43 Get:6 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libnghttp2-14 amd64 1.59.0-1ubuntu0.4 [74.6 kB]
+#16 89.20 Get:7 http://archive.ubuntu.com/ubuntu noble/main amd64 libpsl5t64 amd64 0.21.2-1.1build1 [57.1 kB]
+#16 96.97 Get:8 http://archive.ubuntu.com/ubuntu noble/main amd64 libbrotli1 amd64 1.1.0-2build2 [331 kB]
+#16 104.1 Get:9 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-5ubuntu3.1 [20.4 kB]
+#16 108.2 Get:10 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-5ubuntu3.1 [53.2 kB]
+#16 115.2 Get:11 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libldap2 amd64 2.6.10+dfsg-0ubuntu0.24.04.1 [198 kB]
+#16 120.3 Get:12 http://archive.ubuntu.com/ubuntu noble/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2build7 [56.3 kB]
+#16 125.9 Get:13 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libssh-4 amd64 0.10.6-2ubuntu0.5 [191 kB]
+#16 132.3 Get:14 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4t64 amd64 8.5.0-2ubuntu10.15 [343 kB]
+#16 142.4 Get:15 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 curl amd64 8.5.0-2ubuntu10.15 [227 kB]
+#16 147.5 debconf: delaying package configuration, since apt-utils is not installed
+#16 147.5 Fetched 2168 kB in 1min 55s (18.9 kB/s)
+#16 147.5 Selecting previously unselected package libkrb5support0:amd64.
+#16 147.5 (Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 6111 files and directories currently installed.)
+#16 147.5 Preparing to unpack .../00-libkrb5support0_1.20.1-6ubuntu2.10_amd64.deb ...
+#16 147.5 Unpacking libkrb5support0:amd64 (1.20.1-6ubuntu2.10) ...
+#16 147.6 Selecting previously unselected package libk5crypto3:amd64.
+#16 147.6 Preparing to unpack .../01-libk5crypto3_1.20.1-6ubuntu2.10_amd64.deb ...
+#16 147.6 Unpacking libk5crypto3:amd64 (1.20.1-6ubuntu2.10) ...
+#16 147.6 Selecting previously unselected package libkeyutils1:amd64.
+#16 147.6 Preparing to unpack .../02-libkeyutils1_1.6.3-3build1_amd64.deb ...
+#16 147.6 Unpacking libkeyutils1:amd64 (1.6.3-3build1) ...
+#16 147.6 Selecting previously unselected package libkrb5-3:amd64.
+#16 147.6 Preparing to unpack .../03-libkrb5-3_1.20.1-6ubuntu2.10_amd64.deb ...
+#16 147.6 Unpacking libkrb5-3:amd64 (1.20.1-6ubuntu2.10) ...
+#16 147.7 Selecting previously unselected package libgssapi-krb5-2:amd64.
+#16 147.7 Preparing to unpack .../04-libgssapi-krb5-2_1.20.1-6ubuntu2.10_amd64.deb ...
+#16 147.7 Unpacking libgssapi-krb5-2:amd64 (1.20.1-6ubuntu2.10) ...
+#16 147.7 Selecting previously unselected package libnghttp2-14:amd64.
+#16 147.7 Preparing to unpack .../05-libnghttp2-14_1.59.0-1ubuntu0.4_amd64.deb ...
+#16 147.7 Unpacking libnghttp2-14:amd64 (1.59.0-1ubuntu0.4) ...
+#16 147.8 Selecting previously unselected package libpsl5t64:amd64.
+#16 147.8 Preparing to unpack .../06-libpsl5t64_0.21.2-1.1build1_amd64.deb ...
+#16 147.8 Unpacking libpsl5t64:amd64 (0.21.2-1.1build1) ...
+#16 147.8 Selecting previously unselected package libbrotli1:amd64.
+#16 147.8 Preparing to unpack .../07-libbrotli1_1.1.0-2build2_amd64.deb ...
+#16 147.8 Unpacking libbrotli1:amd64 (1.1.0-2build2) ...
+#16 147.8 Selecting previously unselected package libsasl2-modules-db:amd64.
+#16 147.8 Preparing to unpack .../08-libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_amd64.deb ...
+#16 147.8 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#16 147.9 Selecting previously unselected package libsasl2-2:amd64.
+#16 147.9 Preparing to unpack .../09-libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_amd64.deb ...
+#16 147.9 Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#16 147.9 Selecting previously unselected package libldap2:amd64.
+#16 147.9 Preparing to unpack .../10-libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_amd64.deb ...
+#16 147.9 Unpacking libldap2:amd64 (2.6.10+dfsg-0ubuntu0.24.04.1) ...
+#16 148.0 Selecting previously unselected package librtmp1:amd64.
+#16 148.0 Preparing to unpack .../11-librtmp1_2.4+20151223.gitfa8646d.1-2build7_amd64.deb ...
+#16 148.0 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2build7) ...
+#16 148.0 Selecting previously unselected package libssh-4:amd64.
+#16 148.0 Preparing to unpack .../12-libssh-4_0.10.6-2ubuntu0.5_amd64.deb ...
+#16 148.0 Unpacking libssh-4:amd64 (0.10.6-2ubuntu0.5) ...
+#16 148.0 Selecting previously unselected package libcurl4t64:amd64.
+#16 148.0 Preparing to unpack .../13-libcurl4t64_8.5.0-2ubuntu10.15_amd64.deb ...
+#16 148.0 Unpacking libcurl4t64:amd64 (8.5.0-2ubuntu10.15) ...
+#16 148.1 Selecting previously unselected package curl.
+#16 148.1 Preparing to unpack .../14-curl_8.5.0-2ubuntu10.15_amd64.deb ...
+#16 148.1 Unpacking curl (8.5.0-2ubuntu10.15) ...
+#16 148.1 Setting up libkeyutils1:amd64 (1.6.3-3build1) ...
+#16 148.1 Setting up libbrotli1:amd64 (1.1.0-2build2) ...
+#16 148.1 Setting up libpsl5t64:amd64 (0.21.2-1.1build1) ...
+#16 148.2 Setting up libnghttp2-14:amd64 (1.59.0-1ubuntu0.4) ...
+#16 148.2 Setting up libkrb5support0:amd64 (1.20.1-6ubuntu2.10) ...
+#16 148.2 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#16 148.2 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2build7) ...
+#16 148.2 Setting up libk5crypto3:amd64 (1.20.1-6ubuntu2.10) ...
+#16 148.2 Setting up libsasl2-2:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#16 148.2 Setting up libkrb5-3:amd64 (1.20.1-6ubuntu2.10) ...
+#16 148.2 Setting up libldap2:amd64 (2.6.10+dfsg-0ubuntu0.24.04.1) ...
+#16 148.3 Setting up libgssapi-krb5-2:amd64 (1.20.1-6ubuntu2.10) ...
+#16 148.3 Setting up libssh-4:amd64 (0.10.6-2ubuntu0.5) ...
+#16 148.3 Setting up libcurl4t64:amd64 (8.5.0-2ubuntu10.15) ...
+#16 148.3 Setting up curl (8.5.0-2ubuntu10.15) ...
+#16 148.3 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#16 DONE 148.4s
+
+#32 [culinary-api runtime 4/4] COPY --from=build /app/publish .
+#32 DONE 0.4s
+
+#33 [culinary-api] exporting to image
+#33 exporting layers
+#33 exporting layers 0.7s done
+#33 exporting manifest sha256:2c6529b4e9b41425142f804bf370abab6e5ff862ff7575cf003229972938830a 0.0s done
+#33 exporting config sha256:8167176c946535d335508a22de2daf49d5d7c757064c4dab8d3a9cce687df477 0.0s done
+#33 exporting attestation manifest sha256:626ec881629b2c16d3ed7b7b7e0c8e5ab8cf04b0410c3443f1a922bf89e85457 0.0s done
+#33 exporting manifest list sha256:4fa0559bde12cff648c10ee397326242f49b19149b1b71ee84db8a6eea371557 0.0s done
+#33 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest done
+#33 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest
+#33 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest 0.2s done
+#33 DONE 1.0s
+
+#34 [culinary-api] resolving provenance for metadata file
+#34 DONE 0.0s
+ Image ptudwnc-2026-nhom16-culinary-api Built 
+ Image ptudwnc-2026-nhom16-culinary-frontend Built 
+time="2026-10-07T21:27:27+07:00" level=warning msg="Found orphan containers (culinaryblog-otel, culinaryblog-redis, 
+culinaryblog-s3, culinaryblog-seq, culinaryblog-nginx, culinaryblog-pg, culinaryblog-mailhog) for this project. If you 
+removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean 
+it up."
+ Container staging-culinary-db Running 
+ Container staging-culinary-redis Running 
+ Container staging-culinary-s3 Running 
+ Container staging-culinary-api Recreate 
+ Container staging-culinary-api Recreated 
+ Container staging-culinary-db Waiting 
+ Container staging-culinary-redis Waiting 
+ Container staging-culinary-s3 Waiting 
+ Container staging-culinary-redis Healthy 
+ Container staging-culinary-db Healthy 
+ Container staging-culinary-s3 Healthy 
+ Container staging-culinary-api Starting 
+ Container staging-culinary-api Started 
+ Container staging-culinary-api Waiting 
+ Container staging-culinary-api Healthy 
+ Container staging-culinary-frontend Starting 
+ Container staging-culinary-frontend Started 
+ Container staging-culinary-nginx Starting 
+ Container staging-culinary-nginx Started 
+staging-culinary-api | Up 11 seconds (healthy)
+staging-culinary-nginx | Up Less than a second
+staging-culinary-frontend | Up Less than a second
+staging-culinary-redis | Up 5 minutes (healthy)
+staging-culinary-db | Up 5 minutes (healthy)
+staging-culinary-s3 | Up 5 minutes (healthy)
+health/ready qua nginx | http://localhost/health/ready | HTTP 503 | 414 bytes
+health/ready truc tiep API | http://localhost:5080/health/ready | HTTP 503 | 414 bytes
+FE qua nginx (/) | http://localhost/ | HTTP 200 | 59948 bytes
+FE truc tiep :3000 | http://localhost:3000/ | HTTP 200 | 59948 bytes
+sitemap.xml truc tiep API | http://localhost:5080/sitemap.xml | HTTP 500 | 247 bytes
+sitemap.xml qua nginx | http://localhost/sitemap.xml | HTTP 200 | 701 bytes
+docker : go-yaml load error in parser (while parsing a block mapping) at L9.C3-L133.C5: did not find expected key
+At line:1 char:42
++ ... StartNew(); docker compose -f docker-compose.staging.yml up -d --buil ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (go-yaml load er...nd expected key:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+staging-culinary-api | Up 6 minutes (healthy)
+staging-culinary-nginx | Up 6 minutes
+staging-culinary-frontend | Up 6 minutes
+staging-culinary-redis | Up 12 minutes (healthy)
+staging-culinary-db | Up 12 minutes (healthy)
+staging-culinary-s3 | Up 12 minutes (healthy)
+docker :  Image minio/mc:RELEASE.2025-08-13T08-35-41Z Pulling 
+At line:1 char:159
++ ... StartNew(); docker compose -f docker-compose.staging.yml up -d --buil ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Image minio/mc...35-41Z Pulling :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Image minio/mc:RELEASE.2025-08-13T08-35-41Z Error pull access denied for minio/mc, repository does not exist or may 
+require 'docker login'
+Error response from daemon: pull access denied for minio/mc, repository does not exist or may require 'docker login'
+staging-culinary-api | Up 8 minutes (healthy)
+staging-culinary-nginx | Up 8 minutes
+staging-culinary-frontend | Up 8 minutes
+staging-culinary-redis | Up 13 minutes (healthy)
+staging-culinary-db | Up 13 minutes (healthy)
+staging-culinary-s3 | Up 13 minutes (healthy)
+docker :  Image ptudwnc-2026-nhom16-culinary-api Building 
+At line:1 char:132
++ ... StartNew(); docker compose -f docker-compose.staging.yml up -d --buil ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Image ptudwnc-...y-api Building :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Image ptudwnc-2026-nhom16-culinary-frontend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.08kB done
+#1 DONE 0.0s
+
+#2 [culinary-api internal] load build definition from Dockerfile
+#2 DONE 0.0s
+
+#3 [culinary-frontend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 719B done
+#3 DONE 0.0s
+
+#2 [culinary-api internal] load build definition from Dockerfile
+#2 transferring dockerfile: 904B done
+#2 DONE 0.0s
+
+#4 [culinary-api internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#4 DONE 0.4s
+
+#5 [culinary-api internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#5 DONE 0.4s
+
+#6 [culinary-api internal] load .dockerignore
+#6 transferring context: 352B done
+#6 DONE 0.0s
+
+#7 [culinary-api runtime 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:222759b391a1aaf241166672c8f99b2d4ada452e7b5319f3c6e8f265a37b5ad4
+#7 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:222759b391a1aaf241166672c8f99b2d4ada452e7b5319f3c6e8f265a37b5ad4 0.1s done
+#7 DONE 0.1s
+
+#8 [culinary-api build 1/5] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317
+#8 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 0.1s done
+#8 DONE 0.1s
+
+#9 [culinary-api internal] load build context
+#9 transferring context: 9.33kB 0.0s done
+#9 DONE 0.0s
+
+#10 [culinary-api runtime 2/4] WORKDIR /app
+#10 CACHED
+
+#11 [culinary-api runtime 3/4] RUN apt-get update     && apt-get install -y --no-install-recommends curl     && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [culinary-api build 4/5] COPY src/backend/ src/backend/
+#12 CACHED
+
+#13 [culinary-api build 2/5] WORKDIR /src
+#13 CACHED
+
+#14 [culinary-api build 3/5] COPY Directory.Build.props ./
+#14 CACHED
+
+#15 [culinary-api build 5/5] RUN dotnet publish src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj -c Release -o /app/publish /p:UseAppHost=false
+#15 CACHED
+
+#16 [culinary-api runtime 4/4] COPY --from=build /app/publish .
+#16 CACHED
+
+#17 [culinary-api] exporting to image
+#17 exporting layers done
+#17 exporting manifest sha256:2c6529b4e9b41425142f804bf370abab6e5ff862ff7575cf003229972938830a done
+#17 exporting config sha256:8167176c946535d335508a22de2daf49d5d7c757064c4dab8d3a9cce687df477 done
+#17 exporting attestation manifest sha256:3df7c156537761cc1569635e98938e4ce7327e337cb583cc6fcebe81fc774a72 0.0s done
+#17 exporting manifest list sha256:9d7afa52c95152e47a5b7cc5585d564c94a6346795377fef0ff909b0ff1e23a5
+#17 exporting manifest list sha256:9d7afa52c95152e47a5b7cc5585d564c94a6346795377fef0ff909b0ff1e23a5 0.0s done
+#17 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest done
+#17 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest 0.0s done
+#17 DONE 0.1s
+
+#18 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#18 ...
+
+#19 [culinary-api] resolving provenance for metadata file
+#19 DONE 0.0s
+
+#18 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#18 DONE 1.9s
+
+#20 [culinary-frontend internal] load .dockerignore
+#20 transferring context: 2B done
+#20 DONE 0.0s
+
+#21 [culinary-frontend deps 1/4] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#21 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.0s done
+#21 DONE 0.0s
+
+#22 [culinary-frontend internal] load build context
+#22 transferring context: 2.66MB 1.2s done
+#22 DONE 1.2s
+
+#23 [culinary-frontend builder 4/5] COPY . .
+#23 CACHED
+
+#24 [culinary-frontend runner 3/6] COPY --from=builder /app/public ./public
+#24 CACHED
+
+#25 [culinary-frontend runner 4/6] COPY --from=builder /app/.next ./.next
+#25 CACHED
+
+#26 [culinary-frontend builder 3/5] COPY --from=deps /app/node_modules ./node_modules
+#26 CACHED
+
+#27 [culinary-frontend builder 5/5] RUN npm run build
+#27 CACHED
+
+#28 [culinary-frontend runner 5/6] COPY --from=builder /app/node_modules ./node_modules
+#28 CACHED
+
+#29 [culinary-frontend deps 2/4] WORKDIR /app
+#29 CACHED
+
+#30 [culinary-frontend deps 3/4] COPY package*.json ./
+#30 CACHED
+
+#31 [culinary-frontend deps 4/4] RUN npm ci
+#31 CACHED
+
+#32 [culinary-frontend runner 6/6] COPY --from=builder /app/package.json ./package.json
+#32 CACHED
+
+#33 [culinary-frontend] exporting to image
+#33 exporting layers done
+#33 exporting manifest sha256:79a28981d6f4492666b7c336d7d7dd617932db699d86d997c33ba69b54e32807 done
+#33 exporting config sha256:1c7d3155694a4b0335afc0a5d98f47d9f533fa0e882c225c8665d490be054fdb done
+#33 exporting attestation manifest sha256:57c02cea9e4037c1a6fecaf018346e0e7efcaa1e7983f9e5a187050a5213c110 0.0s done
+#33 exporting manifest list sha256:2a096233496e47683e5421e5ae50d1144c3da49e1bce6c6867a295fe70d3e31b 0.0s done
+#33 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest
+#33 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest done
+#33 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest 0.0s done
+#33 DONE 0.1s
+
+#34 [culinary-frontend] resolving provenance for metadata file
+#34 DONE 0.0s
+ Image ptudwnc-2026-nhom16-culinary-api Built 
+ Image ptudwnc-2026-nhom16-culinary-frontend Built 
+time="2026-10-07T21:37:43+07:00" level=warning msg="Found orphan containers (culinaryblog-otel, culinaryblog-redis, 
+culinaryblog-s3, culinaryblog-seq, culinaryblog-nginx, culinaryblog-pg, culinaryblog-mailhog) for this project. If you 
+removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean 
+it up."
+ Container staging-culinary-s3 Running 
+ Container staging-culinary-frontend Running 
+ Container staging-culinary-nginx Running 
+ Container staging-culinary-db Running 
+ Container staging-culinary-redis Running 
+ Container staging-culinary-init Creating 
+ Container staging-culinary-init Created 
+ Container staging-culinary-api Recreate 
+ Container staging-culinary-api Recreated 
+ Container staging-culinary-s3 Waiting 
+ Container staging-culinary-s3 Healthy 
+ Container staging-culinary-init Starting 
+ Container staging-culinary-init Started 
+ Container staging-culinary-init Waiting 
+ Container staging-culinary-db Waiting 
+ Container staging-culinary-redis Waiting 
+ Container staging-culinary-s3 Waiting 
+ Container staging-culinary-redis Healthy 
+ Container staging-culinary-db Healthy 
+ Container staging-culinary-s3 Healthy 
+ Container staging-culinary-init Exited 
+ Container staging-culinary-api Starting 
+ Container staging-culinary-api Started 
+ Container staging-culinary-api Waiting 
+ Container staging-culinary-api Healthy 
+staging-culinary-api | Up 16 seconds (healthy)
+staging-culinary-init | Exited (0) 17 seconds ago
+staging-culinary-nginx | Up 10 minutes
+staging-culinary-frontend | Up 10 minutes
+staging-culinary-redis | Up 15 minutes (healthy)
+staging-culinary-db | Up 15 minutes (healthy)
+staging-culinary-s3 | Up 15 minutes (healthy)
+health/ready qua nginx | http://localhost/health/ready | HTTP 200 | 386 bytes
+health/ready truc tiep API | http://localhost:5080/health/ready | HTTP 200 | 385 bytes
+health/live | http://localhost/health/live | HTTP 200 | 114 bytes
+FE qua nginx (/) | http://localhost/ | HTTP 200 | 59948 bytes
+FE truc tiep :3000 | http://localhost:3000/ | HTTP 200 | 59948 bytes
+sitemap.xml qua nginx | http://localhost/sitemap.xml | HTTP 200 | 701 bytes
+sitemap.xml truc tiep API | http://localhost:5080/sitemap.xml | HTTP 500 | 247 bytes
+health/ready sau Redis key fix | http://localhost/health/ready | HTTP 200 | 386 bytes
+sitemap.xml truc tiep API | http://localhost:5080/sitemap.xml | HTTP 200 | 16727 bytes
+sitemap.xml qua nginx | http://localhost/sitemap.xml | HTTP 200 | 701 bytes
+FE qua nginx | http://localhost/ | HTTP 200 | 59948 bytes
+email=staging-tv4-499109888@example.com
+register: OK (accessToken nhan duoc)
+login: OK (accessToken cap moi)
+create recipe: OK id=8d68e249-718e-4eaf-8318-94798ea7041b
+upload anh: {"data":{"id":"21bdef4d-8076-4b89-9955-d8ae48d88baa","recipeId":"8d68e249-718e-4eaf-8318-94798ea7041b","originalUrl":"recipes/8d68e249-718e-4eaf-8318-94798ea7041b/3fbaae35320a4a0c96c55ce01f5db020.png","mediumUrl":null,"thumbnailUrl":null,"altText":"staging-w52-check","isPrimary":true,"orderIndex":0,"createdAt":"2026-10-07T14:43:58.7887947+00:00","updatedAt":"2026-10-07T14:43:58.7887947+00:00","presignedUrl":"http://culinary-s3:9000/culinary-blog/recipes/8d68e249-718e-4eaf-8318-94798ea7041b/3fbaae35320a4a0c96c55ce01f5db020.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20261007%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261007T144358Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=a6895c7c9ff0eac43f0d3050217c7330d5edb91f736a97951af0eeb0f4c51849"}}|201
+recipe sau upload: 1 anh, anh dau tay key=

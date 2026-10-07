@@ -1,0 +1,12 @@
+﻿=== W5-2.5: Program.cs override EF qua config ===
+    0 Error(s)
+
+Time Elapsed 00:00:20.46
+build=0 format=0 time=51s
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 1 s - ConcurrencySpike.dll (net10.0)
+
+Passed!  - Failed:     0, Passed:   421, Skipped:     0, Total:   421, Duration: 1 m 4 s - CulinaryBlog.Tests.dll (net10.0)
+test exit=0 time=69s

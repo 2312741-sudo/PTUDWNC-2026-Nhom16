@@ -18,9 +18,9 @@
 |---|---|
 | Nhánh | ✅ Tạo `2312739_NHTSon_D5-D7` từ `origin/main` = `262201b` |
 | Tài liệu tuần 5 | ✅ Kế hoạch · Mô tả việc · Trạng thái · Sổ evidence (4 file trong `Tuan05/`) |
-| Việc W5-1…W5-10 | ⬜ **0/10** — chưa bắt đầu |
-| PR cho nhánh tuần 5 | ⬜ Chưa mở |
-| Baseline trên `262201b` | ⬜ **Chưa chạy lại** — số dưới đây là số kế thừa từ tuần 4 |
+| Việc W5-1…W5-10 | 🟢 **2/10 khối bắt đầu** (cập nhật cuối ngày 07/10: W5-1 xong, W5-2 5/6, W5-10 2/8) |
+| PR cho nhánh tuần 5 | ✅ PR #32 (`week-5` → `main`) + PR #33 (`practice/TV4/L4` → `main`) mở 07/10 |
+| Baseline trên `262201b` | ✅ **Đã đo lại** trên commit `0a9b1a5` — 426/426, coverage 97.07%, build/format/FE exit 0, CI xanh (`SO_EVIDENCE_TUAN_5.md` §1) |
 
 ### 0.2. Số liệu kế thừa từ tuần 4 (chưa phải số của tuần 5)
 
@@ -42,8 +42,8 @@
 
 | # | Khối | Việc | Kế hoạch | Xong | Đang làm | Còn lại | Tỷ lệ |
 |---|---|---|---|---|---|---|---|
-| W5-1 | Mở đầu | Baseline + mở PR | 3 | 0 | 0 | 3 | 0% |
-| W5-2 | Staging | Deploy lặp lại được + restore + trace | 6 | 0 | 0 | 6 | 0% |
+| W5-1 | Mở đầu | Baseline + mở PR | 3 | 3 | 0 | 0 | 100% |
+| W5-2 | Staging | Deploy lặp lại được + restore + trace | 6 | 5 | 1 | 0 | 83% |
 | W5-3 | Staging | 2 API instance + Nginx upstream + health | 6 | 0 | 0 | 6 | 0% |
 | W5-4 | Bảo mật | HTTPS / HSTS / CORS / volumes | 5 | 0 | 0 | 5 | 0% |
 | W5-5 | Vận hành | Runbook 7 mục | 7 | 0 | 0 | 7 | 0% |
@@ -51,8 +51,8 @@
 | W5-7 | Kiểm thử | 5 E2E flows trên staging | 5 | 0 | 0 | 5 | 0% |
 | W5-8 | Số đo | k6 + SEO + EXPLAIN + cache-hit + metrics | 6 | 0 | 0 | 6 | 0% |
 | W5-9 | Lab/nợ | Zod/RHF · OAuth · **4 phase L5** · `cqrs-behavior` · npm audit | 5 | 0 | 0 | 5 | 0% |
-| W5-10 | Bản vá/nợ | `BUG-W4-01/02/03` · secret A1 · PR L4 · ADR · path traversal | 8 | 0 | 0 | 8 | 0% |
-| **Tổng** | | | **56** | **0** | **0** | **56** | **0%** |
+| W5-10 | Bản vá/nợ | `BUG-W4-01/02/03` · secret A1 · PR L4 · ADR · path traversal | 8 | 2 | 0 | 6 | 25% |
+| **Tổng** | | | **56** | **10** | **1** | **45** | **18%** |
 
 > Tỷ lệ tính theo **số việc có bằng chứng chạy thật trong tuần 5**.
 > **07/10 — bổ sung W5-10 + mở rộng W5-2/3/6/8/9 sau rà soát nợ trong báo cáo tuần 4** → tổng **39 → 56**.
@@ -63,7 +63,7 @@
 
 | Ngày | Việc dự kiến | Trạng thái |
 |---|---|---|
-| 07/10 | W5-1 baseline + mở PR · bắt W5-2 · W5-10 (PR `practice/TV4/L4` + bắt dọn secret A1) | ⬜ Chưa bắt đầu |
+| 07/10 | W5-1 baseline + mở PR #32/#33 · **W5-2 items 1–5** (run1+run2 sạch, drill backup→restore 14 bảng, trace HTTP→EFCore→Postgres) · **W5-10** (PR `practice/TV4/L4` + dọn secret A1, CI xanh) | ✅ Xong (mục 6 giới hạn → runbook W5-5 10/10) |
 | 08/10 | W5-2 (2 lần + restore) + W5-3 profile 2 API · W5-10 (mở rộng `scan-secrets.sh`) | ⬜ |
 | 09/10 | W5-4 HTTPS/HSTS/CORS · bắt W5-6 (D4-UI) · W5-10 (ADR + path traversal) | ⬜ |
 | 10/10 | W5-5 runbook · W5-6 xong · W5-9 | ⬜ |
@@ -147,3 +147,4 @@
 |---|---|
 | 07/10 | Tạo nhánh `2312739_NHTSon_D5-D7` từ `origin/main` = `262201b`; lập 4 tài liệu tuần 5; ghi trạng thái bắt đầu **0/9 khối việc**. Chưa chạy kiểm định trên nhánh mới. |
 | 07/10 | **Rà soát nợ trong báo cáo tuần 4** (`GĐ1` §6–§7, `GĐ3`, báo cáo lỗi, báo cáo tiến độ SRS, `SOK_LAB_L5`, `KE_HOACH_V2` §4.4) + kiểm chứng trực tiếp trên code: bổ sung **W5-10** (A1 secret còn lại, PR `practice/TV4/L4`, `BUG-W4-01/02/03`, ADR, path traversal), mở rộng W5-2 (restore + trace), W5-3 (health/upstream + Hangfire), W5-6 (nút Xóa), W5-8 (EXPLAIN + cache-hit + metrics), W5-9 (4 phase + `cqrs-behavior`) → tổng **39 → 56 việc, 0/10 khối**. |
+| 07/10 | **W5-1 xong**: baseline đo lại trên `0a9b1a5` (426/426, coverage 97.07%, build/format/FE/CI xanh) + mở PR #32. **W5-2**: run1 + run2 trên staging đều xanh (idempotent, `culinary-init`, fail-fast `JWT_SIGNING_KEY`), drill backup→restore 14 bảng = N1, trace HTTP→EFCore→Postgres qua Seq (3 span cùng CorrelationId); còn item 6 (giới hạn) chuyển vào runbook W5-5. **W5-10**: PR #33 + dọn secret A1 (`git grep` = 0), CI xanh. 2/10 khối bắt đầu. |

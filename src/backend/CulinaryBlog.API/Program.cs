@@ -46,7 +46,12 @@ builder.Host.UseSerilog((context, config) =>
 {
     config.MinimumLevel.Information()
         .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error)
+        // W5-2.5 (TV4, 07/10): cho phép override mức log EF qua config (Logging:LogLevel:Microsoft.EntityFrameworkCore)
+        // để Seq ghi span EFCore->Postgres khi truy vết trên staging. Default vẫn giữ Error như N1-3 (tuần 4).
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore",
+            Enum.TryParse(context.Configuration["Logging:LogLevel:Microsoft.EntityFrameworkCore"],
+                out Serilog.Events.LogEventLevel efCommandLevel)
+                ? efCommandLevel : Serilog.Events.LogEventLevel.Error)
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Application", "CulinaryBlog.API")
         .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)

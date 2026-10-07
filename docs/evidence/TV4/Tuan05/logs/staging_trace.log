@@ -1,0 +1,38 @@
+﻿=== W5-2.5: Trace HTTP->DB tren staging ===
+request categories -> HTTP 200, gui luc 2026-10-07T16:03:52.0870389Z
+TraceId: fcfe837ecee8dda7386ec24ecdff81f3
+co 2 event theo TraceId
+[Serilog.AspNetCore.RequestLoggingMiddleware] 
+[CulinaryBlog.Application.LoggingBehavior] 
+=== Event theo TraceId fcfe837ecee8dda7386ec24ecdff81f3 (SourceContext + message) ===
+[Serilog.AspNetCore.RequestLoggingMiddleware] (khong co RenderedMessage)
+[CulinaryBlog.Application.LoggingBehavior] (khong co RenderedMessage)
+request categories (trace) -> HTTP 200
+TraceId: fd5a6a8425294258c0979ad438e04c98
+=== Event theo TraceId fd5a6a8425294258c0979ad438e04c98 ===
+[Serilog.AspNetCore.RequestLoggingMiddleware] HTTP {RequestMethod} {RequestPath} responded {StatusCode} in 98.2101 ms
+[CulinaryBlog.Application.LoggingBehavior] Handled {RequestType} in {ElapsedMs} ms
+request categories (trace lan3) -> HTTP 200
+TraceId: 8460f7e3c42f6dc5b1e8225c7060d0ce
+=== Event theo TraceId 8460f7e3c42f6dc5b1e8225c7060d0ce ===
+[Serilog.AspNetCore.RequestLoggingMiddleware] HTTP {RequestMethod} {RequestPath} responded {StatusCode} in 95.6256 ms
+[CulinaryBlog.Application.LoggingBehavior] Handled {RequestType} in {ElapsedMs} ms
+share: gui cac request loi de kich EF CommandError:
+request categories (trace FINAL) -> HTTP 200
+TraceId: 654765ffafbb11d71c5017c595946e7a
+=== Event theo TraceId 654765ffafbb11d71c5017c595946e7a ===
+[Serilog.AspNetCore.RequestLoggingMiddleware] HTTP {RequestMethod} {RequestPath} responded {StatusCode} in 94.9202 ms
+[CulinaryBlog.Application.LoggingBehavior] Handled {RequestType} in {ElapsedMs} ms
+TRACE HTTP -> EFCore -> PostgreSQL (1 request duy nhat, tu Seq):
+  [HTTP span] TraceId=837638ddf709a53d6042d4d8734ca408 CorrelationId=17bbf46b5d754612ba209f71d743a48c RequestId=0HNP4HM7265QA:00000001 HTTP GET /api/v1/categories = 200
+  [Logic span] LoggingBehavior handled categories
+  (khong thay EF event cung CorrelationId)
+
+=== W5-2.5 HOAN TAT ===
+HTTP GET /api/v1/recipes?sort=... (key moi, chua cache) -> HTTP 200
+  HTTP span   CorrelationId=54b376a23c704d7b96571998104f03c7 (RequestLoggingMiddleware)
+  EFCore span Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted (cung CorrelationId)
+  Postgres    SELECT r."Id"...FROM "Recipes"... + SELECT count(*)... = 2 DbCommand da log vao Seq
+Ghi chu: /api/v1/categories bi cache Redis (key staging:cache:categories:all:False) nen request sau
+  khong sinh EF event - phai dung request key moi (recipes sort) de bat span trong request
+Env da verify: Logging__LogLevel__Microsoft.EntityFrameworkCore=Information (Program.cs override tu config)

@@ -14,6 +14,10 @@ RUN dotnet publish src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj -c Relea
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
+# curl cho healthcheck (image aspnet không kèm curl/wget — staging run 1 unhealthy vì lý do này)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 
 # Default port

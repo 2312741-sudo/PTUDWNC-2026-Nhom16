@@ -27,15 +27,15 @@
 
 | Hạng mục | Lệnh | Kết quả | Ngày | Log |
 |---|---|---|---|---|
-| Build backend | `dotnet build CulinaryBlog.sln -c Release` | ⬜ | — | `logs/baseline_build.log` |
-| Format | `dotnet format CulinaryBlog.sln --verify-no-changes` | ⬜ | — | `logs/baseline_format.log` |
-| Test | `dotnet test CulinaryBlog.sln -c Release` | ⬜ | — | `logs/baseline_test.log` |
-| Coverage `CulinaryBlog.Application` | `bash deploy/check-coverage.sh` | ⬜ | — | `logs/baseline_coverage.log` |
-| Frontend typecheck | `npx tsc --noEmit` | ⬜ | — | `logs/baseline_frontend.log` |
-| Frontend lint | `npm run lint` | ⬜ | — | `logs/baseline_frontend.log` |
-| Frontend build | `npm run build` | ⬜ | — | `logs/baseline_frontend.log` |
-| Secret scan | `bash deploy/scan-secrets.sh` (hoặc `git grep` nếu máy thiếu bash thật) | ⬜ | — | — |
-| CI `Backend week 1` + `Frontend CI` | GitHub Actions | ⬜ | — | link run |
+| Build backend | `dotnet build CulinaryBlog.sln -c Release` | **0 warning · 0 error** | 07/10 | `logs/baseline_build.log` |
+| Format | `dotnet format CulinaryBlog.sln --verify-no-changes` | exit 0 | 07/10 | `logs/baseline_format.log` |
+| Test | `dotnet test CulinaryBlog.sln -c Release` | **426/426** (421 + 5 `ConcurrencySpike`), Skipped 0 | 07/10 | `logs/baseline_test.log` |
+| Coverage `CulinaryBlog.Application` | `bash deploy/check-coverage.sh` | **97.07%** (ngưỡng 80%) | 07/10 | `logs/baseline_coverage.log` |
+| Frontend typecheck | `npx tsc --noEmit` | exit 0 | 07/10 | `logs/baseline_frontend.log` |
+| Frontend lint | `npm run lint` | exit 0 | 07/10 | `logs/baseline_frontend.log` |
+| Frontend build | `npm run build` | exit 0 | 07/10 | `logs/baseline_frontend.log` |
+| Secret scan | `git grep` phạm vi W5-10 (A1) | **0** khớp `Password=postgres`/`minioadmin` còn lại | 07/10 | `logs/a1_*.log` ; commit `0a9b1a5` |
+| CI `Backend week 1` + `Frontend CI` | GitHub Actions | **success** (run `0a9b1a5`, 2026-10-07T12:33–34Z) | 07/10 | [runs](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/actions) |
 
 ---
 
@@ -84,13 +84,19 @@
 
 | Ngày | Việc | Kết quả | Log/commit/PR |
 |---|---|---|---|
-| | | | |
+| 07/10 | Baseline đo lại trên nhánh tuần 5 (gốc `262201b` + commit `0a9b1a5`) | 426/426 · coverage 97.07% · build 0W/0E · format exit 0 · FE tsc/lint/build exit 0 · CI xanh | `logs/baseline_*.log`; CI run `0a9b1a5` |
+| 07/10 | Mở PR #32 (`week-5` → `main`) + PR #33 (`practice/TV4/L4` → `main`) | 2 PR đang chờ review | PR #32, PR #33 |
 
 ### 3.2. W5-2 — Deploy staging (2 lần)
 
 | Ngày | Việc | Kết quả | Log |
 |---|---|---|---|
-| | | | |
+| 07/10 | **run 1** — dựng staging từ `docker-compose.staging.yml` | 6 container lên (db/redis/s3/api/nginx/frontend), `/health/ready` **200** (database + redis + object-storage), FE **200**, sitemap **200** (nginx + API), register/login OK, create recipe OK, upload 1 ảnh **201**; fail-fast thiếu `JWT_SIGNING_KEY` exit **1** ✓ | `logs/staging_run1.log` |
+| 07/10 | **run 2** — `down -v` → `up -d --build` (volume sạch) | toàn bộ checklist xanh lặp lại; `culinary-init` tạo bucket mới (aws-cli exit 0); recipe dùng categoryId **động** (volume mới → GUID seeded đổi) | `logs/staging_run2.log` |
+| 07/10 | **Drill backup→restore** trên staging (client PG16 trong container `postgres:16-alpine`) | `backup.sh` exit 0 (`culinary_20261007T145532Z.dump` 287KB) → `DROP DATABASE ... WITH (FORCE)` → `restore.sh` exit 0 → **14 bảng public = đúng N1** → `up -d` → ready 200 + FE 200 + truy vấn `"Categories"` | `logs/staging_backup.log` + `logs/staging_restore.log` |
+| 07/10 | **Trace HTTP→EFCore→Postgres** (mục A6) | 1 request `GET /api/v1/recipes?sort=<key mới chưa cache>` → Seq: **HTTP span** (RequestLoggingMiddleware) + **LoggingBehavior** + **EFCore span** `CommandExecuted` (`SELECT r."Id"... FROM "Recipes"...`, `SELECT count(*)...`) — **3 span cùng `CorrelationId=54b376a2...`** | `logs/staging_trace.log` |
+| 07/10 | Ghi chú trace | `/api/v1/categories` bị **cache Redis** (`staging:cache:categories:all`) nên request sau không sinh EF — phải dùng request key mới. EF span cần `Logging__LogLevel__Microsoft.EntityFrameworkCore=Information` + `Program.cs` cho phép override (default vẫn Error như tuần 4) | `logs/staging_trace.log` ; `src/backend/CulinaryBlog.API/Program.cs` |
+| 07/10 | item 6 — giới hạn hạ tầng | `render.yaml` vẫn `plan: free`; staging chạy trên máy dev → **không** tuyên bố `NFR-REL-001` 99,5%. Chi tiết đi sâu ở mục "Giới hạn" runbook (W5-5, 10/10) | — |
 
 ### 3.3. W5-3 — 2 API instance trên staging
 
@@ -151,10 +157,10 @@
 | Việc | Kết quả | Bằng chứng |
 |---|---|---|
 | Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ⬜ | |
-| Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ⬜ | |
+| Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ✅ **07/10** — dọn + `git grep` = 0 trong phạm vi; test/format/coverage lại đều xanh | commit `0a9b1a5` ; `logs/a1_test.log`/`a1_format.log`/`a1_coverage.log` |
 | Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ⬜ | |
 | `BUG-W4-03` — sửa trực tiếp trong W5-10 (chưa từng có bản vá trong dự án; `Program.cs` của TV1 → PR riêng) | ⬜ | |
-| Mở PR cho `practice/TV4/L4` | ⬜ | |
+| Mở PR cho `practice/TV4/L4` | ✅ **07/10** — PR #33 (`practice/TV4/L4` → `main`); CI Frontend xanh | ![PR #33](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/33) |
 | ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ⬜ | |
 | Header `X-Sitemap-Generated` (`BUG-W4-09`) | ⬜ | |
 | Test path traversal `../` (`NFR-SEC-004`) | ⬜ | |
