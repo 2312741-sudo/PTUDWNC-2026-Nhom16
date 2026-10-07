@@ -315,7 +315,7 @@ dotnet run --project src/backend/CulinaryBlog.API -- --seed
 dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
 ```
 > Không cần `export` gì thêm: `EnvFileLoader` nạp `.env` tự động (bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`).
-> Không có `.env` thì app dùng default trong `appsettings.Development.json` (`Password=postgres`) — khớp default của `docker-compose.dev.yml`.
+> Không có `.env` thì app **fail-fast** yêu cầu cấu hình (mật khẩu DB/Minio đã gỡ khỏi `appsettings*.json` theo A1) — copy `.env.example` thành `.env` là chạy được.
 >
 > 🔑 **`Jwt__SigningKey` là BẮT BUỘC (QD3-3b).** Khoá ký JWT không còn nằm trong `appsettings*.json`; app **fail-fast** khi
 > thiếu hoặc khoá < 64 byte (`InvalidOperationException` kèm hướng dẫn). Đổi khoá = mọi phiên đăng nhập cũ mất hiệu lực.
@@ -347,7 +347,7 @@ npm run dev
 ### 5.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
 # Chuỗi kết nối database test đọc từ TEST_DATABASE trong .env (đã tạo ở bước 2 mục 5.3).
-# Không có .env thì test tự dùng default khớp docker-compose.dev.yml (Password=postgres).
+# Không có .env thì test tự dùng default nội bộ khớp docker-compose.dev.yml (Postgres password mặc định).
 
 # Chạy toàn bộ test trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"

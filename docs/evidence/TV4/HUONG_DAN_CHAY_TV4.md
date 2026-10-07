@@ -439,7 +439,8 @@ Biến dùng trong toàn bộ hướng dẫn — **khai trong `.env` ở thư m�
 
 > 🔒 **Không commit secret.** `.env` đã nằm trong `.gitignore` **và** `.dockerignore` (nên không lọt vào
 > Docker image). Mật khẩu `admin123`/`minioadmin` ở trên là giá trị **dev-only** — trong repo chỉ còn
-> default `postgres`/`minioadmin` trong `appsettings.Development.json` và `docker-compose.dev.yml`.
+> default `postgres`/`minioadmin` trong `docker-compose.dev.yml` và `.env.example`; `appsettings*.json`
+> đã được gỡ hết credential (A1, tuần 5) nên thiếu `.env` app sẽ fail-fast.
 > Production phải dùng object storage **có license** — không dùng RustFS
 > (xem `docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md` §6).
 
