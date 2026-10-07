@@ -46,8 +46,52 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
   const recipesResult = await getRecipes({ categoryId: category.id, pageSize: 12 });
   const recipes = recipesResult.data;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: category.name,
+    description: category.description || `Khám phá các công thức món ăn thuộc danh mục ${category.name}`,
+    url: `/categories/${category.slug}`,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: recipes.map((r, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        url: `/recipes/${r.slug}`,
+        name: r.title,
+      })),
+    },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Trang chủ',
+          item: '/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Danh mục ẩm thực',
+          item: '/categories',
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: category.name,
+          item: `/categories/${category.slug}`,
+        },
+      ],
+    },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb / Back button */}
       <div>
         <Link
