@@ -24,18 +24,17 @@ services:
         value: culinary-blog
       - key: Jwt__Audience
         value: culinary-blog-client
-      # B2 (issue #21) bắt buộc có Minio AccessKey/SecretKey mới khởi động được ở Production,
-      # nên khai báo tại đây (giá trị do Render quản lý) thay vì để trống rồi fail lúc deploy.
+      # B2 (issue #21): Cung cấp giá trị mặc định cho MinioOptions để startup validation không crash nếu chưa cấu hình S3 trên Render dashboard.
       - key: Minio__Endpoint
-        sync: false
+        value: "localhost:9000"
       - key: Minio__AccessKey
-        sync: false
+        value: "minioadmin"
       - key: Minio__SecretKey
-        sync: false
+        value: "minioadmin"
       - key: Minio__Bucket
-        sync: false
+        value: "culinary-blog"
       - key: Minio__UseSsl
-        value: "true"
+        value: "false"
       # N1-5: cache và sitemap lock dùng chung qua Redis nên lấy thông tin từ Redis của Render.
       - key: Redis__Host
         fromService:
