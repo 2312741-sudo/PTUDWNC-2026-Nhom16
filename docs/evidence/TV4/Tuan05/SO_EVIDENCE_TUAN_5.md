@@ -42,34 +42,35 @@
 ## 2. Bảng 24 ô kỹ năng — trạng thái kế thừa 07/10 (chưa ô nào được Tâm xác nhận)
 
 > Nguồn: `../Tuan04/TRANG_THAI_THUC_HIEN_TUAN_4.md` §7 (cập nhật 05/10). Tuần 5 chỉ **thêm bằng chứng
-> mới** vào các ô W5-x mở lại (K05, K10, K17, K19, K22, K23, K24), không tự đổi trạng thái ô khác.
+> mới** vào các ô W5-x mở lại (K04, K05, K06, K10, K11, K12, K13, K17, K19, K22, K23, K24), không tự đổi
+> trạng thái ô khác. *(`07/10` — bổ sung K04/K06/K11/K12/K13 sau rà soát nợ, xem §3.10.)*
 
 | Ô | Trạng thái kế thừa | Việc tuần 5 có bổ sung bằng chứng |
 |---|---|---|
 | K01 Phân tích SRS/FR-NFR/ADR/contract | 🟡 có nền — mapping đã lập, chờ Tâm | Nộp lại mapping |
 | K02 .NET10 Minimal API/REST/Scalar/RFC7807 | 🟢 gần đạt | — |
 | K03 Clean Architecture/DI | 🟢 gần đạt | — |
-| K04 CQRS/MediatR behaviors | 🟡 có nền | — |
+| K04 CQRS/MediatR behaviors | 🟡 có nền | ✅ **W5-9** (phase `cqrs-behavior` — L5 tuần 4 chưa chạy) |
 | K05 FluentValidation/Zod/RHF | 🟡 có nền | ✅ **W5-6**, **W5-9** (Zod/RHF FE) |
-| K06 EF Core/PG16 migration/index | 🟡 có nền | — |
+| K06 EF Core/PG16 migration/index | 🟡 có nền | ✅ **W5-8** (EXPLAIN re-run — `N2-6` bị cắt) |
 | K07 UoW/transaction/concurrency | 🟢 gần đạt | — |
 | K08 Identity/PBKDF2/JWT/refresh/logout | 🟢 đủ bằng chứng | — |
 | K09 Google OAuth2/PKCE | ⬜ thiếu thật (chờ credentials) | W5-9 — vẫn ghi "còn chờ" nếu chưa có credentials |
-| K10 RBAC/rate limit/HTTPS/CORS/secrets | 🟢 gần đạt | ✅ **W5-4** (HTTPS/HSTS/CORS) |
-| K11 FTS/GIN/ts_rank | 🟡 có nền | — |
-| K12 Redis cache-aside/invalidation/fallback | 🟢 gần đạt | ✅ W5-3 (cache chung ở staging) |
-| K13 MinIO/S3 upload/delete/magic bytes | 🟢 đủ bằng chứng | — |
-| K14 Hangfire/retry/persistence | 🟢 gần đạt | — |
+| K10 RBAC/rate limit/HTTPS/CORS/secrets | 🟢 gần đạt | ✅ **W5-4** (HTTPS/HSTS/CORS) · **W5-10** (dọn secret A1) |
+| K11 FTS/GIN/ts_rank | 🟡 có nền | ✅ **W5-8** (EXPLAIN FTS — phụ thuộc TV2 sửa `to_tsquery`) |
+| K12 Redis cache-aside/invalidation/fallback | 🟢 gần đạt | ✅ W5-3 (cache chung ở staging) · **W5-8** (cache-hit ratio) |
+| K13 MinIO/S3 upload/delete/magic bytes | 🟢 đủ bằng chứng | ✅ **W5-10** (test path traversal `../`) |
+| K14 Hangfire/retry/persistence | 🟢 gần đạt | ✅ **W5-3** (số Hangfire server khi 2 API) |
 | K15 SMTP/resize/sitemap XML | 🟢 gần đạt | — |
 | K16 Next.js App Router/SSR/ISR/CSR | 🟡 có nền | W5-9 (image-opt/ISR của Lab L5) |
-| K17 TanStack Query/next/image/progress | 🟡 có nền | ✅ **W5-6** (progress upload, nút trạng thái) |
+| K17 TanStack Query/next/image/progress | 🟡 có nền | ✅ **W5-6** (progress upload, nút trạng thái + Xóa) |
 | K18 Responsive/WCAG | ⬜ thiếu thật — **thuộc TV2** | — |
-| K19 SEO metadata/OG/JSON-LD/robots/sitemap | 🟢 đủ bằng chứng | ✅ **W5-8** (SEO trên staging) |
-| K20 Serilog/Seq/OTEL/health | 🟢 đủ bằng chứng | — |
+| K19 SEO metadata/OG/JSON-LD/robots/sitemap | 🟢 đủ bằng chứng | ✅ **W5-8** (SEO + 301 trên staging) |
+| K20 Serilog/Seq/OTEL/health | 🟢 đủ bằng chứng | ✅ **W5-8** (metrics scrape thật — `FR-OBS-003`) |
 | K21 xUnit/API/Jest/Playwright | 🟢 đủ bằng chứng | ✅ **W5-7** (5 luồng G6) |
-| K22 k6/p95/p99/EXPLAIN/CWV | 🟡 có nền | ✅ **W5-8** (k6 trên staging ≥100 VU) |
+| K22 k6/p95/p99/EXPLAIN/CWV | 🟡 có nền | ✅ **W5-8** (k6 trên staging ≥100 VU + EXPLAIN) |
 | K23 Docker/Compose/Nginx/volumes/backup/restore | 🟢 gần đạt | ✅ **W5-2, W5-3, W5-5** |
-| K24 Git/PR/review/CI/secret scan/docs | 🟢 đủ bằng chứng | ✅ **W5-1** (baseline + PR) |
+| K24 Git/PR/review/CI/secret scan/docs | 🟢 đủ bằng chứng | ✅ **W5-1** (baseline + PR) · **W5-10** (PR `practice/TV4/L4`, scan-secrets mở rộng) |
 
 **Tổng đầu tuần 5**: 🟢 đủ 6 · 🟢 gần đạt 8 · 🟡 có nền 8 · ⬜ thiếu thật 2 — **0/24 được Tâm xác nhận**.
 
@@ -109,7 +110,7 @@
 |---|---|---|---|
 | | | | |
 
-### 3.6. W5-6 — D4-UI: progress upload + Unpublish/Archive
+### 3.6. W5-6 — D4-UI: progress upload + Unpublish/Archive/**Xóa**
 
 | Ngày | Việc | Kết quả | Test/E2E |
 |---|---|---|---|
@@ -122,15 +123,18 @@
 | register | `create-recipe.spec.ts` | TV4 (cần xác nhận) | ⬜ |
 | login | `create-recipe.spec.ts` | TV4 (cần xác nhận) | ⬜ |
 | category | chưa có | **cần TV2 xác nhận** | ⬜ |
-| create-recipe / draft | `create-recipe.spec.ts`, `wizard-week4.spec.ts` | TV4/TV3 | ⬜ |
+| draft / create-recipe | `create-recipe.spec.ts`, `wizard-week4.spec.ts` | TV4/TV3 | ⬜ |
 | publish | `recipe-publish.spec.ts` | TV4 | ⬜ |
 
-### 3.8. W5-8 — Số đo load/SEO trên staging
+### 3.8. W5-8 — Số đo load/SEO + số đo bị cắt tuần 4
 
 | Ngày | Hạng mục | Số đo | Ghi giới hạn |
 |---|---|---|---|
 | | k6 ≥100 VU (p50/p95/p99, lỗi%) | | |
-| | SEO (sitemap/robots/metadata/JSON-LD) | | |
+| | SEO (sitemap/robots/metadata/JSON-LD/301) | | |
+| | EXPLAIN re-run (`N2-6`) | | |
+| | Cache-hit ratio (K12) | | |
+| | Metrics scrape thật (`FR-OBS-003`: count/duration/error) | | |
 
 ### 3.9. W5-9 — Lab còn thiếu + nợ kỹ thuật
 
@@ -138,8 +142,22 @@
 |---|---|---|
 | `N3-A3` Zod/RHF FE | ⬜ | |
 | `N3-A5` Google OAuth | ⬜ (chờ credentials) | |
-| 3 phase Lab L5 (`isr-detail`, `image-opt`, `search-ssr`) | ⬜ | |
+| **4** phase Lab L5 (`isr-detail`, `image-opt`, `search-ssr`, `query-rollback`) | ⬜ | |
+| Phase `cqrs-behavior` (K04) | ⬜ | |
 | `npm audit` | ⬜ | |
+
+### 3.10. W5-10 — Đóng bản vá lab + nợ nhỏ P1/P2 *(bổ sung 07/10)*
+
+| Việc | Kết quả | Bằng chứng |
+|---|---|---|
+| Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ⬜ | |
+| Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ⬜ | |
+| Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ⬜ | |
+| `BUG-W4-03` — bản vá trên `lab/TV4-audit-tuan4`, chờ Tâm giao | ⬜ (chờ nhóm) | |
+| Mở PR cho `practice/TV4/L4` | ⬜ | |
+| ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ⬜ | |
+| Header `X-Sitemap-Generated` (`BUG-W4-09`) | ⬜ | |
+| Test path traversal `../` (`NFR-SEC-004`) | ⬜ | |
 
 ---
 
@@ -168,7 +186,10 @@ phù hợp · test và CI pass · docs cập nhật · **Tâm duyệt** · có e
 | Luồng E2E `category` | TV2 | W5-7 — thiếu thì G6 chưa đủ 5 luồng |
 | Checklist WCAG/responsive | TV2 | G6 có mục a11y — số đo do TV2, TV4 ghi dẫn chiếu |
 | Jest/RTL frontend unit test | TV1 | Không chặn việc nào của TV4 |
-| Rate limit phân tán (`UseForwardedHeaders`) | TV1 | Ảnh hưởng số k6 (W5-8) — chưa sửa thì phải ghi giới hạn |
+| Rate limit phân tán (`BUG-W4-03` = `UseForwardedHeaders`) — bản vá trên `lab/TV4-audit-tuan4` chưa merge | TV1 + Tâm | Ảnh hưởng số k6 (W5-8) — chưa sửa thì phải ghi giới hạn |
+| Chốt `BUG-W4-01` C1/C2 (đụng schema TV3) | Tâm + TV3 | W5-10 — đối chiếu trạng thái trên `main` trước khi chốt |
+| `query-rollback` (RowVersion): cần account E2E **sở hữu** công thức / `GetRecipesQuery` filter chủ sở hữu | TV3/Tâm | W5-9 — thiếu thì phase thứ 4 của L5 không chạy được |
+| K11 EXPLAIN FTS phụ thuộc sửa `to_tsquery` (ADR 0003) | TV2 | W5-8 — phần EXPLAIN FTS chưa đo được |
 | Chốt lịch backup / kho 30 ngày / rotate JWT | Tâm + TV2 | W5-5 phải ghi đúng giới hạn hiện tại (backup giữ 7 ngày) |
 | Google credentials | Nhóm | K09 / `N3-A5` không đạt được |
 

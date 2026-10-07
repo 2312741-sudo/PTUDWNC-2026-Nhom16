@@ -18,7 +18,7 @@
 |---|---|
 | Nhánh | ✅ Tạo `2312739_NHTSon_D5-D7` từ `origin/main` = `262201b` |
 | Tài liệu tuần 5 | ✅ Kế hoạch · Mô tả việc · Trạng thái · Sổ evidence (4 file trong `Tuan05/`) |
-| Việc W5-1…W5-9 | ⬜ **0/9** — chưa bắt đầu |
+| Việc W5-1…W5-10 | ⬜ **0/10** — chưa bắt đầu |
 | PR cho nhánh tuần 5 | ⬜ Chưa mở |
 | Baseline trên `262201b` | ⬜ **Chưa chạy lại** — số dưới đây là số kế thừa từ tuần 4 |
 
@@ -43,17 +43,19 @@
 | # | Khối | Việc | Kế hoạch | Xong | Đang làm | Còn lại | Tỷ lệ |
 |---|---|---|---|---|---|---|---|
 | W5-1 | Mở đầu | Baseline + mở PR | 3 | 0 | 0 | 3 | 0% |
-| W5-2 | Staging | Deploy lặp lại được (2 lần) | 4 | 0 | 0 | 4 | 0% |
-| W5-3 | Staging | 2 API instance + Nginx upstream | 4 | 0 | 0 | 4 | 0% |
+| W5-2 | Staging | Deploy lặp lại được + restore + trace | 6 | 0 | 0 | 6 | 0% |
+| W5-3 | Staging | 2 API instance + Nginx upstream + health | 6 | 0 | 0 | 6 | 0% |
 | W5-4 | Bảo mật | HTTPS / HSTS / CORS / volumes | 5 | 0 | 0 | 5 | 0% |
 | W5-5 | Vận hành | Runbook 7 mục | 7 | 0 | 0 | 7 | 0% |
-| W5-6 | UI | Progress upload + Unpublish/Archive | 4 | 0 | 0 | 4 | 0% |
+| W5-6 | UI | Progress upload + Unpublish/Archive/**Xóa** | 5 | 0 | 0 | 5 | 0% |
 | W5-7 | Kiểm thử | 5 E2E flows trên staging | 5 | 0 | 0 | 5 | 0% |
-| W5-8 | Số đo | k6 + SEO trên staging | 3 | 0 | 0 | 3 | 0% |
-| W5-9 | Lab/nợ | Zod/RHF · Google OAuth · 3 phase L5 · npm audit | 4 | 0 | 0 | 4 | 0% |
-| **Tổng** | | | **39** | **0** | **0** | **39** | **0%** |
+| W5-8 | Số đo | k6 + SEO + EXPLAIN + cache-hit + metrics | 6 | 0 | 0 | 6 | 0% |
+| W5-9 | Lab/nợ | Zod/RHF · OAuth · **4 phase L5** · `cqrs-behavior` · npm audit | 5 | 0 | 0 | 5 | 0% |
+| W5-10 | Bản vá/nợ | `BUG-W4-01/02/03` · secret A1 · PR L4 · ADR · path traversal | 8 | 0 | 0 | 8 | 0% |
+| **Tổng** | | | **56** | **0** | **0** | **56** | **0%** |
 
 > Tỷ lệ tính theo **số việc có bằng chứng chạy thật trong tuần 5**.
+> **07/10 — bổ sung W5-10 + mở rộng W5-2/3/6/8/9 sau rà soát nợ trong báo cáo tuần 4** → tổng **39 → 56**.
 
 ---
 
@@ -61,11 +63,11 @@
 
 | Ngày | Việc dự kiến | Trạng thái |
 |---|---|---|
-| 07/10 | W5-1 baseline + mở PR · bắt W5-2 | ⬜ Chưa bắt đầu |
-| 08/10 | W5-2 (2 lần) + W5-3 profile 2 API | ⬜ |
-| 09/10 | W5-4 HTTPS/HSTS/CORS · bắt W5-6 (D4-UI) | ⬜ |
+| 07/10 | W5-1 baseline + mở PR · bắt W5-2 · W5-10 (PR `practice/TV4/L4` + bắt dọn secret A1) | ⬜ Chưa bắt đầu |
+| 08/10 | W5-2 (2 lần + restore) + W5-3 profile 2 API · W5-10 (mở rộng `scan-secrets.sh`) | ⬜ |
+| 09/10 | W5-4 HTTPS/HSTS/CORS · bắt W5-6 (D4-UI) · W5-10 (ADR + path traversal) | ⬜ |
 | 10/10 | W5-5 runbook · W5-6 xong · W5-9 | ⬜ |
-| 11/10 | W5-7 5 E2E · W5-8 số đo · chốt sổ, nộp review | ⬜ |
+| 11/10 | W5-7 5 E2E · W5-8 số đo · W5-10 (đối chiếu `BUG-W4-01`) · chốt sổ, nộp review | ⬜ |
 
 *(Ngày tham chiếu — nhóm chưa chốt ngày bắt đầu/kết thúc tuần 5 trong tài liệu chung.)*
 
@@ -75,14 +77,22 @@
 
 | Việc | Nguồn | Việc tuần 5 phải làm |
 |---|---|---|
-| `N2-D1/D2` — progress upload % + nút Unpublish/Archive | `Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md` §7 | **W5-6** |
+| `N2-D1/D2` — progress upload % + nút Unpublish/Archive/**Xóa** | `Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md` §7 + `Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-6** |
 | `N4-A` runbook 7 mục | `PLAN_GIAI_DOAN_1_N2_N4.md` §7 | **W5-5** |
-| `N4-B` deploy staging · 2 API · TLS/HSTS · volumes | `PLAN_GIAI_DOAN_1_N2_N4.md` §7 | **W5-2, W5-3, W5-4** |
+| `N4-B` deploy staging · 2 API · TLS/HSTS · volumes · **restore** · **trace HTTP→DB** · **`/health/ready` upstream** | `PLAN_GIAI_DOAN_1_N2_N4.md` §7 + 6-tuân L88 + `GĐ1` FR-OBS-001 | **W5-2, W5-3, W5-4** |
 | 5 E2E flows (G6) — tuần 4 mới có 2 luồng của TV4 | `PLAN_GIAI_DOAN_1_N2_N4.md` §7 | **W5-7** |
 | `N3-A3` Zod/RHF · `N3-A5` Google OAuth (chờ credentials) | `PLAN_GIAI_DOAN_1_N2_N4.md` §7 | **W5-9** |
 | Số đo load/SEO trên staging | 6-tuần L88 | **W5-8** |
-| 3 phase Lab L5 chưa PASS (`isr-detail`, `image-opt`, `search-ssr`) | `Tuan04/SOK_LAB_L5.md` | **W5-9** (cắt trước) |
-| `npm audit` 10 vulnerability (9 high, 1 critical) | `Tuan04/Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-9** |
+| **4** phase Lab L5 chưa PASS — thêm **`query-rollback`** (báo cáo viết 3, sổ ghi 4 phase FAIL) | `Tuan04/SOK_LAB_L5.md` §1 | **W5-9** (cắt trước) |
+| Phase **`cqrs-behavior`** (K04) chưa từng chạy trong L5 | `Tuan04/SO_EVIDENCE_TUAN_4.md` K04 | **W5-9** |
+| **EXPLAIN re-run** (`N2-6` bị cắt) + **cache-hit ratio** (K12 gap, `N2-5`) | `KE_HOACH_TUAN_4_TV4_V2.md` §4.4 + `GĐ1` §6.3–6.4 | **W5-8** |
+| **Metrics scrape thật** (`FR-OBS-003` 90% — chưa có bằng chứng số liệu chạy thật) | `Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-8** |
+| `npm audit` 10 vulnerability (9 high, 1 critical) | `Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-9** |
+| **A1 secret còn lại** — `Password=postgres`/`minioadmin` trong `appsettings*.json` + `backend.yml`; `scan-secrets.sh` chưa quét appsettings/workflow | `report/BAO_CAO_LOI_TUAN_4_TV4.md` A1 | **W5-10** (P0, không cắt) |
+| **PR cho `practice/TV4/L4`** chưa có (P1 "nâng lên bắt buộc") | `KE_HOACH_V2` §4.2 + §4.4 cut-list | **W5-10** (K24) |
+| `BUG-W4-01/02/03` (bản vá lab chưa merge / đối chiếu) · `BUG-W4-06` ADR · `BUG-W4-09` header sitemap | `report/BAO_CAO_LOI_TUAN_4_TV4.md` | **W5-10** |
+| **ADR soft-delete `Recipe` vs `Category`** + đổi tên test; test path traversal `../` (`NFR-SEC-004`) | `GĐ3` + `GĐ1` §7 | **W5-10** |
+| Số Hangfire server khi 2 API chưa xác nhận | `Report/BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | **W5-3** |
 | 3 việc hạ tầng chờ chốt (lịch backup · kho 30 ngày · rotate JWT) | đề xuất 07/08/09 | ⛔ **Không tự quyết** — §5 |
 | 24 ô K chờ Tâm xác nhận + mapping K01 | `../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` | Nộp lại + chờ xác nhận |
 
@@ -94,9 +104,9 @@
 
 | Mức | Số ô | Ô | Ghi chú tuần 5 |
 |---|---:|---|---|
-| 🟢 đủ bằng chứng | 6 | K08, K13, K19, K20, K21, K24 | Chờ Tâm xác nhận và ghi ngày |
-| 🟢 gần đạt | 8 | K02, K03, K07, K10, K12, K14, K15, K23 | K10/K23 mở lại ở W5-4/W5-2 |
-| 🟡 có nền, thiếu lab/đo lại | 8 | K01, K04, K05, K06, K11, K16, K17, K22 | K05/K17 mở ở W5-6; K22 mở ở W5-8 |
+| 🟢 đủ bằng chứng | 6 | K08, K13, K19, K20, K21, K24 | Chờ Tâm xác nhận và ghi ngày; K24 mở lại vì **PR `practice/TV4/L4` chưa có** |
+| 🟢 gần đạt | 8 | K02, K03, K07, K10, K12, K14, K15, K23 | K10/K23 mở lại ở W5-4/W5-2; **K12** thêm đo cache-hit ratio (W5-8) |
+| 🟡 có nền, thiếu lab/đo lại | 8 | K01, K04, K05, K06, K11, K16, K17, K22 | K05/K17 mở ở W5-6; K22 mở ở W5-8; **K04** thêm phase `cqrs-behavior`; **K06/K11** EXPLAIN re-run |
 | ⬜ còn thiếu thật | 2 | K09 (Google credentials), K18 (thuộc TV2) | Không tự đánh dấu đạt |
 
 ---
@@ -110,7 +120,10 @@
 | Rotate/xoá khoá JWT ngoài repo (đề xuất 09) | 🟡 | Tâm | 03/10 |
 | Google OAuth credentials (K09) | 🟡 | Nhóm | từ tuần 3 |
 | Tâm xác nhận 24 ô K + mapping | 🟡 | Tâm | 30/09 |
-| G1 rate limit phân tán (TV1) — ảnh hưởng số k6 | 🟡 | TV1 | 03/10 |
+| `BUG-W4-03` / G1 rate limit phân tán — bản vá trên `lab/TV4-audit-tuan4` chưa merge (`Program.cs` của TV1) | 🔴 | TV1 + Tâm | 07/10 |
+| Chốt `BUG-W4-01` C1/C2 (đụng schema TV3) | 🟡 | Tâm + TV3 | 07/10 |
+| `query-rollback` — cần tài khoản E2E **sở hữu** công thức (hoặc `GetRecipesQuery` filter chủ sở hữu) | 🟡 | TV3/Tâm | 07/10 |
+| K11 EXPLAIN FTS phụ thuộc TV2 sửa `to_tsquery` | 🟡 | TV2 | 07/10 |
 | Luồng E2E `category` do ai viết | 🟡 | TV2 | 07/10 |
 
 ---
@@ -119,7 +132,8 @@
 
 | Rủi ro | Mức | Xử lý |
 |---|---|---|
-| 39 việc trong 5 ngày | 🔴 | Thứ tự + thứ tự cắt ở `MO_TA_CONG_VIEC_TUAN_5.md` §4; không cắt việc điều kiện G6 |
+| 56 việc trong 5 ngày (07/10 tăng từ 39 sau rà soát nợ) | 🔴 | Thứ tự + thứ tự cắt ở `MO_TA_CONG_VIEC_TUAN_5.md` §4; không cắt A1 + PR L4 (điều kiện G6/DoD) |
+| A1 secret còn lại + PR L4 là việc tuần 4 đã ghi "không cắt" nhưng chưa làm | 🔴 | W5-10 xếp từ ngày 07/10, song song với W5-1/2 |
 | Staging chỉ có 1 API, `container_name` cứng, không TLS | 🔴 | W5-2/3/4 — đây chính là phần G6 đang thiếu |
 | D4-UI dở dang từ tuần 3 → không E2E được luồng gỡ xuất bản | 🟡 | W5-6 làm cùng ngày với W5-2 |
 | Số đo tuần 4 làm trên dev → không đại diện staging | 🟡 | W5-8 đo lại trên staging, ghi giới hạn |
@@ -133,3 +147,4 @@
 | Ngày | Nội dung |
 |---|---|
 | 07/10 | Tạo nhánh `2312739_NHTSon_D5-D7` từ `origin/main` = `262201b`; lập 4 tài liệu tuần 5; ghi trạng thái bắt đầu **0/9 khối việc**. Chưa chạy kiểm định trên nhánh mới. |
+| 07/10 | **Rà soát nợ trong báo cáo tuần 4** (`GĐ1` §6–§7, `GĐ3`, báo cáo lỗi, báo cáo tiến độ SRS, `SOK_LAB_L5`, `KE_HOACH_V2` §4.4) + kiểm chứng trực tiếp trên code: bổ sung **W5-10** (A1 secret còn lại, PR `practice/TV4/L4`, `BUG-W4-01/02/03`, ADR, path traversal), mở rộng W5-2 (restore + trace), W5-3 (health/upstream + Hangfire), W5-6 (nút Xóa), W5-8 (EXPLAIN + cache-hit + metrics), W5-9 (4 phase + `cqrs-behavior`) → tổng **39 → 56 việc, 0/10 khối**. |
