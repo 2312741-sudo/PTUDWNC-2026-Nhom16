@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { User, UpdateProfileRequest } from '@/types/auth';
-import { getMe, updateProfile, changePassword } from '@/lib/api';
-import { UserCheck, Shield, AlertCircle, CheckCircle, Save, RefreshCw, Mail, Image as ImageIcon, FileText, Lock, KeyRound } from 'lucide-react';
+import { getMe, updateProfile, changePassword, requestChangePasswordCode } from '@/lib/api';
+import { UserCheck, Shield, AlertCircle, CheckCircle, Save, RefreshCw, Mail, Image as ImageIcon, FileText, Lock, KeyRound, Send, ExternalLink } from 'lucide-react';
 
 export default function ProfileDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,10 +24,22 @@ export default function ProfileDashboardPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpSentMessage, setOtpSentMessage] = useState<string | null>(null);
+  const [otpCooldown, setOtpCooldown] = useState(0);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordFieldErrors, setPasswordFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setOtpCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || localStorage.getItem('token') || '' : '';
 
@@ -144,6 +156,27 @@ export default function ProfileDashboardPage() {
     setSaving(false);
   };
 
+  const handleRequestCode = async () => {
+    if (!token) {
+      setPasswordError('Vui lòng đăng nhập lại để nhận mã.');
+      return;
+    }
+
+    setOtpSending(true);
+    setPasswordError(null);
+    setOtpSentMessage(null);
+
+    const res = await requestChangePasswordCode(token);
+    setOtpSending(false);
+
+    if (res.success) {
+      setOtpSentMessage(res.message || 'Mã xác thực đã được gửi về email của bạn.');
+      setOtpCooldown(60);
+    } else {
+      setPasswordError(res.error || 'Không thể gửi mã xác nhận. Vui lòng thử lại sau.');
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError(null);
@@ -168,18 +201,24 @@ export default function ProfileDashboardPage() {
       errors.confirmPassword = 'Mật khẩu xác nhận không khớp.';
     }
 
+    if (!otpCode.trim()) {
+      errors.otpCode = 'Vui lòng bấm "Gửi mã về email" và nhập mã xác thực OTP 6 số.';
+    }
+
     if (Object.keys(errors).length > 0) {
       setPasswordFieldErrors(errors);
       return;
     }
 
     setPasswordSaving(true);
-    const res = await changePassword({ currentPassword, newPassword }, token);
+    const res = await changePassword({ currentPassword, newPassword, code: otpCode.trim() }, token);
     if (res.success) {
       setPasswordSuccess('Đổi mật khẩu thành công! Bạn có thể sử dụng mật khẩu mới để đăng nhập.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setOtpCode('');
+      setOtpSentMessage(null);
     } else {
       setPasswordError(res.error || 'Đổi mật khẩu thất bại.');
       if (res.validationErrors) {
@@ -507,6 +546,74 @@ export default function ProfileDashboardPage() {
                   {passwordFieldErrors.confirmPassword && (
                     <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-3.5 h-3.5" /> {passwordFieldErrors.confirmPassword}
+                    </p>
+                  )}
+                </div>
+
+                {/* OTP Email Verification Box */}
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label htmlFor="otpCode" className="block text-sm font-semibold text-neutral-900">
+                        Mã xác thực OTP qua Email <span className="text-red-500">*</span>
+                      </label>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        Mã 6 số sẽ được gửi tới email tài khoản của bạn để bảo mật.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRequestCode}
+                      disabled={otpSending || otpCooldown > 0}
+                      className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-auto"
+                    >
+                      {otpSending ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Đang gửi mã...
+                        </>
+                      ) : otpCooldown > 0 ? (
+                        `Gửi lại sau (${otpCooldown}s)`
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" /> Gửi mã về email
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div>
+                    <input
+                      id="otpCode"
+                      type="text"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Nhập mã xác thực 6 số (ví dụ: 123456)"
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm font-mono tracking-widest text-center transition focus:outline-none focus:ring-2 bg-white ${
+                        passwordFieldErrors.otpCode
+                          ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
+                          : 'border-neutral-300 focus:ring-amber-200 focus:border-amber-500'
+                      }`}
+                    />
+                  </div>
+
+                  {otpSentMessage && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-xs text-emerald-800 flex items-center justify-between font-medium">
+                      <span>✓ {otpSentMessage}</span>
+                      <a
+                        href="http://localhost:8025"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline hover:text-emerald-950 flex items-center gap-1 text-[11px] shrink-0 ml-2"
+                      >
+                        Mở MailHog <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+
+                  {passwordFieldErrors.otpCode && (
+                    <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1 font-medium">
+                      <AlertCircle className="w-3.5 h-3.5" /> {passwordFieldErrors.otpCode}
                     </p>
                   )}
                 </div>

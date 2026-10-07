@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using CulinaryBlog.Application;
@@ -5,11 +6,19 @@ using CulinaryBlog.Domain;
 using CulinaryBlog.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Npgsql;
 
 namespace CulinaryBlog.Infrastructure;
 
-public sealed class IdentityService(UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signIn, AuthDbContext db, JwtService jwt, IWelcomeEmailQueue welcome) : IIdentityService
+public sealed class IdentityService(
+    UserManager<ApplicationUser> users,
+    SignInManager<ApplicationUser> signIn,
+    AuthDbContext db,
+    JwtService jwt,
+    IWelcomeEmailQueue welcome,
+    IEmailService emailService,
+    IMemoryCache cache) : IIdentityService
 {
     private static (string rawToken, string tokenHash) GenerateRefreshToken()
     {
@@ -168,12 +177,66 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
         }
     }
 
+    public async Task RequestChangePasswordCodeAsync(string userId, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var user = await users.FindByIdAsync(userId) ?? throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản.");
+        if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
+
+        var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+        var cacheKey = $"change_pwd_otp_{userId}";
+        cache.Set(cacheKey, code, TimeSpan.FromMinutes(10));
+
+        var html = $@"
+<div style=""font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;"">
+    <div style=""text-align: center; margin-bottom: 20px;"">
+        <h2 style=""color: #059669; margin: 0; font-size: 22px;"">Culinary Blog</h2>
+        <p style=""color: #6b7280; font-size: 14px; margin-top: 4px;"">Xác thực yêu cầu đổi mật khẩu</p>
+    </div>
+    <p style=""font-size: 15px; color: #374151;"">Xin chào <strong>{WebUtility.HtmlEncode(user.DisplayName)}</strong>,</p>
+    <p style=""font-size: 14px; color: #4b5563; line-height: 1.5;"">Bạn vừa yêu cầu mã xác nhận để đổi mật khẩu tài khoản Culinary Blog. Mã OTP xác thực của bạn là:</p>
+    <div style=""background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 18px; text-align: center; margin: 24px 0;"">
+        <span style=""font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #047857;"">{code}</span>
+    </div>
+    <p style=""font-size: 13px; color: #6b7280; line-height: 1.5;"">Mã này có hiệu lực trong vòng <strong>10 phút</strong>. Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email hoặc đổi mật khẩu ngay để bảo vệ tài khoản.</p>
+    <div style=""border-top: 1px solid #f3f4f6; margin-top: 20px; padding-top: 16px; text-align: center; font-size: 12px; color: #9ca3af;"">
+        Culinary Blog - Nền tảng chia sẻ công thức ẩm thực
+    </div>
+</div>";
+
+        await emailService.SendEmailAsync(user.Email!, "[Culinary Blog] Mã OTP xác nhận đổi mật khẩu", html, ct);
+    }
+
     public async Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(userId) ?? throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản.");
         if (!user.IsActive) throw new AppException(403, "auth.inactive", "Tài khoản không khả dụng.");
 
-        var result = await users.ChangePasswordAsync(user, command.CurrentPassword, command.NewPassword);
+        var cacheKey = $"change_pwd_otp_{userId}";
+        if (cache.TryGetValue(cacheKey, out string? expectedCode))
+        {
+            if (string.IsNullOrWhiteSpace(command.Code) || !string.Equals(command.Code.Trim(), expectedCode, StringComparison.Ordinal))
+            {
+                throw new AppException(400, "auth.invalid_verification_code", "Mã xác thực email không đúng hoặc đã hết hạn.");
+            }
+            cache.Remove(cacheKey);
+        }
+        else if (!string.IsNullOrWhiteSpace(command.Code))
+        {
+            throw new AppException(400, "auth.invalid_verification_code", "Mã xác thực email đã hết hạn hoặc không hợp lệ. Vui lòng bấm nhận mã mới.");
+        }
+
+        var hasPassword = await users.HasPasswordAsync(user);
+        IdentityResult result;
+        if (!hasPassword)
+        {
+            result = await users.AddPasswordAsync(user, command.NewPassword);
+        }
+        else
+        {
+            result = await users.ChangePasswordAsync(user, command.CurrentPassword, command.NewPassword);
+        }
+
         if (!result.Succeeded)
         {
             if (result.Errors.Any(e => e.Code == "PasswordMismatch"))
@@ -192,6 +255,79 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, SignInMa
             t.Revoke(DateTime.UtcNow);
         }
         await db.SaveChangesAsync(ct);
+
+        var confirmHtml = $@"
+<div style=""font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;"">
+    <h2 style=""color: #059669; margin-top: 0; font-size: 20px;"">Đổi mật khẩu thành công</h2>
+    <p style=""font-size: 15px; color: #374151;"">Xin chào <strong>{WebUtility.HtmlEncode(user.DisplayName)}</strong>,</p>
+    <p style=""font-size: 14px; color: #4b5563; line-height: 1.5;"">Mật khẩu tài khoản Culinary Blog của bạn vừa được cập nhật thành công lúc {DateTime.UtcNow:dd/MM/yyyy HH:mm} UTC.</p>
+    <p style=""font-size: 13px; color: #6b7280; line-height: 1.5;"">Nếu bạn không thực hiện thay đổi này, hãy liên hệ ngay với chúng tôi để bảo vệ tài khoản của mình.</p>
+</div>";
+        await emailService.SendEmailAsync(user.Email!, "[Culinary Blog] Mật khẩu đã được thay đổi thành công", confirmHtml, ct);
+    }
+
+    public async Task ForgotPasswordAsync(string email, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(email))
+            throw new AppException(400, "auth.invalid_email", "Email không được để trống.");
+
+        var user = await users.FindByEmailAsync(email.Trim());
+        if (user is null)
+            throw new AppException(404, "auth.user_not_found", "Không tìm thấy tài khoản với email này trong hệ thống.");
+
+        if (!user.IsActive)
+            throw new AppException(403, "auth.inactive", "Tài khoản của bạn đã bị vô hiệu hóa.");
+
+        var randomDigits = RandomNumberGenerator.GetInt32(1000, 10000);
+        var randomSuffix = Convert.ToHexString(RandomNumberGenerator.GetBytes(2)).ToLowerInvariant();
+        var tempPassword = $"Chef@{randomDigits}{randomSuffix}";
+
+        var hasPassword = await users.HasPasswordAsync(user);
+        if (hasPassword)
+        {
+            await users.RemovePasswordAsync(user);
+        }
+        var addResult = await users.AddPasswordAsync(user, tempPassword);
+        if (!addResult.Succeeded)
+        {
+            var msg = string.Join("; ", addResult.Errors.Select(e => e.Description));
+            throw new AppException(400, "auth.invalid_password", msg);
+        }
+
+        await users.UpdateSecurityStampAsync(user);
+        var activeTokens = await db.RefreshTokens
+            .Where(t => t.UserId == user.Id && t.RevokedAt == null)
+            .ToListAsync(ct);
+        foreach (var t in activeTokens)
+        {
+            t.Revoke(DateTime.UtcNow);
+        }
+        await db.SaveChangesAsync(ct);
+
+        var html = $@"
+<div style=""font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;"">
+    <div style=""text-align: center; margin-bottom: 20px;"">
+        <h2 style=""color: #059669; margin: 0; font-size: 22px;"">Culinary Blog</h2>
+        <p style=""color: #6b7280; font-size: 14px; margin-top: 4px;"">Khôi phục mật khẩu tài khoản</p>
+    </div>
+    <p style=""font-size: 15px; color: #374151;"">Xin chào <strong>{WebUtility.HtmlEncode(user.DisplayName)}</strong>,</p>
+    <p style=""font-size: 14px; color: #4b5563; line-height: 1.5;"">Hệ thống đã nhận được yêu cầu cấp lại mật khẩu cho tài khoản <strong>{WebUtility.HtmlEncode(user.Email)}</strong> của bạn.</p>
+    
+    <div style=""background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 18px; text-align: center; margin: 24px 0;"">
+        <div style=""font-size: 13px; font-weight: 600; color: #065f46; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;"">Mật khẩu mới của bạn:</div>
+        <div style=""font-size: 24px; font-family: monospace; font-weight: bold; color: #047857; letter-spacing: 2px; user-select: all;"">{tempPassword}</div>
+    </div>
+
+    <p style=""font-size: 13px; color: #6b7280; line-height: 1.6;"">
+        💡 <strong>Lưu ý:</strong> Vui lòng sử dụng mật khẩu mới này để đăng nhập ngay và truy cập vào mục <strong>Hồ sơ & Tài khoản</strong> để đổi sang mật khẩu cá nhân của bạn.
+    </p>
+    <div style=""border-top: 1px solid #f3f4f6; margin-top: 20px; padding-top: 16px; text-align: center; font-size: 12px; color: #9ca3af;"">
+        Culinary Blog - Nền tảng chia sẻ công thức ẩm thực
+    </div>
+</div>";
+
+        await emailService.SendEmailAsync(user.Email!, "[Culinary Blog] Cấp lại mật khẩu mới cho tài khoản của bạn", html, ct);
     }
 
     public async Task<UserDto> UpdateAsync(string id, UpdateProfileCommand command, CancellationToken ct)

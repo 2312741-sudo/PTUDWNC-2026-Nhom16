@@ -181,8 +181,34 @@ export async function logout(token: string): Promise<{ success: boolean; error?:
   }
 }
 
+export async function requestChangePasswordCode(
+  token: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/change-password/request-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        success: false,
+        error: result.title || result.detail || 'Không thể gửi mã xác thực.',
+      };
+    }
+
+    return { success: true, message: result.message || 'Mã xác thực đã được gửi về email của bạn.' };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
+
 export async function changePassword(
-  data: { currentPassword: string; newPassword: string },
+  data: { currentPassword: string; newPassword: string; code?: string },
   token: string
 ): Promise<{ success: boolean; error?: string; validationErrors?: Record<string, string[]> }> {
   try {
@@ -201,6 +227,35 @@ export async function changePassword(
       success: false,
       error: err.title || err.detail || 'Đổi mật khẩu thất bại.',
       validationErrors: err.errors,
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+  }
+}
+
+export async function forgotPassword(
+  email: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        success: false,
+        error: result.title || result.detail || 'Không thể khôi phục mật khẩu.',
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message || 'Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.',
     };
   } catch (err: any) {
     return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };

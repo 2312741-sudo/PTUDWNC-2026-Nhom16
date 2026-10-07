@@ -105,7 +105,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.AllowedForNewUsers = true;
-}).AddRoles<IdentityRole>().AddEntityFrameworkStores<AuthDbContext>().AddSignInManager();
+}).AddRoles<IdentityRole>().AddEntityFrameworkStores<AuthDbContext>().AddSignInManager().AddDefaultTokenProviders();
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 100_000);
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -120,6 +120,8 @@ builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<Au
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 builder.Services.AddSingleton<WelcomeEmailQueue>();
 builder.Services.AddSingleton<IWelcomeEmailQueue>(sp => sp.GetRequiredService<WelcomeEmailQueue>());
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHostedService<WelcomeEmailWorker>();
 builder.Services.AddRateLimiter(options =>
 {
@@ -461,6 +463,18 @@ auth.MapPost("/change-password", async (ChangePasswordCommand command, ISender s
     return Results.NoContent();
 })
     .RequireAuthorization().WithName("ChangePassword").Produces(204).ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401);
+
+auth.MapPost("/change-password/request-code", async (ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(new RequestChangePasswordCodeCommand(), ct);
+    return Results.Ok(new { message = "Mã xác nhận đã được gửi về email của bạn." });
+}).RequireAuthorization().WithName("RequestChangePasswordCode").Produces<object>(200).ProducesProblem(401);
+
+auth.MapPost("/forgot-password", async (ForgotPasswordCommand command, ISender sender, CancellationToken ct) =>
+{
+    await sender.Send(command, ct);
+    return Results.Ok(new { message = "Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư." });
+}).WithName("ForgotPassword").Produces<object>(200).ProducesValidationProblem().ProducesProblem(400).ProducesProblem(404);
 
 auth.MapPost("/google", async (GoogleLoginCommand command, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(command, ct) }))
