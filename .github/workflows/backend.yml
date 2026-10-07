@@ -21,6 +21,9 @@ jobs:
           fetch-depth: 0
       - name: Quét secret
         run: bash deploy/scan-secrets.sh
+      # W5-10 (TV4 08/10): test cho scanner — fixture (+) và (−) cho JSON config + workflow env.
+      - name: Test scan-secrets
+        run: bash deploy/scan-secrets.test.sh
   build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30

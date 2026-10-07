@@ -102,7 +102,12 @@
 
 | Ngày | Việc | Kết quả | Log |
 |---|---|---|---|
-| | | | |
+| 08/10 | Thêm profile `multi` + service `culinary-api-2` (cùng image/env, port 5081) | `docker compose --profile multi config --quiet` exit 0 (default + multi) | `docker-compose.staging.yml` |
+| 08/10 | Nginx upstream 2 server + failover | `nginx -t` "syntax is ok" — `zone 128k` + `server culinary-api-2 resolve` + `resolver 127.0.0.11`; single mode vẫn chạy (không phá DoD W5-2) | `nginx/nginx.staging.conf` |
+| 08/10 | Trải đều request | 12 request qua nginx: **api1=6 api2=6 (50/50)**, 0 non-200 | `logs/staging_two_api.log` |
+| 08/10 | Failover FR-OBS-001 | stop api-2 → 0/8 non-200 (api1 gánh); start lại → 0/8 non-200 | `logs/staging_two_api.log` |
+| 08/10 | Số Hangfire server | `hangfire."Server"` có **2** server (1/instance, cùng storage PostgreSQL); console 2 instance "Starting Hangfire Server..." | `logs/staging_two_api.log` |
+| 08/10 | Cache/queue chung + khoá phân tán | Cả 2 instance cùng `Redis__Host: culinary-redis`; key `staging:cache:*`/`staging:sitemap:xml` dùng chung; `SitemapLockTests` trong bộ 426 test | `logs/staging_two_api.log` |
 
 ### 3.4. W5-4 — HTTPS / HSTS / CORS / volumes
 
@@ -158,7 +163,7 @@
 |---|---|---|
 | Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ⬜ | |
 | Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ✅ **07/10** — dọn + `git grep` = 0 trong phạm vi; test/format/coverage lại đều xanh | commit `0a9b1a5` ; `logs/a1_test.log`/`a1_format.log`/`a1_coverage.log` |
-| Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ⬜ | |
+| Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ✅ **08/10** — thêm `check_json_config_secrets` + `check_workflow_env_secrets`; ngưỡng riêng (`${…}`, `${{…}}`, `ci-*`); test **9 PASS/0 FAIL** + full-scan exit 0; CI thêm bước test | `deploy/scan-secrets.sh`, `deploy/scan-secrets.test.sh`, `.github/workflows/backend.yml` ; `logs/scan_secrets.log` |
 | `BUG-W4-03` — sửa trực tiếp trong W5-10 (chưa từng có bản vá trong dự án; `Program.cs` của TV1 → PR riêng) | ⬜ | |
 | Mở PR cho `practice/TV4/L4` | ✅ **07/10** — PR #33 (`practice/TV4/L4` → `main`); CI Frontend xanh | ![PR #33](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/33) |
 | ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ⬜ | |

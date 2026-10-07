@@ -1,0 +1,33 @@
+﻿# W5-3 — 2 API instance trên staging (TV4 08/10/2026)
+# Bằng chứng cho: G6 "test 2 API" · FR-OBS-001 (tích hợp upstream) · NFR-SCALE-001 · K23/K14
+
+1) Cấu hình
+- `docker compose -f docker-compose.staging.yml --profile multi config --quiet` exit 0 (cả default lẫn --profile multi)
+- `docker exec staging-culinary-nginx nginx -t` → "syntax is ok" / "test is successful" (exit 0)
+  - nginx.staging.conf: `zone culinary_backend 128k` + `server culinary-api-2:8080 resolve;` + `resolver 127.0.0.11`
+    → api-2 chưa chạy (single mode) nginx vẫn khởi động (không phá DoD W5-2).
+  - `server ... max_fails=3 fail_timeout=10s` + `proxy_next_upstream error timeout invalid_header http_5xx` + `proxy_connect_timeout 2s`
+
+2) Stack lên
+- staging-culinary-api     (default, port host 5080) healthy
+- staging-culinary-api-2   (profile `multi`, port host 5081) healthy
+- /health/live: api1=200, api2=200 · /health/ready qua nginx: 200
+
+3) Trải đều (round-robin qua nginx)
+- 12 request `GET /api/v1/categories` (đếm theo pattern ".../api/v1/categories responded" trong `docker logs --since`)
+- api1 = 6 · api2 = 6 · tổng 12 → 50/50, 0 request non-200
+
+4) Failover FR-OBS-001 — nginx tạm ngừng gửi traffic khi instance không sẵn sàng
+- `docker stop staging-culinary-api-2` → 8 request: 0/8 non-200 (api1 gánh hết)
+- `docker start staging-culinary-api-2` → 8 request: 0/8 non-200 (phục hồi, trải lại)
+
+5) Số Hangfire server khi 2 API (chia sẻ storage PostgreSQL — distributed lock)
+- `SELECT "Id" FROM hangfire."Server";` → **2** dòng:
+  - c375ba6ba0e6:1:1084b969-fecd-4555-9d06-1949c50133e6
+  - e2fca53a1a79:1:1ca8f99e-59e8-46a9-922a-94d6f86594be
+- Console cả 2 instance: "Starting Hangfire Server using job storage: 'PostgreSQL Server: Host: culinary-db, DB: culinary_blog...'" (api1 16:10:42; api2 17:01:13)
+
+6) Cache/queue dùng chung
+- Cả 2 instance cùng `Redis__Host: culinary-redis` (một trong `x-api-env` của docker-compose.staging.yml)
+- Redis key dùng chung (staging:cache:*, staging:sitemap:xml) — cùng 1 Redis
+- Sitemap distributed lock: `SitemapLockTests` nằm trong bộ 426 test (chạy lại được mỗi lần `dotnet test`)

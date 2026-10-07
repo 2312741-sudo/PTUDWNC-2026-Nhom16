@@ -4,6 +4,51 @@
 # Port host cố tình KHÁC docker-compose.dev.yml (W5-2, TV4 07/10): staging phải chạy song song
 # được với stack dev trên cùng máy (idempotent, không giành port 5432/6379/9000/9001).
 #   db 5433 (dev: service Postgres Windows 5432) · redis 6380 · s3 9002/9003
+#
+# W5-3 (TV4 08/10): 2 API instance.
+#   - `culinary-api-2` nằm trong profile `multi` nên mặc định (không có --profile) stack vẫn
+#     chạy 1 API như W5-2 (run1/run2), không phá DoD "chạy sạch".
+#   - Chạy 2 instance:  docker compose -f docker-compose.staging.yml --profile multi up -d --build
+#   - Cả 2 cùng dùng `Redis__Host: culinary-redis` (cache/queue chung) + cùng bucket S3.
+#   - nginx.staging.conf dùng `resolver` + `server ... resolve;` (ngược với host-resolve lúc load)
+#     nên khi api-2 chưa chạy nginx vẫn khởi động được (tương thích default single mode).
+
+# Env dùng chung cho cả 2 API instance (tránh duplicate + đảm bảo 2 instance đồng bộ config).
+x-api-env: &api-env
+  ASPNETCORE_ENVIRONMENT: Staging
+  ASPNETCORE_HTTP_PORTS: "8080"
+  # Credential lấy bằng substitution cùng nguồn với hạ tầng (W5-2, TV4 07/10):
+  # run 1 fail 28P01 vì hardcode Password=postgres trong khi POSTGRES_PASSWORD trong .env khác giá trị.
+  ConnectionStrings__Database: "Host=culinary-db;Port=5432;Database=culinary_blog;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+  # App đọc section "Redis" (RedisOptions.SectionName; appsettings.json:14 mặc định localhost) —
+  # ConnectionStrings:Redis không có code nào đọc được (W5-2, TV4 07/10): thiếu key này thì
+  # sitemap/cache kết nối localhost:6379 trong container -> /sitemap.xml 500.
+  Redis__Host: culinary-redis
+  Redis__Port: "6379"
+  Redis__Instance: staging
+  # RedisHealthCheck đọc HealthChecks:Redis:Host/Port riêng, default localhost (Health.cs:29-30)
+  HealthChecks__Redis__Host: culinary-redis
+  HealthChecks__Redis__Port: "6379"
+  Minio__Endpoint: "culinary-s3:9000"
+  Minio__Bucket: "culinary-blog"
+  Minio__AccessKey: "${RUSTFS_ACCESS_KEY:-minioadmin}"
+  Minio__SecretKey: "${RUSTFS_SECRET_KEY:-minioadmin}"
+  Minio__UseSsl: "false"
+  # Khoá ký JWT KHÔNG được hardcode trong repo. Sinh riêng cho staging:
+  #   openssl rand -base64 48      -> 64 ký tự, đúng yêu cầu >= 64 byte
+  # rồi đặt vào .env.staging (không commit) hoặc export khi chạy compose.
+  # JwtSettings.Validate() từ chối khoá dev đã thu hồi, nên không có default ở đây:
+  # để trống giá trị sẽ làm container fail-fast, tốt hơn là chạy bằng khoá đã biết.
+  Jwt__SigningKey: ${JWT_SIGNING_KEY:?chua dat JWT_SIGNING_KEY - sinh bang openssl rand -base64 48}
+  Jwt__Issuer: "culinary-blog"
+  Jwt__Audience: "culinary-blog-client"
+  # W5-2.5 trace HTTP->DB: Seq dev chạy trên máy host (docker-compose.dev.yml, port 5341).
+  # Trên server thật thay bằng URL Seq của môi trường staging.
+  Seq__Url: "http://host.docker.internal:5341"
+  # Cho W5-2.5 thấy span EFCore->Postgres trên Seq: default non-Development filter Microsoft.* = Warning.
+  # Lưu ý: `__` là phân cách cấp; category giữ dấu '.' (không thay bằng '_').
+  # Program.cs override EF qua config (mặc định Error) — đặt Information ở đây để hiện span.
+  Logging__LogLevel__Microsoft.EntityFrameworkCore: Information
 
 services:
   culinary-db:
@@ -93,42 +138,39 @@ services:
       culinary-init:
         condition: service_completed_successfully
     environment:
-      ASPNETCORE_ENVIRONMENT: Staging
-      ASPNETCORE_HTTP_PORTS: "8080"
-      # Credential lấy bằng substitution cùng nguồn với hạ tầng (W5-2, TV4 07/10):
-      # run 1 fail 28P01 vì hardcode Password=postgres trong khi POSTGRES_PASSWORD trong .env khác giá trị.
-      ConnectionStrings__Database: "Host=culinary-db;Port=5432;Database=culinary_blog;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
-      # App đọc section "Redis" (RedisOptions.SectionName; appsettings.json:14 mặc định localhost) —
-      # ConnectionStrings:Redis không có code nào đọc được (W5-2, TV4 07/10): thiếu key này thì
-      # sitemap/cache kết nối localhost:6379 trong container -> /sitemap.xml 500.
-      Redis__Host: culinary-redis
-      Redis__Port: "6379"
-      Redis__Instance: staging
-      # RedisHealthCheck đọc HealthChecks:Redis:Host/Port riêng, default localhost (Health.cs:29-30)
-      HealthChecks__Redis__Host: culinary-redis
-      HealthChecks__Redis__Port: "6379"
-      Minio__Endpoint: "culinary-s3:9000"
-      Minio__Bucket: "culinary-blog"
-      Minio__AccessKey: "${RUSTFS_ACCESS_KEY:-minioadmin}"
-      Minio__SecretKey: "${RUSTFS_SECRET_KEY:-minioadmin}"
-      Minio__UseSsl: "false"
-      # Khoá ký JWT KHÔNG được hardcode trong repo. Sinh riêng cho staging:
-      #   openssl rand -base64 48      -> 64 ký tự, đúng yêu cầu >= 64 byte
-      # rồi đặt vào .env.staging (không commit) hoặc export khi chạy compose.
-      # JwtSettings.Validate() từ chối khoá dev đã thu hồi, nên không có default ở đây:
-      # để trống giá trị sẽ làm container fail-fast, tốt hơn là chạy bằng khoá đã biết.
-      Jwt__SigningKey: ${JWT_SIGNING_KEY:?chua dat JWT_SIGNING_KEY - sinh bang openssl rand -base64 48}
-      Jwt__Issuer: "culinary-blog"
-      Jwt__Audience: "culinary-blog-client"
-      # W5-2.5 trace HTTP->DB: Seq dev chạy trên máy host (docker-compose.dev.yml, port 5341).
-      # Trên server thật thay bằng URL Seq của môi trường staging.
-      Seq__Url: "http://host.docker.internal:5341"
-      # Cho W5-2.5 thấy span EFCore->Postgres trên Seq: default non-Development filter Microsoft.* = Warning.
-      # Lưu ý: `__` là phân cách cấp; category giữ dấu '.' (không thay bằng '_').
-      # Program.cs override EF qua config (mặc định Error) — đặt Information ở đây để hiện span.
-      Logging__LogLevel__Microsoft.EntityFrameworkCore: Information
+      <<: *api-env
     ports:
       - "5080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # W5-3 (TV4 08/10): instance thứ 2, cùng image + env, port host 5081.
+  # Profile `multi` → chỉ chạy khi `--profile multi` (xem header file). Nginx trong upstream
+  # khai `server culinary-api-2:8080 resolve;` + `resolver` nên khi api-2 chưa chạy (single mode)
+  # nginx không đứng hình vì thiếu DNS host.
+  culinary-api-2:
+    profiles: ["multi"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: staging-culinary-api-2
+    restart: unless-stopped
+    depends_on:
+      culinary-db:
+        condition: service_healthy
+      culinary-redis:
+        condition: service_healthy
+      culinary-s3:
+        condition: service_healthy
+      culinary-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *api-env
+    ports:
+      - "5081:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
       interval: 10s
