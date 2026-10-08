@@ -194,19 +194,46 @@ services:
     ports:
       - "3000:3000"
 
+  # W5-4 (TV4 09/10): TLS staging. Sinh chứng thư TỰ KÝ (CN=localhost) một lần vào named volume
+  # `staging_certs`; chạy lại (up) không ghi đè cert cũ. Key KHÔNG nằm trong repo (chỉ trong volume).
+  # Nhược điểm: cert hết hạn sau 3650 ngày / mất volume thì sinh lại — vô hại vì là self-signed.
+  culinary-certs:
+    image: alpine:3.20
+    container_name: staging-culinary-certs
+    restart: "no"
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        apk add --no-cache openssl >/dev/null 2>&1;
+        [ -f /certs/server.crt ] ||
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650
+        -subj "/CN=localhost"
+        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+        -keyout /certs/server.key -out /certs/server.crt
+    volumes:
+      - staging_certs:/certs
+
   culinary-nginx:
     image: nginx:alpine
     container_name: staging-culinary-nginx
     restart: unless-stopped
     depends_on:
-      - culinary-api
-      - culinary-frontend
+      culinary-api:
+        condition: service_started
+      culinary-frontend:
+        condition: service_started
+      culinary-certs:
+        condition: service_completed_successfully
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.staging.conf:/etc/nginx/nginx.conf:ro
+      - staging_certs:/etc/nginx/certs:ro
 
 volumes:
   staging_pgdata:
   staging_redisdata:
   staging_s3data:
+  staging_certs:
