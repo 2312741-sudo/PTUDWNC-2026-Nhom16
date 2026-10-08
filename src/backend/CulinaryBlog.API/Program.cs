@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -14,6 +15,7 @@ using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -134,11 +136,20 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("auth", http => RateLimitPartition.GetFixedWindowLimiter(
         http.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
+// W5-4 (TV4 09/10): CORS phải liệt kê origin tường minh (AllowAnyOrigin đánh đổ NFR-SEC-005).
+// Origin hợp lệ đọc từ cấu hình `Cors:AllowedOrigins` (danh sách cách dấu phẩy; compose staging đặt
+// http://localhost,https://localhost,http://localhost:3000). Không có cấu hình -> mặc định dev/staging
+// là localhost FE; Production PHẢI khai báo tường minh, còn `WithOrigins` rỗng = từ chối mọi origin.
+var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"]
+        ?? (builder.Environment.IsProduction()
+            ? string.Empty
+            : "http://localhost:3000,http://localhost,https://localhost"))
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(corsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -392,6 +403,17 @@ if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("T
         Log.Warning(ex, "Database initialization on startup error: {Message}", ex.Message);
     }
 }
+
+// W5-4 (TV4 09/10) — BUG-W4-03: nginx đã set X-Forwarded-For nhưng app không đọc => RemoteIpAddress
+// là IP container nginx, mọi người dùng gộp vào 1 bucket rate-limit (NFR-SEC-003). UseForwardedHeaders
+// PHẢI chạy trước mọi middleware đọc IP (rate limiter, logging). Chỉ tin forearded headers từ dải
+// Docker bridge (172.16/12) thay vì chấp nhận bừa bãi — tránh spoof X-Forwarded-For từ client.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    ForwardLimit = 1,
+    KnownIPNetworks = { new System.Net.IPNetwork(IPAddress.Parse("172.16.0.0"), 12) }
+});
 
 app.Use(async (context, next) =>
 {
