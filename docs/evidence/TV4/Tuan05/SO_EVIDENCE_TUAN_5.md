@@ -140,11 +140,19 @@
 
 | Luồng | Spec | Do ai viết | Kết quả trên staging |
 |---|---|---|---|
-| register | `create-recipe.spec.ts` | TV4 (cần xác nhận) | ⬜ |
-| login | `create-recipe.spec.ts` | TV4 (cần xác nhận) | ⬜ |
-| category | chưa có | **cần TV2 xác nhận** | ⬜ |
-| draft / create-recipe | `create-recipe.spec.ts`, `wizard-week4.spec.ts` | TV4/TV3 | ⬜ |
-| publish | `recipe-publish.spec.ts` | TV4 | ⬜ |
+| register | `create-recipe.spec.ts` | TV4 | ✅ pass (trong bộ 40/40) |
+| login | `create-recipe.spec.ts` | TV4 | ✅ pass (trong bộ 40/40) |
+| category | chưa có | **cần TV2 xác nhận** | ⬜ (chờ TV2) |
+| draft / create-recipe | `wizard-week4.spec.ts`, `create-recipe.spec.ts` | TV4/TV3 | ✅ **10/10** `wizard-week4` pass |
+| publish | `recipe-publish.spec.ts` | TV4 | ✅ **4/4** pass (B1-1…B1-4) |
+
+| Ngày | Việc | Kết quả | Log/commit |
+|---|---|---|---|
+| 11/10 | **Chặn gốc lỗi ảnh nháp/vừa tải (presigned `culinary-s3:9000` không trỏ từ trình duyệt)** | `recipe-editor.ts`: `mediaUrl` fallback `MEDIA_DEFAULT = ${API}/resources/images` khi thiếu `NEXT_PUBLIC_MEDIA_URL`; `imageSrc` bỏ `presignedUrl` → **luôn** ra proxy `/api/v1/resources/images` → `AuthImage` fetch + Bearer → blob; `ImagesStep` bỏ UI "liên kết hết hạn / Tải lại" (placeholder "Ảnh chưa có đường dẫn") | commit `9f3dd4c` |
+| 11/10 | Sửa spec E2E lỗi thời (6 spec fail 10/10 = finding) | `recipe-publish.spec.ts`: lỗi zod dưới ô (`#err-title`/`#err-category`) thay banner, dòng nháp chọn theo **placeholder** (`Tên *`, `SL`, `Tiêu đề bước *`) thay aria-label động `(dòng N)`, nav-scope `Các bước soạn công thức`; `wizard-week4.spec.ts`: loại `#__next-route-announcer__` (giữ tiêu đề route sau `replaceState ?step=`) | commit `9f3dd4c` |
+| 11/10 | **Chạy E2E chống staging thật** (stop `staging-culinary-frontend` nhả port 3000 → `next dev` 127.0.0.1:3000 → API 5080) | **full suite 40/40 pass** (2.8m): `recipe-publish` 4/4 · `wizard-week4` 10/10 · `create-recipe` · `search` 12 · `upload-security` 10 · `recipe-unpublish` 3; ảnh blob `^blob:` + JSON-LD ảnh tuyệt đối trả 200; sau đó `docker start staging-culinary-frontend` | `npm run test:e2e` 11/10 |
+| 11/10 | Verify jest + build | jest **86/86** (recipe-jsonld cập nhật kỳ vọng mediaUrl mặc định = proxy tuyệt đối, không còn null khi thiếu `NEXT_PUBLIC_MEDIA_URL`) · `tsc`/`lint`/`build` exit 0 | commit `9f3dd4c` |
+| 11/10 | Hồi quy full suite sau fix | 40/40 xanh lần 2 (xác nhận không phải fix "ăn may") | `npm run test:e2e` 11/10 |
 
 ### 3.8. W5-8 — Số đo load/SEO + số đo bị cắt tuần 4
 
