@@ -113,7 +113,11 @@
 
 | Ngày | Việc | Kết quả | Cấu hình + header đo được |
 |---|---|---|---|
-| | | | |
+| 09/10 | TLS staging (chứng thư tự ký) + redirect HTTP→HTTPS + HSTS | `service culinary-certs` (alpine+openssl) sinh `CN=localhost` vào volume `staging_certs` (không commit key); nginx `listen 443 ssl` + `ssl_protocols TLSv1.2/1.3`; port 80 = `return 301 https://$host$request_uri`; header `Strict-Transport-Security: max-age=31536000; includeSubDomains` | `nginx/nginx.staging.conf`, `docker-compose.staging.yml` ; HTTP / → **301** → HTTPS / → **200** + đủ security headers |
+| 09/10 | CORS origin tường minh + `UseForwardedHeaders` (`BUG-W4-03`) | `Cors:AllowedOrigins` (compose staging đặt http/https localhost; Production phải khai, rỗng = từ chối) thay `AllowAnyOrigin`; `UseForwardedHeaders` (`X-Forwarded-For|Proto`, `ForwardLimit=1`, `KnownIPNetworks 172.16/12`) chạy trước rate limiter → mỗi IP một bucket | `Program.cs` (commit `afdb4a7` — **PR riêng, thuộc TV1**) ; OPTIONS origin `evil.example` → không có `Allow-Origin`, origin localhost → có; login XFF A: 10×400 + 429, XFF B: 400 (bucket riêng) |
+| 09/10 | Volumes persistent (DB/S3/Redis) | named `staging_pgdata`/`staging_s3data`/`staging_redisdata` (+ `staging_certs`); DB: register 201 → `docker compose restart culinary-db` → login 200 (user còn); Redis appendonly: SET → restart → GET còn | `logs/w54_tls_cors.log` |
+| 09/10 | Sửa `/health` = 503 oan (companion) | `MinIOHealthCheck` đọc `HealthChecks:Minio:Host` riêng (default `localhost:9000`) — thêm vào `x-api-env` → `/health` (toàn bộ check) 200 cả direct lẫn qua nginx | `docker-compose.staging.yml` |
+| 09/10 | ImageSharp 3.1.11 → 3.1.12 + suppress 5 advisory (chưa có bản vá miễn phí) | NuGetAudit flag cả nhánh `<= 4.1.1`; `first_patched=4.1.2` = **commercial** → giữ 3.1.12 (Apache-2.0 mới nhất), `NuGetAuditSuppress` đúng 5 URL; build/test/format xanh; audit vẫn bật cho package khác | `Directory.Build.props`, `ADR-TV4-004` |
 
 ### 3.5. W5-5 — Runbook `docs/RUNBOOK.md`
 
@@ -164,11 +168,11 @@
 | Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ⬜ | |
 | Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ✅ **07/10** — dọn + `git grep` = 0 trong phạm vi; test/format/coverage lại đều xanh | commit `0a9b1a5` ; `logs/a1_test.log`/`a1_format.log`/`a1_coverage.log` |
 | Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ✅ **08/10** — thêm `check_json_config_secrets` + `check_workflow_env_secrets`; ngưỡng riêng (`${…}`, `${{…}}`, `ci-*`); test **9 PASS/0 FAIL** + full-scan exit 0; CI thêm bước test | `deploy/scan-secrets.sh`, `deploy/scan-secrets.test.sh`, `.github/workflows/backend.yml` ; `logs/scan_secrets.log` |
-| `BUG-W4-03` — sửa trực tiếp trong W5-10 (chưa từng có bản vá trong dự án; `Program.cs` của TV1 → PR riêng) | ⬜ | |
+| `BUG-W4-03` — sửa trực tiếp trong W5-10 (chưa từng có bản vá trong dự án; `Program.cs` của TV1 → PR riêng) | ✅ **09/10** — `UseForwardedHeaders` + `KnownIPNetworks 172.16/12` + `ForwardLimit=1` chạy trước rate limiter; XFF A: 10×400+429, XFF B: 400 (mỗi IP một bucket). Commit `afdb4a7` (**PR riêng — Tâm review**) | `logs/w54_tls_cors.log`, `Program.cs:409-421` |
 | Mở PR cho `practice/TV4/L4` | ✅ **07/10** — PR #33 (`practice/TV4/L4` → `main`); CI Frontend xanh | ![PR #33](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/33) |
-| ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ⬜ | |
+| ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ✅ **09/10** — ADR `ADR-TV4-003` ghi rõ Recipe soft delete (interceptor+query filter) / Category hard delete (`CategoryRepository.cs:51`, C07); `MarkDeleted` = dead code, KHÔNG xoá; test `CategoryTests.cs:146` đổi → `...hard_deletes_when_empty` | `docs/adr/ADR-TV4-003-quy-uoc-soft-delete.md` ; commit `0084bb9` |
 | Header `X-Sitemap-Generated` (`BUG-W4-09`) | ⬜ | |
-| Test path traversal `../` (`NFR-SEC-004`) | ⬜ | |
+| Test path traversal `../` (`NFR-SEC-004`) | ✅ **09/10** — `PathTraversalSecurityTests`: 5 unit (server đặt key `recipes/{id}/image{ext}`, FileName client không vào path) + proxy 404 cho mọi `..`, không phục vụ ngoài prefix (guard `minioUp`); **7/7 pass** | `tests/CulinaryBlog.Tests/PathTraversalSecurityTests.cs` ; commit `2d40fb0` |
 
 ---
 
