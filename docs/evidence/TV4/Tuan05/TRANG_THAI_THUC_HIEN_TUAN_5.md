@@ -66,7 +66,7 @@
 | 07/10 | W5-1 baseline + mở PR #32/#33 · **W5-2 items 1–5** (run1+run2 sạch, drill backup→restore 14 bảng, trace HTTP→EFCore→Postgres) · **W5-10** (PR `practice/TV4/L4` + dọn secret A1, CI xanh) | ✅ Xong (mục 6 giới hạn → runbook W5-5 10/10) |
 | 08/10 | W5-3 profile 2 API (default single + `--profile multi`) · W5-10 (mở rộng `scan-secrets.sh` + test) | ✅ Xong — W5-3 6/6, W5-10 scan mở rộng (3/8) |
 | 09/10 | W5-4 HTTPS/HSTS/CORS · W5-10 (ADR + path traversal + BUG-W4-03) | ✅ W5-4 **5/5** + W5-10 (#4/#6/#8); W5-6 dời 10/10 |
-| 10/10 | W5-5 runbook · W5-6 xong · W5-9 | ⬜ |
+| 10/10 | W5-5 runbook · W5-6 xong · W5-9 | ✅ **W5-5** runbook 7 mục + Giới hạn · **W5-6** code + E2E 3/3 + unit test progress + staging runtime verify · **W5-9** npm audit (**critical → 0**), Zod/RHF xác nhận đã dùng, `isr-detail` code fix (ISR thật) |
 | 11/10 | W5-7 5 E2E · W5-8 số đo · W5-10 (đối chiếu `BUG-W4-01`) · chốt sổ, nộp review | ⬜ |
 
 *(Ngày tham chiếu — nhóm chưa chốt ngày bắt đầu/kết thúc tuần 5 trong tài liệu chung.)*

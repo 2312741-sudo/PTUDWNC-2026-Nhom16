@@ -123,13 +123,18 @@
 
 | Ngày | Việc | Kết quả | Đường dẫn |
 |---|---|---|---|
-| | | | |
+| 10/10 | Viết runbook đủ 7 mục, mỗi mục có **số liệu/log thật** | A1 dựng stack từ đầu (run2 = **24s** tới `/health/ready` 200; fail-fast thiếu `JWT_SIGNING_KEY`; chưa đo máy sạch 100%); A2 backup→restore (`culinary_20261007T145532Z.dump` 287KB, **14 bảng** sau restore); A3 failover từng dependency (drill tuần 4: Redis hồi **0.2s**, S3 ~0.5s, API node = SPOF; staging 2 API: stop api-2 → 8/8 200); A4 2 API (round-robin **6/6 = 50/50**, Hangfire 2 server); A5 k6 (**chưa đo staging** → ghi rõ + điều kiện ghi kèm); A6 trace theo TraceId (HTTP→EFCore→Postgres, 3 span cùng `CorrelationId`); A7 Seq (`localhost:5341`; staging gửi qua `host.docker.internal:5341`); mục **Giới hạn** (TLS tự ký, SLA chưa đo, backup cục bộ 30 ngày, k6/chỉ số staging W5-8) | `docs/RUNBOOK.md` ; commit `92e34be` |
 
 ### 3.6. W5-6 — D4-UI: progress upload + Unpublish/Archive/**Xóa**
 
 | Ngày | Việc | Kết quả | Test/E2E |
 |---|---|---|---|
-| | | | |
+| 09/10 | `uploadImage` chuyển sang **XMLHttpRequest** + `onProgress(%)` | `ImagesStep` có `role="progressbar"` (aria-valuenow tăng theo % thật, có nhãn %); gỡ phụ thuộc fetch-response không báo progress | `src/lib/recipe-editor.ts`, `_wizard/ImagesStep.tsx` ; commit `d65cc17` |
+| 09/10 | Nút **Gỡ đăng** (Published→Draft), **Lưu trữ** (Draft→Archived), **Xóa** (soft delete) trong dashboard công thức | `my-recipes.ts` gọi `PATCH /recipes/{id}/unpublish`, `/archive`; `page.tsx` (MyRecipes) thêm nút theo trạng thái + xác nhận 2 bước + state `actingId`; after mutation refresh danh sách từ API (dữ liệu thật, không mock) | commit `d65cc17` |
+| 10/10 | **E2E thật trên staging** luồng Gỡ đăng/Lưu trữ/Xóa | `recipe-unpublish.spec.ts` chạy chống staging (API 5080 + FE thật), **3/3 pass** (10.4s): Published→Bản nháp / Draft→Lưu trữ (hết nút Lưu trữ) / Xóa→dòng biến mất (soft delete); trước khi chạy phải `docker stop staging-culinary-frontend` để nhả port 3000, bật lại sau đó | `e2e/recipe-unpublish.spec.ts` ; commit `367b42e` |
+| 10/10 | CORS cho Playwright chống staging | thêm `http://127.0.0.1:3000` vào `Cors__AllowedOrigins` → OPTIONS preflight **204 + `Access-Control-Allow-Origin`**; đã recreate `culinary-api` (+certs) | `docker-compose.staging.yml` (commit `367b42e`) |
+| 10/10 | Unit test progress bar | `ImagesStepProgress.test.tsx` — **pass** (phải `findByRole` vì zod resolver bất đồng bộ); full suite **86/86** pass | commit `2969f94` |
+| 10/10 | Verify overall | `tsc`/lint/build sạch sau dồn commit; **6 spec E2E cũ fail trên staging là do spec cũ lỗi thời + presigned URL `culinary-s3:9000` không trỏ từ trình duyệt** (gap `NEXT_PUBLIC_MEDIA_URL`, xử lý W5-7), **không phải regression W5-6** (commit d65cc17 chỉ chạm 4 file nêu trên) | log chạy E2E staging 10/10 |
 
 ### 3.7. W5-7 — 5 E2E flows trên staging
 
@@ -155,11 +160,11 @@
 
 | Việc | Kết quả | Bằng chứng |
 |---|---|---|
-| `N3-A3` Zod/RHF FE | ⬜ | |
-| `N3-A5` Google OAuth | ⬜ (chờ credentials) | |
-| **4** phase Lab L5 (`isr-detail`, `image-opt`, `search-ssr`, `query-rollback`) | ⬜ | |
-| Phase `cqrs-behavior` (K04) | ⬜ | |
-| `npm audit` | ⬜ | |
+| `N3-A3` Zod/RHF FE | ✅ **10/10 (xác nhận lại)** — đã dùng sâu trong wizard từ tuần 3: zod schema (`recipe-schemas.ts`, `IngredientsStep.tsx`, `StepsStep.tsx`), `zodResolver` + React Hook Form toàn bộ form tạo/sửa (dùng 11 nơi `zodResolver`, 5 file import `react-hook-form`) → **không còn "chưa import"**; kết hợp E2E publish `recipe-publish.spec.ts` | `src/lib/recipe-schemas.ts`, `src/app/dashboard/recipes/_wizard/*` |
+| `N3-A5` Google OAuth | ⬜ (chờ credentials từ nhóm — không tự sinh; không tính đạt đến khi có client-id/secret) | — |
+| **4** phase Lab L5 (`isr-detail`, `image-opt`, `search-ssr`, `query-rollback`) | phần sửa code **2/4**: `isr-detail` **đã sửa** — bỏ nhánh `isDev` ép `no-store` trong `getRecipeBySlug` + thêm `generateStaticParams` (lấy slug từ sitemap API, CI-safe trả `[]`) → build ra route `●` **ISR thật** (104 trang static, `revalidate=300`); `search-ssr` **đã đúng khuyến nghị L5** — `no-store` vốn nằm ở fetch (`getRecipes`/`searchRecipes`) chứ không do route bị ép dynamic; `image-opt` + `query-rollback` **còn ⬜** (cần lab re-run `practice/TV4/L5`, để W5-13) | `src/lib/api.ts:379-389`, `src/app/recipes/[slug]/page.tsx` (commit W5-9) ; `docs/evidence/TV4/Tuan04/report/SOK_LAB_L5.md` |
+| Phase `cqrs-behavior` (K04) | ⬜ (ngoài harness L5, để W5-14) | — |
+| `npm audit` | ✅ **10/10** — **46 → 44 vuln, critical → 0**: `next` 15.1.11 → **15.5.27** (cùng major, không breaking) mù 1 CVE critical; còn lại **đều cần nâng major** (next p/moderate qua postcss → fix `next@16`, `tailwindcss` 4.3.3, `jest`/`@types/jest`/`jest-environment-jsdom` 30.x) → **đề xuất lên nhóm chốt**, không tự nâng major trong tuần | `package.json` (commit W5-9) ; `npm audit` 10/10 |
 
 ### 3.10. W5-10 — Đóng `BUG-W4-01/02/03` + nợ nhỏ P1/P2 *(bổ sung 07/10)*
 

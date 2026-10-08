@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getRecipeBySlug } from '@/lib/api';
+import { getRecipeBySlug, getSitemapRecipes } from '@/lib/api';
 import { mediaUrl } from '@/lib/recipe-editor';
 import { recipeMetaDescription } from '@/lib/recipe-meta';
 import { getRecipeImage } from '@/lib/recipeImages';
@@ -19,6 +19,15 @@ import {
 } from 'lucide-react';
 
 export const revalidate = 300; // ISR 5 phút cho công thức đã xuất bản (SRS 3.4)
+
+// Bắt buộc cho ISR: có generateStaticParams thì async params không còn ép route dynamic.
+// Dùng chính API sitemap (chỉ trả Published) làm danh sách slug gốc; khi API không mở
+// (vd. CI build) getSitemapRecipes trả [] nhưng dynamicParams=true vẫn cho phép render on-demand
+// và cache theo revalidate ở request thật.
+export async function generateStaticParams() {
+  const recipes = await getSitemapRecipes();
+  return recipes.map((r) => ({ slug: r.slug }));
+}
 
 interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
