@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   ApiError,
+  archiveRecipe,
   deleteRecipe,
   getMyRecipeCounts,
   getMyRecipes,
@@ -12,6 +13,7 @@ import {
   type MyRecipesParams,
   type MyRecipeSummary,
   type PagedResult,
+  unpublishRecipe,
 } from "@/lib/my-recipes";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -51,6 +53,7 @@ export default function DashboardRecipesPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
 
   const handleAuth = useCallback(
     (e: unknown) => {
@@ -122,6 +125,38 @@ export default function DashboardRecipesPage() {
       }
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function onUnpublish(r: MyRecipeSummary) {
+    if (!confirm(`Chuyển "${r.title}" về Bản nháp? Công thức sẽ không còn hiển thị công khai.`)) return;
+    setActingId(r.id);
+    setNotice(null);
+    try {
+      await unpublishRecipe(r.id);
+      setNotice(`"${r.title}" đã về Bản nháp.`);
+      await load();
+    } catch (e) {
+      if (handleAuth(e)) return;
+      setNotice(e instanceof Error ? e.message : "Không gỡ đăng được.");
+    } finally {
+      setActingId(null);
+    }
+  }
+
+  async function onArchive(r: MyRecipeSummary) {
+    if (!confirm(`Lưu trữ "${r.title}"? Bạn vẫn mở lại được từ tab "Lưu trữ".`)) return;
+    setActingId(r.id);
+    setNotice(null);
+    try {
+      await archiveRecipe(r.id);
+      setNotice(`"${r.title}" đã được lưu trữ.`);
+      await load();
+    } catch (e) {
+      if (handleAuth(e)) return;
+      setNotice(e instanceof Error ? e.message : "Không lưu trữ được.");
+    } finally {
+      setActingId(null);
     }
   }
 
@@ -242,13 +277,33 @@ export default function DashboardRecipesPage() {
                       {/* K18 (NVDA): mỗi hàng chỉ đọc "Sửa link" -> aria-label kèm tên công thức, chữ nhìn thấy đứng đầu tên (WCAG 2.5.3) */}
                       <div className="flex justify-end gap-3 whitespace-nowrap">
                         {r.status === "Published" && (
-                          <Link href={`/recipes/${r.slug}`} aria-label={`Xem công thức ${r.title}`} className="text-stone-700 underline-offset-2 hover:underline">
-                            Xem
-                          </Link>
+                          <>
+                            <Link href={`/recipes/${r.slug}`} aria-label={`Xem công thức ${r.title}`} className="text-stone-700 underline-offset-2 hover:underline">
+                              Xem
+                            </Link>
+                            <button
+                              onClick={() => void onUnpublish(r)}
+                              disabled={actingId === r.id}
+                              aria-label={`${actingId === r.id ? "Đang gỡ đăng" : "Gỡ đăng"} công thức ${r.title}`}
+                              className="text-amber-700 underline-offset-2 hover:underline disabled:opacity-50"
+                            >
+                              {actingId === r.id ? "Đang gỡ…" : "Gỡ đăng"}
+                            </button>
+                          </>
                         )}
                         <Link href={`/dashboard/recipes/${r.id}/edit?slug=${encodeURIComponent(r.slug)}`} aria-label={`Sửa công thức ${r.title}`} className="font-medium text-stone-900 underline-offset-2 hover:underline">
                           Sửa
                         </Link>
+                        {r.status !== "Archived" && (
+                          <button
+                            onClick={() => void onArchive(r)}
+                            disabled={actingId === r.id}
+                            aria-label={`${actingId === r.id ? "Đang lưu trữ" : "Lưu trữ"} công thức ${r.title}`}
+                            className="text-stone-500 underline-offset-2 hover:underline disabled:opacity-50"
+                          >
+                            {actingId === r.id ? "Đang lưu…" : "Lưu trữ"}
+                          </button>
+                        )}
                         <button
                           onClick={() => void onDelete(r)}
                           disabled={deletingId === r.id}

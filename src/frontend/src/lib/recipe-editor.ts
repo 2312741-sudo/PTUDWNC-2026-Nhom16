@@ -210,19 +210,36 @@ export function isPresignedStale(url?: string | null, now: number = Date.now()):
   return at !== null && at - now <= PRESIGNED_SAFETY_MS;
 }
 
-export async function uploadImage(id: string, file: File, altText: string | null): Promise<RecipeImage> {
+// D27: fetch không báo tiến trình upload -> dùng XMLHttpRequest để có onProgress (%).
+// KHÔNG đặt Content-Type: trình duyệt tự thêm boundary multipart.
+export function uploadImage(
+  id: string,
+  file: File,
+  altText: string | null,
+  onProgress?: (percent: number) => void,
+): Promise<RecipeImage> {
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
   const fd = new FormData();
   fd.append("file", file);
   if (altText) fd.append("altText", altText);
-  // KHÔNG đặt Content-Type: trình duyệt tự thêm boundary multipart
-  const res = await fetch(`${API}/recipes/${id}/images`, {
-    method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd,
+  return new Promise<RecipeImage>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API}/recipes/${id}/images`);
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      let body: any = null;
+      try { body = JSON.parse(xhr.responseText); } catch { /* 204 hoặc HTML -> body null */ }
+      if (xhr.status === 401) return reject(new UnauthorizedError(401, "UNAUTHORIZED", "Phiên đăng nhập hết hạn"));
+      if (xhr.status >= 200 && xhr.status < 300) return resolve((body?.data ?? body) as RecipeImage);
+      reject(new ApiError(xhr.status, body?.code ?? body?.error?.code, errorMessage(body, xhr.status)));
+    };
+    xhr.onerror = () => reject(new ApiError(0, "NETWORK", "Không thể kết nối máy chủ"));
+    xhr.onabort = () => reject(new ApiError(0, "ABORTED", "Đã huỷ tải lên"));
+    xhr.send(fd);
   });
-  if (res.status === 401) throw new UnauthorizedError(401, "UNAUTHORIZED", "Phiên đăng nhập hết hạn");
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, body?.code ?? body?.error?.code, errorMessage(body, res.status));
-  return (body?.data ?? body) as RecipeImage;
 }
 
 // PATCH gửi đủ 3 field (JSON strict) và giữ nguyên giá trị hiện tại để không vô tình xoá altText/orderIndex.

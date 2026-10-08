@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,6 +16,8 @@ interface Props { recipe: RecipeDetail; busy: boolean; run: RunFn; onError: (msg
 // onError không còn dùng: lỗi chọn tệp/alt hiện dưới từng ô; lỗi server do run() đưa lên banner
 export default function ImagesStep({ recipe, busy, run }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  // D27: % tiến trình tải lên (XMLHttpRequest.upload.onprogress) — một tệp một lúc.
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
   // Kiểm tra sớm ở client (MIME, 5 MiB, alt); backend vẫn kiểm tra magic bytes (không tin Content-Type)
   const { register, control, handleSubmit, reset, formState: { errors } } = useForm<ImageUploadInput, unknown, ImageUploadOutput>({
     resolver: zodResolver(imageUploadSchema),
@@ -27,7 +29,9 @@ export default function ImagesStep({ recipe, busy, run }: Props) {
 
   // file/altText là output đã parse (alt trim, rỗng -> null)
   async function upload({ file, altText }: ImageUploadOutput) {
-    const ok = await run(() => uploadImage(recipe.id, file, altText));
+    setUploadPct(0);
+    const ok = await run(() => uploadImage(recipe.id, file, altText, (p) => setUploadPct(p)));
+    setUploadPct(null);
     if (ok) { reset({ altText: "" }); if (fileRef.current) fileRef.current.value = ""; }
   }
 
@@ -109,6 +113,15 @@ export default function ImagesStep({ recipe, busy, run }: Props) {
           <ErrorText id="err-image-alt" error={errors.altText} />
         </div>
         <p className="text-xs text-gray-500">JPEG, PNG, WebP, AVIF — tối đa 5 MiB.</p>
+        {uploadPct !== null && (
+          <div className="flex items-center gap-2" role="progressbar" aria-label="Tiến trình tải ảnh lên"
+            aria-valuenow={uploadPct} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-2 flex-1 overflow-hidden rounded bg-stone-200">
+              <div className="h-full bg-emerald-600 transition-[width]" style={{ width: `${uploadPct}%` }} />
+            </div>
+            <span className="w-11 shrink-0 text-right text-xs tabular-nums text-stone-600">{uploadPct}%</span>
+          </div>
+        )}
         <button disabled={busy} onClick={handleSubmit(upload)}
           className="rounded bg-emerald-600 px-3 py-1 text-sm text-white disabled:opacity-50">
           {busy ? "Đang tải lên..." : "Tải lên"}
