@@ -169,21 +169,26 @@ export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MiB (FR-FILE-001)
 
 const MEDIA = process.env.NEXT_PUBLIC_MEDIA_URL;
-/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) hoặc đường dẫn ảnh tĩnh cục bộ (/images/...) — ghép với NEXT_PUBLIC_MEDIA_URL để ra URL trình duyệt nếu là key MinIO. */
+/** Kiểu db: tên container nội bộ (culinary-s3:9000) trình duyệt không mở được — ảnh phải đi qua proxy D27. */
+const MEDIA_DEFAULT = `${API}/resources/images`;
+/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) hoặc đường dẫn ảnh tĩnh cục bộ (/images/...) — ghép với proxy ảnh API
+ * (NEXT_PUBLIC_MEDIA_URL nếu có, mặc định `${API}/resources/images`) để ra URL tuyệt đối trình duyệt tải được. */
 export function mediaUrl(key?: string | null): string | null {
   if (!key) return null;
   if (/^https?:\/\//i.test(key)) return key;
   if (key.startsWith('/images/') || key.startsWith('images/')) {
     return key.startsWith('/') ? key : `/${key}`;
   }
-  return MEDIA ? `${MEDIA.replace(/\/$/, "")}/${key.replace(/^\//, "")}` : (key.startsWith('/') ? key : `/${key}`);
+  return `${(MEDIA ?? MEDIA_DEFAULT).replace(/\/$/, "")}/${key.replace(/^\//, "")}`;
 }
 /**
- * B5: ưu tiên URL có chữ ký khi ảnh còn private. `mediaUrl` trả nguyên URL tuyệt đối,
- * nên không cần ghép NEXT_PUBLIC_MEDIA_URL cho trường này.
+ * B5: ảnh nháp luôn hiển thị qua proxy (`thumbnail/medium/original` là key object storage -> mediaUrl),
+ * vì URL ký trỏ vào host MinIO nội bộ (vd. culinary-s3:9000) trình duyệt không mở được và `<img src>`
+ * không gửi Bearer. `AuthImage` tải proxy kèm Authorization rồi bày qua blob URL. Còn `presignedUrl`
+ * vẫn được giữ để báo "hết hạn liên kết tải" và gia hạn URL (xem `isPresignedStale`/`refreshUrl`).
  */
 export const imageSrc = (i: RecipeImage) =>
-  mediaUrl(i.presignedUrl ?? i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
+  mediaUrl(i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
 
 /** Chặn dùng URL ký sắp hết hạn (bù độ trễ mạng/render) — 20 giây. */
 const PRESIGNED_SAFETY_MS = 20_000;
