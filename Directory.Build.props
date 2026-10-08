@@ -1,1 +1,20 @@
-<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup></Project>
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- W5-4 (TV4 09/10): SixLabors.ImageSharp 3.1.12 bị NuGetAudit flag 5 advisory nhưng KHÔNG có bản vá
+         miễn phí: first_patched = 4.1.2, và 4.x yêu cầu license trả phí (sixlabors.com/pricing). 3.1.12 là bản
+         Apache-2.0 mới nhất; mọi bản <= 4.1.1 (cả 3.1.11 cũ) đều dính. Audt vẫn BẬT cho mọi package khác —
+         chỉ bỏ qua 5 advisory của 1 gói đã ghi nhận "không có bản vá dùng được" (rủi ro chấp nhận, ADR-TV4-004). -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-wmxv-xphr-5c9g" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-gwg2-r3hj-4w44" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-j3p4-wp97-rph4" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-j9gm-c75j-xc9q" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-jjfr-hcj7-qf5w" />
+  </ItemGroup>
+</Project>
