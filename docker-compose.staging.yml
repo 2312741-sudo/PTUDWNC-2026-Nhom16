@@ -40,7 +40,7 @@ x-api-env: &api-env
   Minio__UseSsl: "false"
   # W5-4 (TV4 09/10): CORS origin tường minh (Program.cs đọc Cors:AllowedOrigins; Production phải khai
   # báo rõ, không có AllowAnyOrigin). Vì staging nằm sau nginx TLS, trỏ cả http/https localhost.
-  Cors__AllowedOrigins: "http://localhost,https://localhost,http://localhost:3000"
+  Cors__AllowedOrigins: "http://localhost,https://localhost,http://localhost:3000,http://127.0.0.1:3000"
   # Khoá ký JWT KHÔNG được hardcode trong repo. Sinh riêng cho staging:
   #   openssl rand -base64 48      -> 64 ký tự, đúng yêu cầu >= 64 byte
   # rồi đặt vào .env.staging (không commit) hoặc export khi chạy compose.
