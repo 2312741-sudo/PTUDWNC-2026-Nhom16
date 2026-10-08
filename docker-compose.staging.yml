@@ -29,11 +29,18 @@ x-api-env: &api-env
   # RedisHealthCheck đọc HealthChecks:Redis:Host/Port riêng, default localhost (Health.cs:29-30)
   HealthChecks__Redis__Host: culinary-redis
   HealthChecks__Redis__Port: "6379"
+  # MinIOHealthCheck cũng đọc HealthChecks:Minio:Host/Port riêng, default localhost (Health.cs:38-39) —
+  # nếu thiếu thì check "minio" luôn Unhealthy => /health (toàn bộ check) trả 503 dù stack vẫn khoẻ.
+  HealthChecks__Minio__Host: culinary-s3
+  HealthChecks__Minio__Port: "9000"
   Minio__Endpoint: "culinary-s3:9000"
   Minio__Bucket: "culinary-blog"
   Minio__AccessKey: "${RUSTFS_ACCESS_KEY:-minioadmin}"
   Minio__SecretKey: "${RUSTFS_SECRET_KEY:-minioadmin}"
   Minio__UseSsl: "false"
+  # W5-4 (TV4 09/10): CORS origin tường minh (Program.cs đọc Cors:AllowedOrigins; Production phải khai
+  # báo rõ, không có AllowAnyOrigin). Vì staging nằm sau nginx TLS, trỏ cả http/https localhost.
+  Cors__AllowedOrigins: "http://localhost,https://localhost,http://localhost:3000"
   # Khoá ký JWT KHÔNG được hardcode trong repo. Sinh riêng cho staging:
   #   openssl rand -base64 48      -> 64 ký tự, đúng yêu cầu >= 64 byte
   # rồi đặt vào .env.staging (không commit) hoặc export khi chạy compose.

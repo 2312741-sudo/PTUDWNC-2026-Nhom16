@@ -1,0 +1,65 @@
+# W5-4 evidence log (TV4, 09/10/2026, N3)
+# TLS staging + HTTP->HTTPS redirect + HSTS | CORS explicit + UseForwardedHeaders | Volumes persistent
+
+--- docker compose -f docker-compose.staging.yml up -d --build (tail) ---
+ Container staging-culinary-db Healthy
+ Container staging-culinary-s3 Healthy
+ Container staging-culinary-redis Healthy
+ Container staging-culinary-init Exited
+ Container staging-culinary-api Started / Healthy
+ Container staging-culinary-certs Exited        # sinh cert self-signed CN=localhost vao volume staging_certs
+ Container staging-culinary-nginx Started
+
+--- docker compose exec culinary-nginx nginx -t ---
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+--- Cert: subject/issuer/dates (openssl x509 tren volume staging_certs) ---
+subject=CN=localhost
+issuer=CN=localhost
+notBefore=Oct  8 05:56:42 2026 GMT
+notAfter=Oct  5 05:56:42 2036 GMT
+# GHI CHU: chung thu tu ky != TLS production (chua co domain/CA that) - gioi han da ghi nhan.
+
+--- HTTP -> HTTPS redirect (return 301) ---
+GET  http://localhost/       -> HTTP/1.1 301 Moved Permanently, Location: https://localhost/
+GET  http://localhost/health -> HTTP/1.1 301 Moved Permanently, Location: https://localhost/health
+
+--- HTTPS (self-signed, curl -k): chef + security headers ---
+GET https://localhost/ -> 200 OK
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+GET https://localhost/health -> 200 OK (nginx proxy API; /health la tong toan bo check)
+
+--- Fix companion: HealthChecks__Minio__Host/Port (Health.cs:38-39 mac dinh localhost) ---
+Truoc: /health = 503 ("minio": "localhost:9000 unreachable") du stack van khoe.
+Sau:  them HealthChecks__Minio__Host=culinary-s3, Port=9000 vao x-api-env -> /health = 200 (all checks Healthy).
+
+--- BUG-W4-03 / NFR-SEC-003: moi IP mot bucket rate-limit (UseForwardedHeaders + KnownIPNetworks 172.16/12) ---
+POST /api/v1/auth/login x 11, X-Forwarded-For: 198.51.100.7 ->  400 400 400 400 400 400 400 400 400 400 429
+POST /api/v1/auth/login x 1,  X-Forwarded-For: 198.51.100.8 ->  400  (bucket rieng, khong bi 429)
+(IP A vuot 10 lan -> 429; IP B van cho qua => khong con "2 IP dung chung 1 bucket")
+
+--- W5-4 #4 CORS: origin explicit (WithOrigins, khong AllowAnyOrigin) ---
+OPTIONS /api/v1/recipes, Origin: https://www.evil.example  -> 204, KHONG co Access-Control-Allow-Origin (chan)
+OPTIONS /api/v1/recipes, Origin: https://localhost         -> 204, Access-Control-Allow-Origin: https://localhost
+GET  /api/v1/recipes (khong Origin)                        -> 200
+
+--- W5-4 #5 Volumes persistent (named volumes trong compose) ---
+docker volume ls:
+ ptudwnc-2026-nhom16_staging_certs
+ ptudwnc-2026-nhom16_staging_pgdata
+ ptudwnc-2026-nhom16_staging_redisdata
+ ptudwnc-2026-nhom16_staging_s3data
+DB persistence:  POST /auth/register (https) -> 201 ; docker compose restart culinary-db ;
+                POST /auth/login cung creds (https) -> 200  (user van con sau restart)
+Redis persistence (appendonly): redis-cli SET staging:voltest persistent-ok ;
+                docker compose restart culinary-redis ; GET staging:voltest -> persistent-ok
+
+--- Dependency note (same day): SixLabors.ImageSharp 3.1.11 -> 3.1.12 + NuGetAuditSuppress 5 advisory ---
+5 advisory moi (15/09/2026) anh huong moi ban <= 4.1.1; first_patched = 4.1.2 (commercial license).
+Xem ADR-TV4-004. dotnet restore/build 0W/0E, 427/427 test, dotnet format ok.
