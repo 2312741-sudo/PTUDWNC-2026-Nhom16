@@ -158,11 +158,21 @@
 
 | Ngày | Hạng mục | Số đo | Ghi giới hạn |
 |---|---|---|---|
-| | k6 ≥100 VU (p50/p95/p99, lỗi%) | | |
-| | SEO (sitemap/robots/metadata/JSON-LD/301) | | |
-| | EXPLAIN re-run (`N2-6`) | | |
-| | Cache-hit ratio (K12) | | |
-| | Metrics scrape thật (`FR-OBS-003`: count/duration/error) | | |
+| 11/10 | k6 ≥100 VU (p50/p95/p99, lỗi%) | ✅ **102 VU** (34×3, `MODE=vus` constant-vus) · p50 **82.56ms** · p90 131.44 · p95 **148.56ms** · p99 187.28ms · **0% lỗi** · ~1150 req/s, mọi threshold PASS | Arrival-rate không khẳng định được số VU → thêm `MODE=vus`; có scenario `list_uncached` cố ý để đo miss | `logs/w58_k6_vus100.log` |
+| 11/10 | SEO (sitemap/robots/metadata/JSON-LD/301) | ✅ FE sitemap **96 URL** (92 Published + 4 tĩnh), robots 200 (`Allow: /`, `Disallow: /auth/ /dashboard/`, `Sitemap:`), backend `/sitemap.xml` 96 URL Published-only; recipe detail JSON-LD (`@type:Recipe`, recipeIngredient/instructions), canonical, 5 OG, `twitter:card=summary_large_image`; nginx 301 `http→https` (`Location: https://localhost/`) | `NEXT_PUBLIC_SITE_URL=http://localhost`; **NFR-SEO-004** (301 khi đổi slug) chưa có → nợ TV3 | `logs/w58_seo_staging.log` |
+| 11/10 | EXPLAIN re-run (`N2-6`) | ✅ list seq scan **0.32ms**; category filter seq scan **0.161ms**; search `ILIKE` seq scan **0.347ms** (trigram GIN chưa dùng); detail-by-slug **Index Scan `IDX_Recipe_Slug` 0.032ms** | Planner chọn seq scan vì `Recipes` chỉ **167 dòng** → khuyến nghị composite index khi dữ liệu lớn | `logs/w58_explain_staging.log` |
+| 11/10 | Cache-hit ratio (K12) | ✅ mixed **70.31%** (hits 24192 / miss 10213 sau k6); cached-only `page=1` → **100%** (200 hits / 0 miss) | Miss đến từ scenario `list_uncached` cố ý, không phải lỗi cache | `logs/w58_redis_cachehit.log` |
+| 11/10 | Metrics scrape thật (`FR-OBS-003`: count/duration/error) | ✅ `/metrics` **200** `text/plain; version=0.0.4`: `http_requests_total`, `http_request_errors_total`, `http_request_duration_ms_sum`, `http_requests_by_class` (api-2 counter riêng) | Tự viết `RequestMetrics` (**không** thêm package exporter → không đổi lock file); số trong bộ nhớ, reset khi restart; không lộ qua nginx (404) | `logs/w58_metrics_header.log` |
+
+| 11/10 | Metrics scrape thật (`FR-OBS-003`: count/duration/error) | ✅ `/metrics` **200** `text/plain; version=0.0.4`: `http_requests_total`, `http_request_errors_total`, `http_request_duration_ms_sum`, `http_requests_by_class` (api-2 counter riêng) | Tự viết `RequestMetrics` (**không** thêm package exporter → không đổi lock file); số trong bộ nhớ, reset khi restart; không lộ qua nginx (404) | `logs/w58_metrics_header.log` |
+
+**Giới hạn số đo W5-8** (ghi rõ để không hiểu nhầm là SLA):
+- Số k6 đo trên **máy dev gọi vào staging cục bộ** (`host.docker.internal:5080`), không phải hạ tầng production nhiều máy → p95/p99 chỉ mang tính xu hướng, không phải SLA (chưa đo máy sạch/qua Internet).
+- EXPLAIN cho thấy planner chọn **Seq Scan** cho list/category/search vì `Recipes` chỉ 167 dòng; trigram GIN (`IDX_Recipe_SearchTrgm`) **chưa được dùng** ở quy mô này → không kết luận chỉ số sai, chỉ ghi nhận; phần FTS `to_tsquery` vẫn phụ thuộc TV2 (ADR 0003).
+- Cache-hit **70.31%** là con số **trộn** (có scenario `list_uncached` cố ý bỏ cache); trang cached-only đạt **100%**.
+- `/metrics` tự viết, giữ số **trong bộ nhớ tiến trình** (reset khi restart), chỉ phơi trên cổng API (`5080/5081`), **không** lộ qua nginx; chưa có pipeline metrics OTLP/Prometheus exporter thật.
+- `NFR-SEO-004` (301 khi đổi slug) **chưa có** → còn nợ TV3 (không phải việc W5-8).
+- FE dùng `NEXT_PUBLIC_SITE_URL=http://localhost` trong staging nên URL tuyệt đối trong sitemap/OG là `http://localhost`.
 
 ### 3.9. W5-9 — Lab còn thiếu + nợ kỹ thuật
 
@@ -178,13 +188,13 @@
 
 | Việc | Kết quả | Bằng chứng |
 |---|---|---|
-| Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ⬜ | |
+| Đối chiếu + chốt `BUG-W4-01` (`ValueGeneratedNever` đã thấy ở `main` — `c624b9f`) | ✅ **11/10** — đối chiếu: `RecipeImageConfiguration.cs:21`, `RecipeStepConfiguration.cs:20`, `RecipeIngredientConfiguration.cs:20` đều `ValueGeneratedNever()` + 2 migration riêng; thêm test hồi quy **model-level** `RecipeChildIdGenerationTests` (3 case, không cần Postgres) bắt lỗi nếu gỡ cấu hình. Full suite **430/430** | `tests/CulinaryBlog.Tests/RecipeChildIdGenerationTests.cs` ; `logs/w58_metrics_header.log` |
 | Dọn secret còn lại: `appsettings*.json` (`Password=postgres`, `minioadmin`) + `.github/workflows/backend.yml` | ✅ **07/10** — dọn + `git grep` = 0 trong phạm vi; test/format/coverage lại đều xanh | commit `0a9b1a5` ; `logs/a1_test.log`/`a1_format.log`/`a1_coverage.log` |
 | Mở rộng `deploy/scan-secrets.sh` (quét appsettings + `env:` workflow) + test | ✅ **08/10** — thêm `check_json_config_secrets` + `check_workflow_env_secrets`; ngưỡng riêng (`${…}`, `${{…}}`, `ci-*`); test **9 PASS/0 FAIL** + full-scan exit 0; CI thêm bước test | `deploy/scan-secrets.sh`, `deploy/scan-secrets.test.sh`, `.github/workflows/backend.yml` ; `logs/scan_secrets.log` |
 | `BUG-W4-03` — sửa trực tiếp trong W5-10 (chưa từng có bản vá trong dự án; `Program.cs` của TV1 → PR riêng) | ✅ **09/10** — `UseForwardedHeaders` + `KnownIPNetworks 172.16/12` + `ForwardLimit=1` chạy trước rate limiter; XFF A: 10×400+429, XFF B: 400 (mỗi IP một bucket). Commit `afdb4a7` (**PR riêng — Tâm review**) | `logs/w54_tls_cors.log`, `Program.cs:409-421` |
 | Mở PR cho `practice/TV4/L4` | ✅ **07/10** — PR #33 (`practice/TV4/L4` → `main`); CI Frontend xanh | ![PR #33](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/33) |
 | ADR soft-delete `Recipe` vs `Category` + đổi tên test (`BUG-W4-06`) | ✅ **09/10** — ADR `ADR-TV4-003` ghi rõ Recipe soft delete (interceptor+query filter) / Category hard delete (`CategoryRepository.cs:51`, C07); `MarkDeleted` = dead code, KHÔNG xoá; test `CategoryTests.cs:146` đổi → `...hard_deletes_when_empty` | `docs/adr/ADR-TV4-003-quy-uoc-soft-delete.md` ; commit `0084bb9` |
-| Header `X-Sitemap-Generated` (`BUG-W4-09`) | ⬜ | |
+| Header `X-Sitemap-Generated` (`BUG-W4-09`) | ✅ **11/10** — backend `/sitemap.xml` set header `true` khi sinh mới (cache nguội) / `false` khi lấy từ Redis (cache ấm); verify trên `:5080` (nginx `/sitemap.xml` là sitemap của FE nên không có header này — đúng thiết kế) | `Program.cs` (endpoint sitemap) ; `logs/w58_metrics_header.log` |
 | Test path traversal `../` (`NFR-SEC-004`) | ✅ **09/10** — `PathTraversalSecurityTests`: 5 unit (server đặt key `recipes/{id}/image{ext}`, FileName client không vào path) + proxy 404 cho mọi `..`, không phục vụ ngoài prefix (guard `minioUp`); **7/7 pass** | `tests/CulinaryBlog.Tests/PathTraversalSecurityTests.cs` ; commit `2d40fb0` |
 
 ---

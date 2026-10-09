@@ -1,0 +1,67 @@
+# W5-8.5 — Endpoint /metrics (FR-OBS-003) + W5-10b header X-Sitemap-Generated
+
+Ngày: 2026-10-09 · Người: TV4/N4
+Build: `docker compose -f docker-compose.staging.yml build culinary-api culinary-api-2`
+        (2 image rebuild, API Release build 0 warning; `dotnet format --verify-no-changes` PASS)
+Runtime: staging-culinary-api (:5080) + staging-culinary-api-2 (:5081) đều healthy sau recreate.
+
+## 1. W5-8.5 — GET /metrics (Prometheus text, không cần package exporter)
+
+Quyết định thiết kế: thêm `RequestMetrics` (bộ đếm trong bộ nhớ tiến trình) thay vì kéo
+`OpenTelemetry.Exporter.Prometheus.AspNetCore` — tránh đổi `packages.lock.json` (CI restore
+locked-mode). Đặt middleware đo ngay sau `UseForwardedHeaders` để bắt trọn request kể cả khi
+exception-handler/status-pages đổi mã. Truy cập trực tiếp instance API (Prometheus scrape
+container network), KHÔNG expose qua nginx.
+
+```
+$ curl.exe -s -w "HTTP=%{http_code} type=%{content_type}" http://localhost:5080/metrics
+# HELP http_requests_total Tổng số request HTTP đã phục vụ.
+# TYPE http_requests_total counter
+http_requests_total{service="CulinaryBlog.API"} 8
+# HELP http_request_errors_total Số request trả 5xx.
+# TYPE http_request_errors_total counter
+http_request_errors_total{service="CulinaryBlog.API"} 0
+# HELP http_request_duration_ms_sum Tổng thời gian xử lý (ms).
+# TYPE http_request_duration_ms_sum counter
+http_request_duration_ms_sum{service="CulinaryBlog.API"} 360
+# HELP http_requests_by_class Số request theo method và lớp status.
+# TYPE http_requests_by_class counter
+http_requests_by_class{service="CulinaryBlog.API",method="GET",status_class="2xx"} 8
+
+HTTP=200 type=text/plain; version=0.0.4; charset=utf-8
+```
+
+- `http://localhost:5081/metrics` (api-2) → 200, counter độc lập theo tiến trình (9).
+- `https://localhost/metrics` (qua nginx) → **404**: không public metric ra ngoài (đúng bảo mật;
+  scrape trực tiếp API instance như /health).
+- Lưu ý: bộ đếm in-process nên reset khi restart; muốn lịch sử/persist thì pipeline metrics OTLP
+  (deploy/otel-collector-config.yaml hiện chỉ có pipeline traces) là bước tiếp theo.
+
+## W5-10b: header `X-Sitemap-Generated` (backend /sitemap.xml)
+
+`Program.cs`: endpoint sitemap set header theo `generatedNow = result.Acquired`.
+
+```
+=== cache nguoi (DEL staging:sitemap:xml) -> lan 1 ==="
+HTTP/1.1 200 OK
+X-Sitemap-Generated: true
+
+=== lan 2 (cache am) ===
+HTTP/1.1 200 OK
+X-Sitemap-Generated: false
+```
+
+- API trực tiếp :5080: header true khi sinh mới, false khi lấy từ Redis.
+- Qua nginx `https://localhost/sitemap.xml` = sitemap của **FE** (Next.js: `Content-Type: application/xml`,
+  `vary: rsc,next-router-state-tree...`) nên không có header backend — đúng thiết kế (nginx route
+  `/sitemap.xml` → frontend). Backend sitemap dùng trực tiếp ở `:5080/sitemap.xml` (Hangfire/SEO).
+- 301 http→https vẫn hoạt động: `http://localhost/sitemap.xml` → `301 Location: https://localhost/sitemap.xml`.
+
+## BUG-W4-01 — test hồi quy model-level
+
+`tests/CulinaryBlog.Tests/RecipeChildIdGenerationTests.cs` (3 case: RecipeImage/RecipeStep/RecipeIngredient)
+assert `ValueGenerated.Never` trên `Id` mà KHÔNG cần Postgres → bắt được nếu ai gỡ
+`ValueGeneratedNever()` khỏi configuration (nguyên nhân gốc BUG-W4-01).
+
+Full backend suite (Release): **CulinaryBlog.Tests 430/430 pass**, ConcurrencySpike 5/5.
+Frontend: jest 86/86, tsc exit 0, lint warning-only (pre-existing `no-img-element`).

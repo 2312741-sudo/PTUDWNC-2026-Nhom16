@@ -18,7 +18,7 @@
 |---|---|
 | Nhánh | ✅ Tạo `2312739_NHTSon_D5-D7` từ `origin/main` = `262201b` |
 | Tài liệu tuần 5 | ✅ Kế hoạch · Mô tả việc · Trạng thái · Sổ evidence (4 file trong `Tuan05/`) |
-| Việc W5-1…W5-10 | 🟢 **8/10 khối bắt đầu** (cập nhật 11/10: W5-1, W5-2 **6/6**, W5-3, W5-4, W5-5, W5-6, W5-7 **4/5**, W5-9 **2/5**, W5-10 6/8) |
+| Việc W5-1…W5-10 | 🟢 **9/10 khối xong** (cập nhật 11/10: W5-1, W5-2 **6/6**, W5-3, W5-4, W5-5, W5-6, W5-8 **6/6**, W5-10 **8/8**; W5-7 **4/5**, W5-9 **2/5**) |
 | PR cho nhánh tuần 5 | ✅ PR #32 (`week-5` → `main`) + PR #33 (`practice/TV4/L4` → `main`) mở 07/10 |
 | Baseline trên `262201b` | ✅ **Đã đo lại** trên commit `0a9b1a5` — 426/426, coverage 97.07%, build/format/FE exit 0, CI xanh (`SO_EVIDENCE_TUAN_5.md` §1) |
 
@@ -49,10 +49,10 @@
 | W5-5 | Vận hành | Runbook 7 mục | 7 | 7 | 0 | 0 | 100% |
 | W5-6 | UI | Progress upload + Unpublish/Archive/**Xóa** | 5 | 5 | 0 | 0 | 100% |
 | W5-7 | Kiểm thử | 5 E2E flows trên staging | 5 | 4 | 0 | 1 | 80% |
-| W5-8 | Số đo | k6 + SEO + EXPLAIN + cache-hit + metrics | 6 | 0 | 0 | 6 | 0% |
+| W5-8 | Số đo | k6 + SEO + EXPLAIN + cache-hit + metrics | 6 | 6 | 0 | 0 | 100% |
 | W5-9 | Lab/nợ | Zod/RHF · OAuth · **4 phase L5** · `cqrs-behavior` · npm audit | 5 | 2 | 0 | 3 | 40% |
-| W5-10 | Bản vá/nợ | `BUG-W4-01/02/03` · secret A1 · PR L4 · ADR · path traversal | 8 | 6 | 0 | 2 | 75% |
-| **Tổng** | | | **56** | **44** | **0** | **12** | **79%** |
+| W5-10 | Bản vá/nợ | `BUG-W4-01/02/03` · secret A1 · PR L4 · ADR · path traversal | 8 | 8 | 0 | 0 | 100% |
+| **Tổng** | | | **56** | **52** | **0** | **4** | **93%** |
 
 > Tỷ lệ tính theo **số việc có bằng chứng chạy thật trong tuần 5**.
 > **07/10 — bổ sung W5-10 + mở rộng W5-2/3/6/8/9 sau rà soát nợ trong báo cáo tuần 4** → tổng **39 → 56**.
@@ -67,7 +67,7 @@
 | 08/10 | W5-3 profile 2 API (default single + `--profile multi`) · W5-10 (mở rộng `scan-secrets.sh` + test) | ✅ Xong — W5-3 6/6, W5-10 scan mở rộng (3/8) |
 | 09/10 | W5-4 HTTPS/HSTS/CORS · W5-10 (ADR + path traversal + BUG-W4-03) | ✅ W5-4 **5/5** + W5-10 (#4/#6/#8); W5-6 dời 10/10 |
 | 10/10 | W5-5 runbook · W5-6 xong · W5-9 | ✅ **W5-5** runbook 7 mục + Giới hạn · **W5-6** code + E2E 3/3 + unit test progress + staging runtime verify · **W5-9** npm audit (**critical → 0**), Zod/RHF xác nhận đã dùng, `isr-detail` code fix (ISR thật) |
-| 11/10 | W5-7 (5 E2E trên staging) · W5-8 số đo · W5-10 (đối chiếu `BUG-W4-01`) · chốt sổ, nộp review | ✅ **W5-7 4/5**: chặn gốc lỗi ảnh presigned `culinary-s3:9000` (mediaUrl proxy + `imageSrc` bỏ presigned, commit `9f3dd4c`), sửa spec E2E lỗi thời, **full suite 40/40** pass chống staging 2 lần liên tiếp; còn luồng `category` chờ TV2. ⬜ W5-8 · `BUG-W4-01` · nộp review |
+| 11/10 | W5-7 (5 E2E trên staging) · W5-8 số đo · W5-10 (đối chiếu `BUG-W4-01`) · chốt sổ, nộp review | ✅ **W5-7 4/5**: chặn gốc lỗi ảnh presigned `culinary-s3:9000` (mediaUrl proxy + `imageSrc` bỏ presigned, commit `9f3dd4c`), sửa spec E2E lỗi thời, **full suite 40/40** pass chống staging 2 lần liên tiếp; còn luồng `category` chờ TV2. ✅ **W5-8 6/6**: k6 **102 VU** 0% lỗi + SEO + EXPLAIN + cache-hit + `/metrics` (200 Prometheus) · **W5-10 8/8**: `BUG-W4-01` chốt + test hồi quy model-level, header `X-Sitemap-Generated`. ⬜ còn: nộp review | 
 
 *(Ngày tham chiếu — nhóm chưa chốt ngày bắt đầu/kết thúc tuần 5 trong tài liệu chung.)*
 
