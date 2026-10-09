@@ -25,12 +25,20 @@ test.describe("K18 — tên truy cập (accessible name)", () => {
     console.log("[K18] Mô tả sau khi gõ — ariaSnapshot:", snapAfter);
     expect(snapAfter, "gõ xong tên ô vẫn không đổi, không chứa số đếm").not.toContain("/2000");
 
-    // Bộ đếm phải tồn tại, nhưng ở phần tử riêng (aria-describedby), không phải trong tên ô.
+    // K18 N16 (NVDA 09/10/2026, build C9-tuan6): nối describedby thẳng tới bộ đếm sống (N/2000) khiến NVDA đọc
+    // lại sau MỖI phím dù bộ đếm không có aria-live — nội dung node bị describedby đổi theo từng phím là đủ để
+    // trình duyệt báo "mô tả đã đổi" cho ô đang focus. Sửa: describedby trỏ tới câu TĨNH không đổi khi gõ; bộ
+    // đếm số vẫn hiển thị cho người nhìn thấy nhưng ẩn khỏi cây accessibility (aria-hidden).
     const describedBy = await desc.getAttribute("aria-describedby");
-    expect(describedBy, "ô Mô tả phải có aria-describedby trỏ tới bộ đếm").toBeTruthy();
-    const counter = page.locator(`#${describedBy!.split(" ")[0]}`);
+    expect(describedBy, "ô Mô tả phải có aria-describedby").toBeTruthy();
+    const hint = page.locator(`#${describedBy!.split(" ")[0]}`);
+    await expect(hint).toHaveText("Tối đa 2000 ký tự.");
+    console.log("[K18] Nội dung mô tả tĩnh (describedby):", await hint.textContent());
+
+    const counter = page.locator("#description-count");
     await expect(counter).toContainText("/2000");
-    console.log("[K18] Nội dung phần tử đếm (id=" + describedBy + "):", await counter.textContent());
+    await expect(counter).toHaveAttribute("aria-hidden", "true");
+    console.log("[K18] Bộ đếm số (chỉ hiển thị thị giác, aria-hidden):", await counter.textContent());
   });
 
   test("Ô Tiêu đề: tên không chứa số đếm (đối chiếu)", async ({ page, request }) => {
