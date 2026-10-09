@@ -415,6 +415,24 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     KnownIPNetworks = { new System.Net.IPNetwork(IPAddress.Parse("172.16.0.0"), 12) }
 });
 
+// FR-OBS-003 (W5-8): bộ đếm trong tiến trình cho endpoint /metrics. Đặt sớm để bao trọn mọi
+// request (kể cả request bị exception handler/status-pages đổi mã), nên số liệu phản ánh đúng
+// những gì client nhận. Không thay thế OTLP; chỉ thêm đường scrape không cần dependency mới.
+var requestMetrics = new RequestMetrics();
+app.Use(async (context, next) =>
+{
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        stopwatch.Stop();
+        requestMetrics.Record(context.Request.Method, context.Response.StatusCode, stopwatch.Elapsed.TotalMilliseconds);
+    }
+});
+
 app.Use(async (context, next) =>
 {
     // Generate server correlation IDs; do not trust arbitrary client strings in logs.
@@ -545,16 +563,21 @@ recipes.MapGet("/sitemap", async (ISender sender, CancellationToken ct) =>
 // N1-6 (tuần 4): sitemap.xml do cron 02:00 UTC sinh, lưu trong Redis để mọi API instance
 // (và lần chạy sau) đọc chung một bản. Nếu chưa có bản nào thì sinh tại chỗ để không bao giờ
 // trả 404 cho crawler.
-app.MapGet("/sitemap.xml", async (SitemapGenerator generator, ILogger<SitemapGenerator> log, CancellationToken ct) =>
+app.MapGet("/sitemap.xml", async (HttpContext http, SitemapGenerator generator, ILogger<SitemapGenerator> log, CancellationToken ct) =>
 {
     var xml = await generator.GetCachedXmlAsync(ct);
+    var generatedNow = false;
     if (xml is null)
     {
         var result = await generator.GenerateAsync(ct);
         xml = await generator.GetCachedXmlAsync(ct) ?? string.Empty;
+        generatedNow = result.Acquired;
         if (!result.Acquired)
             log.LogWarning("sitemap.xml chưa có bản cache và lock đang bị giữ ({Reason}); trả nội dung rỗng tạm thời", result.Reason);
     }
+    // BUG-W4-09 (W5-10): phân biệt "200 vì vừa sinh tại chỗ" với "200 vì phục vụ bản cache" —
+    // crawler/monitor không cần parse XML cũng biết lần gọi này có kích hoạt sinh mới hay không.
+    http.Response.Headers["X-Sitemap-Generated"] = generatedNow ? "true" : "false";
     return Results.Content(xml, "application/xml; charset=utf-8");
 }).WithName("GetSitemapXml").Produces<string>(200, "application/xml");
 
@@ -751,6 +774,10 @@ resourcesImages.MapGet("/{**key}", async (string key, IObjectStorageReader stora
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
+// FR-OBS-003 (W5-8): scrape metric dạng Prometheus text. Không cần auth (giống /health) nhưng chỉ
+// lộ số đếm tổng hợp, không có dữ liệu người dùng; production nên chặn theo mạng nội bộ.
+app.MapGet("/metrics", () => Results.Text(requestMetrics.Render("CulinaryBlog.API"), "text/plain; version=0.0.4; charset=utf-8"))
+    .WithName("GetMetrics").Produces<string>(200, "text/plain");
 app.MapControllers();
 app.Run();
 
