@@ -21,6 +21,8 @@ Biến môi trường (không bắt buộc):
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
 | `BASE_URL` | `http://localhost:5080` | gốc API |
+| `MODE` | `arrival` | `arrival` = constant-arrival-rate; `vus` = constant-vus (**đo số VU đồng thời**) |
+| `VUS` | `100` | **tổng** VU khi `MODE=vus`, chia đều 3 scenario |
 | `RATE` | `20` | request/giây **cho mỗi** scenario |
 | `DURATION` | `30s` | thời lượng mỗi scenario |
 | `PRE_VUS` / `MAX_VUS` | `50` / `100` | VU dự trữ / tối đa |

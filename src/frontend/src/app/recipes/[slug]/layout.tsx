@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 import { buildRecipeJsonLd, jsonLdString } from "@/lib/recipe-jsonld";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5080/api/v1";
+import { API_BASE_URL } from "@/lib/api";
 
 async function getPublishedRecipe(slug: string) {
   try {
-    const res = await fetch(`${API}/recipes/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     const r = (await res.json())?.data;
     return r && (r.status === undefined || r.status === "Published") ? r : null; // không lộ Draft
