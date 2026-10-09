@@ -18,6 +18,7 @@ import ReviewStep from "./ReviewStep";
 
 export const STEPS = ["Thông tin cơ bản", "Nguyên liệu", "Các bước", "Ảnh", "Xem lại & Xuất bản"] as const;
 const DESC_MAX = 2000; // khớp basicInfoSchema.description
+const DESC_WARN = 1800; // N16: báo gần giới hạn ở đúng 90%, không đổi theo từng phím trong khoảng này
 
 /**
  * Số bước hợp lệ để đọc từ query `?step=` — ngoài khoảng này thì coi như bước 0.
@@ -252,7 +253,7 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
   const hasNutrition = !!nutrition && Object.values(nutrition).some(v => v !== null);
   const descLen = description?.length ?? 0;
   const descLimitMsg = descLen >= DESC_MAX ? `Mô tả đã đạt giới hạn ${DESC_MAX} ký tự.`
-    : DESC_MAX - descLen < 100 ? "Mô tả còn dưới 100 ký tự." : "";
+    : descLen >= DESC_WARN ? `Mô tả còn dưới ${DESC_MAX - DESC_WARN} ký tự.` : "";
   const onError = (m: string) => dispatch({ type: "error", message: m });
   const last = STEPS.length - 1;
 
@@ -295,15 +296,20 @@ function WizardInner({ initial }: { initial?: Partial<WizardState> }) {
             <input className="w-full rounded border p-2" placeholder="VD: Canh chua cá lóc" maxLength={200}
               {...register("title")} {...ariaOf("err-title", errors.title)} />
             <ErrorText id="err-title" error={errors.title} /></label>
-          {/* K18 (NVDA): bộ đếm nằm ngoài nhãn -> tên ô luôn là "Mô tả"; chỉ nối bằng aria-describedby (đọc khi focus).
-              Vùng polite riêng chỉ đổi chữ khi qua ngưỡng còn < 100 ký tự / chạm giới hạn, không đọc theo từng phím */}
+          {/* K18 N16 (NVDA 09/10/2026): bộ đếm N/2000 dù nằm ngoài nhãn và không aria-live vẫn bị đọc lại sau MỖI phím,
+              vì nó được nối vào ô qua aria-describedby và nội dung đổi theo từng phím -> trình duyệt báo "mô tả đã đổi"
+              cho ô đang focus, NVDA đọc lại dù không có aria-live (cùng nguyên nhân GOV.UK Design System character-count
+              phải xử lý: xem design-system.service.gov.uk/components/character-count). Sửa: bộ đếm hiện số chỉ hiển thị
+              thị giác (aria-hidden), ô nối describedby tới câu tĩnh không đổi; vùng polite riêng chỉ đổi chữ ở đúng
+              ngưỡng 90%/100%, không đổi theo từng phím trong khoảng giữa. */}
           <div className="text-sm">
             <label htmlFor="recipe-description" className="block">Mô tả</label>
             <textarea id="recipe-description" className="w-full rounded border p-2" rows={3} maxLength={DESC_MAX}
               {...register("description")} {...ariaOf("err-description", errors.description)}
-              aria-describedby={["description-count", errors.description && "err-description"].filter(Boolean).join(" ")} />
-            <p id="description-count" className="text-xs text-gray-600">{descLen}/{DESC_MAX} ký tự</p>
-            <p id="description-limit" aria-live="polite" className="sr-only">{descLimitMsg}</p>
+              aria-describedby={["description-hint", errors.description && "err-description"].filter(Boolean).join(" ")} />
+            <p id="description-count" aria-hidden="true" className="text-xs text-gray-600">{descLen}/{DESC_MAX} ký tự</p>
+            <span id="description-hint" className="sr-only">Tối đa {DESC_MAX} ký tự.</span>
+            <p id="description-limit" role="status" aria-live="polite" aria-atomic="true" className="sr-only">{descLimitMsg}</p>
             <ErrorText id="err-description" error={errors.description} /></div>
           <label className="block text-sm">Hướng dẫn chung
             <textarea className="w-full rounded border p-2" rows={4} {...register("instructions")} /></label>

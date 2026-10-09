@@ -42,6 +42,8 @@ Chỗ nào là suy đoán hoặc chưa kiểm lại thì ghi rõ. Mọi con số
 4. Câu hỏi: NVDA của K18 tính cho cả bốn người hay chỉ ô TV1? Thứ tự PR: `C4-wizard-rhf-zod` trước hay gộp một PR?
    Lab TV3 giữ ở nhánh riêng hay đưa vào `main`?
 
+**Cập nhật 07/10/2026 (Tuần 5, xem `Tuan05/KIEM_TRA_TUAN4.md` mục 4.2)**: Hai dòng 1 và 2 ở trên **đã được sửa** — không phải bởi TV1 mà bởi **TV4 (Trung Sơn)**, commit `18ca04c` (PR #29, đã merge vào `main` ngày 06/10). Đã đọc code thật trên `origin/main` xác nhận: (1) `DbSeeder.cs` đổi điều kiện chỉ còn khớp ảnh mẫu (`photo-1546069901-ba9599a7e63c` hoặc `/images/` không phải `/images/recipes/`), không còn ghi đè ảnh người dùng; có test hồi quy `DbSeederUserImageUrlTests`. (2) `Program.cs` đoạn `--migrate` không còn `catch { }` nuốt lỗi — in lỗi thật ra `Console.Error` + `Environment.ExitCode = 1`. **Nhánh làm việc hiện tại của TV3 (`2312786_HuynhQuocTrung_C7-frontend-tests`) CHƯA có hai bản sửa này** (nhánh dừng ở PR #27, trước PR #29) — đã tái hiện lại lỗi cũ thật trên máy (xem `Tuan05/KIEM_TRA_TUAN4.md` mục 4.2/4.3). Cần merge `origin/main` mới nhất vào nhánh làm việc ở bước tiếp theo để có hai bản sửa này.
+
 ## D. Việc liên quan TV2 (Trường Vĩ)
 
 1. `Footer.tsx`: chữ `text-gray-500` trên nền `bg-gray-900` thiếu độ tương phản (Lighthouse Accessibility 96, ba dòng chân trang).
@@ -70,9 +72,9 @@ Chỗ nào là suy đoán hoặc chưa kiểm lại thì ghi rõ. Mọi con số
 - K18: NVDA đã nghe một đợt (`docs/evidence/TV3/Tuan04/K18_nvda_speech_log.txt`), ba lỗi đã sửa nhưng chưa nghe lại.
   Chưa kiểm: lỗi khi để trống tiêu đề, chữ mô tả (alt) của ảnh, sắp xếp cột, bước 5.
   320/768/1200: kiểm tự động bằng Playwright (không cuộn ngang), chưa kiểm tay.
-- DB dev `culinary_blog`: lệnh `--migrate` thất bại (mục C.2) nên chưa áp migration chỉ mục ảnh; công thức cũ có ảnh bị xóa mềm trước đó có thể vẫn kẹt.
-  Công thức mới không bị ảnh hưởng.
-- K24: chờ review của Tâm trên PR.
+- DB dev `culinary_blog`: lệnh `--migrate` thất bại (mục C.2, **đã sửa trên `main` bởi TV4** — xem cập nhật ở mục C) nên chưa áp migration chỉ mục ảnh; công thức cũ có ảnh bị xóa mềm trước đó có thể vẫn kẹt.
+  Công thức mới không bị ảnh hưởng. **Xác nhận thật bằng SELECT (07/10, `Tuan05/NHAT_QUAN_DU_LIEU.md`): đúng 4 dòng `RecipeImages` xoá mềm còn `IsPrimary=true` trên `culinary_blog`** (3 công thức còn đủ nguyên liệu/bước nhưng mất ảnh chính, 1 công thức Draft) — không sửa (DB dev chỉ đọc). Phát hiện thêm (ngoài dự kiến): **6 công thức Published khác** trên `culinary_blog` **rỗng hoàn toàn** (0 nguyên liệu/0 bước/0 ảnh) — vi phạm C02 thật trong dữ liệu dev, không liên quan migration ảnh, không sửa, đã ghi chi tiết (chỉ mã, không email/tên) trong `Tuan05/NHAT_QUAN_DU_LIEU.md`.
+- K24: **cập nhật 07/10** — PR #27 (nội dung C4/C7) **đã mở và đã merge** vào `main` 05/10/2026 bởi TV4, merge commit `2961a22`, nhưng **0 review của Tâm** (xác nhận qua GitHub API). Giữ CHƯA vì thiếu review, không phải vì thiếu PR như bàn giao cũ ghi nhầm. Xem `Tuan05/KIEM_TRA_TUAN4.md` mục 4.1.
 
 ## G. Lệnh chạy lại
 

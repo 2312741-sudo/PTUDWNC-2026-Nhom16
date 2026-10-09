@@ -1,0 +1,18 @@
+# K18 N16 - Nghe lai NVDA sau sua lan 2 (Speech Viewer), 09/10/2026.
+# Build: nhanh 2312786_HuynhQuocTrung_C9-tuan6, chua commit 8ad85c1 (aria-hidden bo dem + describedby cau tinh + nguong 1800/2000).
+# Pham vi: chi o Mo ta, Buoc 1 (/dashboard/recipes/new). Ghi theo tuong thuat cua Trung, khong suy dien them.
+
+## Vao o Mo ta
+Mô tả edit multi line Tối đa 2000 ký tự.
+
+## Go 12 phim (ky tu thuong + dau cach)
+Chi doc tung ky tu va "space"; KHONG doc lai bo dem/cau mo ta sau moi phim.
+
+## Chua nghe trong lan nay
+- Phim Backspace: chua nghe rieng.
+- Moc 1800/2000 ky tu (vung role="status" rieng): chua nghe bang NVDA; chi co Playwright (k18-a11y-names.spec.ts,
+  WizardA11y.test.tsx) xac nhan DOM/ARIA dung nhu thiet ke, KHONG thay the cho tai nghe NVDA that o hai moc nay.
+
+## Ket luan (cua TV3, khong phai dau ra NVDA)
+- N16 phan "vao o" va "go ky tu": DAT.
+- N16 phan Backspace va nguong 90%/100%: CHUA NGHE, khong tinh la da dat.
