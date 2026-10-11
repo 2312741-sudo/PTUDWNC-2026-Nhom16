@@ -1,0 +1,18 @@
+320px bước 1: scrollWidth=320 innerWidth=320 -> OK
+320px bước 2: scrollWidth=320 innerWidth=320 -> OK
+320px bước 3: scrollWidth=320 innerWidth=320 -> OK
+320px bước 4: scrollWidth=320 innerWidth=320 -> OK
+320px bước 5: scrollWidth=320 innerWidth=320 -> OK
+320px dashboard: scrollWidth=662 innerWidth=320 -> CUỘN NGANG
+768px bước 1: scrollWidth=768 innerWidth=768 -> OK
+768px bước 2: scrollWidth=768 innerWidth=768 -> OK
+768px bước 3: scrollWidth=768 innerWidth=768 -> OK
+768px bước 4: scrollWidth=768 innerWidth=768 -> OK
+768px bước 5: scrollWidth=768 innerWidth=768 -> OK
+768px dashboard: scrollWidth=768 innerWidth=768 -> OK
+1200px bước 1: scrollWidth=1200 innerWidth=1200 -> OK
+1200px bước 2: scrollWidth=1200 innerWidth=1200 -> OK
+1200px bước 3: scrollWidth=1200 innerWidth=1200 -> OK
+1200px bước 4: scrollWidth=1200 innerWidth=1200 -> OK
+1200px bước 5: scrollWidth=1200 innerWidth=1200 -> OK
+1200px dashboard: scrollWidth=1200 innerWidth=1200 -> OK
