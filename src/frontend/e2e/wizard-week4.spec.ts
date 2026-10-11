@@ -146,10 +146,13 @@ test.describe("Wizard soạn công thức — tuần 4", () => {
     await expect(cards.nth(0)).toContainText("Ảnh thử 1");
     await expect(cards.nth(1)).not.toContainText("Ảnh chính");
 
-    // Ảnh nháp hiển thị được trong trình soạn: tải bằng fetch có Bearer -> blob URL, ảnh giải mã được
+    // Ảnh nháp hiển thị được trong trình soạn: PA-3 (IMAGE_CONTRACT.md §7b, chốt 28/09) trả presignedUrl
+    // ký trực tiếp vào RustFS/MinIO (không còn blob: như PA-2 cũ — PA-2 bị loại vì mất ảnh sau reload),
+    // nên <img src> là URL ký thật (AuthImage chỉ đổi sang blob: khi qua proxy /resources/images/,
+    // không áp dụng cho presignedUrl). Vẫn kiểm ảnh giải mã được (naturalWidth > 0) đúng ý nghĩa gốc.
     for (const alt of ["Ảnh thử 1", "Ảnh thử 2"]) {
       const img = page.getByRole("img", { name: alt });
-      await expect(img).toHaveAttribute("src", /^blob:/);
+      await expect(img).toHaveAttribute("src", /^https?:\/\/.+X-Amz-Signature=/);
       await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
     }
 
@@ -195,8 +198,9 @@ test.describe("Wizard soạn công thức — tuần 4", () => {
     const cards = page.locator("ul.grid > li");
     await expect(cards).toHaveCount(1);
     await expect(cards.nth(0)).toContainText("Ảnh chính");
+    // PA-3 (IMAGE_CONTRACT.md §7b) — xem chú thích ở ca (d) phía trên.
     const img = page.getByRole("img", { name: "Ảnh mới" });
-    await expect(img).toHaveAttribute("src", /^blob:/);
+    await expect(img).toHaveAttribute("src", /^https?:\/\/.+X-Amz-Signature=/);
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
 
     const d = await getDetail(request, s, r.id);
