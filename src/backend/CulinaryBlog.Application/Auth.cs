@@ -80,6 +80,8 @@ public interface IIdentityService
     Task<AuthResponse> RefreshTokenAsync(string refreshToken, string? ipAddress, CancellationToken ct);
     Task LogoutAsync(string? userId, string? refreshToken, CancellationToken ct);
     Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct);
+    Task RequestChangePasswordCodeAsync(string userId, CancellationToken ct);
+    Task ForgotPasswordAsync(string email, CancellationToken ct);
 }
 
 public sealed class AppException(int status, string code, string message) : Exception(message)
@@ -196,12 +198,39 @@ public sealed class LoginValidator : AbstractValidator<LoginCommand>
     }
 }
 
-public sealed record ChangePasswordCommand(string CurrentPassword, string NewPassword) : IRequest;
+public sealed record ChangePasswordCommand(string CurrentPassword, string NewPassword, string? Code = null) : IRequest;
 
 public sealed class ChangePasswordHandler(IIdentityService identity, ICurrentUser currentUser) : IRequestHandler<ChangePasswordCommand>
 {
     public Task Handle(ChangePasswordCommand request, CancellationToken ct) =>
         identity.ChangePasswordAsync(currentUser.UserId ?? throw new AppException(401, "auth.unauthorized", "Vui lòng đăng nhập."), request, ct);
+}
+
+public sealed record RequestChangePasswordCodeCommand : IRequest;
+
+public sealed class RequestChangePasswordCodeHandler(IIdentityService identity, ICurrentUser currentUser) : IRequestHandler<RequestChangePasswordCodeCommand>
+{
+    public Task Handle(RequestChangePasswordCodeCommand request, CancellationToken ct) =>
+        identity.RequestChangePasswordCodeAsync(currentUser.UserId ?? throw new AppException(401, "auth.unauthorized", "Vui lòng đăng nhập."), ct);
+}
+
+public sealed record ForgotPasswordCommand(string Email) : IRequest;
+
+public sealed class ForgotPasswordHandler(IIdentityService identity) : IRequestHandler<ForgotPasswordCommand>
+{
+    public Task Handle(ForgotPasswordCommand request, CancellationToken ct) =>
+        identity.ForgotPasswordAsync(request.Email, ct);
+}
+
+public sealed class ForgotPasswordValidator : AbstractValidator<ForgotPasswordCommand>
+{
+    public ForgotPasswordValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email không được để trống.")
+            .EmailAddress().WithMessage("Định dạng email không hợp lệ.")
+            .MaximumLength(256).WithMessage("Email tối đa 256 ký tự.");
+    }
 }
 
 public sealed class ChangePasswordValidator : AbstractValidator<ChangePasswordCommand>

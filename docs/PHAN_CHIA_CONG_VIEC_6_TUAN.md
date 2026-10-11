@@ -177,7 +177,7 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 | Thành viên | MSSV | Phần công việc | Kỹ năng xác nhận | Deploy/restore staging | Demo cuối kỳ | Trạng thái hiện tại |
 |---|---|---|---|---|---|---|
 | TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 18/24 (K01, K02, K04, K05, K06, K08, K10, K11, K12, K14, K15, K16, K17, K19, K20, K21, K23, K24) | Đạt kiểm thử CI/Dev | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1, 2 & 3 (A1–A5, A7) |
-| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 20/24 (K01, K02, K03, K04, K05, K06, K07, K08, K09, K10, K11, K12, K13, K16, K17, K18, K19, K20, K21, K24) | Chờ Staging | Hoàn thành Tuần 1, 2 & 3 | ✅ Hoàn thành Tuần 1, 2 & 3 (B1–B7) — PR #18 đã merge vào `main` |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 24/24 (K01–K24 đủ minh chứng) | Đạt kiểm thử Staging & BCP/DR | Hoàn thành Tuần 1, 2, 3, 4 & 5 | ✅ Hoàn thành Tuần 1, 2, 3, 4 & 5 (B1–B7, Cổng G6) — Lab 5 & evidence đầy đủ |
 | TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 8/24 (K01, K02, K03, K05, K06, K07, K08, K21) | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 (Recipe Aggregate, RowVersion, RefreshTokens) |
 | TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 9/24 đã được reviewer xác nhận (K01, K05, K08, K11, K12, K13, K20, K23, K24) · **+8 ô có bằng chứng mới từ N1, đang chờ duyệt** | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 — PR #16 đã merge; ✅ N0+N1 xong (03/10); ⏳ Tuần 4: N2–N4 **đã lập kế hoạch, chưa thực thi** |
 
