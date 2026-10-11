@@ -1,9 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getRecipes, searchRecipes, getCategories } from '@/lib/api';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeSearchBar from '@/components/RecipeSearchBar';
 import { RecipeFilters } from '@/types/recipe';
 import { Filter, SlidersHorizontal, BookOpen, ChevronLeft, ChevronRight, Search, Sparkles } from 'lucide-react';
+
+export const revalidate = 900; // 15 mins OutputCache / ISR
 
 interface RecipesPageProps {
   searchParams: Promise<{
@@ -17,6 +20,30 @@ interface RecipesPageProps {
     maxCookTime?: string;
     minServings?: string;
   }>;
+}
+
+export async function generateMetadata({ searchParams }: RecipesPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const query = params.q?.trim() || '';
+  const page = params.page ? parseInt(params.page, 10) : 1;
+
+  const title = query
+    ? `Tìm kiếm: "${query}" ${page > 1 ? `(Trang ${page})` : ''} | Culinary Blog`
+    : `Khám phá công thức nấu ăn ${page > 1 ? `(Trang ${page})` : ''} | Culinary Blog`;
+
+  return {
+    title,
+    description: 'Kho tàng hàng trăm công thức nấu ăn phong phú từ món ăn gia đình, đặc sản vùng miền đến tráng miệng, nước uống bổ dưỡng.',
+    alternates: {
+      canonical: '/recipes',
+    },
+    openGraph: {
+      title,
+      description: 'Khám phá công thức nấu ăn ngon, chuẩn vị với hướng dẫn chi tiết từng bước trên Culinary Blog.',
+      type: 'website',
+      url: '/recipes',
+    },
+  };
 }
 
 export default async function RecipesPage({ searchParams }: RecipesPageProps) {
@@ -272,7 +299,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
 
           {/* Pagination Controls */}
           {meta.totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-100 pt-6">
+            <nav aria-label="Phân trang công thức" className="flex items-center justify-between border-t border-gray-100 pt-6">
               <span className="text-xs text-gray-500 font-medium">
                 Trang {meta.page} trên {meta.totalPages} ({meta.total} công thức)
               </span>
@@ -283,16 +310,17 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                     href={buildUrl({ page: meta.page - 1 })}
                     className="p-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
                     title="Trang trước"
+                    aria-label="Chuyển đến trang trước"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Link>
                 ) : (
-                  <button disabled className="p-2 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
+                  <button disabled aria-label="Trang trước (không khả dụng)" className="p-2 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                 )}
 
-                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg">
+                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg" aria-current="page">
                   {meta.page}
                 </span>
 
@@ -301,16 +329,17 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                     href={buildUrl({ page: meta.page + 1 })}
                     className="p-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
                     title="Trang sau"
+                    aria-label="Chuyển đến trang sau"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Link>
                 ) : (
-                  <button disabled className="p-2 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
+                  <button disabled aria-label="Trang sau (không khả dụng)" className="p-2 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 )}
               </div>
-            </div>
+            </nav>
           )}
         </main>
       </div>

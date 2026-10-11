@@ -105,12 +105,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           Tìm kiếm công thức nấu ăn
         </h1>
 
-        <form action="/search" method="GET" className="relative flex items-center mt-6">
-          <Search className="w-5 h-5 text-gray-400 absolute left-4 pointer-events-none" />
+        <form action="/search" method="GET" className="relative flex items-center mt-6" role="search">
+          <Search className="w-5 h-5 text-gray-400 absolute left-4 pointer-events-none" aria-hidden="true" />
           <input
             type="text"
             name="q"
             defaultValue={q}
+            aria-label="Nhập từ khóa tìm kiếm món ăn hoặc nguyên liệu"
             placeholder="Nhập tên món ăn, nguyên liệu (VD: pho, bo, cuon, salad)..."
             className="w-full pl-12 pr-28 py-3.5 text-sm bg-white border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
           />
@@ -120,6 +121,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {sortOrder !== 'desc' && <input type="hidden" name="sortOrder" value={sortOrder} />}
           <button
             type="submit"
+            aria-label="Thực hiện tìm kiếm công thức"
             className="absolute right-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-emerald-200/60 transition-all"
           >
             Tìm kiếm
@@ -129,8 +131,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Error alert */}
       {error && (
-        <div className="max-w-3xl mx-auto p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div role="alert" className="max-w-3xl mx-auto p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
@@ -144,7 +146,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <h2 className="text-lg font-bold text-gray-900">
                 Kết quả cho từ khóa: <span className="text-emerald-700 font-extrabold">&quot;{q}&quot;</span>
               </h2>
-              <span className="text-xs font-semibold text-gray-500">
+              <span className="text-xs font-semibold text-gray-500" aria-live="polite">
                 Tìm thấy {result.meta.total} món ăn (Trang {result.meta.page}/{Math.max(1, result.meta.totalPages)})
               </span>
             </div>
