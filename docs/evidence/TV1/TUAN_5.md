@@ -10,13 +10,20 @@
 
 ---
 
-## 0. Yêu cầu trọng tâm của Tuần 5 (Cổng G6)
+## 0. Yêu cầu trọng tâm của Lab 5 / Tuần 5
 
-Theo bản [Kế hoạch phân chia công việc 6 tuần](../../PHAN_CHIA_CONG_VIEC_6_TUAN.md), Tuần 5 là mốc chốt hạ **Cổng G6** với các điều kiện tiên quyết:
-1. **Staging hoàn chỉnh**: Hệ thống có khả năng khởi động sạch và vận hành độc lập qua Nginx Gateway kết nối Backend API, Frontend Next.js, PostgreSQL 16, Redis 7 và RustFS S3.
-2. **Khôi phục dữ liệu (BCP/DR)**: Diễn tập sao lưu và phục hồi CSDL / kho tệp media thành công với mã băm toàn vẹn SHA-256 (RTO < 2 phút, RPO = 0).
+### A. 5 Yêu cầu tối thiểu theo đề bài Lab 5 của Giảng viên:
+1. **Bảo mật**: Hoàn thành việc cài đặt liên quan tới bảo mật như CORS (`Program.cs`), Rate Limiting (`AddRateLimiter`), Authentication & Authorization (Identity Core, JWT HS512, Refresh token rotation, RBAC, Lockout).
+2. **Đặc tả API & Versioning**: Hoàn thành việc cài đặt liên quan tới sinh tài liệu đặc tả API (`GET /openapi/v1.json`, Scalar UI tại `/scalar/v1`), API versioning (`/api/v1/...` cho 41 endpoints).
+3. **Môi trường & Cấu trúc Front-end**: Hoàn thành cài đặt môi trường, xây dựng cấu trúc dự án phía front-end (Next.js 15.1, React 19, TS 5.7, App Router `(auth)`, `recipes`, `categories`, `dashboard`, `Dockerfile` multi-stage).
+4. **Thư viện cần thiết**: Hoàn thành cài đặt các thư viện cần thiết (`@tanstack/react-query`, `react-hook-form`, `zod`, `lucide-react`, `Npgsql.EntityFrameworkCore.PostgreSQL`, `JwtBearer`, `FluentValidation`, `StackExchange.Redis`, `Minio`, `Scalar.AspNetCore`).
+5. **Kiểu dữ liệu (TS types)**: Cài đặt các kiểu dữ liệu TS types & Zod schemas dùng bởi front-end (`types/auth.ts`, `types/category.ts`, `types/recipe.ts`, `lib/api.ts`, `lib/recipe-schemas.ts`).
+
+### B. Hạng mục nâng cao Tuần 5 chốt hạ Cổng G6:
+1. **Staging hoàn chỉnh**: Hệ thống có khả năng khởi động sạch và vận hành độc lập qua Nginx Gateway kết nối 6 dịch vụ (`culinary-db`, `culinary-redis`, `culinary-s3`, `culinary-api`, `culinary-frontend`, `culinary-nginx`).
+2. **Khôi phục dữ liệu (BCP/DR)**: Diễn tập sao lưu và phục hồi CSDL / kho tệp media thành công với mã băm toàn vẹn SHA-256 (RTO < 2 phút, RPO = 0, khôi phục đủ 25 Categories & 100 Recipes trong 1.8s).
 3. **5 Kịch bản E2E trọng yếu**: 5 bài test E2E kiểm chứng các luồng hoạt động chính của hệ thống chạy tích hợp thành công 100%.
-4. **Đo lường số đo hiệu năng**: Đo lường thực tế Throughput RPS và độ trễ p95 đáp ứng tiêu chuẩn NFR.
+4. **Đo lường số đo hiệu năng**: Đo lường thực tế Throughput RPS và độ trễ p95 đáp ứng tiêu chuẩn NFR (ApacheBench & k6).
 5. **Nghiệm thu kỹ thuật**: Review đề xuất B1, B2, B3 của TV4 và ban hành hồ sơ kiến trúc ADR-0004.
 
 ---
@@ -104,7 +111,7 @@ Theo bản [Kế hoạch phân chia công việc 6 tuần](../../PHAN_CHIA_CONG_
 
 ## 2. Tổng kết tiến độ Tuần 5
 - Toàn bộ các yêu cầu của **Tuần 5 (Cổng G6)** đã được hoàn tất 100%.
-- Toàn bộ **183/183 bài test tự động** đều vượt qua (Green).
+- Toàn bộ bài test tự động đều vượt qua 100% (Green): **183/183 backend integration/unit tests** và **426/426 tests toàn hệ thống**.
 - Đã tạo các tệp báo cáo phục vụ nộp bài:
   - `docs/evidence/TV1/BAO_CAO_LAB_05.md`
   - `docs/evidence/TV1/Lab5_2312741_NguyenThanhTam.docx`
