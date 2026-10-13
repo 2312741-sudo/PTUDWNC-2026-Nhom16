@@ -143,7 +143,7 @@ public sealed class CategoryTests
     }
 
     [Fact]
-    public async Task DeleteCategory_blocks_when_recipes_exist_and_soft_deletes_when_empty()
+    public async Task DeleteCategory_blocks_when_recipes_exist_and_hard_deletes_when_empty()
     {
         var repo = new FakeCategoryRepository();
         var createHandler = new CreateCategoryHandler(repo);

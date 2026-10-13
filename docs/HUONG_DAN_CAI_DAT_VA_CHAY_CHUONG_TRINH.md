@@ -96,8 +96,9 @@ Dự án sử dụng cơ chế cấu hình 2 lớp:
 Tại thư mục gốc dự án (`PTUDWNC-2026-Nhom16`):
 
 ```powershell
-# Copy file mẫu cấu hình sang .env
-Copy-Item .env.example .env
+# Copy file mẫu cấu hình sang .env — CHỈ KHI CHƯA CÓ .env
+# (Copy-Item thường sẽ GHI ĐÈ .env đang có và làm mất cấu hình máy)
+if (Test-Path .env) { ".env đã có — giữ nguyên" } else { Copy-Item .env.example .env }
 ```
 
 Mở file `.env` vừa tạo và kiểm tra các giá trị quan trọng sau:

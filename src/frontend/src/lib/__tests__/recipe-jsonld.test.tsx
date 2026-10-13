@@ -43,12 +43,13 @@ describe("buildRecipeJsonLd", () => {
     ]);
   });
 
-  it("URL http(s) giu nguyen; key MinIO khong co NEXT_PUBLIC_MEDIA_URL thi bo, khong xuat duong dan tuong doi", () => {
+  it("URL http(s) giu nguyen; key MinIO khong co NEXT_PUBLIC_MEDIA_URL van ra proxy tuyet doi (khong duong dan tuong doi)", () => {
     const ld = buildRecipeJsonLd({ ...detail, images: [
       { originalUrl: "https://cdn.example.com/a.webp", isPrimary: true },
       { originalUrl: "recipes/r1/abc.webp", isPrimary: false },
     ] });
-    expect(ld.image).toEqual(["https://cdn.example.com/a.webp"]);
+    const proxy = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5080/api/v1"}/resources/images/recipes/r1/abc.webp`;
+    expect(ld.image).toEqual(["https://cdn.example.com/a.webp", proxy]);
   });
 
   it("author la Person, thoi gian ISO 8601, nguyen lieu va buoc dung thu tu", () => {

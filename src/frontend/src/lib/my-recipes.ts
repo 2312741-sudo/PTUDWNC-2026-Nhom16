@@ -110,3 +110,12 @@ export function deleteRecipe(id: string, rowVersion: string) {
     headers: { "If-Match": rowVersion },
   });
 }
+
+// D27: thay đổi trạng thái từ dashboard (backend ĐÃ có PATCH /unpublish và /archive,
+// chỉ cần client FE gọi). Không cần rowVersion — handler chỉ thao tác trên recipe của chủ sở hữu.
+export function unpublishRecipe(id: string) {
+  return authFetch<void>(`/recipes/${id}/unpublish`, { method: "PATCH" });
+}
+export function archiveRecipe(id: string) {
+  return authFetch<void>(`/recipes/${id}/archive`, { method: "PATCH" });
+}

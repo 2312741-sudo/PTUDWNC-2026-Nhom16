@@ -185,7 +185,7 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 >
 > **Kết quả kiểm chứng chung tính đến 03/10/2026**: `dotnet build` Release 0 warning/0 error; `dotnet format --verify-no-changes` exit 0; `dotnet test` **210/210 pass** (205 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Skipped=0`); QA tích hợp Frontend–Backend **41/41 PASS**; `tsc --noEmit` và `next build` exit 0; `docker compose config --quiet` exit 0; secret scan pass.
 >
-> **Đính chính 03/10**: con số `172/172` ở bản cập nhật trước là **đã lỗi thời** — hiện là `210/210`. Số `214/214` là của **nhánh lab `lab/TV4-audit-tuan4`** (thêm 4 test hồi quy cho BUG-W4-01/02/03), ⛔ **chưa merge**, không dùng làm số chính.
+> **Đính chính 03/10 (rà lại 07/10)**: con số `172/172` ở bản cập nhật trước là **đã lỗi thời** — hiện là `210/210`. Con số `214/214` TV4 từng công bố lấy từ một lần đo trên bản vá cục bộ **không push, không thuộc dự án**; đối chiếu 07/10 các test hồi quy kèm theo **không tồn tại trong repo** → ⛔ **không dùng làm số chính**.
 >
 > **Việc mới hoàn thành trong Tuần 4**: TV4 gỡ bug upload ảnh trả `500` do thiếu cấu hình `Minio`/S3, chuẩn hóa nạp `.env` (gỡ block B3), thêm 3 test `DevConfigParityTests`, ghi báo cáo trước/sau và 6 đề xuất B1–B6 — đóng gói trong **PR #19** đang chờ review. TV2 hoàn tất Search & Cache Tuần 3 qua **PR #18** (đã merge). PR #16 của TV4 đã merge gồm D23 (Hangfire queue + dashboard Admin), D27 (media proxy có auth), D2 (resize 300×300/800×600), D4 (sitemap/robots/OG/JSON-LD), D5 (EXPLAIN + k6) và D6 (Lab L4 — 39/39 check PASS); kèm gỡ sự cố CI 5 run đỏ do image MinIO bị gỡ khỏi registry (chuyển sang `rustfs/rustfs`).
 >

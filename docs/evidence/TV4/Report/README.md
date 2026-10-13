@@ -34,5 +34,7 @@ commit + báo cáo của các thành viên khác nhằm đối chiếu xem có k
 | `BAO_CAO_TIEN_DO_TUAN_3_SO_VOI_TUAN_2.md` | Tiến độ tuần 3 so với tuần 2 |
 | `BAO_CAO_TIEN_DO_TUAN_3_TV4_SRS.md` | Tiến độ tuần 3 (bản SRS) |
 | `BAO_CAO_TIEN_DO_TUAN_4_TV4_SRS.md` | Tiến độ tuần 4 (bản SRS) — gộp GĐ1/GĐ2/GĐ3 |
+| `BAO_CAO_RA_SOAT_TONG_HOP_5_TUAN.md` | Rà soát tổng hợp 5 tuần **cả nhóm 4 TV** — audit từng thành viên, kiểm chứng thật (dotnet test 446/446, tsc 0, jest 86/86, PR/Git) |
+| `BAO_CAO_TIEN_DO_TUAN_5_SO_VOI_TUAN_4.md` | Tiến độ tuần 5 so với tuần 4 |
 
 Người thực hiện: **TV4 — Nguyễn Hữu Trung Sơn (2312739)**.

@@ -24,51 +24,72 @@ import { check } from 'k6';
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:5080';
 
 // Workload: arrival-rate cố định nên p95 ổn định hơn `per-vu` (không phụ thuộc máy tải chậm bao lâu).
+//
+// MODE:
+//   - `arrival` (mặc định): constant-arrival-rate. VU chỉ được cấp theo nhu cầu nên `vus` thấp
+//     dù máy khoẻ — KHÔNG dùng số này để nói "đã chạy 100 VU".
+//   - `vus`: constant-vus. Dùng để khẳng định đúng **số VU đồng thời** theo rubric "≥100 VU";
+//     mỗi VU lặp request liên tục nên p95 sẽ cao hơn hẳn arrival-rate — đó mới là số đại diện
+//     cho "100 người dùng cùng lúc".
+const MODE = __ENV.MODE || 'arrival';
 const RATE = Number(__ENV.RATE || 20); // request/giây, chia đều cho 3 scenario
 const DURATION = __ENV.DURATION || '30s';
 const PRE_VUS = Number(__ENV.PRE_VUS || 50);
 const MAX_VUS = Number(__ENV.MAX_VUS || 100);
+const VUS = Number(__ENV.VUS || 100); // chỉ dùng khi MODE=vus (chia đều 3 scenario)
 
 // Ngưỡng rút gọn cho môi trường lab. Production phải siết theo SLO thật, đừng copy nguyên xi.
 const THRESHOLD_CACHED_MS = Number(__ENV.THRESHOLD_CACHED_MS || 200);
 const THRESHOLD_UNCACHED_MS = Number(__ENV.THRESHOLD_UNCACHED_MS || 800);
 const THRESHOLD_MIXED_MS = Number(__ENV.THRESHOLD_MIXED_MS || 500);
 
+// Hai bộ scenario: `arrival` (mặc định, đo đường đọc) và `vus` (đo ở tải 100 VU thật).
+const ARRIVAL_SCENARIOS = {
+  list_cached: {
+    executor: 'constant-arrival-rate',
+    exec: 'listCached',
+    rate: RATE,
+    timeUnit: '1s',
+    duration: DURATION,
+    preAllocatedVUs: PRE_VUS,
+    maxVUs: MAX_VUS,
+    tags: { scenario: 'list_cached' },
+  },
+  list_uncached: {
+    executor: 'constant-arrival-rate',
+    exec: 'listUncached',
+    rate: RATE,
+    timeUnit: '1s',
+    duration: DURATION,
+    preAllocatedVUs: PRE_VUS,
+    maxVUs: MAX_VUS,
+    tags: { scenario: 'list_uncached' },
+  },
+  read_mixed: {
+    executor: 'constant-arrival-rate',
+    exec: 'readMixed',
+    rate: RATE,
+    timeUnit: '1s',
+    duration: DURATION,
+    preAllocatedVUs: PRE_VUS,
+    maxVUs: MAX_VUS,
+    tags: { scenario: 'read_mixed' },
+  },
+};
+
+// `constant-vus`: mỗi scenario giữ VUS_PER_SCENARIO VU chạy liên tục.
+// VUS là **tổng** VU mong muốn, chia đều 3 scenario (làm tròn LÊN để tổng không hụt dưới VUS).
+const VUS_PER_SCENARIO = Math.ceil(VUS / 3);
+const VUS_SCENARIOS = {
+  list_cached: { executor: 'constant-vus', exec: 'listCached', vus: VUS_PER_SCENARIO, duration: DURATION, tags: { scenario: 'list_cached' } },
+  list_uncached: { executor: 'constant-vus', exec: 'listUncached', vus: VUS_PER_SCENARIO, duration: DURATION, tags: { scenario: 'list_uncached' } },
+  read_mixed: { executor: 'constant-vus', exec: 'readMixed', vus: VUS_PER_SCENARIO, duration: DURATION, tags: { scenario: 'read_mixed' } },
+};
+
 export const options = {
   // p(50)=med: k6 tên là `med`. Ghi rõ ở đây để lệnh `k6 summary` mặc định in ra cả p50/p95/p99.
   summaryTrendStats: ['avg', 'min', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
-  scenarios: {
-    list_cached: {
-      executor: 'constant-arrival-rate',
-      exec: 'listCached',
-      rate: RATE,
-      timeUnit: '1s',
-      duration: DURATION,
-      preAllocatedVUs: PRE_VUS,
-      maxVUs: MAX_VUS,
-      tags: { scenario: 'list_cached' },
-    },
-    list_uncached: {
-      executor: 'constant-arrival-rate',
-      exec: 'listUncached',
-      rate: RATE,
-      timeUnit: '1s',
-      duration: DURATION,
-      preAllocatedVUs: PRE_VUS,
-      maxVUs: MAX_VUS,
-      tags: { scenario: 'list_uncached' },
-    },
-    read_mixed: {
-      executor: 'constant-arrival-rate',
-      exec: 'readMixed',
-      rate: RATE,
-      timeUnit: '1s',
-      duration: DURATION,
-      preAllocatedVUs: PRE_VUS,
-      maxVUs: MAX_VUS,
-      tags: { scenario: 'read_mixed' },
-    },
-  },
+  scenarios: MODE === 'vus' ? VUS_SCENARIOS : ARRIVAL_SCENARIOS,
   thresholds: {
     // Một lỗi 5xx/timeout là báo động đỏ — tính cả request bị ngắt (http_req_failed).
     http_req_failed: ['rate==0'],

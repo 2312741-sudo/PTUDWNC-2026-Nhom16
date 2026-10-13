@@ -4,18 +4,17 @@
 |---|---|
 | Người thực hiện | Nguyễn Hữu Trung Sơn (TV4) |
 | Ngày | 03/10/2026 |
-| Nhánh lab | `lab/TV4-audit-tuan4` (local, **không push**) |
+| Nơi chạy | Bản kiểm tra cục bộ của TV4 (local, **không push**, không thuộc dự án) |
 | Nhánh gốc | `2312739_NHTSon_D5-D6-D7` |
 | Mục đích | Kiểm chứng thực tế các lỗi đã ghi trong `BAO_CAO_LOI_TUAN_4_TV4.md` và các yêu cầu trong `KE_HOACH_TUAN_4_TV4_V2.md`, thay vì chỉ đọc code |
-| Kết luận | **3 lỗi được chứng minh + sửa thành công trên lab**; 4 lỗi xác nhận/sửa một phần; 3 lỗi còn mở |
+| Kết luận | **3 lỗi được chứng minh + sửa thành công trên bản cục bộ**; 4 lỗi xác nhận/sửa một phần; 3 lỗi còn mở |
 
 > [!WARNING]
-> **📌 Ảnh chụp kiểm chứng lúc làm 03/10 — trạng thái merge đã được kiểm chứng lại 05/10.**
+> **📌 Ảnh chụp kiểm chứng lúc làm 03/10 — trạng thái tích hợp đã kiểm chứng lại 05/10, rà lại 07/10.**
 >
-> | Việc | Kết quả kiểm chứng 05/10 |
+> | Việc | Kết quả |
 > |---|---|
-> | 3 lỗi "đã sửa thành công trên lab" | ⛔ **Bản vá vẫn nằm trên nhánh lab `lab/TV4-audit-tuan4`, CHƯA merge** nhánh tuần. Đã kiểm chứng lại: `RecipeImageConfiguration.cs` vẫn thiếu `ValueGeneratedNever()` ⇒ BUG-W4-01 **còn mở** |
-> | Nhánh `lab/TV4-audit-tuan4` | ✅ Còn tồn tại |
+> | 3 lỗi "đã sửa thành công" | ⛔ 05/10: **bản vá chưa có trong dự án** (chỉ cục bộ, không push); `RecipeImageConfiguration.cs` vẫn thiếu `ValueGeneratedNever()` ⇒ BUG-W4-01 **còn mở**. → 07/10: `BUG-W4-01` **đã vào `main`** (PR #29 `c624b9f`); `02`/`03` chưa có bản vá trong repo → **sửa trực tiếp tuần 5** (W5-10) |
 >
 > ⛔ **Không nhầm với 3 lỗi đã đóng ở GĐ1** (DB chết trả `500`, DB chết lúc khởi động giết tiến
 > trình, `GET /recipes/{slug}` trả `500` khi thiếu credential storage) — ba lỗi đó **đã merge**
@@ -74,7 +73,7 @@ SaveChanges: DbUpdateConcurrencyException (1 row affected, 0) -> FAIL
 
 Bộ test cũ `RecipeImageTests.cs` **không phát hiện được** vì chỉ dùng fake list, không chạy EF/Postgres.
 
-**Sửa trên lab** — `src/backend/CulinaryBlog.Infrastructure/Persistence/Configurations/RecipeImageConfiguration.cs`:
+**Sửa trên bản cục bộ (chưa vào repo)** — `src/backend/CulinaryBlog.Infrastructure/Persistence/Configurations/RecipeImageConfiguration.cs`:
 
 ```csharp
 b.Property(i => i.Id).ValueGeneratedNever();
@@ -90,7 +89,7 @@ Chen 1 ban ghi -> 1 dong trong DB, RowVersion 16 byte -> PASS
 
 **Phát hiện bổ sung — `RowVersion` vẫn cần interceptor.** Bản vá cấu hình không tự sinh `RowVersion`: bỏ interceptor thì `RowVersion` là mảng rỗng (0 byte). Chỉ khi đi qua DI stack thật, `AuditableEntityInterceptor` mới gán 16 byte và điền `CreatedAt`. Vì vậy **không được** coi là đã thay thế được interceptor.
 
-**Kết quả.** `214/214` pass (`209` + `5`), `Skipped=0`; build sạch `0 warning / 0 error`.
+**Kết quả.** `214/214` pass (`209` + `5`) trên bản cục bộ — số không dùng làm baseline (xem §3.8), test hồi quy không có trong repo; build sạch `0 warning / 0 error`.
 
 ### 3.2 BUG-W4-10 — Snapshot lệch (đi kèm BUG-W4-01)
 
@@ -113,7 +112,7 @@ Chen 1 ban ghi -> 1 dong trong DB, RowVersion 16 byte -> PASS
 
 Nghĩa là scanner chỉ bắt được mẫu nổi tiết, không bắt được bí mật do chính dự án đặt ra.
 
-**Sửa trên lab.**
+**Sửa trên bản cục bộ (chưa vào repo).**
 - `deploy/scan-secrets.sh`: thêm `check_json_config_secrets` (khoá nhạy cảm trong JSON, chuỗi kết nối có `Password=`), `check_workflow_env_secrets` (bỏ qua giá trị dạng `${{ secrets.* }}`), và cơ chế allowlist.
 - `deploy/secret-scan-allowlist.txt`: allowlist cho credential dev/CI, **kèm lý do từng dòng**.
 - Ghi rõ cơ chế allowlist dùng Bash associative array, không dùng `grep`: Git Bash `grep` bị `SIGABRT` (rc 134) khi đọc allowlist tiếng Việt.
@@ -148,7 +147,7 @@ Khách B và C có IP hoàn toàn khác, không gửi một request 401 nào th�
 
 **Phát hiện mới — hạn mức nhân theo số instance.** Qua nginx với 2 upstream, 12 request từ cùng một IP đều `401`; 6 request tiếp theo vẫn `401`. Nguyên nhân: bộ đếm là in-memory **trên từng tiến trình**, mỗi node một bộ đếm riêng, nên hạn mức thực tế bằng `10 × số instance`. Cấu hình `proxy_next_upstream` mới thêm ở đây cũng làm nhiều request hơn rơi vào node còn sống. **Đây là rủi ro riêng, không nằm trong BUG-W4-03, và cần ghi nhận vào NFR về rate limiting phân tán.**
 
-**Sửa trên lab** — `src/backend/CulinaryBlog.API/Program.cs`, đặt **trước** `UseRateLimiter()`:
+**Sửa trên bản cục bộ (chưa vào repo)** — `src/backend/CulinaryBlog.API/Program.cs`, đặt **trước** `UseRateLimiter()`:
 
 ```csharp
 app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -169,7 +168,7 @@ Khách B (2.2.2.2) -> 401 x4
 Khách C (3.3.3.3) -> 401 x4
 ```
 
-Mỗi IP đã có khoá riêng. Full test sau thay đổi: `214/214` pass — không hồi quy.
+Mỗi IP đã có khoá riêng. Full test sau thay đổi trên bản cục bộ: `214/214` pass — không hồi quy (test hồi quy không có trong repo — xem §3.8/§4).
 
 ### 3.5 A3 — Nginx multi-instance, failover
 
@@ -207,9 +206,9 @@ Báo cáo gốc đề xuất xoá code soft delete. Kiểm tra thực tế cho t
 
 ### 3.8 BUG-W4-04 / BUG-W4-05 / A6 — Tài liệu
 
-**Số liệu thực đo.** `dotnet test CulinaryBlog.sln -c Release` trên `2312739`: `205` + `5` = **`210/210`**, `Skipped=0`. Trên branch lab: `209` + `5` = `214/214` (chênh 4 do 4 test lab).
+**Số liệu thực đo.** `dotnet test CulinaryBlog.sln -c Release` trên `2312739`: `205` + `5` = **`210/210`**, `Skipped=0`. Số `214/214` (209 + 5) là của bản kiểm tra cục bộ; đối chiếu 07/10 **không có 4 test hồi quy đó trong repo** → không dùng.
 
-**Đã sửa trên lab.**
+**Đã sửa trên bản cục bộ (chưa vào repo).**
 - `README.md`: `177/177` → `210/210`; `172/172` → `210/210` (cả câu chữ lẫn khối output mẫu).
 - Giữ nguyên hai ghi chú lịch sử có ngày (`30/09/2026`) vì chúng là ảnh chụp trạng thái tại thời điểm đó, không phải số liệu hiện hành.
 - Thêm ghi chú làm rõ cột `24 / 24 (K01–K24)` là **số tự khai**, chưa có rubric máy kiểm chứng; vòng kiểm chứng chỉ xác nhận được build sạch, `210/210` test, `nginx -t` hợp lệ và scanner exit 0.
@@ -227,21 +226,22 @@ Chưa kiểm thử sâu; giữ nguyên trạng thái mở.
 
 ---
 
-## 4. Thay đổi trên branch lab
+## 4. Thay đổi cục bộ (chưa vào repo)
 
-| File | Thay đổi | Trạng thái |
+| File | Thay đổi | Trạng thái (rà lại 07/10) |
 |---|---|---|
-| `deploy/scan-secrets.sh` | +111 dòng: JSON config, connection string, workflow env, allowlist | Cần review |
-| `deploy/secret-scan-allowlist.txt` | Mới — allowlist dev/CI kèm lý do | Cần review |
-| `src/backend/.../RecipeImageConfiguration.cs` | +`ValueGeneratedNever()` | **Fix BUG-W4-01, nên merge** |
-| `src/backend/CulinaryBlog.API/Program.cs` | +`UseForwardedHeaders` | **Fix BUG-W4-03, nên merge** |
-| `nginx/nginx.dev.conf` | 2 upstream, `max_fails`, `keepalive`, `proxy_next_upstream` | Nên merge; TLS còn nằm trong comment |
-| `src/backend/CulinaryBlog.API/appsettings.json` | `Jwt:SigningKey` → rỗng | Nên merge (kèm `.env.example`) |
-| `src/backend/CulinaryBlog.API/appsettings.Development.json` | `Jwt:SigningKey` → rỗng | Nên merge |
-| `tests/CulinaryBlog.Tests/LabRecipeImageValueGeneratedTests.cs` | Mới — 4 test hồi quy | Nên đổi tên bỏ tiền tố `Lab` rồi merge |
-| `README.md`, `CHANGELOG.md` | Số liệu + changelog | Nên merge |
+| `deploy/scan-secrets.sh` | +111 dòng: JSON config, connection string, workflow env, allowlist | Chưa vào repo → **W5-10** (BUG-W4-02) |
+| `deploy/secret-scan-allowlist.txt` | Mới — allowlist dev/CI kèm lý do | Chưa vào repo → **W5-10** |
+| `src/backend/.../RecipeImageConfiguration.cs` | +`ValueGeneratedNever()` | ✅ **Fix BUG-W4-01 — đã vào `main`** (PR #29, `c624b9f`) |
+| `src/backend/CulinaryBlog.API/Program.cs` | +`UseForwardedHeaders` | Fix BUG-W4-03 — **chưa vào repo → sửa trực tiếp tuần 5 (W5-10)** |
+| `nginx/nginx.dev.conf` | 2 upstream, `max_fails`, `keepalive`, `proxy_next_upstream` | Chưa vào repo — W5-4/W5-10 xem lại; TLS còn nằm trong comment |
+| `src/backend/CulinaryBlog.API/appsettings.json` | `Jwt:SigningKey` → rỗng | ✅ Đã vào `main` (QD3-3a) |
+| `src/backend/CulinaryBlog.API/appsettings.Development.json` | `Jwt:SigningKey` → rỗng | ✅ Đã vào `main` (QD3-3a) |
+| `tests/CulinaryBlog.Tests/LabRecipeImageValueGeneratedTests.cs` | Mới — 4 test hồi quy | ❌ **Không tồn tại trong repo** (đối chiếu 07/10) — viết mới trong W5-10 |
+| `README.md`, `CHANGELOG.md` | Số liệu + changelog | Đã cập nhật một phần trong `main` (05/10) |
 
-Không có migration nào được thêm. Không có thay đổi nào lên `2312739_NHTSon_D5-D6-D7` hay `main` tại thời điểm viết báo cáo này.
+Không có migration nào được thêm **tại thời điểm viết báo cáo**. Không có thay đổi nào lên `2312739_NHTSon_D5-D6-D7` hay `main` tại thời điểm viết báo cáo này.
+*(07/10: riêng `ValueGeneratedNever()` + migration `20261001112029` đã vào `main` qua PR #29 `c624b9f`.)*
 
 ---
 

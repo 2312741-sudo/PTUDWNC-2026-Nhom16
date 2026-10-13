@@ -310,7 +310,8 @@ docker compose -f docker-compose.dev.yml ps
 dotnet restore CulinaryBlog.sln --locked-mode
 
 # 2. Tạo .env cho máy này (giá trị thật, KHÔNG commit)
-cp .env.example .env
+#    -n = KHÔNG ghi đè nếu .env đã có (tránh mất cấu hình máy đang dùng):
+cp -n .env.example .env
 #    BẮT BUỘC sinh khóa JWT rồi dán vào .env (app sẽ không khởi động nếu bỏ trống):
 #      Git Bash / WSL : openssl rand -base64 48
 #      PowerShell     : $b=New-Object byte[] 48; ([Security.Cryptography.RandomNumberGenerator]::Create()).GetBytes($b); [Convert]::ToBase64String($b)
@@ -325,7 +326,7 @@ dotnet run --project src/backend/CulinaryBlog.API -- --seed
 dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:5080
 ```
 > Không cần `export` gì thêm: `EnvFileLoader` nạp `.env` tự động (bỏ qua khi `ASPNETCORE_ENVIRONMENT=Production`).
-> Không có `.env` thì app dùng default trong `appsettings.Development.json` (`Password=postgres`) — khớp default của `docker-compose.dev.yml`.
+> Không có `.env` thì app **fail-fast** yêu cầu cấu hình (mật khẩu DB/Minio đã gỡ khỏi `appsettings*.json` theo A1) — copy `.env.example` thành `.env` là chạy được.
 >
 > 🔑 **`Jwt__SigningKey` là BẮT BUỘC (QD3-3b).** Khoá ký JWT không còn nằm trong `appsettings*.json`; app **fail-fast** khi
 > thiếu hoặc khoá < 64 byte (`InvalidOperationException` kèm hướng dẫn). Đổi khoá = mọi phiên đăng nhập cũ mất hiệu lực.
@@ -357,7 +358,7 @@ npm run dev
 ### 5.5. Chạy bộ kiểm thử tự động (Automated Tests)
 ```bash
 # Chuỗi kết nối database test đọc từ TEST_DATABASE trong .env (đã tạo ở bước 2 mục 5.3).
-# Không có .env thì test tự dùng default khớp docker-compose.dev.yml (Password=postgres).
+# Không có .env thì test tự dùng default nội bộ khớp docker-compose.dev.yml (Postgres password mặc định).
 
 # Chạy toàn bộ test trong solution
 dotnet test CulinaryBlog.sln --logger "console;verbosity=normal"
@@ -381,34 +382,22 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
 
 ---
 
-## 🧭 6. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 4)
+## 🧭 6. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 5)
 
 1. **TV1 (Thanh Tâm - Leader)**:
-   - Viết Negative Tests chuyên sâu cho toàn bộ luồng Auth, Rate Limiting, Brute-force và Token Replay Attack.
-   - Xây dựng các ca kiểm thử E2E flows (Playwright/xUnit) cho toàn bộ chu trình: Đăng ký → Đăng nhập → Refresh Token → Đăng xuất.
-   - Nâng cao Code Coverage toàn hệ thống (mục tiêu ≥ 80% line coverage).
+   - Triển khai Staging Nginx đa container (6 service) và quy trình sao lưu/phục hồi CSDL–Storage (BCP/DR, mã băm SHA-256, RTO < 2 phút, RPO = 0).
+   - 5 kịch bản E2E cổng G6, đo tải (ab/k6: p95 < 10ms, 0% lỗi), review đề xuất B1–B3 của TV4 và ban hành ADR-0004. **183/183 test pass.**
 2. **TV2 (Trường Vĩ)**:
-   - Thực hiện k6 Load Testing đo lường thời gian phản hồi p50, p95, p99 cho các endpoint Tìm kiếm FTS và Khám phá công thức.
-   - Phân tích EXPLAIN QUERY PLAN trên PostgreSQL, đánh giá hiệu quả của GIN index và Cache-hit ratio.
-   - Kiểm thử khả năng truy cập (a11y) WCAG 2.1 AA và độ tương thích giao diện trên các mốc kích thước màn hình (320px, 768px, 1200px).
+   - Kiểm chứng Staging độc lập, diễn tập BCP/DR; tối ưu SEO (canonical, robots `index:false`) và dữ liệu có cấu trúc JSON-LD (CollectionPage/ItemList/BreadcrumbList).
+   - Trợ năng WCAG 2.1 AA + Core Web Vitals (ISR `revalidate`), thêm `Week5DiscoverySeoAndA11yTests`. **194/194 test pass**, 15/15 route Next.js build sạch.
 3. **TV3 (Quốc Trung)**:
-   - Hoàn thiện giao diện Wizard tạo và chỉnh sửa công thức đa bước trên frontend.
-   - Viết các bài test kiểm thử tích hợp giao dịch phân tán, kiểm tra rollback transaction khi xảy ra lỗi ở child entities (nguyên liệu, bước làm).
-4. **TV4 (Trung Sơn)** — **đã chốt Giai đoạn 1 ngày 04/10/2026**, cập nhật 05/10; Giai đoạn 3 (sửa lỗi) xong phần đã thực thi. Xem [`docs/evidence/TV4/Tuan04/report/BAO_CAO_GIAI_DOAN_1_N2_N4.md`](docs/evidence/TV4/Tuan04/report/BAO_CAO_GIAI_DOAN_1_N2_N4.md):
-   - ✅ **Tuần 3 (PR #16 đã merge)**: D23 Hangfire queue persistent + dashboard Admin, D27 media proxy công khai, D2 resize 300×300/800×600 idempotent, D4 sitemap/robots/OG/JSON-LD, D5 EXPLAIN + k6, D6 Lab L4 (`practice/TV4/L4`, 4 phase 39/39 check).
-   - ✅ **B1/B2 (chặn trước tuần 4)**: `503 storage.unavailable` cho storage down/sai credential; fail-fast lúc khởi động khi thiếu cấu hình; `503 database.unavailable` khi DB chết; gỡ secret khỏi `render.yaml` + secret scan trong CI. **216/216** test xanh.
-   - ✅ **N2 (tuần 4)**: resilience N2-C1/C1b/C1c/C2/C3/C4/C6 (outage drill Redis/S3/DB/worker, retry 2/3/3, sitemap 02:00 UTC + distributed lock, k6 `read-load.js` 3 lần xanh), N2-B1 (Playwright **26/26**, 3 lần liên tiếp), N2-B2/B3/B4 (file attack, MIME spoofing, quyền upload), N2-E (retry/race/security).
-   - ✅ **Ba lỗi thật đã tìm và sửa kèm test hồi quy**: (1) DB chết trả `500` vì `ApiExceptionHandler` không dò `InnerException`; (2) DB chết lúc khởi động giết tiến trình vì lịch sitemap ném ra khỏi `Main`; (3) `GET /recipes/{slug}` trả `500` khi thiếu credential object storage vì `MinioClient.Build()` ném ngay trong constructor — **lỗi này do CI bắt, không phải do test local**, và đã khoá bằng 2 test hồi quy.
-   - ✅ **N3-B/C1/C2 (05/10)**: Lab L5 7 phase chạy thật (63 check, **3/7 phase PASS** — `seo` 15/15, `observability` 10/10, `multi-instance` 7/7), Sổ K + 2 log, PR #28 đã mở rồi đóng theo quyết định nhóm. **4 phase lộ ra vấn đề thật**: ISR không hoạt động, ảnh không tối ưu 2 tầng, search trả `no-store`, RowVersion chưa kiểm chứng được.
-   - 🔒 **Kiểm chứng báo cáo "Tuần 5" của TV1** (việc cuối GĐ3) — báo cáo đánh dấu **không đáng tin**: 4 sai lệch đã xác nhận (p95 < mean, nhãn tuần, số test, `render.yaml` không tồn tại) + tuyên bố RTO/RPO không có bản ghi chạy. Phát hiện và **đã sửa lỗi khoá JWT `R3`** trong `docker-compose.staging.yml`. Xem [`KiemChung_Commit_Week5_TV1.md`](docs/evidence/TV4/Tuan04/misc/KiemChung_Commit_Week5_TV1.md).
-    - 📊 **Số đo cuối tuần 4** (mới nhất 05/10, sau merge `origin/main` `2961a22` → `fd90572`): backend **426/426** (421 + 5), coverage `Application` **96.31%** ≥ 80% (`Domain` 85.19%), build 0 warning/0 error, `dotnet format` exit `0`; Playwright **26/26**, Jest **85/85**, k6 `http_req_failed` **0.00%**. CI xanh lần cuối xác nhận tại `8a585ef` (**321/321**) — run cho `fd90572` chưa có vì commit chưa push.
-    - 🔧 **Đối chiếu bàn giao TV3 (`TV3_BAN_GIAO_TUAN4.md`) 05/10** — 3 phát hiện, đã sửa:
-      (1) `DbSeeder` dùng `!OriginalUrl.StartsWith("/images/recipes/")` → mỗi lần API khởi động **ghi đè URL ảnh người dùng** thành ảnh seed (TV3 §C.1) — sửa lại chỉ đụng ảnh mẫu, khoá bằng `DbSeederUserImageUrlTests` (chứng minh đỏ 2/2 trên code cũ, xanh 2/2 sau sửa);
-      (2) `--migrate` nuốt lỗi bằng `catch { }` rồi vẫn in *"applied successfully"* (TV3 §C.2) — giờ in lỗi thật + exit code `1`;
-      (3) TV3 ghi *"chỉ mục thuộc IMAGE_CONTRACT §4"* nhưng §4 là RFC 7807 — hợp đồng **không hề mô tả** `ux_recipe_images_one_primary` — bổ sung `IMAGE_CONTRACT.md` §7c và sửa con trỏ trong `ApiExceptionHandler.cs`.
-    - ✅ **Kết luận kỹ thuật của TV3 về chỉ mục là đúng**: `AuditableEntityInterceptor` (D08) biến `Deleted → Modified` + `IsDeleted = true`, nên `MarkImageDeleted` = **xoá mềm ở tầng DB**; bộ lọc `IsDeleted = false` trong chỉ mục là **bắt buộc**, không phải phòng xa.
-   - ⏭ **Còn lại**: N2-D3 (checklist WCAG/responsive — thuộc TV2), 3 luồng E2E còn lại (`register/login` TV1, `category` TV2, `create-recipe` TV3), runbook đầy đủ + deploy staging + TLS/HSTS (N4-A/N4-B), Zod/RHF (N3-A3), và Google OAuth2-PKCE (cần credentials).
-    - ✅ **CI xanh trở lại (05/10)** tại `8a585ef`: `Backend week 1` run `37320431750` ✅ + `Frontend CI` run `37320431432` ✅. Sửa 2 nguyên nhân khiến backend đỏ 4 lần liên tiếp: (1) `.md` của TV4 chứa khoá JWT đã thu hồi (`JwtSigningKeyNotCommittedTests`); (2) `ApiFactory.EnsureMigrated()` chỉ `Migrate()` không seed, nên `E2E_Scenario_5` của TV1 không có dữ liệu; (3) race trong `TracingObservabilityTests` đọc span trước khi `ActivityStopped` gọi.
+   - Kiểm lại Tuần 4 độc lập; schema/ERD (`SCHEMA_RECIPE.md`), nhất quán dữ liệu, migration sạch + idempotent; review kiểm thử TV2.
+   - Số đo EXPLAIN + k6 (p95 ~40–50ms); E2E 5 luồng → 11/11 Playwright pass. *(Làm sớm sang Tuần 6: K18 a11y, regression **421/421 + 5**.)*
+4. **TV4 (Trung Sơn)**:
+   - Staging lặp lại được: 2 API + Nginx upstream/failover, HTTPS/HSTS/CORS, volume bền vững, runbook 7 mục; UI progress upload + Unpublish/Archive/Xóa.
+   - Số đo k6 (102 VU, 0% lỗi) + `/metrics` Prometheus; sửa gốc lỗi ảnh nháp (proxy thay presigned). **9/10 khối xong** (W5-7 4/5 chờ TV2, W5-9 2/5); baseline 426/426, coverage 97.07%.
+
+> Mốc **G6 (Tuần 5)**: staging hoàn chỉnh, BCP/DR đạt RTO < 2 phút · RPO = 0, 5 kịch bản E2E pass, có số đo hiệu năng/SEO/a11y và giới hạn.
 
 ---
 
@@ -433,40 +422,61 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
 
 ### 7.2. Danh mục đầy đủ
 
+**Hướng dẫn & Vận hành**
+
 - 🚀 [**Hướng dẫn cài đặt, cấu hình & chạy chương trình chi tiết (Setup & Run Guide)**](docs/HUONG_DAN_CAI_DAT_VA_CHAY_CHUONG_TRINH.md)
 - 🧪 [Hướng dẫn kiểm thử ứng dụng toàn diện (Testing Guide)](docs/HUONG_DAN_TEST_APP.md)
 - 🖥️ [Hướng dẫn cài đặt & chạy ứng dụng — riêng TV4 (PowerShell, xử lý sai mật khẩu PostgreSQL)](docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md)
-- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/report/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
-- 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/report/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)
+- 📘 [Runbook vận hành hạ tầng & triển khai (staging, backup/restore, TLS, failover)](docs/RUNBOOK.md)
+- 📙 [Runbook soạn thảo công thức (TV3)](docs/RUNBOOK_SOAN_THAO_CONG_THUC.md)
+
+**Kế hoạch & Đặc tả**
+
 - 📋 [Kế hoạch phân chia công việc 6 tuần](docs/PHAN_CHIA_CONG_VIEC_6_TUAN.md)
 - 📖 [Kế hoạch tổng thể & Giải quyết xung đột SRS](docs/KE_HOACH_DU_AN.md)
-- 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm chính thức (SRS v1.1.1)](docs/root/SRS_Culinary_Blog_v1.1.1.md)
+- 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm chính thức (SRS v1.1.1)](docs/root/SRS_Culinary_Blog_v1.1.1.md) · [Bản chi tiết v1.1.1](docs/root/SRS_Culinary_Blog_v1.1.1%20Detail.md)
 - 📑 [Báo cáo Mâu thuẫn Nội tại SRS chi tiết](docs/root/SRS_Contradictions_Report.md)
 - 📄 [Tài liệu Đặc tả Yêu cầu Phần mềm (Bản gốc v1.0.0)](docs/root/SRS_Culinary_Blog_v1.0.0.md)
 - 📐 [Thiết kế Cơ sở Dữ liệu & ERD (Entity Relationship Diagram)](docs/ERD.md)
+
+**Hợp đồng kỹ thuật (Contracts)**
+
 - 🔐 [Hợp đồng API Xác thực (Auth Contract)](docs/AUTH_CONTRACT.md)
 - 🗂️ [Hợp đồng API Danh mục (Category Contract)](docs/CATEGORY_CONTRACT.md)
 - 🍲 [Hợp đồng Danh sách Công thức (Recipe List Contract)](docs/RECIPE_LIST_CONTRACT.md)
 - 🔍 [Hợp đồng Tìm kiếm & Khám phá (Search & Discovery Contract)](docs/SEARCH_AND_DISCOVERY_CONTRACT.md)
 - 🌐 [Hợp đồng Google OAuth (Google Auth Contract)](docs/GOOGLE_AUTH_CONTRACT.md)
 - 🖼️ [Hợp đồng API Tải lên & Xử lý Ảnh (Image Contract)](docs/IMAGE_CONTRACT.md)
-- 🤝 [Biên bản Chuyển giao Kỹ thuật (Handoff TV4)](docs/evidence/TV4/Tuan02/HANDOFF_TV4_TUAN2_BLOCKED.md)
-- 📑 **Báo cáo nghiệm thu cá nhân & Báo cáo Lab môn học**:
-  - **TV1 (Nguyễn Thanh Tâm — Leader)**:
-    - [Báo cáo Tổng hợp Lab 01 - 02 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_01_02.md)
-    - [Báo cáo Lab 02 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_02.md) | [Báo cáo Lab 02 (Word)](docs/evidence/TV1/Lab02_2312741_NguyenThanhTam.docx)
-    - [Báo cáo Lab 03 (Markdown)](docs/evidence/TV1/BAO_CAO_LAB_03.md) | [Báo cáo Lab 03 (Word)](docs/evidence/TV1/Lab03_2312741_NguyenThanhTam.docx)
-    - [Báo cáo Nghiệm thu Tuần 1](docs/evidence/TV1/TUAN_1.md)
-    - [Báo cáo Nghiệm thu Tuần 2](docs/evidence/TV1/TUAN_2.md)
-    - [Báo cáo Nghiệm thu Tuần 3](docs/evidence/TV1/TUAN_3.md)
-  - **TV2 (Ngô Quốc Trường Vĩ)**:
-    - [Báo cáo Nghiệm thu Tuần 1](docs/evidence/TV2/TUAN_1.md)
-    - [Báo cáo Nghiệm thu Tuần 2](docs/evidence/TV2/TUAN_2.md)
-    - [Báo cáo Spike Danh mục & Auth](docs/evidence/TV2/LAB_DANH_MUC_AUTH_SPIKE.md)
-  - **TV3 (Huỳnh Quốc Trung)**:
-    - [Báo cáo Hoàn thiện Task C1 Tuần 1](docs/evidence/TV3/C1-HOAN-THIEN.md)
-    - [Kế hoạch Thực hiện Chi tiết](docs/evidence/TV3/KE_HOACH_TV3.md)
-  - **TV4 (Nguyễn Hữu Trung Sơn)**:
-    - [Báo cáo Nghiệm thu Tuần 1](docs/evidence/TV4/Tuan01/TRANG_THAI_THUC_HIEN_TUAN_1.md)
-    - [Báo cáo Nghiệm thu Tuần 2](docs/evidence/TV4/Tuan02/TRANG_THAI_THUC_HIEN_TUAN_2.md)
+
+**Quyết định Kiến trúc (ADR)** — danh mục tại [`docs/adr/`](docs/adr/)
+
+- 🏛️ [ADR-0001 — Xác thực Tuần 1](docs/adr/0001-auth-week1.md) · [ADR-0002 — Danh mục & Google Auth Tuần 1](docs/adr/0002-category-and-google-auth-week1.md) · [ADR-0003 — Cache Danh mục & Tìm kiếm Tuần 3](docs/adr/0003-category-and-search-caching-week3.md) · [ADR-0004 — Triển khai Staging & Phục hồi Thảm họa](docs/adr/0004-staging-deployment-and-disaster-recovery.md)
+- 🏛️ [ADR-0001 (TV3) — Recipe Schema & Concurrency](docs/adr/ADR-0001-recipe-schema-va-concurrency.md) · [ADR-0002 (TV3) — Recipe Version Schema & Nạp dữ liệu](docs/adr/ADR-0002-recipe-version-schema-va-nap-du-lieu.md)
+- 🏛️ [ADR-TV4-001 — Vận hành Storage & Logout](docs/adr/ADR-TV4-001-van-hanh-storage-logout-tuan-1.md) · [ADR-TV4-002 — Đổi MinIO sang RustFS](docs/adr/ADR-TV4-002-doi-minio-sang-rustfs.md) · [ADR-TV4-003 — Quy ước Soft Delete](docs/adr/ADR-TV4-003-quy-uoc-soft-delete.md) · [ADR-TV4-004 — Pin ImageSharp 3.1.12](docs/adr/ADR-TV4-004-pin-imagesharp-3-1-12.md)
+
+**Báo cáo & Đề xuất kỹ thuật**
+
+- ⚖️ [Báo cáo Giải quyết Mâu thuẫn Nội tại SRS (C01–C09 & §8.1)](docs/report/BAO_CAO_GIAI_QUYET_MAU_THUAN_SRS.md)
+- 🔀 [Báo cáo Giải quyết Xung đột Merge TV2 Tuần 2](docs/report/BAO_CAO_GIAI_QUYET_XUNG_DOT_MERGE_TV2_TUAN2.md)
+- 🐞 [Báo cáo lỗi 500 Upload ảnh](docs/report/BAO_CAO_LOI_UPLOAD_ANH_500.md) · [Báo cáo đã sửa lỗi 500 Upload ảnh](docs/report/BAO_CAO_LOI_UPLOAD_ANH_500_DA_SUA.md) · [Báo cáo lỗi 500 trang Search](docs/report/BAO_CAO_LOI_500_TRANG_SEARCH.md) · [Báo cáo kiểm tra lỗi 422 tại ảnh (TV3 gửi TV4)](docs/report/BAO_CAO_KIEM_TRA_LOI_422_TAI_ANH_TV3_GUI_TV4.md)
+- 💡 [Đề xuất 01 — Storage trả 503 có mã lỗi](docs/proposal/DE_XUAT_01_LOI_STORAGE_TRA_503_CO_MA_LOI.md) · [02 — Fail-fast khi thiếu cấu hình](docs/proposal/DE_XUAT_02_FAIL_FAST_KHI_THIEU_CAU_HINH.md) · [03 — Nạp file `.env`](docs/proposal/DE_XUAT_03_NAP_FILE_DOT_ENV.md) · [04 — Health check Storage](docs/proposal/DE_XUAT_04_HEALTH_CHECK_STORAGE_XAC_THUC.md) · [05 — Xem ảnh Draft trong Wizard](docs/proposal/DE_XUAT_05_XEM_ANH_DRAFT_TRONG_WIZARD.md) · [06 — Tái tạo User Admin để seed](docs/proposal/DE_XUAT_06_TAI_TAO_USER_ADMIN_DE_SEED.md) · [07 — Nơi đặt lịch backup](docs/proposal/DE_XUAT_07_NOI_DAT_LICH_BACKUP.md) · [08 — Kho lưu backup 30 ngày](docs/proposal/DE_XUAT_08_KHO_LUU_BACKUP_30_NGAY.md) · [09 — Rotate khoá JWT đã lộ](docs/proposal/DE_XUAT_09_ROTATE_KHOA_JWT_DA_LO.md)
+- 🔧 [Đề xuất giải quyết D23/D27 (Resize nền & Ảnh proxy)](docs/proposal/DE_XUAT_GIAI_QUYET_D23_D27.md)
+- 🤝 [Biên bản Chuyển giao Kỹ thuật (Handoff TV4 Tuần 2)](docs/evidence/TV4/Tuan02/HANDOFF_TV4_TUAN2_BLOCKED.md)
+
+**Báo cáo nghiệm thu & Lab môn học theo thành viên**
+
+- **TV1 (Nguyễn Thanh Tâm — Leader)**:
+  - Lab: [Tổng hợp Lab 01–02](docs/evidence/TV1/BAO_CAO_LAB_01_02.md) · [Lab 02](docs/evidence/TV1/BAO_CAO_LAB_02.md) ([Word](docs/evidence/TV1/Lab02_2312741_NguyenThanhTam.docx)) · [Lab 03](docs/evidence/TV1/BAO_CAO_LAB_03.md) ([Word](docs/evidence/TV1/Lab03_2312741_NguyenThanhTam.docx)) · [Lab 04](docs/evidence/TV1/BAO_CAO_LAB_04.md) ([Word](docs/evidence/TV1/Lab4_2312741_NguyenThanhTam.docx)) · [Lab 05](docs/evidence/TV1/BAO_CAO_LAB_05.md) ([Word](docs/evidence/TV1/Lab5_2312741_NguyenThanhTam.docx)) · [Lab Kiến trúc & Hợp đồng API](docs/evidence/TV1/LAB_KIEN_TRUC_API.md)
+  - Nghiệm thu: [Tuần 1](docs/evidence/TV1/TUAN_1.md) · [Tuần 2](docs/evidence/TV1/TUAN_2.md) · [Tuần 3](docs/evidence/TV1/TUAN_3.md) · [Tuần 4](docs/evidence/TV1/TUAN_4.md) · [Tuần 5](docs/evidence/TV1/TUAN_5.md)
+- **TV2 (Ngô Quốc Trường Vĩ)**:
+  - Lab: [Lab 04](docs/evidence/TV2/BAO_CAO_LAB_04.md) ([Word](docs/evidence/TV2/Lab4_2312796_NgoQuocTruongVi.docx)) · [Lab 05](docs/evidence/TV2/BAO_CAO_LAB_05.md) ([Word](docs/evidence/TV2/Lab5_2312796_NgoQuocTruongVi.docx)) · [Spike Danh mục & Auth](docs/evidence/TV2/LAB_DANH_MUC_AUTH_SPIKE.md)
+  - Nghiệm thu: [Tuần 1](docs/evidence/TV2/TUAN_1.md) · [Tuần 2](docs/evidence/TV2/TUAN_2.md) · [Tuần 3](docs/evidence/TV2/TUAN_3.md) · [Tuần 4](docs/evidence/TV2/TUAN_4.md) · [Tuần 5](docs/evidence/TV2/TUAN_5.md)
+- **TV3 (Huỳnh Quốc Trung)**:
+  - Lab & nền tảng: [Lab 04](docs/evidence/TV3/BAO_CAO_LAB_04.md) ([Word](docs/evidence/TV3/Lab4_2312786_HuynhQuocTrung.docx)) · [Kế hoạch Thực hiện](docs/evidence/TV3/KE_HOACH_TV3.md) · [Hoàn thiện Task C1](docs/evidence/TV3/C1-HOAN-THIEN.md) · [Rà soát `main`](docs/evidence/TV3/RA_SOAT_MAIN.md) · [Bảng minh chứng K01–K24](docs/evidence/TV3/BANG_MINH_CHUNG_K01_K24.md)
+  - Nghiệm thu: [Tuần 3](docs/evidence/TV3/TUAN_3.md) · [Tuần 4](docs/evidence/TV3/TUAN_4.md) · [Bàn giao Tuần 4](docs/evidence/TV3/TV3_BAN_GIAO_TUAN4.md) · [Tuần 5](docs/evidence/TV3/Tuan05/BAO_CAO_TUAN5.md) · [Tuần 6](docs/evidence/TV3/Tuan06/BAO_CAO_TUAN6.md)
+- **TV4 (Nguyễn Hữu Trung Sơn)**:
+  - Hướng dẫn & mapping: [Hướng dẫn chạy riêng TV4](docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md) · [Mapping K01 – FR/NFR/ADR/Evidence](docs/evidence/TV4/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md)
+  - Nghiệm thu: [Tuần 1](docs/evidence/TV4/Tuan01/TRANG_THAI_THUC_HIEN_TUAN_1.md) · [Tuần 2](docs/evidence/TV4/Tuan02/TRANG_THAI_THUC_HIEN_TUAN_2.md) · [Tuần 3](docs/evidence/TV4/Tuan03/TRANG_THAI_THUC_HIEN_TUAN_3.md) · [Tuần 4](docs/evidence/TV4/Tuan04/TRANG_THAI_THUC_HIEN_TUAN_4.md) · [Tuần 5](docs/evidence/TV4/Tuan05/TRANG_THAI_THUC_HIEN_TUAN_5.md)
+  - Sổ evidence: [Tuần 3](docs/evidence/TV4/Tuan03/SO_EVIDENCE_TUAN_3.md) · [Tuần 4](docs/evidence/TV4/Tuan04/SO_EVIDENCE_TUAN_4.md) · [Tuần 5](docs/evidence/TV4/Tuan05/SO_EVIDENCE_TUAN_5.md)
+  - Báo cáo rà soát/tiến độ: [Tổng hợp 5 tuần](docs/evidence/TV4/Report/BAO_CAO_RA_SOAT_TONG_HOP_5_TUAN.md) · [Tiến độ Tuần 5 so với Tuần 4](docs/evidence/TV4/Report/BAO_CAO_TIEN_DO_TUAN_5_SO_VOI_TUAN_4.md) · [Tổng hợp 3 tuần](docs/evidence/TV4/Report/BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md)
 

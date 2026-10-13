@@ -19,11 +19,12 @@
 >
 > **Nguyên tắc bổ sung (rút từ lab 03/10):**
 >
-> 1. ⛔ **`214/214` không phải số của nhánh này.** Đó là nhánh lab `lab/TV4-audit-tuan4` (+4 test hồi quy),
->    **chưa merge**. Số đưa vào sổ này là `210/210`.
+> 1. ⛔ **`214/214` không phải số của nhánh này.** Đó là số đo trên bản vá cục bộ của TV4 (không push,
+>    không thuộc dự án); đối chiếu 07/10 các test hồi quy kèm theo **không tồn tại trong repo**.
+>    Số đưa vào sổ này là `210/210`.
 > 2. ⚠️ **Có bằng chứng ≠ đã được duyệt.** 8 ô K của N1 có code + test + log nhưng **chưa** ô nào
 >    reviewer xác nhận → vẫn ghi "chờ duyệt", không đánh ✅.
-> 3. ⚠️ **Lỗi đã sửa trên lab vẫn tính là lỗi đang mở** cho tới khi merge. Chi tiết:
+> 3. ⚠️ **Lỗi chưa có bản vá trong dự án vẫn tính là lỗi đang mở** cho tới khi merge vào nhánh chính. Chi tiết:
 >    [`BAO_CAO_LOI_TUAN_4_TV4.md`](report/BAO_CAO_LOI_TUAN_4_TV4.md).
 
 > [!IMPORTANT]

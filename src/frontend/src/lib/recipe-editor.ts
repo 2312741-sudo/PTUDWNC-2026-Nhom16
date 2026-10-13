@@ -169,21 +169,26 @@ export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MiB (FR-FILE-001)
 
 const MEDIA = process.env.NEXT_PUBLIC_MEDIA_URL;
-/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) hoặc đường dẫn ảnh tĩnh cục bộ (/images/...) — ghép với NEXT_PUBLIC_MEDIA_URL để ra URL trình duyệt nếu là key MinIO. */
+/** Kiểu db: tên container nội bộ (culinary-s3:9000) trình duyệt không mở được — ảnh phải đi qua proxy D27. */
+const MEDIA_DEFAULT = `${API}/resources/images`;
+/** originalUrl là KEY MinIO (recipes/{id}/{uuid}.ext) hoặc đường dẫn ảnh tĩnh cục bộ (/images/...) — ghép với proxy ảnh API
+ * (NEXT_PUBLIC_MEDIA_URL nếu có, mặc định `${API}/resources/images`) để ra URL tuyệt đối trình duyệt tải được. */
 export function mediaUrl(key?: string | null): string | null {
   if (!key) return null;
   if (/^https?:\/\//i.test(key)) return key;
   if (key.startsWith('/images/') || key.startsWith('images/')) {
     return key.startsWith('/') ? key : `/${key}`;
   }
-  return MEDIA ? `${MEDIA.replace(/\/$/, "")}/${key.replace(/^\//, "")}` : (key.startsWith('/') ? key : `/${key}`);
+  return `${(MEDIA ?? MEDIA_DEFAULT).replace(/\/$/, "")}/${key.replace(/^\//, "")}`;
 }
 /**
- * B5: ưu tiên URL có chữ ký khi ảnh còn private. `mediaUrl` trả nguyên URL tuyệt đối,
- * nên không cần ghép NEXT_PUBLIC_MEDIA_URL cho trường này.
+ * B5: ảnh nháp luôn hiển thị qua proxy (`thumbnail/medium/original` là key object storage -> mediaUrl),
+ * vì URL ký trỏ vào host MinIO nội bộ (vd. culinary-s3:9000) trình duyệt không mở được và `<img src>`
+ * không gửi Bearer. `AuthImage` tải proxy kèm Authorization rồi bày qua blob URL. Còn `presignedUrl`
+ * vẫn được giữ để báo "hết hạn liên kết tải" và gia hạn URL (xem `isPresignedStale`/`refreshUrl`).
  */
 export const imageSrc = (i: RecipeImage) =>
-  mediaUrl(i.presignedUrl ?? i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
+  mediaUrl(i.thumbnailUrl ?? i.mediumUrl ?? i.originalUrl ?? i.url);
 
 /** Chặn dùng URL ký sắp hết hạn (bù độ trễ mạng/render) — 20 giây. */
 const PRESIGNED_SAFETY_MS = 20_000;
@@ -210,19 +215,36 @@ export function isPresignedStale(url?: string | null, now: number = Date.now()):
   return at !== null && at - now <= PRESIGNED_SAFETY_MS;
 }
 
-export async function uploadImage(id: string, file: File, altText: string | null): Promise<RecipeImage> {
+// D27: fetch không báo tiến trình upload -> dùng XMLHttpRequest để có onProgress (%).
+// KHÔNG đặt Content-Type: trình duyệt tự thêm boundary multipart.
+export function uploadImage(
+  id: string,
+  file: File,
+  altText: string | null,
+  onProgress?: (percent: number) => void,
+): Promise<RecipeImage> {
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
   const fd = new FormData();
   fd.append("file", file);
   if (altText) fd.append("altText", altText);
-  // KHÔNG đặt Content-Type: trình duyệt tự thêm boundary multipart
-  const res = await fetch(`${API}/recipes/${id}/images`, {
-    method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd,
+  return new Promise<RecipeImage>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API}/recipes/${id}/images`);
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      let body: any = null;
+      try { body = JSON.parse(xhr.responseText); } catch { /* 204 hoặc HTML -> body null */ }
+      if (xhr.status === 401) return reject(new UnauthorizedError(401, "UNAUTHORIZED", "Phiên đăng nhập hết hạn"));
+      if (xhr.status >= 200 && xhr.status < 300) return resolve((body?.data ?? body) as RecipeImage);
+      reject(new ApiError(xhr.status, body?.code ?? body?.error?.code, errorMessage(body, xhr.status)));
+    };
+    xhr.onerror = () => reject(new ApiError(0, "NETWORK", "Không thể kết nối máy chủ"));
+    xhr.onabort = () => reject(new ApiError(0, "ABORTED", "Đã huỷ tải lên"));
+    xhr.send(fd);
   });
-  if (res.status === 401) throw new UnauthorizedError(401, "UNAUTHORIZED", "Phiên đăng nhập hết hạn");
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, body?.code ?? body?.error?.code, errorMessage(body, res.status));
-  return (body?.data ?? body) as RecipeImage;
 }
 
 // PATCH gửi đủ 3 field (JSON strict) và giữ nguyên giá trị hiện tại để không vô tình xoá altText/orderIndex.

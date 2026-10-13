@@ -1,0 +1,223 @@
+﻿=== RUN 2 (docker compose down -v, xoa volume) ===
+ Volume ptudwnc-2026-nhom16_staging_redisdata Removed 
+ Volume ptudwnc-2026-nhom16_staging_s3data Removed 
+docker :  Image ptudwnc-2026-nhom16-culinary-api Building 
+At line:1 char:304
++ ... StartNew(); docker compose -f docker-compose.staging.yml up -d --buil ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Image ptudwnc-...y-api Building :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Image ptudwnc-2026-nhom16-culinary-frontend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.08kB done
+#1 DONE 0.0s
+
+#2 [culinary-api internal] load build definition from Dockerfile
+#2 transferring dockerfile: 904B done
+#2 DONE 0.0s
+
+#3 [culinary-frontend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 719B done
+#3 DONE 0.0s
+
+#4 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#4 ...
+
+#5 [culinary-api internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#5 DONE 0.4s
+
+#6 [culinary-api internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#6 DONE 0.4s
+
+#7 [culinary-api internal] load .dockerignore
+#7 transferring context: 352B done
+#7 DONE 0.0s
+
+#8 [culinary-api internal] load build context
+#8 DONE 0.0s
+
+#9 [culinary-api runtime 1/4] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:222759b391a1aaf241166672c8f99b2d4ada452e7b5319f3c6e8f265a37b5ad4
+#9 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:222759b391a1aaf241166672c8f99b2d4ada452e7b5319f3c6e8f265a37b5ad4 0.1s done
+#9 DONE 0.1s
+
+#10 [culinary-api build 1/5] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317
+#10 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 0.1s done
+#10 DONE 0.1s
+
+#8 [culinary-api internal] load build context
+#8 transferring context: 9.33kB done
+#8 DONE 0.0s
+
+#11 [culinary-api build 2/5] WORKDIR /src
+#11 CACHED
+
+#12 [culinary-api build 5/5] RUN dotnet publish src/backend/CulinaryBlog.API/CulinaryBlog.API.csproj -c Release -o /app/publish /p:UseAppHost=false
+#12 CACHED
+
+#13 [culinary-api build 4/5] COPY src/backend/ src/backend/
+#13 CACHED
+
+#14 [culinary-api runtime 3/4] RUN apt-get update     && apt-get install -y --no-install-recommends curl     && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [culinary-api build 3/5] COPY Directory.Build.props ./
+#15 CACHED
+
+#16 [culinary-api runtime 2/4] WORKDIR /app
+#16 CACHED
+
+#17 [culinary-api runtime 4/4] COPY --from=build /app/publish .
+#17 CACHED
+
+#18 [culinary-api] exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:2c6529b4e9b41425142f804bf370abab6e5ff862ff7575cf003229972938830a done
+#18 exporting config sha256:8167176c946535d335508a22de2daf49d5d7c757064c4dab8d3a9cce687df477 done
+#18 exporting attestation manifest sha256:022f619aa9ea1541e612c751e0a9ac4ed456c6985d43603bc787f072d5ad299b
+#18 exporting attestation manifest sha256:022f619aa9ea1541e612c751e0a9ac4ed456c6985d43603bc787f072d5ad299b 0.0s done
+#18 exporting manifest list sha256:1b745f38f93d0dbe4ab1550ed15bf00445624c7f8a995cc54d5f3a24a2951031 0.0s done
+#18 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest done
+#18 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-api:latest 0.0s done
+#18 DONE 0.2s
+
+#4 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#4 ...
+
+#19 [culinary-api] resolving provenance for metadata file
+#19 DONE 0.0s
+
+#4 [culinary-frontend internal] load metadata for docker.io/library/node:20-alpine
+#4 DONE 2.1s
+
+#20 [culinary-frontend internal] load .dockerignore
+#20 transferring context: 2B done
+#20 DONE 0.0s
+
+#21 [culinary-frontend deps 1/4] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#21 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.0s done
+#21 DONE 0.0s
+
+#22 [culinary-frontend internal] load build context
+#22 transferring context: 2.66MB 1.2s done
+#22 DONE 1.2s
+
+#23 [culinary-frontend builder 4/5] COPY . .
+#23 CACHED
+
+#24 [culinary-frontend runner 3/6] COPY --from=builder /app/public ./public
+#24 CACHED
+
+#25 [culinary-frontend runner 5/6] COPY --from=builder /app/node_modules ./node_modules
+#25 CACHED
+
+#26 [culinary-frontend deps 2/4] WORKDIR /app
+#26 CACHED
+
+#27 [culinary-frontend builder 3/5] COPY --from=deps /app/node_modules ./node_modules
+#27 CACHED
+
+#28 [culinary-frontend builder 5/5] RUN npm run build
+#28 CACHED
+
+#29 [culinary-frontend deps 3/4] COPY package*.json ./
+#29 CACHED
+
+#30 [culinary-frontend deps 4/4] RUN npm ci
+#30 CACHED
+
+#31 [culinary-frontend runner 4/6] COPY --from=builder /app/.next ./.next
+#31 CACHED
+
+#32 [culinary-frontend runner 6/6] COPY --from=builder /app/package.json ./package.json
+#32 CACHED
+
+#33 [culinary-frontend] exporting to image
+#33 exporting layers done
+#33 exporting manifest sha256:79a28981d6f4492666b7c336d7d7dd617932db699d86d997c33ba69b54e32807 done
+#33 exporting config sha256:1c7d3155694a4b0335afc0a5d98f47d9f533fa0e882c225c8665d490be054fdb done
+#33 exporting attestation manifest sha256:351662584eb4f85fa501a0469fbc82e702e564a5d509f25a65a90b1366c6d8b3 0.0s done
+#33 exporting manifest list sha256:9dca6fdf964210d29b1b3066d48ab9840b2830a5d21fd8c3643db95a5a90f312
+#33 exporting manifest list sha256:9dca6fdf964210d29b1b3066d48ab9840b2830a5d21fd8c3643db95a5a90f312 0.0s done
+#33 naming to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest done
+#33 unpacking to docker.io/library/ptudwnc-2026-nhom16-culinary-frontend:latest 0.0s done
+#33 DONE 0.1s
+
+#34 [culinary-frontend] resolving provenance for metadata file
+#34 DONE 0.0s
+ Image ptudwnc-2026-nhom16-culinary-api Built 
+ Image ptudwnc-2026-nhom16-culinary-frontend Built 
+time="2026-10-07T21:44:53+07:00" level=warning msg="Found orphan containers (culinaryblog-otel, culinaryblog-redis, 
+culinaryblog-s3, culinaryblog-seq, culinaryblog-nginx, culinaryblog-pg, culinaryblog-mailhog) for this project. If you 
+removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean 
+it up."
+ Volume ptudwnc-2026-nhom16_staging_pgdata Creating 
+ Volume ptudwnc-2026-nhom16_staging_pgdata Creating 
+ Volume ptudwnc-2026-nhom16_staging_redisdata Creating 
+ Volume ptudwnc-2026-nhom16_staging_redisdata Creating 
+ Volume ptudwnc-2026-nhom16_staging_s3data Creating 
+ Volume ptudwnc-2026-nhom16_staging_s3data Creating 
+ Volume ptudwnc-2026-nhom16_staging_s3data Created 
+ Volume ptudwnc-2026-nhom16_staging_s3data Created 
+ Container staging-culinary-s3 Creating 
+ Volume ptudwnc-2026-nhom16_staging_pgdata Created 
+ Volume ptudwnc-2026-nhom16_staging_pgdata Created 
+ Container staging-culinary-db Creating 
+ Volume ptudwnc-2026-nhom16_staging_redisdata Created 
+ Volume ptudwnc-2026-nhom16_staging_redisdata Created 
+ Container staging-culinary-redis Creating 
+ Container staging-culinary-s3 Created 
+ Container staging-culinary-init Creating 
+ Container staging-culinary-db Created 
+ Container staging-culinary-redis Created 
+ Container staging-culinary-init Created 
+ Container staging-culinary-api Creating 
+ Container staging-culinary-api Created 
+ Container staging-culinary-frontend Creating 
+ Container staging-culinary-frontend Created 
+ Container staging-culinary-nginx Creating 
+ Container staging-culinary-nginx Created 
+ Container staging-culinary-redis Starting 
+ Container staging-culinary-db Starting 
+ Container staging-culinary-s3 Starting 
+ Container staging-culinary-redis Started 
+ Container staging-culinary-db Started 
+ Container staging-culinary-s3 Started 
+ Container staging-culinary-s3 Waiting 
+ Container staging-culinary-s3 Healthy 
+ Container staging-culinary-init Starting 
+ Container staging-culinary-init Started 
+ Container staging-culinary-init Waiting 
+ Container staging-culinary-db Waiting 
+ Container staging-culinary-redis Waiting 
+ Container staging-culinary-s3 Waiting 
+ Container staging-culinary-redis Healthy 
+ Container staging-culinary-db Healthy 
+ Container staging-culinary-s3 Healthy 
+ Container staging-culinary-init Exited 
+ Container staging-culinary-api Starting 
+ Container staging-culinary-api Started 
+ Container staging-culinary-api Waiting 
+ Container staging-culinary-api Healthy 
+ Container staging-culinary-frontend Starting 
+ Container staging-culinary-frontend Started 
+ Container staging-culinary-nginx Starting 
+ Container staging-culinary-nginx Started 
+up exit=0 thoi_gian=24s
+staging-culinary-nginx | Up 5 seconds
+staging-culinary-frontend | Up 5 seconds
+staging-culinary-api | Up 16 seconds (healthy)
+staging-culinary-init | Exited (0) 16 seconds ago
+staging-culinary-redis | Up 23 seconds (healthy)
+staging-culinary-db | Up 22 seconds (healthy)
+staging-culinary-s3 | Up 22 seconds (healthy)
+health/ready | http://localhost/health/ready | HTTP 200
+FE qua nginx | http://localhost/ | HTTP 200
+sitemap.xml qua nginx | http://localhost/sitemap.xml | HTTP 200
+sitemap.xml API | http://localhost:5080/sitemap.xml | HTTP 200
+register: OK
+login: OK
+FAIL: The remote server returned an error: (404) Not Found.
+register (retry): OK
+create recipe (retry): OK id=f98bb8d0-67d9-4631-adf0-58fb46d0a7b3
+upload anh: HTTP 201

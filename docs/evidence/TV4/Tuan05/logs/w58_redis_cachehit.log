@@ -1,0 +1,21 @@
+W5-8.4 — cache-hit ratio (K12), staging, 11/10
+=============================================
+
+# (1) Trạng thái Redis ngay sau lần k6 MODE=vus VUS=100 (100 VU, 30s)
+#     => tải trộn (list_cached + list_uncached + read_mixed)
+$ docker exec staging-culinary-redis redis-cli INFO stats | Select-String "keyspace"
+keyspace_hits:24192
+keyspace_misses:10213
+#  => hit ratio = 24192 / (24192 + 10213) = 70.31%
+#  => miss phần lớn là CỐ Ý: scenario list_uncached gọi page ngẫu nhiên (1000..901000) nên chắc chắn miss.
+
+# (2) Đo đường cache thuần: reset thống kê rồi gọi page=1 (đã ấm cache) 200 lần
+$ docker exec staging-culinary-redis redis-cli CONFIG RESETSTAT
+$ 1..200 | % { curl.exe -s -o NUL "http://localhost:5080/api/v1/recipes?page=1&pageSize=12" }
+$ docker exec staging-culinary-redis redis-cli INFO stats | Select-String "keyspace"
+keyspace_hits:200
+keyspace_misses:0
+#  => hit ratio đường cache ấm = 200 / 200 = 100%
+
+KẾT LUẬN: cache-aside hoạt động đúng; mọi static/list page ấm đều hit 100%.
+Tỉ lệ trộn 70% không phải vấn đề vì một phần workload được thiết kế để đo đường DB.

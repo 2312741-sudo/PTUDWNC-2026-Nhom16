@@ -1,0 +1,21 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CulinaryBlog.Domain -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.Domain\bin\Release\net10.0\CulinaryBlog.Domain.dll
+  CulinaryBlog.Application -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.Application\bin\Release\net10.0\CulinaryBlog.Application.dll
+  CulinaryBlog.Infrastructure -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.Infrastructure\bin\Release\net10.0\CulinaryBlog.Infrastructure.dll
+  CulinaryBlog.API -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.API\bin\Release\net10.0\CulinaryBlog.API.dll
+  ConcurrencySpike -> D:\WNC\PTUDWNC-2026-Nhom16\tests\concurrency-spike\bin\Release\net10.0\ConcurrencySpike.dll
+Test run for D:\WNC\PTUDWNC-2026-Nhom16\tests\concurrency-spike\bin\Release\net10.0\ConcurrencySpike.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Data collection : Unable to find a datacollector with friendly name 'XPlat Code Coverage'.
+Data collection : Could not find data collector 'XPlat Code Coverage'
+  CulinaryBlog.Tests -> D:\WNC\PTUDWNC-2026-Nhom16\tests\CulinaryBlog.Tests\bin\Release\net10.0\CulinaryBlog.Tests.dll
+Test run for D:\WNC\PTUDWNC-2026-Nhom16\tests\CulinaryBlog.Tests\bin\Release\net10.0\CulinaryBlog.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 2 s - ConcurrencySpike.dll (net10.0)
+
+Passed!  - Failed:     0, Passed:   421, Skipped:     0, Total:   421, Duration: 1 m 4 s - CulinaryBlog.Tests.dll (net10.0)
+
+Attachments:
+  D:\WNC\PTUDWNC-2026-Nhom16\TestResults\69bd2aa7-5e62-45dd-9eb7-6ec027ad977f\coverage.cobertura.xml

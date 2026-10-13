@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -14,6 +15,7 @@ using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -46,7 +48,12 @@ builder.Host.UseSerilog((context, config) =>
 {
     config.MinimumLevel.Information()
         .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error)
+        // W5-2.5 (TV4, 07/10): cho phép override mức log EF qua config (Logging:LogLevel:Microsoft.EntityFrameworkCore)
+        // để Seq ghi span EFCore->Postgres khi truy vết trên staging. Default vẫn giữ Error như N1-3 (tuần 4).
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore",
+            Enum.TryParse(context.Configuration["Logging:LogLevel:Microsoft.EntityFrameworkCore"],
+                out Serilog.Events.LogEventLevel efCommandLevel)
+                ? efCommandLevel : Serilog.Events.LogEventLevel.Error)
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Application", "CulinaryBlog.API")
         .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
@@ -131,11 +138,20 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("auth", http => RateLimitPartition.GetFixedWindowLimiter(
         http.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
+// W5-4 (TV4 09/10): CORS phải liệt kê origin tường minh (AllowAnyOrigin đánh đổ NFR-SEC-005).
+// Origin hợp lệ đọc từ cấu hình `Cors:AllowedOrigins` (danh sách cách dấu phẩy; compose staging đặt
+// http://localhost,https://localhost,http://localhost:3000). Không có cấu hình -> mặc định dev/staging
+// là localhost FE; Production PHẢI khai báo tường minh, còn `WithOrigins` rỗng = từ chối mọi origin.
+var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"]
+        ?? (builder.Environment.IsProduction()
+            ? string.Empty
+            : "http://localhost:3000,http://localhost,https://localhost"))
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(corsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -390,6 +406,35 @@ if (!args.Contains("--no-auto-migrate") && !builder.Environment.IsEnvironment("T
     }
 }
 
+// W5-4 (TV4 09/10) — BUG-W4-03: nginx đã set X-Forwarded-For nhưng app không đọc => RemoteIpAddress
+// là IP container nginx, mọi người dùng gộp vào 1 bucket rate-limit (NFR-SEC-003). UseForwardedHeaders
+// PHẢI chạy trước mọi middleware đọc IP (rate limiter, logging). Chỉ tin forearded headers từ dải
+// Docker bridge (172.16/12) thay vì chấp nhận bừa bãi — tránh spoof X-Forwarded-For từ client.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    ForwardLimit = 1,
+    KnownIPNetworks = { new System.Net.IPNetwork(IPAddress.Parse("172.16.0.0"), 12) }
+});
+
+// FR-OBS-003 (W5-8): bộ đếm trong tiến trình cho endpoint /metrics. Đặt sớm để bao trọn mọi
+// request (kể cả request bị exception handler/status-pages đổi mã), nên số liệu phản ánh đúng
+// những gì client nhận. Không thay thế OTLP; chỉ thêm đường scrape không cần dependency mới.
+var requestMetrics = new RequestMetrics();
+app.Use(async (context, next) =>
+{
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        stopwatch.Stop();
+        requestMetrics.Record(context.Request.Method, context.Response.StatusCode, stopwatch.Elapsed.TotalMilliseconds);
+    }
+});
+
 app.Use(async (context, next) =>
 {
     // Generate server correlation IDs; do not trust arbitrary client strings in logs.
@@ -532,16 +577,21 @@ recipes.MapGet("/sitemap", async (ISender sender, CancellationToken ct) =>
 // N1-6 (tuần 4): sitemap.xml do cron 02:00 UTC sinh, lưu trong Redis để mọi API instance
 // (và lần chạy sau) đọc chung một bản. Nếu chưa có bản nào thì sinh tại chỗ để không bao giờ
 // trả 404 cho crawler.
-app.MapGet("/sitemap.xml", async (SitemapGenerator generator, ILogger<SitemapGenerator> log, CancellationToken ct) =>
+app.MapGet("/sitemap.xml", async (HttpContext http, SitemapGenerator generator, ILogger<SitemapGenerator> log, CancellationToken ct) =>
 {
     var xml = await generator.GetCachedXmlAsync(ct);
+    var generatedNow = false;
     if (xml is null)
     {
         var result = await generator.GenerateAsync(ct);
         xml = await generator.GetCachedXmlAsync(ct) ?? string.Empty;
+        generatedNow = result.Acquired;
         if (!result.Acquired)
             log.LogWarning("sitemap.xml chưa có bản cache và lock đang bị giữ ({Reason}); trả nội dung rỗng tạm thời", result.Reason);
     }
+    // BUG-W4-09 (W5-10): phân biệt "200 vì vừa sinh tại chỗ" với "200 vì phục vụ bản cache" —
+    // crawler/monitor không cần parse XML cũng biết lần gọi này có kích hoạt sinh mới hay không.
+    http.Response.Headers["X-Sitemap-Generated"] = generatedNow ? "true" : "false";
     return Results.Content(xml, "application/xml; charset=utf-8");
 }).WithName("GetSitemapXml").Produces<string>(200, "application/xml");
 
@@ -738,6 +788,10 @@ resourcesImages.MapGet("/{**key}", async (string key, IObjectStorageReader stora
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => true, ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = c => c.Tags.Contains("live"), ResponseWriter = HealthReportWriter.WriteJson });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready"), ResponseWriter = HealthReportWriter.WriteJson });
+// FR-OBS-003 (W5-8): scrape metric dạng Prometheus text. Không cần auth (giống /health) nhưng chỉ
+// lộ số đếm tổng hợp, không có dữ liệu người dùng; production nên chặn theo mạng nội bộ.
+app.MapGet("/metrics", () => Results.Text(requestMetrics.Render("CulinaryBlog.API"), "text/plain; version=0.0.4; charset=utf-8"))
+    .WithName("GetMetrics").Produces<string>(200, "text/plain");
 app.MapControllers();
 app.Run();
 

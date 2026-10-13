@@ -1,0 +1,14 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CulinaryBlog.Domain -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.Domain\bin\Release\net10.0\CulinaryBlog.Domain.dll
+  CulinaryBlog.Application -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.Application\bin\Release\net10.0\CulinaryBlog.Application.dll
+  CulinaryBlog.Infrastructure -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.Infrastructure\bin\Release\net10.0\CulinaryBlog.Infrastructure.dll
+  CulinaryBlog.API -> D:\WNC\PTUDWNC-2026-Nhom16\src\backend\CulinaryBlog.API\bin\Release\net10.0\CulinaryBlog.API.dll
+  ConcurrencySpike -> D:\WNC\PTUDWNC-2026-Nhom16\tests\concurrency-spike\bin\Release\net10.0\ConcurrencySpike.dll
+  CulinaryBlog.Tests -> D:\WNC\PTUDWNC-2026-Nhom16\tests\CulinaryBlog.Tests\bin\Release\net10.0\CulinaryBlog.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.23

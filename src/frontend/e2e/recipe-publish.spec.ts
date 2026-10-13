@@ -37,21 +37,15 @@ async function signIn(page: Page): Promise<void> {
   }, token)
 }
 
-/**
- * Hộp thông báo lỗi của wizard.
- *
- * Vì sao phải loại `#__next-route-announcer__`: Next.js tự sinh một phần tử `role="alert"` phục vụ
- * screen reader, và nó **luôn có mặt** trên mọi trang. Nếu dùng `getByRole('alert')` trần thì Playwright
- * báo `strict mode violation` vì khớp 2 phần tử — lỗi của test, không phải của sản phẩm.
- */
-const wizardAlert = (page: Page) =>
-  page.locator('div[role="alert"]:not(#__next-route-announcer__)')
-
 /** Chờ wizard dựng xong bước đầu — dấu hiệu là tiêu đề form đã hiện. */
 async function gotoWizard(page: Page): Promise<void> {
   await page.goto(WIZARD_NEW)
   await expect(page.getByRole('heading', { name: 'Tạo công thức mới' })).toBeVisible()
 }
+
+/** Thanh 5 bước nằm trong nav — scope hẹp để không đụng nút khác cùng tên bên ngoài. */
+const stepTab = (page: Page, stepNumber: number) =>
+  page.getByRole('navigation', { name: 'Các bước soạn công thức' }).getByRole('button', { name: new RegExp(`^${stepNumber}\\.`) })
 
 /**
  * Bấm một ô trên thanh điều hướng 5 bước, ví dụ `gotoStep(page, 2)`.
@@ -62,7 +56,7 @@ async function gotoWizard(page: Page): Promise<void> {
  * thành một lỗi nói đúng sự thật ngay tại chỗ.
  */
 async function gotoStep(page: Page, stepNumber: number): Promise<void> {
-  const tab = page.getByRole('button', { name: new RegExp(`^${stepNumber}\\.`) })
+  const tab = stepTab(page, stepNumber)
   await tab.click()
   await expect(tab).toHaveAttribute('aria-current', 'step')
 }
@@ -88,7 +82,13 @@ const publishButton = (page: Page) =>
   page.getByRole('button', { name: 'Xuất bản', exact: true })
 
 /**
- * Chờ một ô nhập của bước hiện tại đã sẵn sàng **và không còn request nào bay nữa**.
+ * Chờ ô nhập đầu tiên của bước 2/3 (dòng nháp — placeholder cố định, không đổi số dòng) đã sẵn sàng
+ * **và không còn request nào bay nữa**.
+ *
+ * Vì sao dùng placeholder thay vì label: ô nhập của dòng nháp có `aria-label` động ("Tên nguyên liệu
+ * (dòng 1)", "dòng 2", …) nên `getByLabel('Tên nguyên liệu')` khớp nhiều phần tử → strict violation,
+ * trong khi placeholder (`Tên *`, `SL`, `Tiêu đề bước *`, …) chỉ tồn tại trên dòng nháp đang nhập.
+ * `.last()` lấy đúng dòng nháp mới nhất (dòng cũ đã lưu thành dòng trong bảng, không còn input).
  *
  * Vì sao phải chờ `networkidle`: lần lưu nháp đầu tiên làm URL đổi từ `/dashboard/recipes/new` sang
  * `/dashboard/recipes/{id}/edit`, nên Next render lại và wizard được dựng lại một lần nữa. Nếu test
@@ -96,10 +96,11 @@ const publishButton = (page: Page) =>
  * hiện là `Tên nguyên liệu` nhận được rồi `Số lượng` thì không thấy. Chờ mạng rảnh là cách chắc chắn
  * remount đã xong trước khi bắt đầu nhập.
  */
-async function settleStep(page: Page, fieldLabel: string): Promise<void> {
-  await expect(page.getByLabel(fieldLabel)).toBeVisible()
+async function settleDraftRow(page: Page, inputSelector: string): Promise<void> {
+  const input = page.locator(inputSelector).last()
+  await expect(input).toBeVisible()
   await page.waitForLoadState('networkidle')
-  await expect(page.getByLabel(fieldLabel)).toBeVisible()
+  await expect(input).toBeVisible()
 }
 
 /**
@@ -143,30 +144,30 @@ async function saveDraftAndGetId(page: Page): Promise<string> {
   return recipeId!
 }
 
-/** Thêm một nguyên liệu ở bước 2. */
+/** Thêm một nguyên liệu ở bước 2 — đổ vào dòng nháp (placeholder cố định) rồi bấm "Lưu". */
 async function addIngredient(
   page: Page,
   name: string,
   quantity: string,
   unit: string,
 ): Promise<void> {
-  await settleStep(page, 'Tên nguyên liệu')
-  await page.getByLabel('Tên nguyên liệu').fill(name)
-  await page.getByLabel('Số lượng').fill(quantity)
-  await page.getByLabel('Đơn vị').fill(unit)
-  await page.getByRole('button', { name: '+ Thêm' }).click()
+  await settleDraftRow(page, 'input[placeholder="Tên *"]')
+  await page.locator('input[placeholder="Tên *"]').last().fill(name)
+  await page.locator('input[placeholder="SL"]').last().fill(quantity)
+  await page.locator('input[placeholder="Đơn vị"]').last().fill(unit)
+  await page.getByRole('button', { name: 'Lưu', exact: true }).click()
 }
 
-/** Thêm một bước thực hiện ở bước 3. */
+/** Thêm một bước thực hiện ở bước 3 — dòng nháp có placeholder cố định, nút "Lưu bước". */
 async function addStep(
   page: Page,
   title: string,
   description: string,
 ): Promise<void> {
-  await settleStep(page, 'Tiêu đề bước')
-  await page.getByLabel('Tiêu đề bước').fill(title)
-  await page.getByLabel('Mô tả chi tiết').fill(description)
-  await page.getByRole('button', { name: '+ Thêm bước' }).click()
+  await settleDraftRow(page, 'input[placeholder="Tiêu đề bước *"]')
+  await page.locator('input[placeholder="Tiêu đề bước *"]').last().fill(title)
+  await page.locator('textarea[placeholder="Mô tả chi tiết *"]').last().fill(description)
+  await page.getByRole('button', { name: 'Lưu bước', exact: true }).click()
 }
 
 test.describe('N2-B1 · Xuất bản công thức qua UI', () => {
@@ -208,7 +209,9 @@ test.describe('N2-B1 · Xuất bản công thức qua UI', () => {
 
     await page.getByRole('button', { name: 'Lưu & tiếp →' }).click()
 
-    await expect(wizardAlert(page)).toContainText('Tiêu đề phải từ 5 đến 200 ký tự')
+    // Lỗi zod hiện dưới chính ô nhập (`#err-title`) chứ không phải banner; banner chỉ nhận lỗi server.
+    await expect(page.locator('#err-title')).toHaveText('Tiêu đề phải từ 5 đến 200 ký tự')
+    await expect(page.getByLabel('Tiêu đề *')).toHaveAttribute('aria-invalid', 'true')
     // Còn nguyên ở bước 1 — không được nhảy bước.
     await expect(page.getByRole('heading', { name: 'Tạo công thức mới' })).toBeVisible()
 
@@ -216,7 +219,7 @@ test.describe('N2-B1 · Xuất bản công thức qua UI', () => {
     await page.getByLabel('Tiêu đề *').fill('Canh rau củ tìm khoảng 400')
     await page.getByRole('button', { name: 'Lưu & tiếp →' }).click()
 
-    await expect(wizardAlert(page)).toContainText('Vui lòng chọn danh mục')
+    await expect(page.locator('#err-category')).toHaveText('Vui lòng chọn danh mục')
   })
 
   /**
@@ -272,16 +275,17 @@ test.describe('N2-B1 · Xuất bản công thức qua UI', () => {
     // Trước khi sửa, việc đổi URL sang route `edit` khiến wizard bị dựng lại và quay về bước 1, nên
     // người dùng phải bấm "Nguyên liệu" lần nữa dù đã bấm "Lưu & tiếp". Chờ form xuất hiện trước rồi
     // mới kiểm bước: nếu lỗi quay lại bước 1 thì form này không bao giờ hiện và test đỏ đúng chỗ.
-    await settleStep(page, 'Tên nguyên liệu')
-    await expect(page.getByRole('button', { name: /^2\./ })).toHaveAttribute('aria-current', 'step')
+    await settleDraftRow(page, 'input[placeholder="Tên *"]')
+    await expect(stepTab(page, 2)).toHaveAttribute('aria-current', 'step')
 
     // --- Bước 2: nguyên liệu (wizard đã tự sang bước này sau khi lưu) ---
     await expect(page.getByText('Chưa có nguyên liệu nào.')).toBeVisible()
     await addIngredient(page, 'Bắp hành', '3', 'cọng')
     await addIngredient(page, 'Bắp gừng', '50', 'g')
     // Hai nguyên liệu phải nằm trong bảng, không chỉ "đã gửi đi".
-    await expect(page.getByRole('cell', { name: 'Bắp hành' })).toBeVisible()
-    await expect(page.getByRole('cell', { name: 'Bắp gừng' })).toBeVisible()
+    // exact: ô "Sửa nguyên liệu Bắp hành / Xoá" cũng chứa tên món — substring sẽ strict violation.
+    await expect(page.getByRole('cell', { name: 'Bắp hành', exact: true })).toBeVisible()
+    await expect(page.getByRole('cell', { name: 'Bắp gừng', exact: true })).toBeVisible()
 
     // --- Bước 3: các bước ---
     await gotoStep(page, 3)

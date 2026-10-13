@@ -15,7 +15,7 @@
 > |---|---|---|
 > | **GĐ1** — N2/N3/N4 | 🟡 Xong phần đủ điều kiện: **N2 7/8** (dở dang `D1/D2/D3`), **N3-B/C1/C2 xong**, N4-C xong. Còn `N3-A3` (Zod/RHF) và `N3-A5` (Google OAuth — chờ credentials) | [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](../report/BAO_CAO_GIAI_DOAN_1_N2_N4.md) |
 > | **GĐ2** — D0 xét lỗi | ⬜ **Chưa thực thi** | [`PLAN_GIAI_DOAN_2_D0_XET_LOI.md`](PLAN_GIAI_DOAN_2_D0_XET_LOI.md) (chỉ là plan) |
-> | **GĐ3** — sửa lỗi | 🟡 Đã thực thi **2 lỗi** (`BUG-W4-M1` khoá JWT `R3`, `BUG-W4-M2` conflict `.gitignore`) + **việc cuối: kiểm chứng báo cáo TV1**. Còn `BUG-W4-01/02/03` (đã sửa trên lab, **chưa merge**) và các lỗi chờ quyết định | [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
+> | **GĐ3** — sửa lỗi | 🟡 Đã thực thi **2 lỗi** (`BUG-W4-M1` khoá JWT `R3`, `BUG-W4-M2` conflict `.gitignore`) + **việc cuối: kiểm chứng báo cáo TV1**. Còn `BUG-W4-01/02/03` (05/10 chưa có bản vá trong dự án → 07/10: `01` đã vào `main`, `02`/`03` sửa trực tiếp tuần 5) và các lỗi chờ quyết định | [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md) |
 
 ---
 
@@ -177,12 +177,14 @@ Các mục dưới đây **đang treo** và ảnh hưởng trực tiếp tới G
 
 ### 6.1. Một việc cần dọn trước (kỹ thuật, thuộc TV4)
 
-Công việc lab đợt trước **chưa được commit**: đang nằm trong `stash@{0}` trên `lab/TV4-audit-tuan4`
-(9 file code/config + allowlist + 4 test hồi quy + README/CHANGELOG). Cần TV1 chọn một trong ba:
+Công việc lab đợt trước **chưa được commit**: đang nằm trong stash cục bộ trên máy TV4
+(9 file code/config + allowlist + README/CHANGELOG; **không có test hồi quy** — đối chiếu 07/10).
+Cách xử lý (rà lại 07/10, không cần TV1 chọn nữa):
 
-1. Commit lên `lab/TV4-audit-tuan4` để giữ làm căn cứ cho GĐ3 → **khuyến nghị**
-2. Áp dụng thẳng vào `2312739_NHTSon_D5-D6-D7` trong GĐ3
-3. Bỏ, vì GĐ2 sẽ dò lại từ đầu
+1. ~~Commit lên nhánh lab~~ → **không làm** — nhánh kiểm tra cục bộ không thuộc dự án.
+2. ~~Áp dụng thẳng trong GĐ3~~ → **đưa vào tuần 5 qua PR bình thường**: `BUG-W4-02` + `BUG-W4-03`
+   sửa trong `W5-10` (xem `docs/evidence/TV4/Tuan05/KE_HOACH_TUAN_5_TV4.md`), được Tâm review.
+3. Bỏ phần không còn giá trị (README/CHANGELOG cũ — `main` đã cập nhật 05/10).
 
 > ⚠️ **Không** xoá `stash@{1}` — đó là stash có sẵn của GitHub Desktop, không thuộc công việc này.
 

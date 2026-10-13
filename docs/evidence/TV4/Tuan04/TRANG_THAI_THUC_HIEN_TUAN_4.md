@@ -22,8 +22,9 @@
 | N2 / N3 / N4 | 0% | **Vẫn 0% — chưa thực thi.** Đã lập kế hoạch 3 giai đoạn, xem [`PLAN_TRIEN_KHAI_TV4_TUAN4.md`](plan/PLAN_TRIEN_KHAI_TV4_TUAN4.md) |
 | Phạm vi N4 | Runbook + release + bàn giao (4 việc) | ⛔ Đã lược: **runbook đầy đủ + deploy staging + TLS thuộc tuần 5**. Tuần 4 chỉ còn tài liệu + evidence. Xem [`PLAN_GIAI_DOAN_1_N2_N4.md`](plan/PLAN_GIAI_DOAN_1_N2_N4.md) §0.2 |
 
-> ⚠️ **Số `214/214` là của nhánh lab** `lab/TV4-audit-tuan4` (thêm 4 test hồi quy), ⛔ chưa merge.
-> Baseline của nhánh này là **`210/210`**. Bảng dưới giữ nguyên số liệu gốc để làm căn cứ đối chiếu.
+> ⚠️ **Số `214/214` là số đo trên bản vá cục bộ của TV4** (không push, không thuộc dự án) — đối chiếu
+> 07/10: các test hồi quy kèm theo **không tồn tại trong repo** → ⛔ không dùng. Baseline của nhánh này là
+> **`210/210`**. Bảng dưới giữ nguyên số liệu gốc để làm căn cứ đối chiếu.
 
 ---
 

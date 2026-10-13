@@ -6,7 +6,7 @@
 > **Phạm vi phụ trách**: Xuất bản công thức, quản lý ảnh, SEO, vận hành hệ thống và đăng xuất
 > **Reviewer**: Nguyễn Thanh Tâm (Nhóm trưởng)
 > **Nhánh làm việc**: `2312739_NHTSon_D5-D6-D7` — [PR #29](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/29)
-> **Nhánh lab**: `practice/TV4/L4`, `practice/TV4/L5`, `lab/TV4-audit-tuan4`
+> **Nhánh lab**: `practice/TV4/L4`, `practice/TV4/L5`
 > **Cổng nghiệm thu trong kỳ**: **G4** giữa tuần (24/24 ô K có minh chứng + reviewer xác nhận) · **G5** cuối tuần (06/10: coverage ≥ 80% có số đo thật, sửa xong lỗi chặn luồng/bảo mật, CI xanh)
 > **Cách làm báo cáo**: tuần 4 chia 3 giai đoạn — GĐ1 (N2/N3/N4-C), GĐ2 (kiểm tra tích hợp FE–BE), GĐ3 (sửa lỗi + đóng issue). Báo cáo SRS này gộp kết quả cả 3 giai đoạn, dẫn chiếu chi tiết tại [`BAO_CAO_GIAI_DOAN_1_N2_N4.md`](../Tuan04/report/BAO_CAO_GIAI_DOAN_1_N2_N4.md), [`BAO_CAO_GIAI_DOAN_2_N3.md`](../Tuan04/report/BAO_CAO_GIAI_DOAN_2_N3.md), [`BAO_CAO_GIAI_DOAN_3_SUA_LOI.md`](../Tuan04/report/BAO_CAO_GIAI_DOAN_3_SUA_LOI.md).
 
@@ -140,7 +140,7 @@
 | **N3-A3 Zod/RHF phía FE** (K05) | `zod` có trong `package.json` nhưng `src/` không import chỗ nào | Tuần 5 |
 | **N2-D3 checklist WCAG 320/768/1200 px** (K18) | Thuộc **TV2** theo phân chia công việc tuần 5 | Tuần 5 |
 | **E2E 5 luồng** (K21) | Mới phủ 2/5 — `register/login` (TV1), `category` (TV2), `create-recipe` (TV3) | Tuần 5 (cổng G6) |
-| **`BUG-W4-01/02/03`** | Đã sửa trên lab `lab/TV4-audit-tuan4` nhưng **chưa merge**; `BUG-W4-01` cần Tâm chốt C1/C2 (đụng schema của TV3) | Chờ Tâm |
+| **`BUG-W4-01/02/03`** | `01` **đã vào `main`** (PR #29 `c624b9f`) — còn test hồi quy + chốt C1/C2; `02`/`03` chưa có bản vá trong dự án → **sửa trực tiếp tuần 5** (W5-10) | TV4 (W5-10) + Tâm (review PR) |
 | **`N4-A` runbook · `N4-B` deploy staging/TLS/HSTS** | Thuộc phạm vi tuần 5 | Tuần 5 |
 | **K11 FTS EXPLAIN** | Phụ thuộc TV2 sửa `RecipeRepository` sang `to_tsquery` (vi phạm ADR 0003) — `K11` của TV4 không đóng được khi TV2 chưa sửa | Chờ TV2 |
 | **`npm audit` 10 vulnerability** (9 high, 1 critical) | Chưa rà được trong kỳ | Tuần 5 |
@@ -183,9 +183,9 @@
 
 | Mã | Lỗi | Vì sao còn mở |
 |:---|:---|:---|
-| `BUG-W4-01` | `422 recipe.version_conflict` khi thêm ảnh vào recipe đã có ảnh | ✅ Đã sửa trên lab `lab/TV4-audit-tuan4` nhưng ⛔ **chưa merge** — cần Tâm chốt C1/C2 (đụng schema của TV3) |
-| `BUG-W4-02` | Secret còn trong file tracked, `scan-secrets.sh` không bắt được | ✅ Đã sửa trên lab, ⛔ chưa merge |
-| `BUG-W4-03` | 2 IP khác nhau dùng chung 1 bucket | ✅ Đã sửa trên lab, ⛔ chưa merge |
+| `BUG-W4-01` | `422 recipe.version_conflict` khi thêm ảnh vào recipe đã có ảnh | 🟠 Đã tái hiện + sửa cục bộ 03/10 — **07/10: đã vào `main`** (PR #29 `c624b9f`) — còn test hồi quy + chốt C1/C2 (W5-10, đụng schema của TV3) |
+| `BUG-W4-02` | Secret còn trong file tracked, `scan-secrets.sh` không bắt được | 🔴 **Chưa có bản vá trong dự án** (chỉ kiểm tra cục bộ 03/10) — sửa trực tiếp tuần 5 (W5-10) |
+| `BUG-W4-03` | 2 IP khác nhau dùng chung 1 bucket | 🔴 **Chưa có bản vá trong dự án** (chỉ kiểm tra cục bộ 03/10) — sửa trực tiếp tuần 5 (W5-10) |
 | `BUG-W4-08/09/10` | Chưa kiểm tra sâu · điều kiện cạnh tranh · migration no-op | ⏳ Chưa xác minh — không tự kết luận |
 | — | RowVersion/optimistic concurrency E2E | ⛔ Tài khoản E2E không sở hữu công thức (`GetRecipesQuery` không filter chủ sở hữu) |
 | — | Google OAuth thật | ⛔ Thiếu credentials |

@@ -1,6 +1,13 @@
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/category';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5080/api/v1';
+// `NEXT_PUBLIC_API_URL` phục vụ TRÌNH DUYỆT (qua reverse proxy). Trên server (SSR/ISR) thì
+// `localhost` là chính container frontend, không phải API -> fetch thất bại (ECONNREFUSED).
+// `API_INTERNAL_URL` là biến chỉ dùng phía server (không có tiền tố NEXT_PUBLIC nên không bị
+// inline vào bundle client): staging đặt về địa chỉ nội bộ của API trong mạng compose.
+export const API_BASE_URL =
+  (typeof window === 'undefined' ? process.env.API_INTERNAL_URL : undefined) ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:5080/api/v1';
 
 export async function getCategories(): Promise<Category[]> {
   try {
@@ -436,10 +443,9 @@ export async function getRecipeBySlug(
   token?: string
 ): Promise<import('@/types/recipe').RecipeDetail | null> {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
     const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, {
-      ...(token || isDev
-        ? { cache: 'no-store' as const, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) }
+      ...(token
+        ? { cache: 'no-store' as const, headers: { Authorization: `Bearer ${token}` } }
         : { next: { revalidate: 300 } }),
     });
     if (res.status === 404) return null;

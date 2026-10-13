@@ -13,7 +13,11 @@ test.use({ trace: "off" });
 
 const CONFLICT_MSG = "Công thức vừa được thay đổi ở nơi khác";
 /** Next.js luôn gắn một role=alert rỗng (next-route-announcer) -> chỉ lấy alert có chữ */
-const alertWithText = (page: Page) => page.getByRole("alert").filter({ hasText: /\S/ });
+// Banner lỗi của wizard (`s.error`). Phải loại `#__next-route-announcer__`: Next.js tự sinh nó với
+// `role="alert"` và tạm giữ tiêu đề route ("Sửa công thức") mỗi khi đổi bước qua `history.replaceState`
+// (`?step=`), nên count 0 sẽ fail nhầm dù không có lỗi nào.
+const alertWithText = (page: Page) =>
+  page.locator('div[role="alert"]:not(#__next-route-announcer__)').filter({ hasText: /\S/ });
 
 test.describe("Wizard soạn công thức — tuần 4", () => {
   test("(a) để trống tiêu đề -> lỗi đúng ô tiêu đề, không gửi POST /recipes", async ({ page, request }) => {
