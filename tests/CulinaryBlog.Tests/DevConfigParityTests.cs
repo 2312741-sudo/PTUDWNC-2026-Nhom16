@@ -28,13 +28,14 @@ public sealed class DevConfigParityTests
             var root = JsonDocument.Parse(File.ReadAllText(ApiSettingsPath(name))).RootElement.Clone();
             Assert.False(root.TryGetProperty("ConnectionStrings", out _),
                 $"{name}: không được chứa ConnectionStrings (mật khẩu DB) trong repo — giá trị thật nằm ở .env (đã gitignore), thiếu thì app fail-fast với thông báo cấu hình.");
-        }
 
-        var minio = DevSettings().GetProperty("Minio");
-        Assert.False(minio.TryGetProperty("AccessKey", out _),
-            "appsettings.Development.json: không được chứa Minio:AccessKey trong repo — lấy từ .env (Minio__AccessKey).");
-        Assert.False(minio.TryGetProperty("SecretKey", out _),
-            "appsettings.Development.json: không được chứa Minio:SecretKey trong repo — lấy từ .env (Minio__SecretKey).");
+            Assert.True(root.TryGetProperty("Minio", out var minio),
+                $"{name}: phải giữ section Minio (Endpoint/Bucket/UseSsl) để giữ guard bug 500.");
+            Assert.False(minio.TryGetProperty("AccessKey", out _),
+                $"{name}: không được chứa Minio:AccessKey trong repo — lấy từ .env (Minio__AccessKey).");
+            Assert.False(minio.TryGetProperty("SecretKey", out _),
+                $"{name}: không được chứa Minio:SecretKey trong repo — lấy từ .env (Minio__SecretKey).");
+        }
     }
 
     [Fact]
