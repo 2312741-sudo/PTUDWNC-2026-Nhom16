@@ -184,14 +184,8 @@ export default function GoogleSignInButton({
       return;
     }
 
-    // In dev mode without configured Client ID, open Dev Assistant
-    if (isDev) {
-      setShowDevModal(true);
-    } else {
-      const msg = 'Chức năng đăng nhập Google chưa được cấu hình Client ID trên hệ thống.';
-      setErrorMsg(msg);
-      onError?.(msg);
-    }
+    // When Client ID is not configured, open Assistant Modal to configure or test
+    setShowDevModal(true);
   };
 
   // Dev mode: Save custom Google Client ID
@@ -209,7 +203,7 @@ export default function GoogleSignInButton({
     }
   };
 
-  // Dev mode: Quick mock login with test account
+  // Quick mock login with test account
   const handleDevMockLogin = (email: string, name: string) => {
     const devToken = `dev_google:${encodeURIComponent(email)}:${encodeURIComponent(name)}`;
     handleAuthPayload(devToken);
@@ -225,16 +219,14 @@ export default function GoogleSignInButton({
             className="w-full flex justify-center min-h-[44px] transition-opacity duration-200"
           />
 
-          {/* Dev Mode toggle button */}
-          {isDev && (
-            <button
-              type="button"
-              onClick={() => setShowDevModal(true)}
-              className="text-[11px] text-gray-400 hover:text-emerald-600 mt-1.5 flex items-center gap-1 transition-colors"
-            >
-              <Settings className="w-3 h-3" /> Cấu hình Google Client ID / Dev Mode
-            </button>
-          )}
+          {/* Quick config button */}
+          <button
+            type="button"
+            onClick={() => setShowDevModal(true)}
+            className="text-[11px] text-gray-400 hover:text-emerald-600 mt-1.5 flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <Settings className="w-3 h-3" /> Cấu hình Google Client ID / Chế độ thử nghiệm
+          </button>
         </div>
       ) : (
         /* Standard Google Sign-In Button compliant with Google Brand Guidelines */
@@ -268,12 +260,10 @@ export default function GoogleSignInButton({
             <span>{loading ? 'Đang kết nối...' : buttonText}</span>
           </button>
 
-          {isDev && (
-            <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400" />
-              Chưa gán Google Client ID — bấm nút để cấu hình hoặc thử nghiệm nhanh
-            </p>
-          )}
+          <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400" />
+            Bấm nút để cấu hình Google Client ID hoặc thử nghiệm 1-click
+          </p>
         </div>
       )}
 
@@ -293,8 +283,8 @@ export default function GoogleSignInButton({
         </div>
       )}
 
-      {/* Professional Developer Assistant Modal (Dev Mode Only - Never Asks for Google Password) */}
-      {showDevModal && isDev && (
+      {/* Developer & Setup Assistant Modal (Never Asks for Google Password) */}
+      {showDevModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
           <div className="w-full max-w-lg bg-white rounded-3xl border border-gray-200 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
