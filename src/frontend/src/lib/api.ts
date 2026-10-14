@@ -345,14 +345,17 @@ export async function loginWithGoogle(
       body: JSON.stringify({ idToken }),
     });
 
-    const result = await res.json();
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { success: false, error: result.title || result.detail || 'Đăng nhập Google thất bại.' };
+      return {
+        success: false,
+        error: result.detail || result.title || result.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.',
+      };
     }
 
     return { success: true, data: result.data ?? result };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+    return { success: false, error: err.message || 'Lỗi kết nối máy chủ xác thực.' };
   }
 }
 

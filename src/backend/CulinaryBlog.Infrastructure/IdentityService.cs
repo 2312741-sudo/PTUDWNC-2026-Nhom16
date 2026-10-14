@@ -356,7 +356,7 @@ public sealed class IdentityService(
         if (!payload.EmailVerified)
             throw new AppException(401, "auth.google_email_unverified", "Email Google chưa được xác minh.");
 
-        var email = payload.Email.Trim();
+        var email = payload.Email.Trim().ToLowerInvariant();
         var user = await users.FindByEmailAsync(email);
         if (user is null)
         {
@@ -387,6 +387,22 @@ public sealed class IdentityService(
             if (!logins.Any(l => l.LoginProvider == "Google" && l.ProviderKey == payload.Subject))
             {
                 await users.AddLoginAsync(user, new UserLoginInfo("Google", payload.Subject, "Google"));
+            }
+
+            var needsUpdate = false;
+            if (!user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;
+                needsUpdate = true;
+            }
+            if (string.IsNullOrWhiteSpace(user.AvatarUrl) && !string.IsNullOrWhiteSpace(payload.Picture))
+            {
+                user.AvatarUrl = payload.Picture;
+                needsUpdate = true;
+            }
+            if (needsUpdate)
+            {
+                await users.UpdateAsync(user);
             }
         }
 

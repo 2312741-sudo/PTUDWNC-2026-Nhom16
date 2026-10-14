@@ -1,17 +1,34 @@
 using CulinaryBlog.Application;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace CulinaryBlog.Infrastructure;
 
-public sealed class GoogleAuthService(IConfiguration configuration, ILogger<GoogleAuthService> logger) : IGoogleAuthService
+public sealed class GoogleAuthService(
+    IConfiguration configuration,
+    ILogger<GoogleAuthService> logger,
+    IHostEnvironment? environment = null) : IGoogleAuthService
 {
     public async Task<GoogleUserPayload> ValidateIdTokenAsync(string idToken, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(idToken))
             throw new AppException(400, "auth.google_token_invalid", "Google ID Token không được để trống.");
+
+        // Tuyệt đối không cho phép mock/dev token trong môi trường Production
+        if (environment?.IsProduction() == true)
+        {
+            if (idToken.StartsWith("dev_google:", StringComparison.OrdinalIgnoreCase) ||
+                idToken.StartsWith("mock_google:", StringComparison.OrdinalIgnoreCase) ||
+                idToken == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token" ||
+                idToken == "valid-token")
+            {
+                logger.LogWarning("Phát hiện token Google thử nghiệm bị từ chối trong môi trường Production");
+                throw new AppException(400, "auth.google_token_invalid", "Token Google thử nghiệm không được hỗ trợ trong môi trường Production.");
+            }
+        }
 
         // Hỗ trợ token mô phỏng Google trong môi trường thử nghiệm (định dạng dev_google:<email>:<tên>)
         if (idToken.StartsWith("dev_google:", StringComparison.OrdinalIgnoreCase) ||
@@ -34,7 +51,7 @@ public sealed class GoogleAuthService(IConfiguration configuration, ILogger<Goog
                 Picture: $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(name)}&background=059669&color=fff");
         }
 
-        // Demo token mặc định
+        // Demo token mặc định (cho các bài test hoặc demo nhanh)
         if (idToken == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token" || idToken == "valid-token")
         {
             var demoEmail = configuration["Authentication:Google:DefaultDevEmail"] ?? "demo.author@culinaryblog.vn";
@@ -56,9 +73,21 @@ public sealed class GoogleAuthService(IConfiguration configuration, ILogger<Goog
         try
         {
             var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, validationSettings);
+            if (string.IsNullOrWhiteSpace(payload.Email))
+            {
+                logger.LogWarning("Google ID Token không chứa thông tin email");
+                throw new AppException(400, "auth.google_token_invalid", "Token Google không chứa địa chỉ email.");
+            }
+
+            if (string.IsNullOrWhiteSpace(payload.Subject))
+            {
+                logger.LogWarning("Google ID Token không chứa thông tin subject");
+                throw new AppException(400, "auth.google_token_invalid", "Token Google không hợp lệ (thiếu subject).");
+            }
+
             return new GoogleUserPayload(
                 Subject: payload.Subject,
-                Email: payload.Email,
+                Email: payload.Email.ToLowerInvariant(),
                 EmailVerified: payload.EmailVerified,
                 Name: payload.Name ?? payload.GivenName ?? payload.Email,
                 Picture: payload.Picture);

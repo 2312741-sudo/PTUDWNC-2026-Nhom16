@@ -152,6 +152,14 @@ public sealed class FakeRecipeRepository : IRecipeDiscoveryRepository
     public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
 }
 
+public sealed class FakeHostEnvironment : Microsoft.Extensions.Hosting.IHostEnvironment
+{
+    public string EnvironmentName { get; set; } = Microsoft.Extensions.Hosting.Environments.Production;
+    public string ApplicationName { get; set; } = "CulinaryBlog.API";
+    public string ContentRootPath { get; set; } = "/app";
+    public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+}
+
 public sealed class FakeGoogleAuthService : IGoogleAuthService
 {
     public bool ShouldFailValidation { get; set; }
@@ -338,6 +346,23 @@ public sealed class DiscoveryAndSearchTests
         // 3. Empty/whitespace token throws 400
         var exEmpty = await Assert.ThrowsAsync<AppException>(() => service.ValidateIdTokenAsync("", CancellationToken.None));
         Assert.Equal(400, exEmpty.Status);
+    }
+
+    [Fact]
+    public async Task GoogleAuthService_rejects_mock_tokens_in_production_environment()
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var prodEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Production };
+        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance, prodEnv);
+
+        var ex = await Assert.ThrowsAsync<AppException>(() =>
+            service.ValidateIdTokenAsync("dev_google:chef@gmail.com:Chef", CancellationToken.None));
+        Assert.Equal(400, ex.Status);
+        Assert.Equal("auth.google_token_invalid", ex.Code);
+
+        var ex2 = await Assert.ThrowsAsync<AppException>(() =>
+            service.ValidateIdTokenAsync("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token", CancellationToken.None));
+        Assert.Equal(400, ex2.Status);
     }
 
     [Fact]
