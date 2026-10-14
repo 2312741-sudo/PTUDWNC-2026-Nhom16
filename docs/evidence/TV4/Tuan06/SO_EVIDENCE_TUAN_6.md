@@ -2,14 +2,14 @@
 
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026)
 > **Reviewer nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
-> **Nhánh**: `2312739_NHTSon_D7` (từ `main` = `e93fbe8`) · **Lab**: `practice/TV4/L5` (L4: `practice/TV4/L4`)
-> **Trạng thái 14/10**: mọi mục bắt đầu ở **Chưa làm**. Ô K chỉ chuyển "đủ bằng chứng" khi có
-> **code/config + test + kết quả chạy thật**, và chỉ chốt khi **reviewer Tâm xác nhận + ghi ngày**.
-> Ô nào thiếu ghi **Chưa làm**, không làm tròn số, không tự đánh dấu ✅.
+> **Nhánh**: `2312739_NHTSon_D7` (từ `main` = `e93fbe8`, + commit `5e84995`) · **Lab**: `practice/TV4/L5` (L4: `practice/TV4/L4`)
+> **Trạng thái 14/10**: baseline backend+FE đã đo (§1) và ghi vào §3.1/§3.2; các mục khác bắt đầu ở **Chưa làm**.
+> Ô K chỉ chuyển "đủ bằng chứng" khi có **code/config + test + kết quả chạy thật**, và chỉ chốt khi
+> **reviewer Tâm xác nhận + ghi ngày**. Ô nào thiếu ghi **Chưa làm**, không làm tròn số, không tự đánh dấu ✅.
 > **Tuần 6 tự chứa**: mốc số liệu tuần 5 được chép lại ở §1 kèm nguồn — không cần mở lại `Tuan05/`.
 
 > [!IMPORTANT]
-> 1. **Không dùng số của tuần 5 làm số của tuần 6.** Số 430/430, 97.07%, 86/86, 40/40 là số đo tuần 5 —
+> 1. **Không dùng số của tuần 5 làm số của tuần 6.** Số 446/446, 86/86, 40/40 là số đo cuối tuần 5 —
 >    tuần 6 phải đo lại trên nhánh `2312739_NHTSon_D7` (W6-1/W6-2) và trên **staging** (W6-2/W6-3).
 > 2. **Không lấy file tuần 5 ở `docs/evidence/TV4/` làm minh chứng của tuần 6** — chỉ trích kèm nguồn + ngày.
 > 3. **`docs/evidence/TV4/Report/` là báo cáo phi chính thống của TV4** — không dùng làm căn cứ nghiệm thu.
@@ -17,21 +17,29 @@
 
 ---
 
-## 1. Baseline tuần 6 — ⬜ CHƯA ĐO (việc W6-1)
+## 1. Baseline tuần 6 — ✅ ĐÃ ĐO 14/10/2026 (N1 · W6-1/W6-2 backend+FE)
 
-> Lệnh và môi trường y hệt cách đo tuần 5 để so sánh được. Điền bảng này sau khi chạy xong trên nhánh tuần 6.
+> Môi trường: máy TV4 (Windows), .NET SDK **10.0.401**, Node **v24.21.0**, docker-compose.dev
+> (postgres/redis/s3/mailhog). Lệnh y hệt CI. Log: `Tuan06/logs/`.
+> **Chưa gồm**: Playwright E2E ×2 + migration chạy lặp (thuộc N2).
 
-| Hạng mục | Lệnh | Kết quả tuần 6 | Ngày | Log |
-|---|---|---|---|---|
-| Build backend | `dotnet build CulinaryBlog.sln -c Release` | ⬜ | — | `logs/baseline_build.log` |
-| Format | `dotnet format CulinaryBlog.sln --verify-no-changes` | ⬜ | — | `logs/baseline_format.log` |
-| Test | `dotnet test CulinaryBlog.sln -c Release` | ⬜ | — | `logs/baseline_test.log` |
-| Coverage `CulinaryBlog.Application` | `bash deploy/check-coverage.sh` | ⬜ | — | `logs/baseline_coverage.log` |
-| Frontend typecheck | `npx tsc --noEmit` | ⬜ | — | `logs/baseline_frontend.log` |
-| Frontend lint | `npm run lint` | ⬜ | — | `logs/baseline_frontend.log` |
-| Frontend build | `npm run build` | ⬜ | — | `logs/baseline_frontend.log` |
-| Frontend unit | `npx jest --ci` | ⬜ | — | `logs/baseline_jest.log` |
-| CI `Backend week 1` + `Frontend CI` | GitHub Actions | ⬜ | — | link run |
+| Hạng mục | Lệnh | Kết quả tuần 6 (14/10) | Log |
+|---|---|---|---|
+| Restore | `dotnet restore CulinaryBlog.sln --locked-mode` | ✅ exit 0 | `logs/baseline_build.log` |
+| Build backend | `dotnet build CulinaryBlog.sln --no-restore -c Release` | ✅ **0 warning · 0 error** | `logs/baseline_build.log` |
+| Format | `dotnet format CulinaryBlog.sln --verify-no-changes --no-restore` | ✅ exit 0 | `logs/baseline_format.log` |
+| Test | `dotnet test CulinaryBlog.sln -c Release` (CI flags) | ✅ **441/441** + **5/5** `ConcurrencySpike` · Failed 0 · **Skipped 0** | `logs/regression_test.log` |
+| Coverage `CulinaryBlog.Application` | `bash deploy/check-coverage.sh 80 TestResults` | ✅ **96.17%** ≥ 80% | `logs/regression_coverage.log` |
+| Frontend typecheck | `npx tsc --noEmit` | ✅ exit 0 | `logs/regression_frontend.log` |
+| Frontend lint | `npm run lint` | ✅ exit 0 (warning `no-img-element` như cũ) | `logs/regression_frontend.log` |
+| Frontend build | `npm run build` | ✅ exit 0 (16 route); `ECONNREFUSED` sinh sitemap lúc build là không chặn (không có API) | `logs/baseline_frontend_build.log` |
+| Frontend unit | `npx jest --ci` | ✅ **86/86** · 15 suite | `logs/baseline_jest.log` |
+| CI `Backend week 1` + `Frontend CI` | GitHub Actions | ⬜ chưa xác nhận run mới (mở PR ở W6-1) | link run |
+
+> **Lưu ý đối chiếu plan §2.2**: plan ghi mốc tuần 5 là 430+5 và coverage 97.07%. Đo thật trên nhánh
+> tuần 6 = **441+5=446** (khớp báo cáo repo tại `400b49a` "dotnet 446/446") và coverage **96.17%**.
+> ⇒ "430" là mốc giữa tuần 5 đã cũ; coverage 96.17% vẫn vượt cổng 80%.
+> **Skipped=0** xác nhận không có test bị ẩn bằng skip.
 
 ### 1.1. Mốc tuần 5 để đối chiếu (KHÔNG dùng làm số tuần 6)
 
@@ -45,6 +53,11 @@
 | k6 | 102 VU · p95 **148.56ms** · 0% lỗi | 11/10 | `Tuan05/logs/w58_k6_vus100.log` |
 | CI | Xanh (run `0a9b1a5`) | 07/10 | `Tuan05/SO_EVIDENCE_TUAN_5.md` §1 |
 | PR tuần 5 | **PR #36 MERGED** (`D5-D7`→`main`, `mergedBy=Tson-dev`, 13/10); #32/#33 CLOSED | 13/10 | `gh pr view 32/33/36` |
+
+> **Đính chính mốc 430**: dòng `430/430` ở bảng §1.1 chép nguyên từ plan §2.2. Đo thật trên nhánh tuần 6
+> (14/10) ra **441/441** `CulinaryBlog.Tests` và báo cáo repo tại `400b49a` cũng ghi **446/446** (441+5).
+> ⇒ "430" là mốc **giữa tuần 5**, đã bị thay bởi 446. Coverage tuần 5 ghi 97.07% (đo `0a9b1a5`); đo lại
+> 14/10 = **96.17%** (vẫn vượt cổng 80%, không coi là hồi quy).
 
 ---
 
@@ -92,18 +105,18 @@
 
 | Ngày | Việc | Kết quả | Log/commit/PR |
 |---|---|---|---|
-| — | Baseline trên `main` (`e93fbe8`) + nhánh `2312739_NHTSon_D7` | ⬜ chưa đo | `logs/baseline_*.log` |
-| — | Mở PR `2312739_NHTSon_D7` → `main` | ⬜ chưa mở | link PR |
+| 14/10 | Baseline trên nhánh `2312739_NHTSon_D7` (`main`+`5e84995`) | ✅ đã đo — xem §1 | `logs/baseline_*.log` |
+| 14/10 | Mở PR `2312739_NHTSon_D7` → `main` | ⬜ chưa mở (bước cuối W6-1) | link PR |
 
 ### 3.2. W6-2 — Regression toàn hệ thống
 
 | Ngày | Việc | Kết quả | Log |
 |---|---|---|---|
-| — | Backend `dotnet test` (kỳ vọng ≥ 430 + 5, Skipped 0) | ⬜ | `logs/regression_test.log` |
-| — | Coverage gate (kỳ vọng ≥ 80%, tuần 5 = 97.07%) | ⬜ | `logs/regression_coverage.log` |
-| — | FE tsc/lint/build/jest (kỳ vọng 86/86) | ⬜ | `logs/regression_frontend.log` |
-| — | E2E full suite chống staging ×2 (kỳ vọng 40/40) | ⬜ | `logs/regression_e2e_run{1,2}.log` |
-| — | Migration chạy lặp (DB sạch + nâng cấp) | ⬜ | log `dotnet ef database update` |
+| 14/10 | Backend `dotnet test` | ✅ **441/441** + **5/5** `ConcurrencySpike`, Failed 0, Skipped 0 | `logs/regression_test.log` |
+| 14/10 | Coverage gate | ✅ **96.17%** ≥ 80% (tuần 5 ghi 97.07%) | `logs/regression_coverage.log` |
+| 14/10 | FE tsc/lint/build/jest | ✅ tsc/lint/build exit 0 · jest **86/86** | `logs/regression_frontend.log`, `logs/baseline_jest.log`, `logs/baseline_frontend_build.log` |
+| — | E2E full suite chống staging ×2 (kỳ vọng ≥ 40/40) | ⬜ **để N2** | `logs/regression_e2e_run{1,2}.log` |
+| — | Migration chạy lặp (DB sạch + nâng cấp) | ⬜ **để N2** | log `dotnet ef database update` |
 
 ### 3.3. W6-3 — Chốt 5/5 luồng G6
 
