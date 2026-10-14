@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { UtensilsCrossed, Mail, Lock, User, AtSign, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { register } from '@/lib/api';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
+import { useAuthStore } from '@/store/auth-store';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+
+  const setAuthFromResponse = useAuthStore((s) => s.setAuthFromResponse);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +44,8 @@ export default function RegisterPage() {
     setIsLoading(false);
 
     if (res.success && res.data) {
-      // Auto-login: Store token in localStorage
+      setAuthFromResponse(res.data);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', res.data.accessToken);
-        if (res.data.refreshToken) {
-          localStorage.setItem('refreshToken', res.data.refreshToken);
-        }
-        localStorage.setItem('user', JSON.stringify(res.data.user));
         localStorage.setItem('lastRegisteredEmail', email.toLowerCase().trim());
       }
       router.push('/dashboard/profile');

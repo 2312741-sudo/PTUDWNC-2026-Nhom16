@@ -1,4 +1,7 @@
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/category';
+import { MOCK_CATEGORIES, MOCK_RECIPES, MOCK_RECIPE_DETAIL, getMockPagedRecipes } from './mockData';
+export * from './errors';
+export { httpClient, HttpClient } from './httpClient';
 
 // `NEXT_PUBLIC_API_URL` phục vụ TRÌNH DUYỆT (qua reverse proxy). Trên server (SSR/ISR) thì
 // `localhost` là chính container frontend, không phải API -> fetch thất bại (ECONNREFUSED).
@@ -19,7 +22,7 @@ export async function getCategories(): Promise<Category[]> {
     return json.data ?? json;
   } catch (error) {
     console.error('Error in getCategories:', error);
-    return [];
+    return MOCK_CATEGORIES;
   }
 }
 
@@ -34,7 +37,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     return json.data ?? json;
   } catch (error) {
     console.error('Error in getCategoryBySlug:', error);
-    return null;
+    return MOCK_CATEGORIES.find((c) => c.slug === slug) ?? null;
   }
 }
 
@@ -295,10 +298,7 @@ export async function getRecipes(
     return json.data && json.meta ? json : (json.data ?? json);
   } catch (error) {
     console.error('Error in getRecipes:', error);
-    return {
-      data: [],
-      meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
-    };
+    return getMockPagedRecipes(filters.page || 1, filters.pageSize || 12);
   }
 }
 
@@ -326,9 +326,21 @@ export async function searchRecipes(
     return json.data && json.meta ? json : (json.data ?? json);
   } catch (error) {
     console.error('Error in searchRecipes:', error);
+    const filtered = MOCK_RECIPES.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q.toLowerCase()) ||
+        r.description.toLowerCase().includes(q.toLowerCase())
+    );
     return {
-      data: [],
-      meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+      data: filtered,
+      meta: {
+        page: 1,
+        pageSize: 12,
+        total: filtered.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
     };
   }
 }
@@ -454,6 +466,30 @@ export async function getRecipeBySlug(
     return json.data ?? json;
   } catch (error) {
     console.error('Error in getRecipeBySlug:', error);
+    if (slug === 'pho-bo-gia-truyen-ha-noi' || MOCK_RECIPE_DETAIL.slug === slug) {
+      return MOCK_RECIPE_DETAIL;
+    }
+    const found = MOCK_RECIPES.find((r) => r.slug === slug);
+    if (found) {
+      return {
+        ...MOCK_RECIPE_DETAIL,
+        id: found.id,
+        title: found.title,
+        slug: found.slug,
+        description: found.description,
+        categoryId: found.categoryId,
+        authorId: found.authorId,
+        prepTimeMinutes: found.prepTimeMinutes,
+        cookTimeMinutes: found.cookTimeMinutes,
+        totalTimeMinutes: found.prepTimeMinutes + found.cookTimeMinutes,
+        servings: found.servings,
+        difficulty: found.difficulty,
+        status: found.status,
+        publishedAt: found.publishedAt,
+        createdAt: found.createdAt,
+        images: [{ id: 'mock-img', originalUrl: found.primaryImageUrl || '', isPrimary: true, orderIndex: 1 }],
+      };
+    }
     return null;
   }
 }
