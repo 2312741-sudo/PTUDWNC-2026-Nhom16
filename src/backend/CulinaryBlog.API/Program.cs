@@ -178,6 +178,15 @@ var minioOptions = builder.Services.AddOptions<MinioOptions>();
 minioOptions.Bind(builder.Configuration.GetSection("Minio"));
 if (!builder.Environment.IsEnvironment("Testing"))
 {
+    builder.Services.PostConfigure<MinioOptions>(options =>
+    {
+        // Trên môi trường triển khai (Render/Staging) nếu chưa cấu hình S3:
+        // fallback sang placeholder changeme để tránh crash toàn bộ ứng dụng lúc khởi động.
+        if (string.IsNullOrWhiteSpace(options.AccessKey))
+            options.AccessKey = "changeme-minio-access";
+        if (string.IsNullOrWhiteSpace(options.SecretKey))
+            options.SecretKey = "changeme-minio-secret";
+    });
     builder.Services.AddSingleton<IValidateOptions<MinioOptions>, MinioOptionsValidator>();
     minioOptions.ValidateOnStart();
 }

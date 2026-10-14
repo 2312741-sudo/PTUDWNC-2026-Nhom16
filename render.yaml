@@ -24,15 +24,15 @@ services:
         value: culinary-blog
       - key: Jwt__Audience
         value: culinary-blog-client
-      # B2 (issue #21): Cấu hình MinIO/S3 trên Render (nếu có). Render tự quản lý qua secret store; fallback dev lấy từ appsettings.json.
+      # B2 (issue #21): Cấu hình MinIO/S3 trên Render. Cung cấp fallback changeme để không crash khi S3 chưa cấu hình trên Render dashboard.
       - key: Minio__Endpoint
-        sync: false
+        value: "localhost:9000"
       - key: Minio__AccessKey
-        sync: false
+        value: changeme-minio-access
       - key: Minio__SecretKey
-        sync: false
+        value: changeme-minio-secret
       - key: Minio__Bucket
-        sync: false
+        value: "culinary-blog"
       - key: Minio__UseSsl
         value: "false"
       # N1-5: cache và sitemap lock dùng chung qua Redis nên lấy thông tin từ Redis của Render.
