@@ -64,28 +64,32 @@ Kế hoạch thực hiện dự án được tổ chức chặt chẽ qua 6 tu�
   - **Pull Requests**: Đã merge 100% các PR Tuần 4 vào `main` (PR #16, PR #18, PR #19).
   - **Biên dịch Frontend**: Next.js 15 App Router `npm run build` thành công **15/15 routes tĩnh và động**.
   - **Báo cáo Lab 4**: Cả 4 thành viên đã hoàn tất báo cáo cá nhân chuẩn quy tắc `Lab4_MSSV_HoVaTen.docx`.
-- ✅ **Cổng G5 / G6 (Tuần 5 — Môi trường Staging Đa Container, Diễn Tập BCP/DR, Tối Ưu Hiệu Năng & 5 Kịch Bản E2E Cổng G6)**: **ĐẠT 100% — cập nhật 07/10/2026**.
+- ✅ **Cổng G5 / G6 (Tuần 5 — Môi trường Staging Đa Container, Diễn Tập BCP/DR, Tối Ưu Hiệu Năng & 5 Kịch Bản E2E Cổng G6)**: **ĐẠT 100%**.
   - **Hạ tầng Staging Đa Container**: Đã triển khai và vận hành `docker-compose.staging.yml` liên kết 6 containers độc lập (PostgreSQL 16, Redis 7, RustFS S3, Backend API .NET 10, Frontend Next.js 15, Gateway Nginx định tuyến proxy an toàn kèm nén Gzip và Security Headers OWASP).
   - **Diễn tập Sao lưu & Phục hồi CSDL (BCP/DR)**: Thực hiện kịch bản sao lưu và phục hồi tự động đối chiếu mã băm SHA-256 (`scripts/backup-db.sh`, `scripts/restore-db.sh`, `scripts/backup-storage.sh`). Thời gian phục hồi CSDL đạt **1.8 giây** (RTO < 2 phút, RPO = 0), bảo toàn nguyên vẹn 25 Categories và 100 Recipes.
-  - **Bộ test tự động toàn hệ thống**: Đạt **426 / 426 tests PASSED 100% (Green)** (421 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`). Line coverage tầng `CulinaryBlog.Application` đạt **96.31%** (vượt xa chỉ tiêu 80%).
+  - **Bộ test tự động toàn hệ thống**: Đạt **426 / 426 tests PASSED 100% (Green)** (421 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`).
   - **Bộ test Frontend**: Đạt **85 / 85 tests Jest pass 100%** (14 test suites) + **26 / 26 kịch bản Playwright E2E**.
   - **Đo lường Tải & Thông lượng**: ApacheBench và k6 xác nhận hệ thống chịu tải cao (`/recipes` 477 req/s p95=7ms; `/search` 1,039 req/s p95=6ms; `/health/live` 4,716 req/s p95=2ms; tỷ lệ lỗi 0.00%).
-  - **Tối ưu hóa Database (TV3 - K22)**: Loại bỏ tích Descartes (Cartesian product) bằng `AsSplitQuery` trên `FindBySlugAsync` (EXPLAIN ANALYZE 0.212 ms, k6 11.35 ms), cài đặt `SlowQueryInterceptor` cảnh báo SQL > 100ms.
-  - **Khả năng Tiếp cận & SEO (TV3 - K18, K19)**: NVDA Speech Viewer kiểm thử và sửa 3 lỗi a11y, tỷ lệ tương phản đạt 5.18:1 (vượt chuẩn WCAG 2.1 AA 4.5:1), Recipe JSON-LD đầy đủ 12/12 thuộc tính (0 lỗi trên `validator.schema.org`).
-  - **Ổn định Hạ tầng & Sửa lỗi (TV4)**: Khắc phục dứt điểm lỗi 500 upload ảnh, nạp biến `.env` qua `EnvFileLoader`, chặn DbSeeder ghi đè URL ảnh người dùng, sửa `--migrate` không nuốt lỗi, trả HTTP 503 `storage.unavailable` rõ ràng, kiểm tra S3 ở `/health/ready`, tích hợp OpenTelemetry Collector + Seq sink, đóng 5 GitHub issues (B1, B2, B4, B5, B6).
-  - **Hợp nhất Mã nguồn**: Đã merge 100% các PR chính vào `main` (PR #16, PR #18, PR #19, PR #25, PR #27, PR #29 và commit Tuần 5 TV1 `21aa722`).
   - **Kiến trúc & Báo cáo Tuần 5**: Ban hành hồ sơ kiến trúc `ADR-0004` (`docs/adr/0004-staging-deployment-and-disaster-recovery.md`), cập nhật minh chứng cá nhân [TUAN_5.md](docs/evidence/TV1/TUAN_5.md) và báo cáo `Lab5_2312741_NguyenThanhTam.docx`.
+- ✅ **Cổng G7 (Tuần 6 — Kiểm Thử Hồi Quy Toàn Diện, Nghiệm Thu 24/24 Kỹ Năng K01–K24 Cho 4 Thành Viên, Bàn Giao Release v1.0.0 & Kịch Bản Demo)**: **ĐẠT 100% — cập nhật 14/10/2026**.
+  - **Kiểm thử hồi quy Backend**: Toàn bộ **446 / 446 tests tự động PASSED 100% (Green)** (441 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, 0 Failed, 0 Skipped). Line coverage tầng `CulinaryBlog.Application` đạt **96.17%** (vượt xa chỉ tiêu 80%).
+  - **Kiểm thử hồi quy Frontend**: Toàn bộ **86 / 86 tests Jest PASSED 100%** (15 test suites). Next.js 15 App Router `npm run build` thành công sạch sẽ **16/16 routes tĩnh và động**.
+  - **Chuẩn hóa mã nguồn & Rà soát bảo mật**: `dotnet format CulinaryBlog.sln --verify-no-changes --no-restore` đạt **exit code 0 (Sạch 100%)**. Script rà soát secret `bash deploy/scan-secrets.sh` đạt `OK: không phát hiện secret bị gửi vào repo`; script test `deploy/scan-secrets.test.sh` đạt **9/9 pass, 0 fail**.
+  - **Hợp nhất mã nguồn chốt đồ án**: Đã review và merge toàn bộ PRs hoàn thiện của 4 thành viên vào nhánh chính `main` (PR #31 TV2, PR #34 & #35 TV3, PR #36 TV4, các bản hoàn thiện TV1).
+  - **Nghiệm thu 24/24 Kỹ năng (K01–K24)**: Toàn bộ 4/4 thành viên (TV1, TV2, TV3, TV4) đã hoàn thành 100% khối lượng công việc 6 tuần và đạt đủ **24/24 nhóm kỹ năng K01–K24** có mã nguồn, cấu hình và bài test thực tế.
+  - **Kịch bản Demo phân hệ (15–20 phút/thành viên)**: Sẵn sàng 4 kịch bản demo độc lập cho buổi chấm thi và đánh giá đồ án trước Hội đồng Giảng viên.
+  - **Đóng gói Bàn giao Release v1.0.0**: Bàn giao trọn vẹn mã nguồn, bộ tài liệu kỹ thuật SRS v1.1.1, ERD, 6 Hợp đồng kỹ thuật (Contracts), 8 ADRs kiến trúc, 2 Runbooks vận hành và sổ minh chứng 6 tuần của 4 thành viên.
 
-### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 07/10/2026 - Tuần 5)
+### 3.2. Bảng theo dõi tiến độ chi tiết từng thành viên (Cập nhật ngày 14/10/2026 — Chốt Cổng G7 Tuần 6)
 
-| Thành viên | Tiến độ Tuần 1–3 | Tiến độ Tuần 4 | Tiến độ Tuần 5 | Kỹ năng xác nhận | Trạng thái nghiệm thu |
-|---|:---:|:---:|:---:|:---:|---|
-| **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** (A1–A5, CI, Seed) | **100%** (A6, A7: Đổi mật khẩu, PBKDF2 HMAC-SHA512, thu hồi phiên cũ, UI Profile, 5 tests bảo mật, Lab 4) | **100%** (A7, K23, K24: Staging Nginx, BCP/DR 1.8s RTO<2p, 5 E2E flows, ApacheBench 477–4716 req/s, ADR-0004, Lab 5) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–5**. Đạt 426/426 tests tự động, Staging 6 containers, diễn tập phục hồi CSDL SHA-256 thành công, ban hành báo cáo Lab 5 đầy đủ. |
-| **TV2 — Ngô Quốc Trường Vĩ** | **100%** (B1–B7, FTS, Cache) | **100%** (B3, B4, B5, B7: PR #25 merged - FTS tối ưu không false-positive, 100 công thức authentic, thanh search khám phá, Frontend CI) | **Đang thực hiện** (Review kiểm thử TV1, kiểm tra SEO/CWV/JS bundle size, rà soát Public metadata & Canonical) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–4**; đang triển khai Tuần 5. PR #25 đã merge vào `main`, hoàn thiện FTS tiếng Việt, bộ CSDL 100 công thức chuẩn authentic, báo cáo Lab 4 đầy đủ. |
-| **TV3 — Huỳnh Quốc Trung** | **100%** (C1–C6, Recipe, OCC) | **100%** (C4, C5, C7: PR #27 merged - Wizard RHF/Zod/TanStack Query, DB AsSplitQuery EXPLAIN 0.21ms, a11y NVDA + tương phản 5.18:1, JSON-LD 12/12 thuộc tính, 85 Jest tests, 11 Playwright tests) | **Đang thực hiện** (Review kiểm thử TV2, điều phối migration sạch trên staging, rà soát tính nhất quán dữ liệu) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–4**; đang triển khai Tuần 5. PR #27 đã merge vào `main`, giải quyết tích Descartes, hoàn thiện a11y WCAG 2.1 AA, 85 Jest tests pass, báo cáo Lab 4 đầy đủ. |
-| **TV4 — Nguyễn Hữu Trung Sơn** | **100%** (D1–D6, Docker, Media) | **100%** (D2–D7: PR #19 & #29 merged - Fix lỗi 500 upload ảnh, EnvFileLoader, bảo toàn URL ảnh người dùng, OTel + Seq, đóng 5 issues, nghiệm thu 3 giai đoạn FE-BE) | **Đang thực hiện** (Review kiểm thử TV3, thiết lập HTTPS, CORS & Volumes, Runbook hướng dẫn vận hành, kịch bản sao lưu) | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–4**; đang triển khai Tuần 5. PR #19 & PR #29 đã merge vào `main`, ổn định hạ tầng S3/DB, nạp `.env` tự động, nghiệm thu FE-BE GĐ1–3, báo cáo Lab 4 đầy đủ. |
+| Thành viên | Tiến độ T1–3 | Tiến độ T4 | Tiến độ T5 | Tiến độ T6 | Kỹ năng xác nhận | Trạng thái nghiệm thu cuối kỳ |
+|---|:---:|:---:|:---:|:---:|:---:|---|
+| **TV1 — Nguyễn Thanh Tâm** *(Leader)* | **100%** | **100%** | **100%** | **100%** | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)**. Release v1.0.0, 446/446 backend tests pass, Staging Nginx 6 containers, BCP/DR 1.8s, kịch bản demo Auth/Profile, Lab 6 & evidence đầy đủ. |
+| **TV2 — Ngô Quốc Trường Vĩ** | **100%** | **100%** | **100%** | **100%** | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)**. PR #31 merged, FTS tiếng Việt unaccent, Google OAuth PKCE, 100 recipes authentic, kịch bản demo Search/Category, Lab 5 & evidence đầy đủ. |
+| **TV3 — Huỳnh Quốc Trung** | **100%** | **100%** | **100%** | **100%** | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)**. PR #34, PR #35 merged, Recipe Aggregate, Optimistic Concurrency RowVersion, AsSplitQuery, a11y NVDA, 86 Jest tests, Aggregate demo docs. |
+| **TV4 — Nguyễn Hữu Trung Sơn** | **100%** | **100%** | **100%** | **100%** | **24 / 24** (K01–K24) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)**. PR #36 merged, PR #37 regression 446 tests, 96.17% coverage, Cloud Staging Render, Docker S3, Hangfire, kịch bản demo Media/Deploy. |
 
-> **Ghi chú nghiệm thu**: Toàn bộ 4 thành viên nhóm 16 đã hoàn tất 100% khối lượng công việc của Tuần 4 và đạt đầy đủ yêu cầu tối thiểu của Lab 4 (41/41 API endpoints hoàn chỉnh). Nhóm trưởng (TV1) đã hoàn thành toàn diện mốc Tuần 5 (Cổng G6: Staging đa container, BCP/DR và 5 E2E flows tích hợp). Các thành viên TV2, TV3, TV4 đang hoàn tất các hạng mục review chéo và runbook vận hành Tuần 5.
+> **Ghi chú nghiệm thu Cổng G7**: Toàn bộ 4 thành viên nhóm 16 đã hoàn tất 100% khối lượng công việc của 6 tuần, đạt trọn vẹn 24/24 nhóm kỹ năng K01–K24 có minh chứng thực tế. Hệ thống đạt độ ổn định tuyệt đối với 446 tests backend pass, 86 tests frontend Jest pass, 0 lỗi định dạng mã nguồn và sẵn sàng cho buổi thuyết trình demo cuối kỳ.
 
 ---
 
@@ -382,22 +386,54 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
 
 ---
 
-## 🧭 6. Kế Hoạch & Trọng Tâm Tiếp Theo (Tuần 5)
+## 🏆 6. Tổng Kết Tuần 6, Kịch Bản Demo Nghiệm Thu & Bàn Giao Release v1.0.0 (Cổng G7)
 
-1. **TV1 (Thanh Tâm - Leader)**:
-   - Triển khai Staging Nginx đa container (6 service) và quy trình sao lưu/phục hồi CSDL–Storage (BCP/DR, mã băm SHA-256, RTO < 2 phút, RPO = 0).
-   - 5 kịch bản E2E cổng G6, đo tải (ab/k6: p95 < 10ms, 0% lỗi), review đề xuất B1–B3 của TV4 và ban hành ADR-0004. **183/183 test pass.**
-2. **TV2 (Trường Vĩ)**:
-   - Kiểm chứng Staging độc lập, diễn tập BCP/DR; tối ưu SEO (canonical, robots `index:false`) và dữ liệu có cấu trúc JSON-LD (CollectionPage/ItemList/BreadcrumbList).
-   - Trợ năng WCAG 2.1 AA + Core Web Vitals (ISR `revalidate`), thêm `Week5DiscoverySeoAndA11yTests`. **194/194 test pass**, 15/15 route Next.js build sạch.
-3. **TV3 (Quốc Trung)**:
-   - Kiểm lại Tuần 4 độc lập; schema/ERD (`SCHEMA_RECIPE.md`), nhất quán dữ liệu, migration sạch + idempotent; review kiểm thử TV2.
-   - Số đo EXPLAIN + k6 (p95 ~40–50ms); E2E 5 luồng → 11/11 Playwright pass. *(Làm sớm sang Tuần 6: K18 a11y, regression **421/421 + 5**.)*
-4. **TV4 (Trung Sơn)**:
-   - Staging lặp lại được: 2 API + Nginx upstream/failover, HTTPS/HSTS/CORS, volume bền vững, runbook 7 mục; UI progress upload + Unpublish/Archive/Xóa.
-   - Số đo k6 (102 VU, 0% lỗi) + `/metrics` Prometheus; sửa gốc lỗi ảnh nháp (proxy thay presigned). **9/10 khối xong** (W5-7 4/5 chờ TV2, W5-9 2/5); baseline 426/426, coverage 97.07%.
+### 6.1. Tổng kết kiểm thử hồi quy & Chất lượng toàn hệ thống
 
-> Mốc **G6 (Tuần 5)**: staging hoàn chỉnh, BCP/DR đạt RTO < 2 phút · RPO = 0, 5 kịch bản E2E pass, có số đo hiệu năng/SEO/a11y và giới hạn.
+Hệ thống đã trải qua quy trình kiểm thử hồi quy (Regression Testing) toàn diện và tự động hóa 100%:
+
+| Hạng mục kiểm thử | Công cụ / Lệnh chạy | Kết quả thực tế | Trạng thái |
+|---|---|:---:|:---:|
+| **Biên dịch Backend** | `dotnet build CulinaryBlog.sln --configuration Release` | 0 Warning, 0 Error | ✅ PASS |
+| **Định dạng chuẩn C#** | `dotnet format CulinaryBlog.sln --verify-no-changes --no-restore` | Exit code 0 | ✅ PASS |
+| **Kiểm thử Backend chính** | `dotnet test tests/CulinaryBlog.Tests/CulinaryBlog.Tests.csproj` | **441 / 441 passed** (2m 55s) | ✅ PASS |
+| **Kiểm thử Tương tranh** | `dotnet test tests/concurrency-spike/ConcurrencySpike.csproj` | **5 / 5 passed** (589ms) | ✅ PASS |
+| **Tổng kiểm thử Backend** | Toàn bộ giải pháp `CulinaryBlog.sln` | **446 / 446 passed (100%)** | ✅ PASS |
+| **Độ bao phủ (Coverage)** | Coverlet / ReportGenerator tầng Application | **96.17% line coverage** | ✅ PASS |
+| **Kiểm thử Frontend** | `npm test -- --watchAll=false` (trong `src/frontend`) | **86 / 86 passed (15 suites)** | ✅ PASS |
+| **Biên dịch Frontend** | `npm run build` (Next.js 15 App Router) | **16 / 16 routes tĩnh & động** | ✅ PASS |
+| **Rà soát Secret** | `bash deploy/scan-secrets.sh` | 0 secret trong repo | ✅ PASS |
+| **Kiểm thử Scanner** | `bash deploy/scan-secrets.test.sh` | **9 / 9 passed** | ✅ PASS |
+| **Phục hồi CSDL (DR)** | `./scripts/restore-db.sh <backup_file>` | **1.8 giây (RTO < 2p, RPO = 0)** | ✅ PASS |
+
+### 6.2. Kịch bản Demo phân hệ phục vụ Hội đồng Giảng viên đánh giá (15–20 phút/thành viên)
+
+Mỗi thành viên phụ trách một kịch bản demo độc lập, bao gồm giải thích kiến trúc/code, thao tác tính năng trực tiếp trên hệ thống và xử lý tình huống lỗi kỹ thuật:
+
+1. **TV1 — Nguyễn Thanh Tâm (Leader / 2312741) — Phân hệ Xác thực, Hồ sơ & Bảo mật (15–20 phút)**:
+   - **Kiến trúc Auth & Identity**: Trình bày cấu hình ASP.NET Core Identity Core, hàm băm mật khẩu PBKDF2 HMAC-SHA512 (100.000 vòng lặp), cấp phát Access Token JWT (HS512, 15 phút) và Refresh Token 512-bit (7 ngày).
+   - **Luồng Đăng ký & Đăng nhập**: Thao tác đăng ký tài khoản mới trên giao diện Next.js, xử lý email không phân biệt hoa thường, đăng nhập nhận token và phòng chống tấn công dò quét người dùng (User Enumeration Prevention).
+   - **Hồ sơ cá nhân & Thu hồi token**: Cập nhật thông tin profile/bio, đổi mật khẩu và minh chứng cơ chế **Token Family Revocation** (thu hồi tức thì toàn bộ token cũ khi phát hiện tái sử dụng hoặc sau khi đổi mật khẩu).
+   - **Bảo mật nâng cao**: Demo cơ chế khóa tài khoản tự động (Account Lockout) sau 5 lần nhập sai mật khẩu liên tiếp (HTTP 423 Locked), bộ giới hạn tần suất yêu cầu (Rate Limiting HTTP 429) và chống chèn mã độc XSS.
+   - **Diễn tập BCP/DR**: Chạy script khôi phục CSDL tự động kiểm tra mã băm SHA-256 trong 1.8 giây, bảo toàn nguyên vẹn 25 Categories và 100 Recipes.
+
+2. **TV2 — Ngô Quốc Trường Vĩ (2312796) — Phân hệ Danh mục, Tìm kiếm & Khám phá (15–20 phút)**:
+   - **Tìm kiếm FTS tiếng Việt**: Demo tìm kiếm tiếng Việt không dấu (PostgreSQL `to_tsvector('simple', unaccent(title))` + GIN Index), tìm "pho" hoặc "canh chua" ra kết quả chuẩn xác, loại trừ false-positive.
+   - **Bộ đệm Redis Cache-aside**: Trình diễn tăng tốc độ truy vấn danh mục và bài viết qua Redis, cơ chế Cache Invalidation tự động xóa cache khi có thay đổi dữ liệu.
+   - **Đăng nhập Google OAuth 2.0**: Demo luồng xác thực Google PKCE Flow an toàn từ frontend tới backend.
+
+3. **TV3 — Huỳnh Quốc Trung (2312786) — Phân hệ Soạn thảo Công thức & Concurrency (15–20 phút)**:
+   - **Soạn thảo đa bước (Wizard)**: Tạo mới công thức kèm nguyên liệu và các bước thực hiện động (React Hook Form + Zod + TanStack Query).
+   - **Kiểm soát tương tranh lạc quan (OCC)**: Demo 2 trình duyệt cùng sửa một công thức đồng thời; người sửa sau với `RowVersion` cũ bị hệ thống chặn lại với mã lỗi HTTP 422 `recipe.version_conflict` mà không làm mất dữ liệu người trước (No Lost Updates).
+   - **Tối ưu hóa Database & Trợ năng**: Giải thích việc áp dụng `AsSplitQuery` loại bỏ tích Descartes (EXPLAIN ANALYZE 0.21ms), kiểm thử trợ năng qua NVDA Speech Viewer và dữ liệu có cấu trúc Recipe JSON-LD.
+
+4. **TV4 — Nguyễn Hữu Trung Sơn (2312739) — Phân hệ Xuất bản, Xử lý Đa phương tiện & Vận hành (15–20 phút)**:
+   - **Tải lên & Resize ảnh tự động**: Upload ảnh món ăn, Hangfire background queue tự động resize thành 2 kích thước (300×300 và 800×600) bằng ImageSharp 3.1.11.
+   - **Bảo mật Media qua Proxy có Auth**: Minh chứng ảnh công thức nháp (Draft) được bảo vệ trong private bucket RustFS S3, chỉ có thể xem qua endpoint proxy có xác thực.
+   - **Quản lý vòng đời xuất bản**: Chuyển đổi trạng thái Publish (thỏa mãn điều kiện C02: đủ nguyên liệu, các bước và ảnh đại diện), Unpublish và Archive.
+   - **Hạ tầng Staging & Giám sát**: Giới thiệu cụm Staging Nginx đa container và Cloud Staging Render kết hợp OpenTelemetry/Seq.
+
+> **Đánh giá Cổng G7**: Dự án được nghiệm thu đạt 100% yêu cầu chất lượng, hoàn tất bàn giao bản phát hành chính thức **Release v1.0.0**.
 
 ---
 
@@ -466,8 +502,8 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
 **Báo cáo nghiệm thu & Lab môn học theo thành viên**
 
 - **TV1 (Nguyễn Thanh Tâm — Leader)**:
-  - Lab: [Tổng hợp Lab 01–02](docs/evidence/TV1/BAO_CAO_LAB_01_02.md) · [Lab 02](docs/evidence/TV1/BAO_CAO_LAB_02.md) ([Word](docs/evidence/TV1/Lab02_2312741_NguyenThanhTam.docx)) · [Lab 03](docs/evidence/TV1/BAO_CAO_LAB_03.md) ([Word](docs/evidence/TV1/Lab03_2312741_NguyenThanhTam.docx)) · [Lab 04](docs/evidence/TV1/BAO_CAO_LAB_04.md) ([Word](docs/evidence/TV1/Lab4_2312741_NguyenThanhTam.docx)) · [Lab 05](docs/evidence/TV1/BAO_CAO_LAB_05.md) ([Word](docs/evidence/TV1/Lab5_2312741_NguyenThanhTam.docx)) · [Lab Kiến trúc & Hợp đồng API](docs/evidence/TV1/LAB_KIEN_TRUC_API.md)
-  - Nghiệm thu: [Tuần 1](docs/evidence/TV1/TUAN_1.md) · [Tuần 2](docs/evidence/TV1/TUAN_2.md) · [Tuần 3](docs/evidence/TV1/TUAN_3.md) · [Tuần 4](docs/evidence/TV1/TUAN_4.md) · [Tuần 5](docs/evidence/TV1/TUAN_5.md)
+  - Lab: [Tổng hợp Lab 01–02](docs/evidence/TV1/BAO_CAO_LAB_01_02.md) · [Lab 02](docs/evidence/TV1/BAO_CAO_LAB_02.md) ([Word](docs/evidence/TV1/Lab02_2312741_NguyenThanhTam.docx)) · [Lab 03](docs/evidence/TV1/BAO_CAO_LAB_03.md) ([Word](docs/evidence/TV1/Lab03_2312741_NguyenThanhTam.docx)) · [Lab 04](docs/evidence/TV1/BAO_CAO_LAB_04.md) ([Word](docs/evidence/TV1/Lab4_2312741_NguyenThanhTam.docx)) · [Lab 05](docs/evidence/TV1/BAO_CAO_LAB_05.md) ([Word](docs/evidence/TV1/Lab5_2312741_NguyenThanhTam.docx)) · [Lab 06](docs/evidence/TV1/BAO_CAO_LAB_06.md) ([Word](docs/evidence/TV1/Lab06_2312741_NguyenThanhTam.docx)) · [Lab Kiến trúc & Hợp đồng API](docs/evidence/TV1/LAB_KIEN_TRUC_API.md)
+  - Nghiệm thu: [Tuần 1](docs/evidence/TV1/TUAN_1.md) · [Tuần 2](docs/evidence/TV1/TUAN_2.md) · [Tuần 3](docs/evidence/TV1/TUAN_3.md) · [Tuần 4](docs/evidence/TV1/TUAN_4.md) · [Tuần 5](docs/evidence/TV1/TUAN_5.md) · [Tuần 6](docs/evidence/TV1/TUAN_6.md)
 - **TV2 (Ngô Quốc Trường Vĩ)**:
   - Lab: [Lab 04](docs/evidence/TV2/BAO_CAO_LAB_04.md) ([Word](docs/evidence/TV2/Lab4_2312796_NgoQuocTruongVi.docx)) · [Lab 05](docs/evidence/TV2/BAO_CAO_LAB_05.md) ([Word](docs/evidence/TV2/Lab5_2312796_NgoQuocTruongVi.docx)) · [Spike Danh mục & Auth](docs/evidence/TV2/LAB_DANH_MUC_AUTH_SPIKE.md)
   - Nghiệm thu: [Tuần 1](docs/evidence/TV2/TUAN_1.md) · [Tuần 2](docs/evidence/TV2/TUAN_2.md) · [Tuần 3](docs/evidence/TV2/TUAN_3.md) · [Tuần 4](docs/evidence/TV2/TUAN_4.md) · [Tuần 5](docs/evidence/TV2/TUAN_5.md)
@@ -476,7 +512,7 @@ TEST_DATABASE=Host=localhost;Port=5432;Database=culinary_test;Username=postgres;
   - Nghiệm thu: [Tuần 3](docs/evidence/TV3/TUAN_3.md) · [Tuần 4](docs/evidence/TV3/TUAN_4.md) · [Bàn giao Tuần 4](docs/evidence/TV3/TV3_BAN_GIAO_TUAN4.md) · [Tuần 5](docs/evidence/TV3/Tuan05/BAO_CAO_TUAN5.md) · [Tuần 6](docs/evidence/TV3/Tuan06/BAO_CAO_TUAN6.md)
 - **TV4 (Nguyễn Hữu Trung Sơn)**:
   - Hướng dẫn & mapping: [Hướng dẫn chạy riêng TV4](docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md) · [Mapping K01 – FR/NFR/ADR/Evidence](docs/evidence/TV4/MAPPING_K01_FR_NFR_ADR_EVIDENCE.md)
-  - Nghiệm thu: [Tuần 1](docs/evidence/TV4/Tuan01/TRANG_THAI_THUC_HIEN_TUAN_1.md) · [Tuần 2](docs/evidence/TV4/Tuan02/TRANG_THAI_THUC_HIEN_TUAN_2.md) · [Tuần 3](docs/evidence/TV4/Tuan03/TRANG_THAI_THUC_HIEN_TUAN_3.md) · [Tuần 4](docs/evidence/TV4/Tuan04/TRANG_THAI_THUC_HIEN_TUAN_4.md) · [Tuần 5](docs/evidence/TV4/Tuan05/TRANG_THAI_THUC_HIEN_TUAN_5.md)
-  - Sổ evidence: [Tuần 3](docs/evidence/TV4/Tuan03/SO_EVIDENCE_TUAN_3.md) · [Tuần 4](docs/evidence/TV4/Tuan04/SO_EVIDENCE_TUAN_4.md) · [Tuần 5](docs/evidence/TV4/Tuan05/SO_EVIDENCE_TUAN_5.md)
+  - Nghiệm thu: [Tuần 1](docs/evidence/TV4/Tuan01/TRANG_THAI_THUC_HIEN_TUAN_1.md) · [Tuần 2](docs/evidence/TV4/Tuan02/TRANG_THAI_THUC_HIEN_TUAN_2.md) · [Tuần 3](docs/evidence/TV4/Tuan03/TRANG_THAI_THUC_HIEN_TUAN_3.md) · [Tuần 4](docs/evidence/TV4/Tuan04/TRANG_THAI_THUC_HIEN_TUAN_4.md) · [Tuần 5](docs/evidence/TV4/Tuan05/TRANG_THAI_THUC_HIEN_TUAN_5.md) · [Tuần 6](docs/evidence/TV4/Tuan06/TRANG_THAI_THUC_HIEN_TUAN_6.md)
+  - Sổ evidence: [Tuần 3](docs/evidence/TV4/Tuan03/SO_EVIDENCE_TUAN_3.md) · [Tuần 4](docs/evidence/TV4/Tuan04/SO_EVIDENCE_TUAN_4.md) · [Tuần 5](docs/evidence/TV4/Tuan05/SO_EVIDENCE_TUAN_5.md) · [Tuần 6](docs/evidence/TV4/Tuan06/SO_EVIDENCE_TUAN_6.md)
   - Báo cáo rà soát/tiến độ: [Tổng hợp 5 tuần](docs/evidence/TV4/Report/BAO_CAO_RA_SOAT_TONG_HOP_5_TUAN.md) · [Tiến độ Tuần 5 so với Tuần 4](docs/evidence/TV4/Report/BAO_CAO_TIEN_DO_TUAN_5_SO_VOI_TUAN_4.md) · [Tổng hợp 3 tuần](docs/evidence/TV4/Report/BAO_CAO_TAM_RA_SOAT_TONG_HOP_3_TUAN.md)
 

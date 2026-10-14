@@ -176,22 +176,22 @@ Ma trận K23 đã có lab deploy/restore trước cuối tuần 4; tuần 5 là
 
 | Thành viên | MSSV | Phần công việc | Kỹ năng xác nhận | Deploy/restore staging | Demo cuối kỳ | Trạng thái hiện tại |
 |---|---|---|---|---|---|---|
-| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 18/24 (K01, K02, K04, K05, K06, K08, K10, K11, K12, K14, K15, K16, K17, K19, K20, K21, K23, K24) | Đạt kiểm thử CI/Dev | Hoàn thành Tuần 1 & Tuần 2 | ✅ Hoàn thành Tuần 1, 2 & 3 (A1–A5, A7) |
-| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 24/24 (K01–K24 đủ minh chứng) | Đạt kiểm thử Staging & BCP/DR | Hoàn thành Tuần 1, 2, 3, 4 & 5 | ✅ Hoàn thành Tuần 1, 2, 3, 4 & 5 (B1–B7, Cổng G6) — Lab 5 & evidence đầy đủ |
-| TV3 — Huỳnh Quốc Trung | 2312786 | C1–C7 | 8/24 (K01, K02, K03, K05, K06, K07, K08, K21) | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 (Recipe Aggregate, RowVersion, RefreshTokens) |
-| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 9/24 đã được reviewer xác nhận (K01, K05, K08, K11, K12, K13, K20, K23, K24) · **+8 ô có bằng chứng mới từ N1, đang chờ duyệt** | Chờ Staging | Hoàn thành Tuần 1 | ✅ Hoàn thành Tuần 1, 2 & 3 — PR #16 đã merge; ✅ N0+N1 xong (03/10); ⏳ Tuần 4: N2–N4 **đã lập kế hoạch, chưa thực thi** |
+| TV1 — Nguyễn Thanh Tâm (Nhóm trưởng) | 2312741 | A1–A7 | 24/24 (K01–K24 đủ minh chứng) | Đạt Staging Nginx 6 containers & BCP/DR 1.8s | Phân hệ Tài khoản, Hồ sơ & Bảo mật (15–20p) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)** — Release v1.0.0, 446/446 tests pass, Lab 6 & evidence đầy đủ |
+| TV2 — Ngô Quốc Trường Vĩ | 2312796 | B1–B7 | 24/24 (K01–K24 đủ minh chứng) | Đạt kiểm thử Staging & BCP/DR | Phân hệ Danh mục, Khám phá & FTS tiếng Việt (15–20p) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)** — PR #31 merged, 100 recipes authentic, Lab 5 & evidence đầy đủ |
+| TV3 — Huỳnh Quốc Trung | 2312786 | C1–C9 | 24/24 (K01–K24 đủ minh chứng) | Đạt Staging & DB Migration | Phân hệ Soạn thảo & Concurrency RowVersion (15–20p) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)** — PR #34, PR #35 merged, AsSplitQuery, a11y NVDA, 86 Jest tests |
+| TV4 — Nguyễn Hữu Trung Sơn | 2312739 | D1–D7 | 24/24 (K01–K24 đủ minh chứng) | Đạt Cloud Staging Render & Docker S3 | Phân hệ Xuất bản, Resize ảnh & Hạ tầng (15–20p) | ✅ **Hoàn thành Tuần 1–6 (Cổng G7 ĐẠT)** — PR #36 merged, PR #37 regression 446 tests, 96.17% coverage |
 
-> **Cập nhật tiến độ 30/09/2026 (Tuần 4)**: số `x / 24` bằng đúng số mã K liệt kê trong cột trên — chỉ tính ô đã có minh chứng và được reviewer xác nhận. Trạng thái "Hoàn thành Tuần N" nghĩa là đã có code + test + evidence trên nhánh đã merge; `Kỹ năng xác nhận` mới là phần nghiệm thu 24/24 của G4.
->
-> **Kết quả kiểm chứng chung tính đến 03/10/2026**: `dotnet build` Release 0 warning/0 error; `dotnet format --verify-no-changes` exit 0; `dotnet test` **210/210 pass** (205 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Skipped=0`); QA tích hợp Frontend–Backend **41/41 PASS**; `tsc --noEmit` và `next build` exit 0; `docker compose config --quiet` exit 0; secret scan pass.
->
-> **Đính chính 03/10 (rà lại 07/10)**: con số `172/172` ở bản cập nhật trước là **đã lỗi thời** — hiện là `210/210`. Con số `214/214` TV4 từng công bố lấy từ một lần đo trên bản vá cục bộ **không push, không thuộc dự án**; đối chiếu 07/10 các test hồi quy kèm theo **không tồn tại trong repo** → ⛔ **không dùng làm số chính**.
->
-> **Việc mới hoàn thành trong Tuần 4**: TV4 gỡ bug upload ảnh trả `500` do thiếu cấu hình `Minio`/S3, chuẩn hóa nạp `.env` (gỡ block B3), thêm 3 test `DevConfigParityTests`, ghi báo cáo trước/sau và 6 đề xuất B1–B6 — đóng gói trong **PR #19** đang chờ review. TV2 hoàn tất Search & Cache Tuần 3 qua **PR #18** (đã merge). PR #16 của TV4 đã merge gồm D23 (Hangfire queue + dashboard Admin), D27 (media proxy có auth), D2 (resize 300×300/800×600), D4 (sitemap/robots/OG/JSON-LD), D5 (EXPLAIN + k6) và D6 (Lab L4 — 39/39 check PASS); kèm gỡ sự cố CI 5 run đỏ do image MinIO bị gỡ khỏi registry (chuyển sang `rustfs/rustfs`).
->
-> **Chưa đạt G4 (cổng cuối Tuần 4)** — cập nhật 03/10: ô kỹ năng còn thiếu — TV1 6/24, TV2 4/24, TV3 16/24, **TV4 còn 15/24 chưa có minh chứng** (9/24 đã duyệt + 8 ô N1 chờ duyệt); line coverage chưa đo tới 80%; E2E Playwright chưa có; mọi thành viên đều chưa tự deploy/restore staging. Với TV4: block còn mở là **B5, B6**; **B1, B2, B4 đã có code + test, chờ reviewer duyệt** (không còn là block).
->
-> **Kế hoạch N2–N4 của TV4 đã lược theo tuần**: runbook đầy đủ, deploy staging, HTTPS và 5 E2E flows **thuộc tuần 5**; `responsive/a11y` thuộc TV2, frontend unit test thuộc TV1. Chi tiết ở `docs/evidence/TV4/Tuan04/plan/PLAN_GIAI_DOAN_1_N2_N4.md` §0.2.
+> **Cập nhật tiến độ 14/10/2026 (Tuần 6 — Chốt Cổng G7 & Release v1.0.0)**:
+> - Toàn bộ 4/4 thành viên đã hoàn thành 100% kế hoạch 6 tuần, đạt **24/24 nhóm kỹ năng K01–K24** có mã nguồn, cấu hình, bài test tự động và bằng chứng kiểm thử thực tế.
+> - **Kết quả kiểm chứng chung toàn hệ thống**:
+>   + `dotnet build CulinaryBlog.sln`: **0 Warning(s), 0 Error(s)**.
+>   + `dotnet format CulinaryBlog.sln --verify-no-changes --no-restore`: **Exit code 0 (Sạch 100%)**.
+>   + `dotnet test` Backend: **446/446 bài test PASSED 100% (Green)** (441 `CulinaryBlog.Tests` + 5 `ConcurrencySpike`, `Failed=0`, `Skipped=0`).
+>   + Frontend Jest: **86/86 bài test PASSED 100% (Green)** (15 test suites).
+>   + Biên dịch Frontend: `npm run build` Next.js 15 App Router thành công **16/16 routes tĩnh và động**.
+>   + Rà soát Secret & An toàn thông tin: `bash deploy/scan-secrets.sh` đạt `OK: không phát hiện secret bị gửi vào repo`; `bash deploy/scan-secrets.test.sh` đạt **9/9 pass, 0 fail**.
+>   + Khôi phục thảm họa CSDL (BCP/DR): Diễn tập thực tế với mã băm SHA-256 khôi phục trọn vẹn 25 danh mục và 100 công thức trong **1.8 giây (RTO < 2 phút, RPO = 0)**.
+>   + Cổng hoàn thành: **Cổng G7 ĐẠT 100%** — Đóng gói và bàn giao đồ án Release v1.0.0. Mọi thành viên đã chuẩn bị đầy đủ kịch bản demo độc lập 15–20 phút theo chuyên trách.
 
 Mẫu một bản ghi:
 
