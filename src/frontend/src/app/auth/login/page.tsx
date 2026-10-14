@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { UtensilsCrossed, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { login } from '@/lib/api';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
+import { useAuthStore } from '@/store/auth-store';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +15,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const setAuthFromResponse = useAuthStore((s) => s.setAuthFromResponse);
+  const setAuth = useAuthStore((s) => s.setAuth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,14 +33,7 @@ export default function LoginPage() {
     setIsLoading(false);
 
     if (res.success && res.data) {
-      // Store token in localStorage for client-side API requests
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', res.data.accessToken);
-        if (res.data.refreshToken) {
-          localStorage.setItem('refreshToken', res.data.refreshToken);
-        }
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-      }
+      setAuthFromResponse(res.data);
       router.push('/dashboard/profile');
     } else {
       setErrorMessage(res.error || 'Đăng nhập không thành công. Vui lòng thử lại.');
@@ -44,12 +41,8 @@ export default function LoginPage() {
   };
 
   const handleGoogleSuccess = (auth: any) => {
-    if (typeof window !== 'undefined' && auth?.accessToken) {
-      localStorage.setItem('accessToken', auth.accessToken);
-      if (auth.refreshToken) {
-        localStorage.setItem('refreshToken', auth.refreshToken);
-      }
-      localStorage.setItem('user', JSON.stringify(auth.user));
+    if (auth?.accessToken && auth?.user) {
+      setAuth(auth.user, auth.accessToken, auth.refreshToken);
     }
     router.push('/dashboard/profile');
   };

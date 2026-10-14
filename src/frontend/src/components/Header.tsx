@@ -3,27 +3,28 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Search, Menu, X, Shield, BookOpen, Plus, LogOut } from 'lucide-react';
+import { Search, Menu, X, Shield, BookOpen, Plus, LogOut, User as UserIcon } from 'lucide-react';
+import { useAuthStore } from '@/store/auth-store';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  // Trạng thái đăng nhập đọc sau khi mount (tránh lệch SSR) và đọc lại mỗi lần đổi trang
-  const [loggedIn, setLoggedIn] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
+  const { user, isAuthenticated, logout: storeLogout, initialize } = useAuthStore();
+
   useEffect(() => {
-    setLoggedIn(!!localStorage.getItem('accessToken'));
-  }, [pathname]);
+    initialize();
+  }, [initialize, pathname]);
 
   function logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    setLoggedIn(false);
+    storeLogout();
     setIsMobileMenuOpen(false);
     router.push('/auth/login');
   }
+
+  const loggedIn = isAuthenticated;
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">

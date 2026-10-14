@@ -22,7 +22,8 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.88.0",
     "tailwind-merge": "^3.0.1",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
