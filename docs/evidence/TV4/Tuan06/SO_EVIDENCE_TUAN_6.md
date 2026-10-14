@@ -34,7 +34,7 @@
 | Frontend lint | `npm run lint` | ✅ exit 0 (warning `no-img-element` như cũ) | `logs/regression_frontend.log` |
 | Frontend build | `npm run build` | ✅ exit 0 (16 route); `ECONNREFUSED` sinh sitemap lúc build là không chặn (không có API) | `logs/baseline_frontend_build.log` |
 | Frontend unit | `npx jest --ci` | ✅ **86/86** · 15 suite | `logs/baseline_jest.log` |
-| CI `Backend week 1` + `Frontend CI` | GitHub Actions | ⬜ chưa xác nhận run mới (mở PR ở W6-1) | link run |
+| CI `Backend week 1` + `Frontend CI` | GitHub Actions | 🟡 PR #37: secret-scan pass, build-test/Frontend đang chạy | https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/37 |
 
 > **Lưu ý đối chiếu plan §2.2**: plan ghi mốc tuần 5 là 430+5 và coverage 97.07%. Đo thật trên nhánh
 > tuần 6 = **441+5=446** (khớp báo cáo repo tại `400b49a` "dotnet 446/446") và coverage **96.17%**.
@@ -106,7 +106,7 @@
 | Ngày | Việc | Kết quả | Log/commit/PR |
 |---|---|---|---|
 | 14/10 | Baseline trên nhánh `2312739_NHTSon_D7` (`main`+`5e84995`) | ✅ đã đo — xem §1 | `logs/baseline_*.log` |
-| 14/10 | Mở PR `2312739_NHTSon_D7` → `main` | ⬜ chưa mở (bước cuối W6-1) | link PR |
+| 14/10 | Mở PR `2312739_NHTSon_D7` → `main` | ✅ **[PR #37](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/37)** (OPEN · MERGEABLE) | PR #37 |
 
 ### 3.2. W6-2 — Regression toàn hệ thống
 

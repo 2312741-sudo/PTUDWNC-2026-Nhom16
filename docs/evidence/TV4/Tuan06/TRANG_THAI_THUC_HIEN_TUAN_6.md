@@ -20,7 +20,7 @@
 | Nhánh | ✅ `2312739_NHTSon_D7` từ `main` (`e93fbe8`) + commit `5e84995` (5 tài liệu tuần 6) đã push `origin/2312739_NHTSon_D7` |
 | Tài liệu tuần 6 | ✅ Kế hoạch · Mô tả việc · Trạng thái · Sổ evidence · Bàn giao (5 file trong `Tuan06/`) |
 | Việc W6-1…W6-9 | 🟡 **N1 xong phần W6-2 backend+FE** (E2E để N2) — các khối khác chưa làm |
-| PR cho nhánh tuần 6 | 🟡 **Chưa mở** (bước cuối W6-1) |
+| PR cho nhánh tuần 6 | ✅ **[PR #37](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/37)** → `main` (OPEN · MERGEABLE; chờ Tâm review, **không tự merge**) |
 | Baseline tuần 6 | ✅ **Đã đo 14/10** trên nhánh tuần 6 — bảng đầy đủ ở §0.3 |
 
 ### 0.3. Kết quả baseline tuần 6 đo ngày 14/10 (N1 · W6-2 backend/FE)
@@ -67,7 +67,7 @@
 
 | # | Khối | Việc | Kế hoạch | Xong | Đang làm | Còn lại | Tỷ lệ |
 |---|---|---|---|---|---|---|---|
-| W6-1 | Mở đầu | Baseline ✅ + mở PR (chưa) | 3 | 1 | 1 | 1 | ~33% |
+| W6-1 | Mở đầu | Baseline ✅ + mở PR ✅ (#37) | 3 | 3 | 0 | 0 | 100% |
 | W6-2 | Kiểm thử | Regression (backend+FE ✅; E2E ×2 + migration → N2) | 6 | 4 | 0 | 2 | ~67% |
 | W6-3 | Kiểm thử | Chốt 5/5 luồng G6 (luồng `category`) | 5 | 0 | 0 | 5 | 0% |
 | W6-4 | Lab/nợ | Lab L5 `image-opt`/`query-rollback` + `cqrs-behavior` | 3 | 0 | 0 | 3 | 0% |
@@ -76,7 +76,7 @@
 | W6-7 | Minh chứng | 24/24 ô K + mapping + Tâm xác nhận | 3 | 0 | 0 | 3 | 0% |
 | W6-8 | Demo | Demo publish/media/ops | 4 | 0 | 0 | 4 | 0% |
 | W6-9 | Nợ nhỏ | `npm audit` major · PR `Program.cs` · OAuth · nợ TV2/TV3 · hậu kiểm PR #36 | 6 | 0 | 0 | 6 | 0% |
-| **Tổng** | | | **41** | **5** | **1** | **35** | **~12%** |
+| **Tổng** | | | **41** | **7** | **0** | **34** | **~17%** |
 
 > Tỷ lệ tính theo **số việc có bằng chứng chạy thật trong tuần 6**. Bảng cập nhật khi làm.
 
@@ -88,7 +88,7 @@
 
 | Ngày | Việc dự kiến | Trạng thái |
 |---|---|---|
-| 14/10 | **W6-1** baseline ✅ + mở PR (chưa) · **W6-2** regression backend/FE ✅ (E2E để N2) | 🟡 Đang làm |
+| 14/10 | **W6-1** baseline ✅ + mở **PR #37** ✅ · **W6-2** regression backend/FE ✅ (E2E để N2) | ✅ W6-1 xong · 🟡 W6-2 4/6 |
 | 15/10 | **W6-2** E2E full suite ×2 · **W6-3** kiểm tra luồng `category` · bắt **W6-4** | ⬜ Chưa làm |
 | 16/10 | **W6-4** xong Lab L5 + `cqrs-behavior` · **W6-5** `/metrics` · bắt **W6-6** | ⬜ Chưa làm |
 | 17/10 | **W6-6** release/CHANGELOG/bàn giao · **W6-7** nộp mapping + sổ evidence | ⬜ Chưa làm |
@@ -167,3 +167,4 @@ Nguồn: `Tuan05/SO_EVIDENCE_TUAN_5.md` §2 + `../MAPPING_K01_FR_NFR_ADR_EVIDENC
 | 14/10 | Tạo nhánh `2312739_NHTSon_D7` **từ `main`** (`e93fbe8`, đã gồm tuần 5 qua PR #36); lập 5 tài liệu tuần 6 (Kế hoạch · Mô tả việc · Trạng thái · Sổ evidence · Bàn giao); ghi trạng thái bắt đầu **0/9 khối**. Chưa chạy kiểm định trên nhánh tuần 6. |
 | 14/10 | Người dùng commit 5 tài liệu tuần 6 → `5e84995` (push `origin/2312739_NHTSon_D7`). |
 | 14/10 | **N1 · W6-2 backend+FE**: restore/build/format exit 0, `dotnet test` **441+5=446** (Failed 0, Skipped 0), coverage gate **96.17%** ≥ 80%, FE tsc/lint/build exit 0, jest **86/86**. Log ở `Tuan06/logs/`. Đối chiếu: mốc 430 cũ trong plan là mốc giữa tuần 5; số đúng là 446. E2E ×2 + migration để N2. |
+| 14/10 | **W6-1 xong**: mở **PR #37** (`2312739_NHTSon_D7` → `main`), secret-scan CI pass, chờ Tâm review. |
