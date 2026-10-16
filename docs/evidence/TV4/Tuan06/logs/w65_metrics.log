@@ -1,0 +1,51 @@
+### W6-5 - danh gia /metrics (FR-OBS-003) - 2026-10-17T03:59:48.8593647+07:00
+--- 1) GET /metrics tren staging API :5080 ---
+HTTP 200 text/plain; version=0.0.4; charset=utf-8
+# HELP http_requests_total T?ng s? request HTTP dã ph?c v?.
+# TYPE http_requests_total counter
+http_requests_total{service="CulinaryBlog.API"} 1468
+# HELP http_request_errors_total S? request tr? 5xx.
+# TYPE http_request_errors_total counter
+http_request_errors_total{service="CulinaryBlog.API"} 0
+# HELP http_request_duration_ms_sum T?ng th?i gian x? lý (ms).
+# TYPE http_request_duration_ms_sum counter
+http_request_duration_ms_sum{service="CulinaryBlog.API"} 13666
+# HELP http_requests_by_class S? request theo method và l?p status.
+# TYPE http_requests_by_class counter
+http_requests_by_class{service="CulinaryBlog.API",method="DELETE",status_class="2xx"} 33
+http_requests_by_class{service="CulinaryBlog.API",method="DELETE",status_class="4xx"} 3
+http_requests_by_class{service="CulinaryBlog.API",method="GET",status_class="2xx"} 872
+http_requests_by_class{service="CulinaryBlog.API",method="GET",status_class="4xx"} 8
+http_requests_by_class{service="CulinaryBlog.API",method="OPTIONS",status_class="2xx"} 229
+http_requests_by_class{service="CulinaryBlog.API",method="PATCH",status_class="2xx"} 32
+http_requests_by_class{service="CulinaryBlog.API",method="POST",status_class="2xx"} 234
+http_requests_by_class{service="CulinaryBlog.API",method="POST",status_class="4xx"} 47
+http_requests_by_class{service="CulinaryBlog.API",method="PUT",status_class="2xx"} 8
+http_requests_by_class{service="CulinaryBlog.API",method="PUT",status_class="4xx"} 2
+
+--- 2) goi /health/live roi doc lai /metrics (tang counter) ---
+health/live -> 200
+# HELP http_requests_total T?ng s? request HTTP dã ph?c v?.
+# TYPE http_requests_total counter
+http_requests_total{service="CulinaryBlog.API"} 1471
+# HELP http_request_errors_total S? request tr? 5xx.
+# TYPE http_request_errors_total counter
+http_request_errors_total{service="CulinaryBlog.API"} 0
+# HELP http_request_duration_ms_sum T?ng th?i gian x? lý (ms).
+# TYPE http_request_duration_ms_sum counter
+http_request_duration_ms_sum{service="CulinaryBlog.API"} 13672
+# HELP http_requests_by_class S? request theo method và l?p status.
+# TYPE http_requests_by_class counter
+http_requests_by_class{service="CulinaryBlog.API",method="DELETE",status_class="2xx"} 33
+http_requests_by_class{service="CulinaryBlog.API",method="DELETE",status_class="4xx"} 3
+http_requests_by_class{service="CulinaryBlog.API",method="GET",status_class="2xx"} 875
+http_requests_by_class{service="CulinaryBlog.API",method="GET",status_class="4xx"} 8
+http_requests_by_class{service="CulinaryBlog.API",method="OPTIONS",status_class="2xx"} 229
+http_requests_by_class{service="CulinaryBlog.API",method="PATCH",status_class="2xx"} 32
+http_requests_by_class{service="CulinaryBlog.API",method="POST",status_class="2xx"} 234
+http_requests_by_class{service="CulinaryBlog.API",method="POST",status_class="4xx"} 47
+http_requests_by_class{service="CulinaryBlog.API",method="PUT",status_class="2xx"} 8
+http_requests_by_class{service="CulinaryBlog.API",method="PUT",status_class="4xx"} 2
+
+--- 3) exporter Prometheus trong csproj? ---
+co package Prometheus: False (False => /metrics la ban tu viet, khong them package)

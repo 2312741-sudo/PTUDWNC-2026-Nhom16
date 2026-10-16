@@ -333,6 +333,11 @@ dotnet run --project src/backend/CulinaryBlog.API -- --urls http://localhost:508
 > Khoá dev cũ từng bị commit vào repo đã bị **thu hồi** — app từ chối dùng lại nó.
 >
 > 👑 Cần tài khoản Admin? `dotnet run --project src/backend/CulinaryBlog.API -- --promote-admin <email>` (chỉ Development, idempotent — xem `docs/evidence/TV4/HUONG_DAN_CHAY_TV4.md` §6.1).
+>
+> 🧑‍🍳 **Tài khoản demo (tạo bởi `--seed`/`--reseed`, `DbSeeder`)**: mật khẩu chung `User@123456`.
+> `masterchef@culinary.local` = **Admin**; `tam.nguyen@culinary.local`, `vi.ngo@culinary.local`,
+> `trung.huynh@culinary.local`, `son.nguyen@culinary.local` = **Author**. Chỉ là **tài khoản dev/seed**,
+> không dùng cho môi trường thật (mật khẩu nằm trong seeder chỉ chạy ở Development).
 
 > 📖 Truy cập tài liệu API trực quan tại: **http://localhost:5080/scalar/v1**
 

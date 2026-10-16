@@ -1,0 +1,231 @@
+[04:06:31 INF] [LAB/main] === LAB L5 bat dau (run 20261016-210631) ===
+[04:06:31 INF] [LAB/main] Muc tieu: doc bang chung ve caching (SSR/ISR), rollback, anh, SEO, observability, multi-instance, cqrs-behavior.
+[04:06:31 INF] [LAB/main] API  = http://127.0.0.1:5080
+[04:06:31 INF] [LAB/main] API2 = http://127.0.0.1:5081
+[04:06:31 INF] [LAB/main] Web  = http://127.0.0.1:3000
+[04:06:31 INF] [LAB/main] Log  = D:\WNC\PTUDWNC-2026-Nhom16\practice\TV4\L5\out\lab_l5_20261016-210631.log
+[04:06:31 INF] [LAB/main] --- Bat dau phase: search-ssr ---
+[04:06:31 INF] [LAB/result] [search-ssr] PASS search trả 200 - HTTP 200
+[04:06:31 INF] [LAB/result] [search-ssr] PASS HTML chứa RSC payload của Next.js - có self.__next_f.push — App Router đã stream render
+[04:06:31 INF] [LAB/result] [search-ssr] PASS HTML tĩnh đã có nội dung thật (không phải CSR shell) - HTML chứa text render sẵn — server-rendered
+[04:06:31 ERR] [LAB/result] [search-ssr] FAIL response KHÔNG bị ép no-store (còn cơ hội cache) - Cache-Control: no-store, must-revalidate, no-cache, max-age=0, private
+[04:06:31 INF] [LAB/result] [search-ssr] PASS do Next.js phục vụ - X-Powered-By: Next.js
+[04:06:31 INF] [LAB/result] [search-ssr] PASS render server hoàn tất dưới 5s - 53 ms
+[04:06:31 INF] [LAB/result] [search-ssr] INFO GET http://127.0.0.1:3000/search?q=E2E -> 200, 51668 byte
+[04:06:31 INF] [LAB/result] [search-ssr] INFO từ khoá: "E2E"
+[04:06:31 INF] [LAB/result] [search-ssr] INFO độ dài HTML: 51668 byte
+[04:06:31 INF] [LAB/result] [search-ssr] INFO Cache-Control: no-store, must-revalidate, no-cache, max-age=0, private
+[04:06:31 INF] [LAB/result] [search-ssr] INFO x-nextjs-cache: (không có)
+[04:06:31 INF] [LAB/result] [search-ssr] INFO x-nextjs-revalidate: (không có)
+[04:06:31 INF] [LAB/result] [search-ssr] FAIL - 5/6 check OK
+[04:06:31 INF] [LAB/main] --- Ket thuc phase search-ssr (FAIL, 317 ms) ---
+[04:06:31 INF] [LAB/summary] SUMMARY search-ssr FAIL (5/6)
+[04:06:31 INF] [LAB/main] --- Bat dau phase: isr-detail ---
+[04:06:32 INF] [LAB/result] [isr-detail] PASS chạy production server (không phải next dev) - X-Powered-By=Next.js
+[04:06:32 INF] [LAB/result] [isr-detail] PASS lần 1 render trang chi tiết OK - HTTP 200, 39571 byte
+[04:06:32 INF] [LAB/result] [isr-detail] PASS lần 2 render trang chi tiết OK - HTTP 200, 39571 byte
+[04:06:32 INF] [LAB/result] [isr-detail] PASS lần 3 render trang chi tiết OK - HTTP 200, 39571 byte
+[04:06:32 INF] [LAB/result] [isr-detail] PASS có bằng chứng cache ISR hoạt động (HIT/STALE) - response báo HIT/STALE → ISR đang cache và tái dụng
+[04:06:32 ERR] [LAB/result] [isr-detail] FAIL revalidate khớp khai báo 300s - không đọc được x-nextjs-revalidate (nhận "không có")
+[04:06:32 INF] [LAB/result] [isr-detail] PASS trang chi tiết server-rendered - HTML có RSC payload — render sẵn ở server
+[04:06:32 INF] [LAB/result] [isr-detail] PASS cache không bị ghim vĩnh viễn (có Age/X-Cache-Miss) - Age: (không có); observedCaching=True
+[04:06:32 INF] [LAB/result] [isr-detail] INFO slug dùng để kiểm chứng: e2e-goi-cuon-tom-thit-179218347678328a1fd
+[04:06:32 INF] [LAB/result] [isr-detail] INFO X-Powered-By: Next.js
+[04:06:32 INF] [LAB/result] [isr-detail] INFO buildId trong HTML: không
+[04:06:32 INF] [LAB/result] [isr-detail] INFO lần 1: HTTP 200, x-nextjs-cache=MISS
+[04:06:32 INF] [LAB/result] [isr-detail] INFO lần 2: HTTP 200, x-nextjs-cache=HIT
+[04:06:32 INF] [LAB/result] [isr-detail] INFO lần 3: HTTP 200, x-nextjs-cache=HIT
+[04:06:32 INF] [LAB/result] [isr-detail] INFO x-nextjs-revalidate: (không có)
+[04:06:32 INF] [LAB/result] [isr-detail] INFO Ghi chú: kiểm tra hết hạn 300s cần chờ đủ 5 phút — xem check 'Hết hạn' trong phần dưới.
+[04:06:32 INF] [LAB/result] [isr-detail] FAIL - 7/8 check OK
+[04:06:32 INF] [LAB/main] --- Ket thuc phase isr-detail (FAIL, 558 ms) ---
+[04:06:32 INF] [LAB/summary] SUMMARY isr-detail FAIL (7/8)
+[04:06:32 INF] [LAB/main] --- Bat dau phase: query-rollback ---
+[04:06:33 INF] [LAB/result] [query-rollback] PASS sản phẩm có dùng useOptimistic hoặc tương đương - tìm thấy useOptimistic / onMutate / rollbacks
+[04:06:33 INF] [LAB/result] [query-rollback] PASS sản phẩm có đường thoát rollback khi server từ chối - tìm thấy rollback / revert / refetch onError
+[04:06:33 INF] [LAB/result] [query-rollback] PASS input sai bị bác bằng 4xx chứ không phải 500 - HTTP 401
+[04:06:33 INF] [LAB/result] [query-rollback] PASS lỗi trả về dạng JSON (client đọc được message) - Content-Type: application/problem+json
+[04:06:33 INF] [LAB/result] [query-rollback] PASS truy vấn không tồn tại trả 404 có cấu trúc - HTTP 404
+[04:06:33 INF] [LAB/result] [query-rollback] PASS lấy được token để kiểm chứng ghi/đọc thật - đăng nhập lab thành công
+[04:06:33 INF] [LAB/result] [query-rollback] PASS read-after-write nhất quán (nền tảng của rollback) - giá trị đã ghi được đọc lại đúng
+[04:06:33 INF] [LAB/result] [query-rollback] PASS giá trị vượt giới hạn bị chặn bằng 4xx, không 500 - HTTP 400
+[04:06:33 INF] [LAB/result] [query-rollback] PASS mutation bị từ chối không làm hỏng dữ liệu đã ghi trước đó - dữ liệu trước đó vẫn còn nguyên — client rollback về đúng giá trị
+[04:06:33 ERR] [LAB/result] [query-rollback] FAIL kiểm tra xung đột ghi đồng thời (RowVersion) - tài khoản lab không sở hữu công thức nào — không kiểm chứng được trên dữ liệu thật
+[04:06:33 INF] [LAB/result] [query-rollback] INFO quet ma nguon tai D:\WNC\PTUDWNC-2026-Nhom16\src\frontend\src
+[04:06:33 INF] [LAB/result] [query-rollback] INFO khop useOptimistic/rollbacks/onMutate/onError: 50 dong
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/api.ts:146: ): Promise<{ success: boolean; data?: import('@/types/auth').User; error?: string; validationErrors?: Record<string, string[]> }> {
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/api.ts:162: validationErrors: result.errors,
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/api.ts:220: ): Promise<{ success: boolean; error?: string; validationErrors?: Record<string, string[]> }> {
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/api.ts:236: validationErrors: err.errors,
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/api.ts:387: ): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string; validationErrors?: Record<string, string[]> }> {
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/api.ts:402: validationErrors: result.errors,
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   lib/recipe-editor.ts:244: xhr.onerror = () => reject(new ApiError(0, "NETWORK", "Không thể kết nối máy chủ"));
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   components/GoogleSignInButton.tsx:11: onError?: (error: string) => void;
+[04:06:33 INF] [LAB/result] [query-rollback] INFO khop rollback/revert/refetch/mutateAsync: 6 dong
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   app/dashboard/recipes/_wizard/RecipeWizard.tsx:61: | { type: "rollback"; message: string }
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   app/dashboard/recipes/_wizard/RecipeWizard.tsx:77: case "rollback": return { ...s, saving: false, error: a.message };
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   app/dashboard/recipes/_wizard/RecipeWizard.tsx:89: * app/layout dùng chung): chỉ refetch khi chính wizard yêu cầu (sau mỗi lần lưu), không tự refetch khi focus/retry
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   app/dashboard/recipes/_wizard/RecipeWizard.tsx:95: queries: { staleTime: Infinity, refetchOnWindowFocus: false, refetchOnReconnect: false, retry: false },
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   app/dashboard/recipes/_wizard/RecipeWizard.tsx:217: dispatch({ type: "rollback", message: `${messageOf(e)} — đã hoàn tác thay đổi.` });
+[04:06:33 INF] [LAB/result] [query-rollback] INFO   app/dashboard/recipes/_wizard/RecipeWizard.tsx:226: return mutation.mutateAsync({ fn, optimistic }).then(() => true, () => false);
+[04:06:33 INF] [LAB/result] [query-rollback] INFO POST /auth/login (sai mat khau) -> HTTP 401: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.2","title":"Email hoặc mật khẩu không đúng.","status":401,"detail":"Email hoặc mật khẩu khôn...
+[04:06:33 INF] [LAB/result] [query-rollback] INFO GET /recipes/khong-ton-tai-abc123 -> HTTP 404: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Không tìm thấy công thức.","status":404,"detail":"Không tìm thấy công thức.","in...
+[04:06:33 INF] [LAB/result] [query-rollback] INFO POST /auth/login e2e.playwright@culinary.local -> HTTP 200
+[04:06:33 INF] [LAB/result] [query-rollback] INFO displayName hien tai: "E2E Playwright"
+[04:06:33 INF] [LAB/result] [query-rollback] INFO bio goc: (rong)
+[04:06:33 INF] [LAB/result] [query-rollback] INFO PATCH /auth/me bio=lab-l5-20261016-210631 -> HTTP 200: {"data":{"id":"97fc6eb7-ff95-4df7-8b61-32d7cbb30910","email":"e2e.playwright@culinary.local","fullName":"E2E Playwright","userName":"e2e.playwright@cu...
+[04:06:33 INF] [LAB/result] [query-rollback] INFO PATCH /auth/me bio(5000 ký tự) -> HTTP 400
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc e2e-goi-cuon-tom-thit-179218347678328a1fd (id=222c43be-d0e7-4f74-b235-16472b2db452): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc e2e-goi-cuon-tom-thit-1792182486809caf941 (id=189b3f07-d0c7-4080-9777-eefa48f7eafb): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc e2e-goi-cuon-tom-thit-1791454268503cdec54 (id=21ccd316-3eff-4970-af78-df599ea1f553): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc e2e-goi-cuon-tom-thit-17914538585264fef20 (id=9523f74e-60e9-4e7b-85ec-4106fa6def47): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc e2e-goi-cuon-tom-thit-17914537439507a9e78 (id=1d26901b-ebe6-425c-8be5-cb478f2eb4ff): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc e2e-goi-cuon-tom-thit-1791450175581b02c55 (id=0a645f08-2b40-4bb4-a890-dcac6c01f42b): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-crepe-sau-rieng (id=48ad6fc0-8d98-42aa-8826-608d5d48e2e7): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-mousse-chanh-leo (id=2476a424-45ae-4720-b134-0d873937dc89): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-tiramisu-y (id=c7874371-7836-4ef0-a072-7b72de683b15): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc vit-quay-bac-kinh (id=25ad854b-c6a4-41d4-9c5c-ddffd140c727): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc suon-nuong-com-lam (id=6c489a17-1ff3-4003-b678-7ad56580119c): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc ga-chien-nuoc-mam (id=3bdbd2c1-b990-43a6-b1ba-819c14918217): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc bo-ne-hoa-tuyet (id=6e791155-28d2-49cd-83e3-33b9ca8d1262): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc ca-tai-tuong-chien-xu (id=1b31474b-fa6b-4eee-98f7-a0b2dd3d545e): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc tom-nuong-muoi-ot (id=cc52f671-f963-4a33-a6f6-a22d27ef27cf): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc hau-nuong-pho-mai (id=cb6e7b72-c96d-4826-b48a-5e14f9f32e5f): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc so-huyet-xao-toi (id=6ef96ac8-4f5d-4627-852b-683a4e99d9d6): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc ngheu-hap-sa-gung (id=c116529e-14ef-47d9-aede-3953c09ae404): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc cang-ghe-rang-muoi-keo-chi (id=1df87e19-0cc4-4100-9f6e-038dcd2ea3df): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc oc-huong-xao-bo-toi (id=3bc12316-7a5b-4741-b2f8-c7d04f640423): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-can-phan-thiet (id=b2490e62-8002-45f9-b5e5-92f2bcdad0b7): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-khot-vung-tau (id=277f833d-0d53-4fac-aa0b-0cb5b80357cc): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc bun-thit-nuong-cha-gio (id=f728229d-11a4-4d10-ad6b-048a72923a0f): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc mi-xao-bo-rau-cai (id=d4c09798-de31-47f9-8b73-576ab213f51d): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc com-rang-dua-bo (id=58f5ebaa-4bf6-4b77-8188-d2f59507e415): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc xoi-bap-mo-hanh (id=dba34261-205b-4a03-a6a8-774192f24297): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-gio-nong-ha-noi (id=79ad275c-731c-486a-9bb2-10b97952765b): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-bao-nhan-thit-trung-cut (id=dce7832c-2529-4bcd-bd16-f7325e156dee): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc xoi-xeo-ga-xe (id=8f6ca6c8-254a-42b7-8c54-ff8b5d4142f7): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-mi-chao-thap-cam (id=34c53d65-99fd-4432-8449-9e8137aac4b2): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc nuoc-ep-can-tay-tao-xanh (id=5d41404e-6af8-4815-a585-d497c6bb2e72): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc sinh-to-bo-dak-lak (id=1065ca95-6c29-4df4-abcb-ac3652410496): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc tra-mang-cau-xiem (id=b76445f6-7cf0-4cd9-b4dd-578ee8ee5073): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc tra-vai-hoa-hong (id=635c2567-ef24-45fd-ac28-4a560b9d245e): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc tra-dao-cam-sa (id=09a678db-8539-4062-b943-4a0f12ef1314): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc rau-cau-dua-trai-cay (id=b660f990-5924-479e-912f-7f1b5f13ffd3): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc sua-chua-nep-cam-moc-chau (id=39acd8be-d408-448d-9ac1-5bbbb4f12385): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc che-suong-sa-hat-luu (id=0a61fa9f-a0a2-4b30-b4a8-b8dedcc2d991): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc che-hat-sen-long-nhan (id=a6924b47-c39f-4f6e-a901-3f44e6b6daec): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc che-khuc-bach-hanh-nhan (id=a2c8fb19-12ce-45ae-8590-9a2d33979d7e): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc che-buoi-an-giang (id=732b3b57-7ad4-4cd5-a57d-3494568b64c3): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc banh-flan-caramel-beo-ngay (id=4e3f331c-bca0-44ab-b861-de68d83488e4): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc chao-yen-mach-tom-thit (id=79abad43-303e-4521-b5a6-8b9873f33e5a): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc chao-ga-hat-sen (id=a67a1be1-caaf-4788-870e-13d771c48e40): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc chao-ca-loc-rau-dang (id=aa7531d5-aea9-4028-978d-144f8993fedd): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc chao-suon-quay-nong (id=00fdfd68-b92b-4a9e-8292-89e1b380644f): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc canh-kim-chi-thit-heo (id=05cd2c3a-e97f-44d5-8646-dbdec3a767da): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc canh-rong-bien-thit-bam (id=cf1bec35-c3de-44bf-a4b6-227840ceb76f): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc bong-bi-xao-thit-bo (id=b23c37e9-410d-4852-936b-8c54f17b6cc2): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO thu cong thuc rau-muong-xao-toi (id=f65b6f10-4e27-4706-84ef-206ef504ae17): PUT -> HTTP 403
+[04:06:33 INF] [LAB/result] [query-rollback] INFO da khoi phuc bio goc
+[04:06:33 INF] [LAB/result] [query-rollback] FAIL - 9/10 check OK
+[04:06:33 INF] [LAB/main] --- Ket thuc phase query-rollback (FAIL, 1350 ms) ---
+[04:06:33 INF] [LAB/summary] SUMMARY query-rollback FAIL (9/10)
+[04:06:33 INF] [LAB/main] --- Bat dau phase: image-opt ---
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL proxy anh phuc vu duoc - HTTP 404
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL proxy anh tra dung Content-Type anh - Content-Type: application/problem+json
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL proxy anh co ETag/Last-Modified de trinh duyet cache lai - ETag: (khong co), Last-Modified: (khong co)
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL có biến thể ảnh resize (medium/large) - khong thay khoa anh nao co hau to medium/large
+[04:06:33 INF] [LAB/result] [image-opt] PASS anh khong ton tai tra 404 chu khong phai 500 - HTTP 404
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL frontend co dung next/image de toi uu anh o tang client - KHONG file nao dung next/image
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL khong con anh bi render bang the img tho khong toi uu - 11 file van dung <img> tho
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL HTML sinh ra da dung duong dan /_next/image cua Next.js - khong thay /_next/image — anh duoc tai nguyen ban, khong duoc resize theo man hinh
+[04:06:33 ERR] [LAB/result] [image-opt] FAIL anh duoc gan loading/decoding de khong lam doi layout (CLS) - khong thay thuoc tich lazy-loading/decoding
+[04:06:33 INF] [LAB/result] [image-opt] INFO tim thay 1 khoa anh tren API
+[04:06:33 INF] [LAB/result] [image-opt] INFO   key: recipes/222c43be-d0e7-4f74-b235-16472b2db452/8a534ebb5c4f4b6e92d787cfaf6eacde.jpg
+[04:06:33 INF] [LAB/result] [image-opt] INFO khoa anh la object key cua MinIO: True (gia tri: recipes/222c43be-d0e7-4f74-b235-16472b2db452/8a534ebb5c4f4b6e92d787cfaf6eacde.jpg)
+[04:06:33 INF] [LAB/result] [image-opt] INFO GET proxy anh -> HTTP 404, len=352
+[04:06:33 INF] [LAB/result] [image-opt] INFO GET proxy anh sai -> HTTP 404
+[04:06:33 INF] [LAB/result] [image-opt] INFO frontend: 0 file dung next/image, 11 file dung the img tho
+[04:06:33 INF] [LAB/result] [image-opt] INFO HTML /recipes/e2e-goi-cuon-tom-thit-179218347678328a1fd co duong dan /_next/image: False
+[04:06:33 INF] [LAB/result] [image-opt] INFO trang co thuoc tich loading/decoding tren anh: False
+[04:06:33 INF] [LAB/result] [image-opt] FAIL - 1/9 check OK
+[04:06:33 INF] [LAB/main] --- Ket thuc phase image-opt (FAIL, 89 ms) ---
+[04:06:33 INF] [LAB/summary] SUMMARY image-opt FAIL (1/9)
+[04:06:33 INF] [LAB/main] --- Bat dau phase: seo ---
+[04:06:33 INF] [LAB/result] [seo] PASS trang cong thuc tra 200 - HTTP 200
+[04:06:33 INF] [LAB/result] [seo] PASS co the <title> trong HTML tinh - "E2E Gỏi cuốn tôm thịt 179218347678328a1fd"
+[04:06:33 INF] [LAB/result] [seo] PASS co meta description - do dai 30 ky tu
+[04:06:33 INF] [LAB/result] [seo] PASS co the OG:title cho chia se mxh - "E2E Gỏi cuốn tôm thịt 179218347678328a1fd"
+[04:06:33 INF] [LAB/result] [seo] PASS co OG:image de hien thi anh khi chia se - "http://localhost/api/v1/resources/images/recipes/222c43be-d0e7-4f74-b235-16472b2..."
+[04:06:33 INF] [LAB/result] [seo] PASS co canonical de chong trung lap noi dung - http://localhost/recipes/e2e-goi-cuon-tom-thit-179218347678328a1fd
+[04:06:33 INF] [LAB/result] [seo] PASS mo khoi JSON-LD phai parse duoc (khong nen sai JSON) - 1/1 khoi hop le
+[04:06:33 INF] [LAB/result] [seo] PASS co JSON-LD kieu Recipe cho Google rich result - tim thay schema.org Recipe
+[04:06:33 INF] [LAB/result] [seo] PASS robots.txt phuc vu duoc - HTTP 200
+[04:06:33 INF] [LAB/result] [seo] PASS robots.txt cho phep crawler doc - noi dung: User-Agent: * | Allow: / | Disallow: /auth/ | Disallow: /dashboard/ |  | Sitemap: http://l...
+[04:06:33 INF] [LAB/result] [seo] PASS sitemap.xml phuc vu duoc - HTTP 200
+[04:06:33 INF] [LAB/result] [seo] PASS sitemap.xml co du lieu <loc> khong rong - do dai 16904 byte
+[04:06:33 INF] [LAB/result] [seo] PASS sitemap.xml co it nhat mot URL - 98 URL
+[04:06:33 INF] [LAB/result] [seo] PASS moi trang co title rieng (khong trung nhau) - "Culinary Blog — Khám phá & Chia sẻ công thức ẩm thực đỉnh cao"
+[04:06:33 INF] [LAB/result] [seo] PASS co khai bao metadata trong ma nguon - 9 cho khai bao
+[04:06:33 INF] [LAB/result] [seo] INFO trang: /recipes/e2e-goi-cuon-tom-thit-179218347678328a1fd -> HTTP 200, 39571 byte
+[04:06:33 INF] [LAB/result] [seo] INFO <title>: E2E Gỏi cuốn tôm thịt 179218347678328a1fd
+[04:06:33 INF] [LAB/result] [seo] INFO meta description: "Món cuốn tươi mát cho ngày hè."
+[04:06:33 INF] [LAB/result] [seo] INFO og:title: "E2E Gỏi cuốn tôm thịt 179218347678328a1fd"
+[04:06:33 INF] [LAB/result] [seo] INFO og:image: "http://localhost/api/v1/resources/images/recipes/222c43be-d0e7-4f74-b235-16472b2..."
+[04:06:33 INF] [LAB/result] [seo] INFO canonical: http://localhost/recipes/e2e-goi-cuon-tom-thit-179218347678328a1fd
+[04:06:33 INF] [LAB/result] [seo] INFO so khoi JSON-LD: 1
+[04:06:33 INF] [LAB/result] [seo] INFO GET /robots.txt -> HTTP 200, len=106
+[04:06:33 INF] [LAB/result] [seo] INFO GET /sitemap.xml -> HTTP 200, len=16904
+[04:06:33 INF] [LAB/result] [seo] INFO so <loc> trong sitemap: 98
+[04:06:33 INF] [LAB/result] [seo] INFO <title> trang chu: Culinary Blog — Khám phá & Chia sẻ công thức ẩm thực đỉnh cao
+[04:06:33 INF] [LAB/result] [seo] INFO khai bao metadata tim thay: 9 cho
+[04:06:33 INF] [LAB/result] [seo] PASS - 15/15 check OK
+[04:06:33 INF] [LAB/main] --- Ket thuc phase seo (PASS, 141 ms) ---
+[04:06:33 INF] [LAB/summary] SUMMARY seo PASS (15/15)
+[04:06:33 INF] [LAB/main] --- Bat dau phase: observability ---
+[04:06:37 INF] [LAB/result] [observability] PASS liveness tra 200 - HTTP 200: {"status":"Healthy","checks":{"liveness":{"status":"Healthy","description":"Process alive.","durationMs":0.0001}}}
+[04:06:37 INF] [LAB/result] [observability] PASS readiness tra 200 khi ha tang san sang - HTTP 200
+[04:06:37 INF] [LAB/result] [observability] PASS readiness bao cao tung thanh phan (khong chi tra rong) - {"status":"Healthy","checks":{"database":{"status":"Healthy","description":"PostgreSQL reachable.","durationMs":0.8887},...
+[04:06:37 INF] [LAB/result] [observability] PASS readiness ổn định giữa hai lần gọi - lần 1=200, lần 2=200
+[04:06:37 INF] [LAB/result] [observability] PASS lỗi nghiệp vụ có mã lỗi máy đọc được - recipe.not_found
+[04:06:37 INF] [LAB/result] [observability] PASS request mang traceparent vẫn được xử lý bình thường - HTTP 200
+[04:06:37 INF] [LAB/result] [observability] PASS trace id do client gui xuất hiện trong log server - da tim thay trace id trong log canh bao
+[04:06:37 ERR] [LAB/result] [observability] FAIL Seq (log sink) liên lạc được - khong lien lac duoc
+[04:06:37 ERR] [LAB/result] [observability] FAIL OTLP collector liên lạc được - khong lien lac OTLP
+[04:06:37 INF] [LAB/result] [observability] PASS lỗi không rò rỉ stack trace cho client - khong co stack trace
+[04:06:37 INF] [LAB/result] [observability] INFO GET /health/live -> HTTP 200
+[04:06:37 INF] [LAB/result] [observability] INFO GET /health/ready -> HTTP 200: {"status":"Healthy","checks":{"database":{"status":"Healthy","description":"PostgreSQL reachable.","durationMs":0.8887},...
+[04:06:37 INF] [LAB/result] [observability] INFO GET /recipes/khong-ton-tai-zzz -> HTTP 404, code=recipe.not_found
+[04:06:37 INF] [LAB/result] [observability] INFO gui traceparent voi trace-id: 20261016210631000000000000000000
+[04:06:37 INF] [LAB/result] [observability] INFO response X-Correlation-Id: b812933a64614a0e943380a6621f3fc5
+[04:06:37 INF] [LAB/result] [observability] INFO response traceparent: (khong tra ve)
+[04:06:37 INF] [LAB/result] [observability] INFO response x-trace-id: (khong tra ve)
+[04:06:37 INF] [LAB/result] [observability] INFO LAB_API_LOG chua duoc dat -> bo qua kiem tra log server
+[04:06:37 INF] [LAB/result] [observability] INFO Seq (5341): khong lien lac duoc
+[04:06:37 INF] [LAB/result] [observability] INFO OTLP HTTP (4318): khong lien lac duoc
+[04:06:37 INF] [LAB/result] [observability] FAIL - 8/10 check OK
+[04:06:37 INF] [LAB/main] --- Ket thuc phase observability (FAIL, 4113 ms) ---
+[04:06:37 INF] [LAB/summary] SUMMARY observability FAIL (8/10)
+[04:06:37 INF] [LAB/main] --- Bat dau phase: multi-instance ---
+[04:06:39 ERR] [LAB/result] [multi-instance] FAIL phase multi-instance chạy không lỗi ngoại lệ - HttpRequestException: No connection could be made because the target machine actively refused it. (127.0.0.1:5081)
+[04:06:39 INF] [LAB/result] [multi-instance] FAIL - 0/1 check OK
+[04:06:39 INF] [LAB/main] --- Ket thuc phase multi-instance (FAIL, 2038 ms) ---
+[04:06:39 INF] [LAB/summary] SUMMARY multi-instance FAIL (0/1)
+[04:06:39 INF] [LAB/main] --- Bat dau phase: cqrs-behavior ---
+[04:06:40 INF] [LAB/result] [cqrs-behavior] PASS query đi qua MediatR tới handler và trả dữ liệu - HTTP 200
+[04:06:40 INF] [LAB/result] [cqrs-behavior] PASS ValidationBehavior chặn command sai bằng HTTP 400 - HTTP 400
+[04:06:40 INF] [LAB/result] [cqrs-behavior] PASS lỗi trả về có cấu trúc FluentValidation (email/password) - có nhắc tới email/password hoặc errors
+[04:06:40 INF] [LAB/result] [cqrs-behavior] PASS command hợp lệ đi qua pipeline tới handler (401, không 400/500) - HTTP 401
+[04:06:40 INF] [LAB/result] [cqrs-behavior] PASS pipeline có behavior validation + logging tối thiểu - validation=True, logging=True
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO GET /recipes -> HTTP 200, 5 muc
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO POST /auth/register (sai) -> HTTP 400
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO body lỗi (200 ky tu): {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Dữ liệu không hợp lệ.","status":400,"instance":"/api/v1/auth/register","errors":{"email":["'Email' is not a valid email address."]...
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO POST /auth/login (khong ton tai) -> HTTP 401
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO Pipeline.cs: 2 tham chieu IPipelineBehavior (validation=True, logging=True, caching=False)
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO KHONG co CachingBehavior — K04 chi yeu cau toi thieu (logging/validation), caching la tuy chon
+[04:06:40 INF] [LAB/result] [cqrs-behavior] INFO GIOI HAN: LoggingBehavior phat ra log/OTLP, KHONG quan sat truc tiep qua HTTP (chi suy ra duoc rang pipeline co chay khi command toi duoc handler).
+[04:06:40 INF] [LAB/result] [cqrs-behavior] PASS - 5/5 check OK
+[04:06:40 INF] [LAB/main] --- Ket thuc phase cqrs-behavior (PASS, 50 ms) ---
+[04:06:40 INF] [LAB/summary] SUMMARY cqrs-behavior PASS (5/5)
+[04:06:40 INF] [LAB/summary] === LAB L5 FAIL - 8 phase, 64 check ===
+[04:06:40 INF] [LAB/main] === LAB L5 ket thuc: FAIL ===
+[04:06:40 INF] [LAB/main] File log: D:\WNC\PTUDWNC-2026-Nhom16\practice\TV4\L5\out\lab_l5_20261016-210631.log

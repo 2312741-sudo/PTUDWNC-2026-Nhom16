@@ -130,3 +130,29 @@
    trong cột "Kỹ thuật con" đều có bằng chứng (mục 9.2: *thiếu một phần thì ô chưa hoàn thành*).
 5. Nếu cột "FR/NFR liên quan" của TV4 gán sai, sửa cột đó và ghi lại — đây là điểm cần Tâm chốt,
    vì ảnh hưởng tới việc đối chiếu ma trận bao phủ ở `KE_HOACH_DU_AN.md` mục 10–11.
+
+---
+
+## F. Cập nhật bằng chứng tuần 6 (17/10/2026)
+
+> Bảng A/B ở trên **đóng băng tại 30/09** (`2d7c992`) — giữ nguyên để đối chiếu, **không** tự đổi trạng thái.
+> Mục này bổ sung bằng chứng **tuần 6** cho các ô K có việc mới. Số `file:line`/log lấy từ
+> `Tuan06/SO_EVIDENCE_TUAN_6.md`. **Vẫn 0/24 ô được Tâm xác nhận.**
+
+| K | Bằng chứng mới tuần 6 | Trạng thái cập nhật |
+|---|---|---|
+| K01 | File mapping này (**§F**) + 6 ADR `docs/adr/` (ADR-0001, ADR-0002, ADR-TV4-001…004) | 🟡 (chờ Tâm) |
+| K04 | Phase **`cqrs-behavior`** (lab `practice/TV4/L5`) chạy thật: query qua MediatR, ValidationBehavior chặn 400, command hợp lệ tới handler — **PASS 5/5** (`Tuan06/logs/w64_lab_l5.log`) | ✅ (chờ Tâm xác nhận) |
+| K06 | Phát hiện **lệch model ↔ migration** FK `RecipeImages→Recipes` (cascade) — `Tuan06/HANDOFF...` §3.2 | 🔴 còn gap (chờ TV3) |
+| K20 | `/metrics` HTTP **200** + counter tăng thật (`logs/w65_metrics.log`); quyết định **giữ in-memory** (FR-OBS-003) | 🟡 |
+| K21 | **Jest 86/86**; **Playwright 44/46 ×2** (`logs/regression_e2e_run{1,2}.log`); coverage `Application` **96.17%** | 🟡 (2 lỗi drift E2E + thiếu spec `category`) |
+| K22 | k6 (tuần 5) 102 VU · p95 **148.56ms** · 0% lỗi (`Tuan05/logs/w58_k6_vus100.log`) | 🟡 |
+| K23 | Staging Compose up healthy + HTTPS 200 (`logs/w62_staging_up.log`); **migration chạy lặp** 8/8 (`logs/w62_migration.log`) | 🟡 |
+| K24 | **PR #37** (chờ review) · **CHANGELOG 0.5.0** · `RELEASE_CHECKLIST_TUAN_6.md` · secret-scan OK (`logs/scan_secrets.log`) | 🟡 |
+
+**Số liệu kiểm chứng cuối tuần 6** (dùng thay số cũ ở bảng B khi đối chiếu): build 0W/0E · `dotnet test`
+**446/446** · coverage **96.17%** · FE tsc/lint/build exit 0 · Jest **86/86** · E2E **44/46 ×2**.
+
+> **Lưu ý tài liệu (cần Tâm đối chiếu):** bảng D nhắc `docs/adr/ADR-0003-category-and-search-caching-week3.md`
+> nhưng quét `docs/adr/` chỉ thấy **ADR-0001, ADR-0002, ADR-TV4-001…004** — cần xác nhận ADR-0003 có tồn tại
+> dưới tên khác hay không.

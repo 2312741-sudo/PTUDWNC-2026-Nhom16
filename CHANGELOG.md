@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.5.0 — 2026-10-17 (Tuần 6 — regression, kiểm chứng cuối, release — TV4)
+
+Nhánh `2312739_NHTSon_D7` (PR [#37](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/37), chờ review).
+
+### Kiểm chứng cuối (regression — không hồi quy)
+
+- **Backend**: build **0 cảnh báo / 0 lỗi**, `dotnet test -c Release` **441/441** + `ConcurrencySpike`
+  **5/5** (**446**, Skipped 0); coverage `Application` **96.17%** (≥ 80%).
+- **Frontend**: `tsc --noEmit` / `eslint` / build **exit 0**; Jest **86/86**.
+- **E2E Playwright** (chống staging cục bộ): **44/46 ×2** (3.4m / 3.5m) — ổn định, **không flaky**.
+- **Migration chạy lặp**: đường chạy production `--migrate` trên DB mới **8/8** (exit 0) và **idempotent**
+  khi chạy lại (vẫn 8/8). Log `docs/evidence/TV4/Tuan06/logs/w62_migration.log`.
+
+### Phát hiện (KHÔNG tự sửa — ghi handoff cho TV3/nhóm)
+
+- **Lệch spec/product E2E `wizard-week4` (d)/(d2)**: spec kỳ vọng `src` presigned (`X-Amz-Signature`)
+  nhưng product render proxy→`blob:` (`imageSrc` không bao giờ trả `presignedUrl`; W5-7 `9f3dd4c` đã gỡ
+  UI presigned nhưng giữ assert). **Có sẵn trên `main`**, không do tuần 6 ⇒ không thể tuyên bố E2E 46/46.
+  Đề xuất + tác động ở `docs/evidence/TV4/Tuan06/HANDOFF_TV4_TUAN6.md` §3.1.
+- **Lệch model EF ↔ migration** (`PendingModelChangesWarning`): `Program.cs` bỏ qua cảnh báo nên runtime
+  không lộ, nhưng `dotnet ef database update` fail; FK `RecipeImages→Recipes` model=không cascade vs
+  DB=cascade. Chờ TV3 (điều phối migration) — `HANDOFF...` §3.2.
+
+### Quyết định
+
+- **`/metrics` (FR-OBS-003) giữ bộ đếm in-memory**, **không** thêm `OpenTelemetry.Exporter.Prometheus.AspNetCore`
+  (tránh đổi `packages.lock.json` ⇒ CI `restore --locked-mode`; OTLP trace đã xuất sang collector).
+  Kiểm chứng `/metrics` HTTP 200 + counter tăng thật — `logs/w65_metrics.log`.
+
+### Bàn giao
+
+- **Checklist release §12.5** — `docs/evidence/TV4/Tuan06/RELEASE_CHECKLIST_TUAN_6.md`.
+- **Tài khoản demo** (seed, dev-only) — `README.md` §5.3: `masterchef@culinary.local` (Admin) và
+  4 Author, mật khẩu `User@123456`.
+
 ## 0.4.1 — 2026-10-05 (Giai đoạn 3 sửa lỗi + đóng N3 — TV4)
 
 Nhánh `2312739_NHTSon_D5-D6-D7`.

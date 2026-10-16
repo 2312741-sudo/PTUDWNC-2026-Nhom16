@@ -3,7 +3,7 @@
 > **SRS tham chiếu**: v1.1.1 (Approved 16/09/2026)
 > **Reviewer nghiệm thu**: Nguyễn Thanh Tâm (Nhóm trưởng)
 > **Nhánh**: `2312739_NHTSon_D7` (từ `main` = `e93fbe8`, + commit `5e84995`) · **Lab**: `practice/TV4/L5` (L4: `practice/TV4/L4`)
-> **Trạng thái 14/10**: baseline backend+FE đã đo (§1) và ghi vào §3.1/§3.2; các mục khác bắt đầu ở **Chưa làm**.
+> **Trạng thái 17/10**: baseline backend+FE đã đo (§1, §3.1/§3.2); E2E ×2 chống staging **đã chạy** — **44/46 ×2**, 2 lỗi là **drift spec/product có sẵn trên `main`** (không do tuần 6 — §3.2, `HANDOFF_TV4_TUAN6.md` §3.1); migration chạy lặp + các mục khác còn **Chưa làm**.
 > Ô K chỉ chuyển "đủ bằng chứng" khi có **code/config + test + kết quả chạy thật**, và chỉ chốt khi
 > **reviewer Tâm xác nhận + ghi ngày**. Ô nào thiếu ghi **Chưa làm**, không làm tròn số, không tự đánh dấu ✅.
 > **Tuần 6 tự chứa**: mốc số liệu tuần 5 được chép lại ở §1 kèm nguồn — không cần mở lại `Tuan05/`.
@@ -21,7 +21,8 @@
 
 > Môi trường: máy TV4 (Windows), .NET SDK **10.0.401**, Node **v24.21.0**, docker-compose.dev
 > (postgres/redis/s3/mailhog). Lệnh y hệt CI. Log: `Tuan06/logs/`.
-> **Chưa gồm**: Playwright E2E ×2 + migration chạy lặp (thuộc N2).
+> **N2 (17/10)**: Playwright E2E ×2 **đã chạy** chống staging (stack `docker-compose.staging.yml` + `next dev`:3000)
+> → **44/46 ×2** (2 lỗi drift spec/product có sẵn trên `main` — §3.2, `HANDOFF` §3.1). Migration chạy lặp còn ⬜.
 
 | Hạng mục | Lệnh | Kết quả tuần 6 (14/10) | Log |
 |---|---|---|---|
@@ -115,33 +116,53 @@
 | 14/10 | Backend `dotnet test` | ✅ **441/441** + **5/5** `ConcurrencySpike`, Failed 0, Skipped 0 | `logs/regression_test.log` |
 | 14/10 | Coverage gate | ✅ **96.17%** ≥ 80% (tuần 5 ghi 97.07%) | `logs/regression_coverage.log` |
 | 14/10 | FE tsc/lint/build/jest | ✅ tsc/lint/build exit 0 · jest **86/86** | `logs/regression_frontend.log`, `logs/baseline_jest.log`, `logs/baseline_frontend_build.log` |
-| — | E2E full suite chống staging ×2 (kỳ vọng ≥ 40/40) | ⬜ **để N2** | `logs/regression_e2e_run{1,2}.log` |
-| — | Migration chạy lặp (DB sạch + nâng cấp) | ⬜ **để N2** | log `dotnet ef database update` |
+| 17/10 | E2E full suite chống staging ×2 | ⚠️ **44/46** (lần 1) · **44/46** (lần 2, 3.5m) — 2 ca `wizard-week4` (d)/(d2) **fail ổn định** = drift spec/product **có sẵn trên `main`**, không do tuần 6 (xem `HANDOFF_TV4_TUAN6.md` §3.1) | `logs/regression_e2e_run{1,2}.log` |
+| 17/10 | Migration chạy lặp (DB sạch + nâng cấp) | ✅ **DB sạch**: 8/8 migration áp dụng, exit 0 · **chạy lặp idempotent** (vẫn 8, exit 0) — qua `dotnet run -- --migrate` (đường runtime). ⚠️ **phát hiện**: model có **pending changes** (xem §3.2.1) | `logs/w62_migration.log` |
+
+#### 3.2.1. Phát hiện — model EF lệch migration (`PendingModelChangesWarning`) — **K06**, chờ TV3/Tâm
+
+| Bước | Lệnh | Kết quả |
+|---|---|---|
+| DB sạch | `docker exec ... CREATE DATABASE culinary_migtest` (localhost:5433) | ✅ tạo DB rỗng |
+| Áp migration (đường runtime) | `dotnet run --project src/backend/CulinaryBlog.API -c Release -- --migrate` | ✅ **8/8** migration, `Database migrations applied successfully.`, EXIT=0 |
+| Chạy lặp (idempotent) | lệnh trên, lần 2 | ✅ EXIT=0, vẫn **8** migration (`__EFMigrationsHistory`) |
+| Kiểm drift (design-time) | `dotnet ef migrations has-pending-model-changes` | ⚠️ **"Changes have been made to the model since the last migration. Add a new migration."** |
+| Áp migration (design-time) | `dotnet ef database update` | ❌ `InvalidOperationException: ... PendingModelChangesWarning: The model for context 'AuthDbContext' has pending changes` |
+| Xác định diff (probe, đã revert) | `dotnet ef migrations add W6ProbePending` → đọc `Up()` → `git checkout` snapshot + xóa file | **FK `FK_RecipeImages_Recipes_RecipeId`**: model muốn **drop + add lại KHÔNG `onDelete: Cascade`**; migration cũ tạo **CÓ `onDelete: ReferentialAction.Cascade`** |
+
+- **Nguyên nhân**: `Program.cs:101` cố ý bỏ qua `PendingModelChangesWarning` (runtime vẫn migrate được); nhưng `AuthDbContextFactory` (design-time, `AuthDbContextFactory.cs`) **không** bỏ qua → `dotnet ef database update` fail.
+- **Rủi ro**: (1) `dotnet ef database update`/kiểm tra nghiêm ngặt **không dùng được**; (2) **lệch khóa ngoại thật**: DB tạo FK `ON DELETE CASCADE` trong khi model hiện tại muốn **không cascade** → xóa Recipe có thể cascade xóa RecipeImages ở tầng DB (liên quan soft-delete ADR-TV4-003) ⇒ **cần TV3 xác nhận** hành vi đúng + bổ sung migration hoặc khôi phục cascade trong model.
+- **Không tự sửa**: thêm migration = đổi schema (việc điều phối của TV3) → ghi ⬜ chờ TV3/Tâm. Probe đã revert sạch (`git status` Migrations: clean).
 
 ### 3.3. W6-3 — Chốt 5/5 luồng G6
 
 | Luồng | Spec | Do ai viết | Kết quả trên staging |
 |---|---|---|---|
-| register | `create-recipe.spec.ts` | TV4 | ⬜ |
-| login | `create-recipe.spec.ts` | TV4 | ⬜ |
-| category | `category.spec.ts` (**chưa có**) | **chờ TV2** | ⬜ (chờ TV2) |
-| draft / create-recipe | `wizard-week4.spec.ts`, `create-recipe.spec.ts` | TV4/TV3 | ⬜ |
-| publish | `recipe-publish.spec.ts` | TV4 | ⬜ |
+| register | `create-recipe.spec.ts` | TV4 | ✅ (nằm trong 44 pass của suite) |
+| login | `create-recipe.spec.ts` | TV4 | ✅ (nằm trong 44 pass của suite) |
+| category | `category.spec.ts` (**chưa có**) | **chờ TV2** | ⬜ (đã xác nhận: `glob` **không có** `category.spec.ts` → **blocked TV2**) |
+| draft / create-recipe | `wizard-week4.spec.ts`, `create-recipe.spec.ts` | TV4/TV3 | ⚠️ (pass phần lớn; (d)/(d2) fail do drift spec — §3.1) |
+| publish | `recipe-publish.spec.ts` | TV4 | ✅ (nằm trong 44 pass của suite) |
+
+> **Xác nhận W6-3 (17/10):** quét toàn repo không có `category.spec.ts` ⇒ luồng `category` **chưa thể chốt**; là việc **TV2**. Các luồng TV4 viết (register/login/publish) đã chạy trong suite 44/46; luồng draft có 2 assert drift (§3.1).
 
 ### 3.4. W6-4 — Lab L5 còn lại + `cqrs-behavior`
 
 | Việc | Kết quả | Bằng chứng |
 |---|---|---|
-| `image-opt` | ⬜ | log harness `practice/TV4/L5` |
-| `query-rollback` | ⬜ (chờ TV3 account sở hữu công thức) | log harness |
-| Phase `cqrs-behavior` (K04) | ⬜ | log harness |
+| `image-opt` | ❌ **FAIL 1/9** — **0 file** dùng `next/image`, **11 file** còn `<img>` thô; proxy ảnh 404; không có biến thể `medium/large`; runtime HTML không có `/_next/image` | `logs/w64_lab_l5.log` |
+| `query-rollback` | ❌ FAIL 9/10 — 1 check bị chặn: **tài khoản lab không sở hữu công thức nào** (không kiểm chứng được xung đột ghi RowVersion) → **chờ TV3** | `logs/w64_lab_l5.log` |
+| Phase `cqrs-behavior` (K04) | ✅ **PASS 5/5** — query qua MediatR (200); ValidationBehavior chặn command sai (**400** + lỗi FluentValidation có cấu trúc); command hợp lệ tới handler (401); pipeline có validation+logging | `logs/w64_lab_l5.log` |
+
+> **Kết quả chạy toàn harness L5 tuần 6 (17/10):** **FAIL 8 phase / 64 check** — chỉ **`seo` (15/15)** và **`cqrs-behavior` (5/5)** PASS. Chi tiết: `logs/w64_lab_l5.log` + `logs/lab_l5_tuan6_20261016-210631.log`.
+> Các phase FAIL khác là **giới hạn môi trường/nợ đã biết**: `multi-instance` 0/1 (API2 `:5081` không chạy), `observability` 8/10 (Seq/OTLP collector không chạy), `image-opt` 1/9, `query-rollback` 9/10 (chờ TV3), `isr-detail` 7/8, `search-ssr` 5/6. Bằng chứng K04 đi kèm (phase mới), hồ sơ lab đầy đủ.
 
 ### 3.5. W6-5 — `/metrics` exporter thật
 
 | Việc | Kết quả | Bằng chứng |
 |---|---|---|
-| Quyết định exporter OTLP/Prometheus vs in-memory | ⬜ | `Program.cs` / `deploy/otel-collector-config.yaml` / runbook |
-| `/metrics` 200 + số liệu scrape | ⬜ | `logs/w65_metrics.log` |
+| Quyết định exporter OTLP/Prometheus vs in-memory | ✅ **Giữ in-memory, KHÔNG thêm package** `OpenTelemetry.Exporter.Prometheus.AspNetCore` (tránh đổi `packages.lock.json` ⇒ CI `restore --locked-mode`; OTLP trace đã xuất sang collector ở W5-2) | `Program.cs:793` (`MapGet("/metrics")`), `RequestMetrics.cs`, csproj **không có** package Prometheus, `logs/w65_metrics.log` |
+| `/metrics` 200 + số liệu scrape | ✅ HTTP **200** · `text/plain; version=0.0.4` · counter **tăng thật** (1468→1471 sau 1 lần `/health/live`) | `logs/w65_metrics.log` |
 
 ### 3.6. W6-6 — Release & bàn giao
 
@@ -161,7 +182,7 @@
 
 | Ngày | Việc | Kết quả | Bằng chứng |
 |---|---|---|---|
-| — | Cập nhật mapping + nộp sổ evidence | ⬜ | `../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` |
+| 17/10 | Cập nhật mapping + nộp sổ evidence | ✅ (thêm **§F** bằng chứng tuần 6) | `../MAPPING_K01_FR_NFR_ADR_EVIDENCE.md` §F |
 | — | **Tâm xác nhận từng ô + ghi ngày** | ⬜ **0/24** | reply/xác nhận Tâm |
 
 ### 3.8. W6-8 — Demo publish/media/ops
