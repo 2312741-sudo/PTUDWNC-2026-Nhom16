@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { loginWithGoogle } from '@/lib/api';
+import { authStore } from '@/lib/auth-store';
 import { Settings, X, AlertCircle, Sparkles, UserCheck, ShieldCheck, Check, ExternalLink } from 'lucide-react';
 
 interface GoogleSignInButtonProps {
@@ -65,16 +66,7 @@ export default function GoogleSignInButton({
     try {
       const res = await loginWithGoogle(token);
       if (res.success && res.data) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', res.data.accessToken);
-          if (res.data.refreshToken) {
-            localStorage.setItem('refreshToken', res.data.refreshToken);
-          }
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-          if (res.data.user?.email) {
-            localStorage.setItem('lastRegisteredEmail', res.data.user.email);
-          }
-        }
+        authStore.setAuth(res.data);
         setShowDevModal(false);
         onSuccess?.(res.data);
       } else {

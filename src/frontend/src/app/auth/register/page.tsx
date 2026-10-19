@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UtensilsCrossed, Mail, Lock, User, AtSign, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { register } from '@/lib/api';
+import { authStore } from '@/lib/auth-store';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function RegisterPage() {
@@ -41,15 +42,7 @@ export default function RegisterPage() {
     setIsLoading(false);
 
     if (res.success && res.data) {
-      // Auto-login: Store token in localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', res.data.accessToken);
-        if (res.data.refreshToken) {
-          localStorage.setItem('refreshToken', res.data.refreshToken);
-        }
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-        localStorage.setItem('lastRegisteredEmail', email.toLowerCase().trim());
-      }
+      authStore.setAuth(res.data);
       router.push('/dashboard/profile');
     } else {
       setErrorMessage(res.error || 'Đăng ký tài khoản không thành công.');
@@ -60,15 +53,8 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSuccess = (auth: any) => {
-    if (typeof window !== 'undefined' && auth?.accessToken) {
-      localStorage.setItem('accessToken', auth.accessToken);
-      if (auth.refreshToken) {
-        localStorage.setItem('refreshToken', auth.refreshToken);
-      }
-      localStorage.setItem('user', JSON.stringify(auth.user));
-      if (auth.user?.email) {
-        localStorage.setItem('lastRegisteredEmail', auth.user.email);
-      }
+    if (auth?.accessToken && auth?.user) {
+      authStore.setAuth(auth);
     }
     router.push('/dashboard/profile');
   };

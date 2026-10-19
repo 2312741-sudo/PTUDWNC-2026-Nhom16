@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { searchRecipes, getCategories } from '@/lib/api';
 import RecipeCard from '@/components/RecipeCard';
+import Pagination from '@/components/Pagination';
 import { SearchFilterSelect } from '@/components/SearchFilterSelect';
 import { Search, Sparkles, AlertCircle, Filter, ArrowUpDown } from 'lucide-react';
 
@@ -240,29 +241,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </div>
 
               {/* Pagination */}
-              {result.meta.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-6">
-                  {result.meta.hasPreviousPage && (
-                    <Link
-                      href={buildQueryUrl({ page: page - 1 })}
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-                    >
-                      Trang trước
-                    </Link>
-                  )}
-                  <span className="text-xs font-medium text-gray-500 px-3">
-                    {page} / {result.meta.totalPages}
-                  </span>
-                  {result.meta.hasNextPage && (
-                    <Link
-                      href={buildQueryUrl({ page: page + 1 })}
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-                    >
-                      Trang sau
-                    </Link>
-                  )}
-                </div>
-              )}
+              <Pagination
+                currentPage={page}
+                totalPages={result.meta.totalPages}
+                createPageUrl={(p) => buildQueryUrl({ page: p })}
+              />
             </>
           )}
         </div>

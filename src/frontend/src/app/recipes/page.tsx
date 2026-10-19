@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getRecipes, searchRecipes, getCategories } from '@/lib/api';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeSearchBar from '@/components/RecipeSearchBar';
+import Pagination from '@/components/Pagination';
 import { RecipeFilters } from '@/types/recipe';
 import { Filter, SlidersHorizontal, BookOpen, ChevronLeft, ChevronRight, Search, Sparkles } from 'lucide-react';
 
@@ -298,49 +299,11 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
           )}
 
           {/* Pagination Controls */}
-          {meta.totalPages > 1 && (
-            <nav aria-label="Phân trang công thức" className="flex items-center justify-between border-t border-gray-100 pt-6">
-              <span className="text-xs text-gray-500 font-medium">
-                Trang {meta.page} trên {meta.totalPages} ({meta.total} công thức)
-              </span>
-
-              <div className="flex items-center gap-2">
-                {meta.hasPreviousPage ? (
-                  <Link
-                    href={buildUrl({ page: meta.page - 1 })}
-                    className="p-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-                    title="Trang trước"
-                    aria-label="Chuyển đến trang trước"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Link>
-                ) : (
-                  <button disabled aria-label="Trang trước (không khả dụng)" className="p-2 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                )}
-
-                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg" aria-current="page">
-                  {meta.page}
-                </span>
-
-                {meta.hasNextPage ? (
-                  <Link
-                    href={buildUrl({ page: meta.page + 1 })}
-                    className="p-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-                    title="Trang sau"
-                    aria-label="Chuyển đến trang sau"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                ) : (
-                  <button disabled aria-label="Trang sau (không khả dụng)" className="p-2 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </nav>
-          )}
+          <Pagination
+            currentPage={meta.page}
+            totalPages={meta.totalPages}
+            createPageUrl={(p) => buildUrl({ page: p })}
+          />
         </main>
       </div>
     </div>

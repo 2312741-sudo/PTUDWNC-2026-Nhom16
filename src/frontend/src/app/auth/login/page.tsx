@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UtensilsCrossed, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { login } from '@/lib/api';
+import { authStore } from '@/lib/auth-store';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function LoginPage() {
@@ -29,14 +30,7 @@ export default function LoginPage() {
     setIsLoading(false);
 
     if (res.success && res.data) {
-      // Store token in localStorage for client-side API requests
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', res.data.accessToken);
-        if (res.data.refreshToken) {
-          localStorage.setItem('refreshToken', res.data.refreshToken);
-        }
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-      }
+      authStore.setAuth(res.data);
       router.push('/dashboard/profile');
     } else {
       setErrorMessage(res.error || 'Đăng nhập không thành công. Vui lòng thử lại.');
@@ -44,12 +38,8 @@ export default function LoginPage() {
   };
 
   const handleGoogleSuccess = (auth: any) => {
-    if (typeof window !== 'undefined' && auth?.accessToken) {
-      localStorage.setItem('accessToken', auth.accessToken);
-      if (auth.refreshToken) {
-        localStorage.setItem('refreshToken', auth.refreshToken);
-      }
-      localStorage.setItem('user', JSON.stringify(auth.user));
+    if (auth?.accessToken && auth?.user) {
+      authStore.setAuth(auth);
     }
     router.push('/dashboard/profile');
   };

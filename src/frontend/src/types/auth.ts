@@ -15,6 +15,8 @@ export interface User {
   createdAt?: string;
 }
 
+export type UserDto = User;
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken?: string | null;
