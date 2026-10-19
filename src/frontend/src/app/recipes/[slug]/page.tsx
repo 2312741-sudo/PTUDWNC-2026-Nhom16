@@ -130,7 +130,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
   // Trường tuỳ DTO: đọc mềm để không phụ thuộc kiểu trong lib/api
   const extra = recipe as unknown as { id?: string; authorId?: string; categoryName?: string };
   // Chỉ hiện mục dinh dưỡng khi có ít nhất một giá trị
-  const hasNutrition = !!recipe.nutrition && Object.values(recipe.nutrition).some((v) => v !== null && v !== undefined);
+  const hasNutrition = !!recipe?.nutrition && typeof recipe.nutrition === 'object' && Object.values(recipe.nutrition).some((v) => v !== null && v !== undefined);
   const imageUrl = getRecipeDetailImage(recipe, slug, extra.categoryName);
 
   return (
@@ -216,7 +216,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
             Nguyên liệu
           </h2>
 
-          {recipe.ingredients.length > 0 ? (
+          {(recipe.ingredients?.length ?? 0) > 0 ? (
             <ul className="space-y-2">
               {recipe.ingredients.map((ing) => (
                 <li
@@ -298,7 +298,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
             Cách làm
           </h2>
 
-          {recipe.steps.length > 0 ? (
+          {(recipe.steps?.length ?? 0) > 0 ? (
             <ol className="space-y-4">
               {recipe.steps.map((step) => (
                 <li

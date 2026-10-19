@@ -47,7 +47,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const sortBy = params.sortBy || 'createdAt';
   const sortOrder = params.sortOrder || 'desc';
 
-  const categories = await getCategories();
+  const categoriesRaw = await getCategories();
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
 
   let result = {
     data: [] as import('@/types/recipe').RecipeSummary[],

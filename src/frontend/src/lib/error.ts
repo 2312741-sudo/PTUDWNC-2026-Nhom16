@@ -43,6 +43,15 @@ export function parseApiError(error: unknown): string {
 
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
+
+    // Phát hiện lỗi Server Components render của Next.js (production mask)
+    if (
+      msg.includes('server components render') ||
+      msg.includes('digest property is included')
+    ) {
+      return 'Máy chủ chưa thể tải dữ liệu từ Backend API. Máy chủ Backend có thể đang khởi động (Render cold start 30s-60s) hoặc chưa cấu hình biến môi trường NEXT_PUBLIC_API_URL trên Vercel. Vui lòng bấm "Thử lại" sau giây lát.';
+    }
+
     // Phát hiện lỗi kết nối mạng (Safari: "load failed", Chrome: "failed to fetch", Firefox: "networkerror")
     if (
       msg.includes('fetch failed') ||

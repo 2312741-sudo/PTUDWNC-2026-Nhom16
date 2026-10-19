@@ -62,12 +62,23 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
     minServings: params.minServings ? parseInt(params.minServings, 10) : undefined,
   };
 
-  const [recipesResult, categories] = await Promise.all([
+  const [recipesResult, categoriesRaw] = await Promise.all([
     query ? searchRecipes(query, filters) : getRecipes(filters),
     getCategories(),
   ]);
 
-  const { data: recipes, meta } = recipesResult;
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+  const recipes: import('@/types/recipe').RecipeSummary[] = Array.isArray(recipesResult?.data)
+    ? recipesResult.data
+    : [];
+  const meta = recipesResult?.meta || {
+    page: 1,
+    pageSize: 12,
+    total: recipes.length,
+    totalPages: Math.ceil(recipes.length / 12) || 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
 
   const buildUrl = (newParams: Partial<Record<string, string | number | undefined>>) => {
     const search = new URLSearchParams();
@@ -207,7 +218,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                   !filters.categoryId ? 'bg-emerald-200 text-emerald-900 font-bold' : 'bg-gray-100 text-gray-500'
                 }`}>
-                  {categories.reduce((acc, c) => acc + (c.recipesCount || 0), 0)}
+                  {categories.reduce((acc, c) => acc + (c?.recipesCount || 0), 0)}
                 </span>
               </Link>
               {categories.map((cat) => (

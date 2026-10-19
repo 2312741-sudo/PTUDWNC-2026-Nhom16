@@ -4,7 +4,8 @@ import CategoryCard from '@/components/CategoryCard';
 import { Sparkles, Search, BookOpen, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default async function HomePage() {
-  const categories = await getCategories();
+  const categoriesRaw = await getCategories();
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
 
   return (
     <div className="space-y-16 pb-12">

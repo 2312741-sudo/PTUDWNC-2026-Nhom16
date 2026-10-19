@@ -44,7 +44,7 @@ export default async function CategoryDetailPage({ params }: CategoryDetailPageP
   }
 
   const recipesResult = await getRecipes({ categoryId: category.id, pageSize: 12 });
-  const recipes = recipesResult.data;
+  const recipes = Array.isArray(recipesResult?.data) ? recipesResult.data : [];
 
   const jsonLd = {
     '@context': 'https://schema.org',

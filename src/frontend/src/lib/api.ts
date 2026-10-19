@@ -5,17 +5,27 @@ import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/
 // `API_INTERNAL_URL` là biến chỉ dùng phía server (không có tiền tố NEXT_PUBLIC nên không bị
 // inline vào bundle client): staging đặt về địa chỉ nội bộ của API trong mạng compose.
 export function getApiBaseUrl(): string {
+  let url = '';
   if (typeof window !== 'undefined') {
     const custom = localStorage.getItem('custom_api_url');
     if (custom && custom.trim()) {
-      return custom.trim().replace(/\/+$/, '');
+      url = custom.trim();
     }
   }
-  return (
-    (typeof window === 'undefined' ? process.env.API_INTERNAL_URL : undefined) ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    'http://localhost:5080/api/v1'
-  );
+
+  if (!url) {
+    url =
+      (typeof window === 'undefined' ? process.env.API_INTERNAL_URL : undefined) ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:5080/api/v1';
+  }
+
+  url = url.trim().replace(/\/+$/, '');
+  // Nếu người dùng cấu hình domain gốc thiếu /api/v1 thì tự động bổ sung
+  if (!url.endsWith('/api/v1') && !url.includes('/api/')) {
+    url = `${url}/api/v1`;
+  }
+  return url;
 }
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -50,12 +60,16 @@ export function formatNetworkError(err: any, endpoint?: string): string {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/categories`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/categories`, {
       next: { revalidate: 3600 },
     });
     if (!res.ok) throw new Error('Không thể tải danh sách danh mục.');
     const json = await res.json();
-    return json.data ?? json;
+    if (Array.isArray(json?.data)) return json.data;
+    if (Array.isArray(json)) return json;
+    if (Array.isArray(json?.items)) return json.items;
+    return [];
   } catch (error) {
     console.error('Error in getCategories:', error);
     return [];
@@ -64,13 +78,16 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/categories/${encodeURIComponent(slug)}`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/categories/${encodeURIComponent(slug)}`, {
       next: { revalidate: 600 },
     });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Không thể tải chi tiết danh mục.');
     const json = await res.json();
-    return json.data ?? json;
+    const data = json?.data ?? json;
+    if (!data || typeof data !== 'object') return null;
+    return data;
   } catch (error) {
     console.error('Error in getCategoryBySlug:', error);
     return null;
@@ -315,6 +332,11 @@ export async function forgotPassword(
 export async function getRecipes(
   filters: import('@/types/recipe').RecipeFilters = {}
 ): Promise<import('@/types/recipe').PagedRecipesResult> {
+  const fallback: import('@/types/recipe').PagedRecipesResult = {
+    data: [],
+    meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+  };
+
   const params = new URLSearchParams();
   if (filters.page) params.set('page', filters.page.toString());
   if (filters.pageSize) params.set('pageSize', filters.pageSize.toString());
@@ -326,18 +348,43 @@ export async function getRecipes(
   if (filters.minServings !== undefined) params.set('minServings', filters.minServings.toString());
 
   try {
-    const res = await fetch(`${API_BASE_URL}/recipes?${params.toString()}`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/recipes?${params.toString()}`, {
       cache: 'no-store',
     });
     if (!res.ok) throw new Error('Không thể tải danh sách công thức.');
     const json = await res.json();
-    return json.data && json.meta ? json : (json.data ?? json);
+
+    const items = Array.isArray(json?.data)
+      ? json.data
+      : Array.isArray(json)
+      ? json
+      : Array.isArray(json?.items)
+      ? json.items
+      : [];
+
+    const meta = json?.meta && typeof json.meta === 'object'
+      ? {
+          page: json.meta.page ?? 1,
+          pageSize: json.meta.pageSize ?? 12,
+          total: json.meta.total ?? items.length,
+          totalPages: json.meta.totalPages ?? (Math.ceil(items.length / 12) || 0),
+          hasNextPage: !!json.meta.hasNextPage,
+          hasPreviousPage: !!json.meta.hasPreviousPage,
+        }
+      : {
+          page: 1,
+          pageSize: 12,
+          total: items.length,
+          totalPages: Math.ceil(items.length / 12) || 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        };
+
+    return { data: items, meta };
   } catch (error) {
     console.error('Error in getRecipes:', error);
-    return {
-      data: [],
-      meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
-    };
+    return fallback;
   }
 }
 
@@ -345,6 +392,11 @@ export async function searchRecipes(
   q: string,
   filters: import('@/types/recipe').RecipeFilters = {}
 ): Promise<import('@/types/recipe').PagedRecipesResult> {
+  const fallback: import('@/types/recipe').PagedRecipesResult = {
+    data: [],
+    meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+  };
+
   const params = new URLSearchParams();
   params.set('q', q);
   if (filters.page) params.set('page', filters.page.toString());
@@ -357,18 +409,43 @@ export async function searchRecipes(
   if (filters.minServings !== undefined) params.set('minServings', filters.minServings.toString());
 
   try {
-    const res = await fetch(`${API_BASE_URL}/recipes/search?${params.toString()}`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/recipes/search?${params.toString()}`, {
       cache: 'no-store',
     });
     if (!res.ok) throw new Error('Không thể tìm kiếm công thức.');
     const json = await res.json();
-    return json.data && json.meta ? json : (json.data ?? json);
+
+    const items = Array.isArray(json?.data)
+      ? json.data
+      : Array.isArray(json)
+      ? json
+      : Array.isArray(json?.items)
+      ? json.items
+      : [];
+
+    const meta = json?.meta && typeof json.meta === 'object'
+      ? {
+          page: json.meta.page ?? 1,
+          pageSize: json.meta.pageSize ?? 12,
+          total: json.meta.total ?? items.length,
+          totalPages: json.meta.totalPages ?? (Math.ceil(items.length / 12) || 0),
+          hasNextPage: !!json.meta.hasNextPage,
+          hasPreviousPage: !!json.meta.hasPreviousPage,
+        }
+      : {
+          page: 1,
+          pageSize: 12,
+          total: items.length,
+          totalPages: Math.ceil(items.length / 12) || 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        };
+
+    return { data: items, meta };
   } catch (error) {
     console.error('Error in searchRecipes:', error);
-    return {
-      data: [],
-      meta: { page: 1, pageSize: 12, total: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
-    };
+    return fallback;
   }
 }
 
@@ -466,7 +543,8 @@ export interface SitemapRecipe {
 
 export async function getSitemapRecipes(): Promise<SitemapRecipe[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/recipes/sitemap`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/recipes/sitemap`, {
       cache: 'no-store',
     });
     if (!res.ok) throw new Error('Không thể tải sitemap.');
@@ -488,7 +566,8 @@ export async function getRecipeBySlug(
   token?: string
 ): Promise<import('@/types/recipe').RecipeDetail | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/recipes/${encodeURIComponent(slug)}`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/recipes/${encodeURIComponent(slug)}`, {
       ...(token
         ? { cache: 'no-store' as const, headers: { Authorization: `Bearer ${token}` } }
         : { next: { revalidate: 300 } }),
@@ -496,7 +575,15 @@ export async function getRecipeBySlug(
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Không thể tải chi tiết công thức.');
     const json = await res.json();
-    return json.data ?? json;
+    const data = json?.data ?? json;
+    if (!data || typeof data !== 'object') return null;
+
+    return {
+      ...data,
+      ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+      steps: Array.isArray(data.steps) ? data.steps : [],
+      images: Array.isArray(data.images) ? data.images : [],
+    };
   } catch (error) {
     console.error('Error in getRecipeBySlug:', error);
     return null;
