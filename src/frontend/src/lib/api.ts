@@ -4,10 +4,49 @@ import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/
 // `localhost` là chính container frontend, không phải API -> fetch thất bại (ECONNREFUSED).
 // `API_INTERNAL_URL` là biến chỉ dùng phía server (không có tiền tố NEXT_PUBLIC nên không bị
 // inline vào bundle client): staging đặt về địa chỉ nội bộ của API trong mạng compose.
-export const API_BASE_URL =
-  (typeof window === 'undefined' ? process.env.API_INTERNAL_URL : undefined) ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  'http://localhost:5080/api/v1';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('custom_api_url');
+    if (custom && custom.trim()) {
+      return custom.trim().replace(/\/+$/, '');
+    }
+  }
+  return (
+    (typeof window === 'undefined' ? process.env.API_INTERNAL_URL : undefined) ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://localhost:5080/api/v1'
+  );
+}
+
+export const API_BASE_URL = getApiBaseUrl();
+
+export function formatNetworkError(err: any, endpoint?: string): string {
+  const rawMsg = err?.message || '';
+  const lowerMsg = rawMsg.toLowerCase();
+  const isNetworkFailure =
+    lowerMsg.includes('load failed') ||
+    lowerMsg.includes('failed to fetch') ||
+    lowerMsg.includes('networkerror') ||
+    lowerMsg.includes('network error') ||
+    lowerMsg.includes('fetch failed') ||
+    lowerMsg.includes('econnrefused') ||
+    err?.name === 'TypeError';
+
+  if (isNetworkFailure) {
+    const baseUrl = getApiBaseUrl();
+    const targetUrl = endpoint ? `${baseUrl}${endpoint}` : baseUrl;
+    if (typeof window !== 'undefined') {
+      const isHttps = window.location.protocol === 'https:';
+      const isTargetHttp = targetUrl.startsWith('http://');
+      if (isHttps && isTargetHttp) {
+        return `Lỗi Mixed Content (Safari/Chrome chặn): Website chạy HTTPS (${window.location.origin}) nhưng API trỏ về HTTP (${targetUrl}). Vui lòng cấu hình biến môi trường NEXT_PUBLIC_API_URL trên Vercel hoặc cấu hình URL Backend HTTPS trong mục Cấu hình bên dưới.`;
+      }
+    }
+    return `Không thể kết nối đến máy chủ (${targetUrl}). Máy chủ có thể đang khởi động hoặc chưa mở CORS cho trang này.`;
+  }
+
+  return rawMsg || 'Lỗi kết nối máy chủ.';
+}
 
 export async function getCategories(): Promise<Category[]> {
   try {
@@ -337,7 +376,8 @@ export async function loginWithGoogle(
   idToken: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/google`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/auth/google`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -355,7 +395,7 @@ export async function loginWithGoogle(
 
     return { success: true, data: result.data ?? result };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Lỗi kết nối máy chủ xác thực.' };
+    return { success: false, error: formatNetworkError(err, '/auth/google') };
   }
 }
 
@@ -363,7 +403,8 @@ export async function login(
   data: import('@/types/auth').LoginRequest
 ): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -381,7 +422,7 @@ export async function login(
 
     return { success: true, data: result.data ?? result };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+    return { success: false, error: formatNetworkError(err, '/auth/login') };
   }
 }
 
@@ -389,7 +430,8 @@ export async function register(
   data: import('@/types/auth').RegisterRequest
 ): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string; validationErrors?: Record<string, string[]> }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -408,7 +450,7 @@ export async function register(
 
     return { success: true, data: result.data ?? result };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Lỗi kết nối máy chủ.' };
+    return { success: false, error: formatNetworkError(err, '/auth/register') };
   }
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { loginWithGoogle } from '@/lib/api';
+import { loginWithGoogle, getApiBaseUrl } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
 import { Settings, X, AlertCircle, Sparkles, UserCheck, ShieldCheck, Check, ExternalLink } from 'lucide-react';
 
@@ -34,6 +34,7 @@ export default function GoogleSignInButton({
   const envClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
   const [clientId, setClientId] = useState(envClientId);
   const [customClientId, setCustomClientId] = useState('');
+  const [customApiUrl, setCustomApiUrl] = useState('');
   const [showDevModal, setShowDevModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'real_oauth' | 'dev_mock'>('real_oauth');
   const [testEmail, setTestEmail] = useState(initialEmail || 'chef.demo@culinaryblog.vn');
@@ -43,13 +44,17 @@ export default function GoogleSignInButton({
   const isDev = process.env.NODE_ENV !== 'production';
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize client ID from localStorage if not configured in env
+  // Initialize client ID & API URL from localStorage if not configured in env
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedClientId = localStorage.getItem('google_client_id');
       if (savedClientId && !envClientId) {
         setClientId(savedClientId);
         setCustomClientId(savedClientId);
+      }
+      const savedApiUrl = localStorage.getItem('custom_api_url');
+      if (savedApiUrl) {
+        setCustomApiUrl(savedApiUrl);
       }
       const savedEmail = localStorage.getItem('lastRegisteredEmail');
       if (savedEmail && !initialEmail) {
@@ -71,13 +76,19 @@ export default function GoogleSignInButton({
         onSuccess?.(res.data);
       } else {
         const msg = res.error || 'Đăng nhập Google không thành công.';
-        setErrorMsg(msg);
-        onError?.(msg);
+        if (onError) {
+          onError(msg);
+        } else {
+          setErrorMsg(msg);
+        }
       }
     } catch (err: any) {
       const msg = err.message || 'Lỗi kết nối tới hệ thống xác thực Google.';
-      setErrorMsg(msg);
-      onError?.(msg);
+      if (onError) {
+        onError(msg);
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -180,19 +191,30 @@ export default function GoogleSignInButton({
     setShowDevModal(true);
   };
 
-  // Dev mode: Save custom Google Client ID
+  // Dev mode: Save custom Google Client ID & Custom API URL
   const handleSaveClientId = (e: React.FormEvent) => {
     e.preventDefault();
     const cleaned = customClientId.trim();
     if (cleaned) {
       localStorage.setItem('google_client_id', cleaned);
       setClientId(cleaned);
-      setSavedSuccess(true);
-      setTimeout(() => {
-        setSavedSuccess(false);
-        setShowDevModal(false);
-      }, 1000);
     }
+
+    const cleanedApi = customApiUrl.trim();
+    if (cleanedApi) {
+      localStorage.setItem('custom_api_url', cleanedApi);
+    } else {
+      localStorage.removeItem('custom_api_url');
+    }
+
+    setSavedSuccess(true);
+    setTimeout(() => {
+      setSavedSuccess(false);
+      setShowDevModal(false);
+      if (cleanedApi) {
+        window.location.reload();
+      }
+    }, 1000);
   };
 
   // Quick mock login with test account
@@ -366,11 +388,11 @@ export default function GoogleSignInButton({
                     </p>
                   </div>
 
-                  <form onSubmit={handleSaveClientId} className="space-y-3">
-                    <label htmlFor="google-client-id-input" className="block text-xs font-semibold text-gray-700">
-                      Google OAuth Web Client ID
-                    </label>
-                    <div className="space-y-1">
+                  <form onSubmit={handleSaveClientId} className="space-y-4">
+                    <div>
+                      <label htmlFor="google-client-id-input" className="block text-xs font-semibold text-gray-700 mb-1">
+                        Google OAuth Web Client ID
+                      </label>
                       <input
                         id="google-client-id-input"
                         type="text"
@@ -379,15 +401,32 @@ export default function GoogleSignInButton({
                         placeholder="xxxx.apps.googleusercontent.com"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       />
-                      <p className="text-[11px] text-gray-500">
+                      <p className="text-[11px] text-gray-500 mt-1">
                         Giá trị sẽ được lưu vào <code className="font-mono text-emerald-700">localStorage</code> và tự động khởi tạo Google GIS SDK.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="custom-api-url-input" className="block text-xs font-semibold text-gray-700 mb-1">
+                        Backend API URL (Render / Staging / Production)
+                      </label>
+                      <input
+                        id="custom-api-url-input"
+                        type="url"
+                        value={customApiUrl}
+                        onChange={(e) => setCustomApiUrl(e.target.value)}
+                        placeholder="https://culinary-api.onrender.com/api/v1"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-gray-900 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      />
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        Đang kết nối: <code className="font-mono text-emerald-700">{getApiBaseUrl()}</code>
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between pt-2">
                       {savedSuccess ? (
                         <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                          <Check className="w-4 h-4" /> Đã lưu thành công! Đang kích hoạt...
+                          <Check className="w-4 h-4" /> Đã lưu cấu hình thành công!
                         </span>
                       ) : (
                         <span className="text-[11px] text-gray-400">
@@ -396,23 +435,25 @@ export default function GoogleSignInButton({
                       )}
 
                       <div className="flex gap-2">
-                        {clientId && (
+                        {(clientId || customApiUrl) && (
                           <button
                             type="button"
                             onClick={() => {
                               localStorage.removeItem('google_client_id');
+                              localStorage.removeItem('custom_api_url');
                               setClientId(envClientId);
                               setCustomClientId('');
+                              setCustomApiUrl('');
                             }}
-                            className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-red-600 rounded-xl hover:bg-gray-100 transition-colors"
+                            className="px-3 py-2 text-xs font-medium text-gray-600 hover:text-red-600 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
                           >
                             Xóa cấu hình
                           </button>
                         )}
                         <button
                           type="submit"
-                          disabled={!customClientId.trim()}
-                          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
+                          disabled={!customClientId.trim() && !customApiUrl.trim()}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50 cursor-pointer"
                         >
                           Lưu & Kích hoạt
                         </button>
@@ -423,10 +464,17 @@ export default function GoogleSignInButton({
                   <div className="pt-2 border-t border-gray-100 text-[11px] text-gray-500 space-y-1">
                     <p className="font-semibold text-gray-700">Hướng dẫn nhanh Google Cloud Console:</p>
                     <ol className="list-decimal list-inside space-y-0.5 text-gray-600">
-                      <li>Tạo dự án mới tại Google Cloud Console.</li>
+                      <li>Tạo dự án mới tại Google Cloud Console (APIs & Services).</li>
                       <li>Vào Credentials → Create Credentials → OAuth client ID.</li>
                       <li>Chọn Application type: <span className="font-medium">Web application</span>.</li>
-                      <li>Thêm Authorized JavaScript origins: <code className="bg-gray-100 px-1 py-0.5 rounded">http://localhost:3000</code></li>
+                      <li>Thêm vào <span className="font-medium">Authorized JavaScript origins</span>:
+                        <ul className="list-disc list-inside pl-3 pt-0.5 space-y-0.5 text-gray-700 font-mono">
+                          <li>http://localhost:3000</li>
+                          {typeof window !== 'undefined' && window.location.origin.includes('vercel.app') && (
+                            <li className="text-emerald-700 font-semibold">{window.location.origin} (Domain Vercel hiện tại)</li>
+                          )}
+                        </ul>
+                      </li>
                     </ol>
                   </div>
                 </div>

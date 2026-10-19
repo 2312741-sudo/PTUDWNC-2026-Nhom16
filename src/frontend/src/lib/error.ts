@@ -42,9 +42,17 @@ export function parseApiError(error: unknown): string {
   }
 
   if (error instanceof Error) {
-    // Phát hiện lỗi kết nối mạng
-    if (error.message.includes('fetch failed') || error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-      return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng của bạn.';
+    const msg = error.message.toLowerCase();
+    // Phát hiện lỗi kết nối mạng (Safari: "load failed", Chrome: "failed to fetch", Firefox: "networkerror")
+    if (
+      msg.includes('fetch failed') ||
+      msg.includes('failed to fetch') ||
+      msg.includes('load failed') ||
+      msg.includes('networkerror') ||
+      msg.includes('network error') ||
+      msg.includes('econnrefused')
+    ) {
+      return 'Không thể kết nối đến máy chủ API. Vui lòng kiểm tra lại kết nối mạng hoặc cấu hình URL máy chủ.';
     }
     return error.message;
   }

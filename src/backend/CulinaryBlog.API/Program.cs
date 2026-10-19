@@ -142,18 +142,33 @@ builder.Services.AddRateLimiter(options =>
 // Origin hợp lệ đọc từ cấu hình `Cors:AllowedOrigins` (danh sách cách dấu phẩy; compose staging đặt
 // http://localhost,https://localhost,http://localhost:3000). Không có cấu hình -> mặc định dev/staging
 // là localhost FE; Production PHẢI khai báo tường minh, còn `WithOrigins` rỗng = từ chối mọi origin.
-var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"]
-        ?? (builder.Environment.IsProduction()
-            ? string.Empty
-            : "http://localhost:3000,http://localhost,https://localhost"))
+var configuredOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? string.Empty)
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(corsOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrWhiteSpace(origin)) return false;
+            if (configuredOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)) return true;
+
+            // Tự động cho phép localhost, 127.0.0.1 và các domain triển khai trên Vercel (*.vercel.app)
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            {
+                if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        })
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 builder.Services.AddHttpContextAccessor();
