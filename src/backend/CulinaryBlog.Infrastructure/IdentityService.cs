@@ -414,6 +414,22 @@ public sealed class IdentityService(
         return jwt.Issue(await ToDto(user), rawRefreshToken);
     }
 
+    public async Task<IReadOnlyList<UserDto>> GetUsersAsync(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var allUsers = await users.Users
+            .OrderByDescending(u => u.CreatedAt)
+            .Take(100)
+            .ToListAsync(ct);
+
+        var dtos = new List<UserDto>(allUsers.Count);
+        foreach (var user in allUsers)
+        {
+            dtos.Add(await ToDto(user));
+        }
+        return dtos;
+    }
+
     private async Task<UserDto> ToDto(ApplicationUser user) => new(
         user.Id,
         user.Email!,

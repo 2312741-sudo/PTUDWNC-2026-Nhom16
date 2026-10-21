@@ -196,6 +196,22 @@ export async function getMe(token: string): Promise<{ success: boolean; data?: i
   }
 }
 
+export async function getUsers(): Promise<import('@/types/auth').User[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/users`, {
+      method: 'GET',
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const raw = data.data ?? data;
+    return Array.isArray(raw) ? raw : [];
+  } catch (error) {
+    console.error('Error in getUsers:', error);
+    return [];
+  }
+}
+
 export async function updateProfile(
   data: import('@/types/auth').UpdateProfileRequest,
   token: string

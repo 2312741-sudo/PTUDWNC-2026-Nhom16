@@ -82,6 +82,14 @@ public interface IIdentityService
     Task ChangePasswordAsync(string userId, ChangePasswordCommand command, CancellationToken ct);
     Task RequestChangePasswordCodeAsync(string userId, CancellationToken ct);
     Task ForgotPasswordAsync(string email, CancellationToken ct);
+    Task<IReadOnlyList<UserDto>> GetUsersAsync(CancellationToken ct);
+}
+
+public sealed record GetUsersQuery : IRequest<IReadOnlyList<UserDto>>;
+
+public sealed class GetUsersHandler(IIdentityService identity) : IRequestHandler<GetUsersQuery, IReadOnlyList<UserDto>>
+{
+    public Task<IReadOnlyList<UserDto>> Handle(GetUsersQuery request, CancellationToken ct) => identity.GetUsersAsync(ct);
 }
 
 public sealed class AppException(int status, string code, string message) : Exception(message)

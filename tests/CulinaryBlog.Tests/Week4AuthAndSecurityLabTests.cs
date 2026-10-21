@@ -135,4 +135,16 @@ public sealed class Week4AuthAndSecurityLabTests : IClassFixture<ApiFactory>
         var refreshRes = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshTokenCommand(oldRefreshToken));
         Assert.Equal(HttpStatusCode.Unauthorized, refreshRes.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_users_returns_user_list_successfully()
+    {
+        var res = await _client.GetAsync("/api/v1/users");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var json = await res.Content.ReadFromJsonAsync<ApiResponse<List<UserDto>>>();
+        Assert.NotNull(json);
+        Assert.NotNull(json.Data);
+        Assert.NotEmpty(json.Data);
+    }
 }

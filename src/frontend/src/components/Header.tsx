@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Search, Menu, X, Shield, BookOpen, Plus, LogOut } from 'lucide-react';
+import { Search, Menu, X, Shield, BookOpen, Plus, LogOut, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 
 export default function Header() {
@@ -88,6 +88,13 @@ export default function Header() {
             >
               <Shield className="w-3.5 h-3.5 text-amber-600" />
               Quản trị DM
+            </Link>
+            <Link
+              href="/dashboard/users"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-800 rounded-lg hover:bg-blue-100 transition-colors text-xs font-semibold"
+            >
+              <Users className="w-3.5 h-3.5 text-blue-600" />
+              Người dùng
             </Link>
             <Link
               href="/dashboard/profile"
@@ -206,6 +213,13 @@ export default function Header() {
               className="px-3 py-2 rounded-lg bg-amber-50 text-amber-800"
             >
               Quản trị Danh mục
+            </Link>
+            <Link
+              href="/dashboard/users"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg bg-blue-50 text-blue-800"
+            >
+              Người dùng & Tác giả
             </Link>
           </div>
           <div className="pt-3 border-t border-gray-100 flex gap-2">

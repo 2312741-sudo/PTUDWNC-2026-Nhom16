@@ -233,6 +233,9 @@ public sealed class FakeIdentityServiceForGoogle : IIdentityService
 
     public Task ForgotPasswordAsync(string email, CancellationToken ct) =>
         Task.CompletedTask;
+
+    public Task<IReadOnlyList<UserDto>> GetUsersAsync(CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<UserDto>>(Users.Values.ToList());
 }
 
 public sealed class DiscoveryAndSearchTests

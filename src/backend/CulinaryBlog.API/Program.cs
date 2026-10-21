@@ -549,6 +549,14 @@ auth.MapPost("/google", async (GoogleLoginCommand command, ISender sender, Cance
     Results.Ok(new { data = await sender.Send(command, ct) }))
     .WithName("GoogleLogin").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502);
 
+auth.MapGet("/users", async (ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new GetUsersQuery(), ct) }))
+    .WithName("GetAuthUsers").Produces<object>(200);
+
+app.MapGet("/api/v1/users", async (ISender sender, CancellationToken ct) =>
+    Results.Ok(new { data = await sender.Send(new GetUsersQuery(), ct) }))
+    .WithName("GetUsers").WithTags("Users").Produces<object>(200);
+
 var categories = app.MapGroup("/api/v1/categories").WithTags("Categories");
 categories.MapGet("", async (ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetCategoriesQuery(), ct) }))
