@@ -8,6 +8,7 @@ describe('CookingModeModal Component', () => {
   const steps: RecipeStep[] = [
     {
       id: 'step-1',
+      recipeId: 'recipe-test',
       stepNumber: 1,
       title: 'Sơ chế nguyên liệu',
       description: 'Rửa sạch thịt bò và thái lát mỏng.',
@@ -15,6 +16,7 @@ describe('CookingModeModal Component', () => {
     },
     {
       id: 'step-2',
+      recipeId: 'recipe-test',
       stepNumber: 2,
       title: 'Nấu nước dùng',
       description: 'Hầm xương ống trong 30 phút cùng gia vị.',
@@ -23,8 +25,8 @@ describe('CookingModeModal Component', () => {
   ];
 
   const ingredients: RecipeIngredient[] = [
-    { id: 'ing-1', name: 'Thịt bò', quantity: 500, unit: 'g', notes: null },
-    { id: 'ing-2', name: 'Hành hoa', quantity: 50, unit: 'g', notes: null },
+    { id: 'ing-1', recipeId: 'recipe-test', orderIndex: 0, name: 'Thịt bò', quantity: 500, unit: 'g', notes: null },
+    { id: 'ing-2', recipeId: 'recipe-test', orderIndex: 1, name: 'Hành hoa', quantity: 50, unit: 'g', notes: null },
   ];
 
   it('does not render when isOpen is false', () => {
