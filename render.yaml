@@ -46,11 +46,6 @@ services:
           type: redis
           name: culinary-redis
           property: port
-      - key: Redis__Password
-        fromService:
-          type: redis
-          name: culinary-redis
-          property: password
       - key: Redis__Instance
         value: prod
       - key: Sitemap__BaseUrl
