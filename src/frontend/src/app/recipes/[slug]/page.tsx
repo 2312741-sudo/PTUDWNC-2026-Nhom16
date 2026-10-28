@@ -7,6 +7,7 @@ import { recipeMetaDescription } from '@/lib/recipe-meta';
 import { getRecipeImage } from '@/lib/recipeImages';
 import OwnerEditButton from '@/components/OwnerEditButton';
 import RecipeDetailImage from '@/components/RecipeDetailImage';
+import RecipeInteractiveSection from '@/components/RecipeInteractiveSection';
 import {
   ArrowLeft,
   ChefHat,
@@ -209,86 +210,9 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Nguyên liệu */}
-        <section className="lg:col-span-1 space-y-4">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
-            <Utensils className="w-5 h-5 text-orange-600" />
-            Nguyên liệu
-          </h2>
-
-          {(recipe.ingredients?.length ?? 0) > 0 ? (
-            <ul className="space-y-2">
-              {recipe.ingredients.map((ing) => (
-                <li
-                  key={ing.id}
-                  className="flex items-start gap-3 bg-white border border-gray-100 rounded-xl p-3 shadow-sm"
-                >
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900">
-                      {ing.quantity !== null && ing.quantity !== undefined && (
-                        <span className="text-orange-700">{ing.quantity} </span>
-                      )}
-                      {ing.unit && <span className="text-orange-700">{ing.unit} </span>}
-                      {ing.name}
-                    </p>
-                    {ing.notes && (
-                      <p className="text-xs text-gray-500 mt-0.5">{ing.notes}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-500 bg-gray-50 rounded-xl p-4 border border-dashed border-gray-200">
-              Công thức này chưa có nguyên liệu nào.
-            </p>
-          )}
-
-          {/* Dinh dưỡng */}
-          {hasNutrition && recipe.nutrition && (
-            <div className="pt-4 space-y-3">
-              <h3 className="text-sm font-bold text-gray-900">Dinh dưỡng mỗi khẩu phần</h3>
-              <dl className="space-y-1.5 text-sm">
-                {recipe.nutrition.calories != null && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Năng lượng</dt>
-                    <dd className="font-semibold text-gray-900">{recipe.nutrition.calories} kcal</dd>
-                  </div>
-                )}
-                {recipe.nutrition.protein != null && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Đạm</dt>
-                    <dd className="font-semibold text-gray-900">{recipe.nutrition.protein} g</dd>
-                  </div>
-                )}
-                {recipe.nutrition.carbohydrates != null && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Tinh bột</dt>
-                    <dd className="font-semibold text-gray-900">{recipe.nutrition.carbohydrates} g</dd>
-                  </div>
-                )}
-                {recipe.nutrition.fat != null && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Chất béo</dt>
-                    <dd className="font-semibold text-gray-900">{recipe.nutrition.fat} g</dd>
-                  </div>
-                )}
-                {recipe.nutrition.fiber != null && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Chất xơ</dt>
-                    <dd className="font-semibold text-gray-900">{recipe.nutrition.fiber} g</dd>
-                  </div>
-                )}
-                {recipe.nutrition.sodium != null && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Natri</dt>
-                    <dd className="font-semibold text-gray-900">{recipe.nutrition.sodium} mg</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          )}
+        {/* Nguyên liệu & Điều khiển tương tác */}
+        <section className="lg:col-span-1">
+          <RecipeInteractiveSection recipe={recipe} categoryName={extra.categoryName} />
         </section>
 
         {/* Các bước thực hiện */}

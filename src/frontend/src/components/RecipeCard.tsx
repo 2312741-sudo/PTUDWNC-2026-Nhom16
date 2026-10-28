@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { RecipeSummary } from '@/types/recipe';
 import { Clock, Users, ChefHat } from 'lucide-react';
 import { getRecipeImage, CATEGORY_FALLBACK_IMAGES } from '@/lib/recipeImages';
+import FavoriteButton from '@/components/FavoriteButton';
 
 interface RecipeCardProps {
   recipe: RecipeSummary;
@@ -59,8 +60,21 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           </span>
         </div>
 
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex items-center gap-1.5">
           {getDifficultyBadge(recipe.difficulty)}
+          <FavoriteButton
+            recipe={{
+              id: recipe.id,
+              slug: recipe.slug,
+              title: recipe.title,
+              description: recipe.description,
+              categoryName: recipe.categoryName,
+              cookTimeMinutes: recipe.cookTimeMinutes,
+              servings: recipe.servings,
+              difficulty: recipe.difficulty,
+              imageUrl,
+            }}
+          />
         </div>
       </div>
 

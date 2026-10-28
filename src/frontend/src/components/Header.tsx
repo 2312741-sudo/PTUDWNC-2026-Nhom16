@@ -3,13 +3,15 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Search, Menu, X, Shield, BookOpen, Plus, LogOut, Users } from 'lucide-react';
+import { Search, Menu, X, Shield, BookOpen, Plus, LogOut, Users, Heart } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
+import { useFavorites } from '@/lib/favorites';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { isAuthenticated: loggedIn, logout: storeLogout } = useAuthStore();
+  const { count: favCount, isLoaded: favLoaded } = useFavorites();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -95,6 +97,19 @@ export default function Header() {
             >
               <Users className="w-3.5 h-3.5 text-blue-600" />
               Người dùng
+            </Link>
+            <Link
+              href="/dashboard/favorites"
+              aria-current={pathname?.startsWith('/dashboard/favorites') ? 'page' : undefined}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-800 rounded-lg hover:bg-rose-100 transition-colors text-xs font-semibold"
+            >
+              <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-500" />
+              <span>Yêu thích</span>
+              {favLoaded && favCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white font-bold leading-tight">
+                  {favCount}
+                </span>
+              )}
             </Link>
             <Link
               href="/dashboard/profile"
@@ -220,6 +235,21 @@ export default function Header() {
               className="px-3 py-2 rounded-lg bg-blue-50 text-blue-800"
             >
               Người dùng & Tác giả
+            </Link>
+            <Link
+              href="/dashboard/favorites"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-50 text-rose-800"
+            >
+              <span className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-rose-600 fill-rose-500" />
+                Công thức đã lưu
+              </span>
+              {favLoaded && favCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs bg-rose-500 text-white font-bold">
+                  {favCount}
+                </span>
+              )}
             </Link>
           </div>
           <div className="pt-3 border-t border-gray-100 flex gap-2">
