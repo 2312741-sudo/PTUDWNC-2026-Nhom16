@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next';
 import { getSitemapRecipes } from '@/lib/api';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
-  ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-  : 'http://localhost:3000';
+  ? process.env.NEXT_PUBLIC_SITE_URL || 'https://culinary-blog-nhom16.vercel.app'
+  : 'https://culinary-blog-nhom16.vercel.app';
 
 // Sitemap lấy dữ liệu Published từ API -> render động (ISR 1 giờ) để không bị
 // coi là static route lúc build khi backend chưa chạy.

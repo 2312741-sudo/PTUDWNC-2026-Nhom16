@@ -34,7 +34,7 @@ interface RecipeDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://culinary-blog-nhom16.vercel.app').replace(/\/$/, '');
 
 // Ảnh đại diện: ưu tiên ảnh chính, sau đó ảnh đầu tiên (originalUrl là key object storage -> qua mediaUrl)
 function primaryImageKey(recipe: any): string | null {
