@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Search, Menu, X, Shield, BookOpen, Plus, LogOut, Users, Heart } from 'lucide-react';
+import { Search, Menu, X, Shield, BookOpen, Plus, LogOut, Users, Heart, User } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useFavorites } from '@/lib/favorites';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { isAuthenticated: loggedIn, logout: storeLogout } = useAuthStore();
+  const { isAuthenticated: loggedIn, logout: storeLogout, user } = useAuthStore();
   const { count: favCount, isLoaded: favLoaded } = useFavorites();
   const pathname = usePathname();
   const router = useRouter();
@@ -119,10 +119,29 @@ export default function Header() {
               <>
                 <Link
                   href="/dashboard/recipes/new"
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   Viết công thức
+                </Link>
+                <Link
+                  href="/dashboard/profile"
+                  aria-current={pathname?.startsWith('/dashboard/profile') ? 'page' : undefined}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-emerald-700 bg-gray-50 hover:bg-emerald-50/70 border border-gray-200 hover:border-emerald-200 rounded-xl transition-all"
+                  title="Hồ sơ cá nhân"
+                >
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user?.displayName || 'Avatar'}
+                      className="w-5 h-5 rounded-full object-cover border border-gray-300"
+                    />
+                  ) : (
+                    <User className="w-4 h-4 text-emerald-600" />
+                  )}
+                  <span className="max-w-[130px] truncate">
+                    {user?.displayName || user?.fullName || 'Hồ sơ'}
+                  </span>
                 </Link>
                 <button
                   onClick={logout}
@@ -200,6 +219,22 @@ export default function Header() {
             </Link>
             {loggedIn && (
               <>
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium hover:bg-gray-200"
+                >
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user?.displayName || 'Avatar'}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-4 h-4 text-emerald-600" />
+                  )}
+                  <span>Hồ sơ cá nhân ({user?.displayName || user?.fullName || 'Tài khoản'})</span>
+                </Link>
                 <Link
                   href="/dashboard/recipes"
                   onClick={() => setIsMobileMenuOpen(false)}
