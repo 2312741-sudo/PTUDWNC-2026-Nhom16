@@ -56,6 +56,14 @@ services:
       - key: Sitemap__BaseUrl
         sync: false
 
+  # N1-5/N1-6: Redis dùng chung cho cache và khoá sitemap. ipAllowList rỗng nghĩa là chỉ
+  # truy cập được từ trong mạng Render, không mở ra Internet.
+  - type: redis
+    name: culinary-redis
+    plan: free
+    region: singapore
+    ipAllowList: []
+
 databases:
   - name: culinary-db-v2
     plan: free
@@ -63,10 +71,3 @@ databases:
     user: culinary_user
     region: singapore
     postgresMajorVersion: "16"
-  # N1-5/N1-6: Redis dùng chung cho cache và khoá sitemap. ipAllowList rỗng nghĩa là chỉ
-  # truy cập được từ trong mạng Render, không mở ra Internet.
-  - name: culinary-redis
-    type: redis
-    plan: free
-    region: singapore
-    ipAllowList: []
