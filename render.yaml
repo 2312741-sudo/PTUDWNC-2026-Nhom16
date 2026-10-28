@@ -9,7 +9,7 @@ services:
     envVars:
       - key: ConnectionStrings__Database
         fromDatabase:
-          name: culinary-db
+          name: culinary-db-v2
           property: connectionString
       - key: AllowedHosts
         value: "*"
@@ -57,7 +57,7 @@ services:
         sync: false
 
 databases:
-  - name: culinary-db
+  - name: culinary-db-v2
     plan: free
     databaseName: culinary_blog
     user: culinary_user
