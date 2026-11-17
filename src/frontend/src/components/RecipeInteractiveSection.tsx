@@ -215,9 +215,9 @@ export default function RecipeInteractiveSection({
                 </span>
               )}
             </div>
-            <dl className="grid grid-cols-2 gap-2 text-xs sm:text-sm bg-gray-50/70 p-3.5 rounded-xl border border-gray-100">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm lg:text-xs xl:text-sm bg-gray-50/70 p-3.5 rounded-xl border border-gray-100">
               {recipe.nutrition.calories != null && (
-                <div className="flex justify-between py-1 border-b border-gray-100">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-100 whitespace-nowrap">
                   <dt className="text-gray-500">Năng lượng</dt>
                   <dd className="font-semibold text-gray-900">
                     {Math.round(recipe.nutrition.calories * ratio)} kcal
@@ -225,7 +225,7 @@ export default function RecipeInteractiveSection({
                 </div>
               )}
               {recipe.nutrition.protein != null && (
-                <div className="flex justify-between py-1 border-b border-gray-100">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-100 whitespace-nowrap">
                   <dt className="text-gray-500">Đạm</dt>
                   <dd className="font-semibold text-gray-900">
                     {Math.round(recipe.nutrition.protein * ratio * 10) / 10} g
@@ -233,7 +233,7 @@ export default function RecipeInteractiveSection({
                 </div>
               )}
               {recipe.nutrition.carbohydrates != null && (
-                <div className="flex justify-between py-1 border-b border-gray-100">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-100 whitespace-nowrap">
                   <dt className="text-gray-500">Tinh bột</dt>
                   <dd className="font-semibold text-gray-900">
                     {Math.round(recipe.nutrition.carbohydrates * ratio * 10) / 10} g
@@ -241,7 +241,7 @@ export default function RecipeInteractiveSection({
                 </div>
               )}
               {recipe.nutrition.fat != null && (
-                <div className="flex justify-between py-1 border-b border-gray-100">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-100 whitespace-nowrap">
                   <dt className="text-gray-500">Chất béo</dt>
                   <dd className="font-semibold text-gray-900">
                     {Math.round(recipe.nutrition.fat * ratio * 10) / 10} g
