@@ -104,9 +104,9 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-100 pb-8">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-gray-100 pb-6">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-semibold mb-3 border border-emerald-200/50">
             <BookOpen className="w-3.5 h-3.5 text-emerald-700" />
@@ -128,13 +128,13 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
 
         {/* Sorting controls */}
         <div className="flex items-center gap-3">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
             Sắp xếp:
           </label>
           <div className="flex rounded-xl bg-gray-100 p-1 text-xs font-semibold">
             <Link
               href={buildUrl({ sortBy: 'createdAt', sortOrder: 'desc', page: 1 })}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${
+              className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                 filters.sortBy === 'createdAt' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -142,7 +142,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             </Link>
             <Link
               href={buildUrl({ sortBy: 'cookTimeMinutes', sortOrder: 'asc', page: 1 })}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${
+              className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                 filters.sortBy === 'cookTimeMinutes' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -150,7 +150,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
             </Link>
             <Link
               href={buildUrl({ sortBy: 'title', sortOrder: 'asc', page: 1 })}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${
+              className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                 filters.sortBy === 'title' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -272,7 +272,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                 <Link
                   key={mins}
                   href={buildUrl({ maxCookTime: filters.maxCookTime === mins ? undefined : mins, page: 1 })}
-                  className={`px-3 py-2 rounded-xl text-center text-xs font-semibold border transition-all ${
+                  className={`px-3 py-2 rounded-xl text-center text-xs font-semibold border transition-all whitespace-nowrap ${
                     filters.maxCookTime === mins
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50'

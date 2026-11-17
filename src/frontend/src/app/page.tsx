@@ -24,11 +24,11 @@ export default async function HomePage() {
   const latestRecipes = Array.isArray(recipesResult?.data) ? recipesResult.data : [];
 
   return (
-    <div className="space-y-16 pb-12">
+    <div className="space-y-10 pb-10">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 via-amber-50/20 to-white py-20 lg:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 via-amber-50/20 to-white py-10 lg:py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100/80 text-emerald-900 text-xs font-semibold mb-6 shadow-sm border border-emerald-200/50">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100/80 text-emerald-900 text-xs font-semibold mb-5 shadow-sm border border-emerald-200/50">
             <Sparkles className="w-4 h-4 text-emerald-600" />
             <span>Nền tảng ẩm thực cao cấp — .NET 10 & Next.js App Router</span>
           </div>
@@ -41,12 +41,12 @@ export default async function HomePage() {
             chuẩn vị
           </h1>
 
-          <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
             Khám phá tinh hoa ẩm thực phong phú, công thức chi tiết từng bước, định lượng nguyên liệu chuẩn xác và giá trị dinh dưỡng minh bạch.
           </p>
 
           {/* Quick CTA Actions */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/recipes"
               className="px-8 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-200/80 hover:bg-emerald-700 hover:scale-105 transition-all flex items-center gap-2"
@@ -71,10 +71,10 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar: Danh sách Category */}
           <aside className="lg:col-span-1 space-y-4">
-            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm sticky top-24">
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm sticky top-32">
               <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100">
                 <Layers className="w-4 h-4 text-emerald-600" />
-                <h3 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider">
+                <h3 className="font-extrabold text-gray-900 text-sm uppercase tracking-wide whitespace-nowrap">
                   Danh mục món ăn
                 </h3>
               </div>
@@ -203,34 +203,34 @@ export default async function HomePage() {
       </section>
 
       {/* Highlights / Features */}
-      <section className="bg-gray-50 py-16 border-y border-gray-100">
+      <section className="bg-gray-50 py-10 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 lg:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-3">
               <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
                 <Search className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Tìm kiếm không dấu</h3>
+              <h3 className="text-lg font-bold text-gray-900 md:text-base lg:text-lg">Tìm kiếm không dấu</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Tích hợp PostgreSQL Full-Text Search qua unaccent và pg_trgm, dễ dàng tìm thấy món ăn bạn cần chỉ với vài ký tự.
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+            <div className="bg-white p-6 lg:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-3">
               <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
                 <BookOpen className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Chi tiết từng bước</h3>
+              <h3 className="text-lg font-bold text-gray-900 md:text-base lg:text-lg">Chi tiết từng bước</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Hướng dẫn nấu ăn trực quan với ảnh minh họa cho từng công đoạn, kèm bộ hẹn giờ đếm ngược tiện lợi.
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+            <div className="bg-white p-6 lg:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-3">
               <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Kiến trúc tin cậy</h3>
+              <h3 className="text-lg font-bold text-gray-900 md:text-base lg:text-lg">Kiến trúc tin cậy</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Xây dựng theo chuẩn Clean Architecture, bảo mật JWT + PBKDF2 100.000 iterations và cache Redis tốc độ cao.
               </p>

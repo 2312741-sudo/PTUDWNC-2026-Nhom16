@@ -143,7 +143,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {q.length >= 2 && (
         <div className="space-y-6">
           {/* Filter Bar & Controls */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/60">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/60">
             <div>
               <h2 className="text-lg font-bold text-gray-900">
                 Kết quả cho từ khóa: <span className="text-emerald-700 font-extrabold">&quot;{q}&quot;</span>
