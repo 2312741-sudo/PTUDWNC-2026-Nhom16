@@ -21,12 +21,18 @@ export default function Header() {
     router.push('/auth/login');
   }
 
+  // Các nút điều hướng dạng "pill" — dùng chung cho hàng điều hướng thứ hai (từ md trở lên).
+  const pillBase =
+    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold whitespace-nowrap';
+
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        {/* Hàng 1: logo + ô tìm kiếm + tài khoản. Không đặt nav ở đây nữa vì khi đăng nhập
+            có tới 8 mục điều hướng, hàng bị tràn và ô tìm kiếm bị bóp đè lên chữ "Trang chủ". */}
+        <div className="flex items-center gap-3 h-16">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
             <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-emerald-200/50 ring-2 ring-emerald-600/30 group-hover:ring-emerald-600 transition-all duration-300 group-hover:scale-105 shrink-0 bg-emerald-50">
               <img
                 src="/logo.jpg"
@@ -34,95 +40,53 @@ export default function Header() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col whitespace-nowrap">
               <span className="text-xl font-extrabold tracking-tight text-gray-900 group-hover:text-emerald-700 transition-colors">
                 Culinary<span className="text-emerald-600">Blog</span>
               </span>
-              <span className="text-[10px] text-emerald-800/70 font-semibold tracking-wider uppercase">
+              <span className="hidden sm:block text-[10px] text-emerald-800/70 font-semibold tracking-wider uppercase">
                 Khám phá & Chia sẻ ẩm thực
               </span>
             </div>
           </Link>
 
-          {/* Desktop Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-sm mx-4 min-w-0">
+          {/* Desktop Search Bar — có nút bấm riêng, không chỉ dựa vào phím Enter */}
+          <div className="hidden md:flex flex-1 min-w-[12rem] max-w-xl mx-2 lg:mx-6">
             <form
               action="/search"
               method="GET"
+              role="search"
               className="w-full relative flex items-center"
             >
               <Search className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
               <input
-                type="text"
+                type="search"
                 name="q"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Tìm công thức, nguyên liệu (VD: phở bò, bún chả)..."
-                className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-800"
+                placeholder="Tìm công thức, nguyên liệu (VD: phở bò)..."
+                aria-label="Tìm công thức"
+                className="w-full pl-9 pr-24 py-2 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-800"
               />
+              <button
+                type="submit"
+                className="absolute right-1 top-1 bottom-1 px-3 rounded-full bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors"
+              >
+                Tìm kiếm
+              </button>
             </form>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-4 whitespace-nowrap text-sm font-medium text-gray-700">
-            <Link href="/" className="hover:text-emerald-600 transition-colors">
-              Trang chủ
-            </Link>
-            <Link href="/recipes" className="hover:text-emerald-600 transition-colors">
-              Công thức
-            </Link>
-            <Link href="/categories" className="hover:text-emerald-600 transition-colors">
-              Danh mục
-            </Link>
-            {loggedIn && (
-              <Link
-                href="/dashboard/recipes"
-                aria-current={pathname?.startsWith('/dashboard/recipes') ? 'page' : undefined}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-lg hover:bg-emerald-100 transition-colors text-xs font-semibold"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                Công thức của tôi
-              </Link>
-            )}
-            <Link
-              href="/dashboard/categories"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 rounded-lg hover:bg-amber-100 transition-colors text-xs font-semibold"
-            >
-              <Shield className="w-3.5 h-3.5 text-amber-600" />
-              Quản trị DM
-            </Link>
-            <Link
-              href="/dashboard/users"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-800 rounded-lg hover:bg-blue-100 transition-colors text-xs font-semibold"
-            >
-              <Users className="w-3.5 h-3.5 text-blue-600" />
-              Người dùng
-            </Link>
-            <Link
-              href="/dashboard/favorites"
-              aria-current={pathname?.startsWith('/dashboard/favorites') ? 'page' : undefined}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-800 rounded-lg hover:bg-rose-100 transition-colors text-xs font-semibold"
-            >
-              <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-500" />
-              <span>Yêu thích</span>
-              {favLoaded && favCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white font-bold leading-tight">
-                  {favCount}
-                </span>
-              )}
-            </Link>
-          </nav>
-
-          {/* Auth Buttons */}
-          <div className="hidden sm:flex items-center gap-2 whitespace-nowrap ml-3">
+          {/* Auth Buttons — dưới lg chỉ hiện biểu tượng (vẫn giữ tên truy cập qua sr-only) */}
+          <div className="hidden sm:flex items-center gap-2 whitespace-nowrap ml-auto shrink-0">
             {loggedIn ? (
               <>
                 <Link
                   href="/dashboard/recipes/new"
-                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all"
                 >
                   <Plus className="w-4 h-4" />
-                  Viết công thức
+                  <span className="sr-only lg:not-sr-only">Viết công thức</span>
                 </Link>
                 <Link
                   href="/dashboard/profile"
@@ -139,16 +103,17 @@ export default function Header() {
                   ) : (
                     <User className="w-4 h-4 text-emerald-600" />
                   )}
-                  <span className="max-w-[130px] truncate">
+                  <span className="max-w-[8rem] xl:max-w-[11rem] truncate">
                     {user?.displayName || user?.fullName || 'Hồ sơ'}
                   </span>
                 </Link>
                 <button
                   onClick={logout}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
+                  title="Đăng xuất"
+                  className="flex items-center gap-1.5 px-2.5 py-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  Đăng xuất
+                  <span className="sr-only lg:not-sr-only">Đăng xuất</span>
                 </button>
               </>
             ) : (
@@ -170,7 +135,7 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center">
+          <div className="flex md:hidden items-center ml-auto sm:ml-0">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
@@ -181,6 +146,62 @@ export default function Header() {
             </button>
           </div>
         </div>
+
+        {/* Hàng 2 (từ md trở lên): điều hướng. Trước đây nav chỉ hiện từ lg nên khoảng
+            768–1023px không có đường nào tới các trang (menu di động cũng ẩn từ md). */}
+        <nav
+          aria-label="Điều hướng chính"
+          className="hidden md:flex flex-wrap items-center gap-x-5 gap-y-2 py-2 border-t border-gray-100 text-sm font-medium text-gray-700"
+        >
+          <Link href="/" aria-current={pathname === '/' ? 'page' : undefined} className="whitespace-nowrap hover:text-emerald-600 transition-colors">
+            Trang chủ
+          </Link>
+          <Link href="/recipes" aria-current={pathname?.startsWith('/recipes') ? 'page' : undefined} className="whitespace-nowrap hover:text-emerald-600 transition-colors">
+            Công thức
+          </Link>
+          <Link href="/categories" aria-current={pathname?.startsWith('/categories') ? 'page' : undefined} className="whitespace-nowrap hover:text-emerald-600 transition-colors">
+            Danh mục
+          </Link>
+          <div className="flex flex-wrap items-center gap-2 ml-auto">
+            {loggedIn && (
+              <Link
+                href="/dashboard/recipes"
+                aria-current={pathname?.startsWith('/dashboard/recipes') ? 'page' : undefined}
+                className={`${pillBase} bg-emerald-50 text-emerald-800 hover:bg-emerald-100`}
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                Công thức của tôi
+              </Link>
+            )}
+            <Link
+              href="/dashboard/categories"
+              className={`${pillBase} bg-amber-50 text-amber-800 hover:bg-amber-100`}
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-600" />
+              Quản trị DM
+            </Link>
+            <Link
+              href="/dashboard/users"
+              className={`${pillBase} bg-blue-50 text-blue-800 hover:bg-blue-100`}
+            >
+              <Users className="w-3.5 h-3.5 text-blue-600" />
+              Người dùng
+            </Link>
+            <Link
+              href="/dashboard/favorites"
+              aria-current={pathname?.startsWith('/dashboard/favorites') ? 'page' : undefined}
+              className={`${pillBase} bg-rose-50 text-rose-800 hover:bg-rose-100`}
+            >
+              <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-500" />
+              <span>Yêu thích</span>
+              {favLoaded && favCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white font-bold leading-tight">
+                  {favCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        </nav>
       </div>
 
       {/* Mobile Drawer */}

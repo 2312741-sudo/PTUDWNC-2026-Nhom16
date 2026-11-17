@@ -140,13 +140,13 @@ export default function UsersDirectoryPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/profile"
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm whitespace-nowrap"
           >
             Hồ sơ cá nhân
           </Link>
           <Link
             href="/dashboard/recipes/new"
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200"
+            className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200 whitespace-nowrap"
           >
             Đăng công thức mới
           </Link>
