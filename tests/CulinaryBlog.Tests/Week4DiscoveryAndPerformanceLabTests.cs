@@ -14,7 +14,8 @@ public sealed class Week4DiscoveryAndPerformanceLabTests
     public async Task GoogleAuthService_validates_dev_token_and_extracts_correct_payload()
     {
         var config = new ConfigurationBuilder().Build();
-        var googleAuthService = new GoogleAuthService(config, NullLogger<GoogleAuthService>.Instance);
+        var devEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Development };
+        var googleAuthService = new GoogleAuthService(config, NullLogger<GoogleAuthService>.Instance, devEnv);
 
         var token = "dev_google:chef.test@gmail.com:Nguyen Van Test";
         var payload = await googleAuthService.ValidateIdTokenAsync(token, CancellationToken.None);
@@ -30,7 +31,8 @@ public sealed class Week4DiscoveryAndPerformanceLabTests
     public async Task GoogleAuthService_rejects_empty_or_malformed_tokens()
     {
         var config = new ConfigurationBuilder().Build();
-        var googleAuthService = new GoogleAuthService(config, NullLogger<GoogleAuthService>.Instance);
+        var devEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Development };
+        var googleAuthService = new GoogleAuthService(config, NullLogger<GoogleAuthService>.Instance, devEnv);
 
         await Assert.ThrowsAsync<AppException>(() =>
             googleAuthService.ValidateIdTokenAsync("", CancellationToken.None));

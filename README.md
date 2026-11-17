@@ -350,6 +350,14 @@ npm install
 # Chạy server phát triển
 npm run dev
 ```
+> 🔐 **Cấu hình Đăng nhập Google OAuth thật (tùy chọn):**
+> 1. Vào [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → Credentials → Create Credentials → OAuth client ID** (Application type: **Web application**).
+> 2. Thêm `http://localhost:3000` (và domain deploy nếu có, VD: `https://culinary-blog-nhom16.vercel.app`) vào mục **Authorized JavaScript origins**.
+> 3. Copy **Client ID** (`*.apps.googleusercontent.com`) dán vào cả 2 nơi:
+>    - Root `.env`: `Authentication__Google__ClientId=<client-id>` (rồi khởi động lại API).
+>    - `src/frontend/.env.local`: `NEXT_PUBLIC_GOOGLE_CLIENT_ID=<client-id>` (nếu build Docker/production cần truyền biến này lúc `npm run build`).
+>    - *Lưu ý bảo mật:* Backend chỉ chấp nhận token giả (`dev_google:...`) khi chạy `Development` hoặc bật `Authentication__Google__AllowDevTokens=true`; ở `Staging` / `Production` token giả và Google ID token thiếu `ClientId` đều bị từ chối.
+
 > 🌐 Mở trình duyệt truy cập:
 > - Trang chủ ứng dụng: **http://localhost:3000**
 > - Trang Khám phá công thức: **http://localhost:3000/recipes**

@@ -332,7 +332,8 @@ public sealed class DiscoveryAndSearchTests
                 ["Authentication:Google:DefaultDevEmail"] = "dev.chef@culinaryblog.vn"
             })
             .Build();
-        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance);
+        var devEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Development };
+        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance, devEnv);
 
         // 1. Dev token with email and name
         var payload1 = await service.ValidateIdTokenAsync("dev_google:chef.vietnam@gmail.com:B%E1%BA%BFp%20Tr%C6%B0%E1%BB%9Fng%20Vi%E1%BB%87t", CancellationToken.None);
@@ -366,6 +367,64 @@ public sealed class DiscoveryAndSearchTests
         var ex2 = await Assert.ThrowsAsync<AppException>(() =>
             service.ValidateIdTokenAsync("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token", CancellationToken.None));
         Assert.Equal(400, ex2.Status);
+    }
+
+    [Fact]
+    public async Task GoogleAuthService_rejects_mock_tokens_in_staging_by_default()
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var stagingEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Staging };
+        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance, stagingEnv);
+
+        foreach (var mockToken in new[]
+        {
+            "dev_google:chef@gmail.com:Chef",
+            "mock_google:chef@gmail.com:Chef",
+            "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.demo_token",
+            "valid-token"
+        })
+        {
+            var ex = await Assert.ThrowsAsync<AppException>(() =>
+                service.ValidateIdTokenAsync(mockToken, CancellationToken.None));
+            Assert.Equal(400, ex.Status);
+            Assert.Equal("auth.google_token_invalid", ex.Code);
+        }
+    }
+
+    [Fact]
+    public async Task GoogleAuthService_respects_AllowDevTokens_flag_outside_production_only()
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Google:AllowDevTokens"] = "true"
+            })
+            .Build();
+        var stagingEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Staging };
+        var stagingService = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance, stagingEnv);
+        var payload = await stagingService.ValidateIdTokenAsync("dev_google:staging.qa@gmail.com:QA", CancellationToken.None);
+        Assert.Equal("staging.qa@gmail.com", payload.Email);
+
+        // Ngay cả khi bật AllowDevTokens=true, Production vẫn tuyệt đối chặn mock token
+        var prodEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Production };
+        var prodService = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance, prodEnv);
+        var ex = await Assert.ThrowsAsync<AppException>(() =>
+            prodService.ValidateIdTokenAsync("dev_google:hacker@gmail.com:Hacker", CancellationToken.None));
+        Assert.Equal(400, ex.Status);
+        Assert.Equal("auth.google_token_invalid", ex.Code);
+    }
+
+    [Fact]
+    public async Task GoogleAuthService_rejects_real_token_when_client_id_is_missing()
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var stagingEnv = new FakeHostEnvironment { EnvironmentName = Microsoft.Extensions.Hosting.Environments.Staging };
+        var service = new GoogleAuthService(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<GoogleAuthService>.Instance, stagingEnv);
+
+        var ex = await Assert.ThrowsAsync<AppException>(() =>
+            service.ValidateIdTokenAsync("eyJhbGciOiJSUzI1NiJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20ifQ.signature", CancellationToken.None));
+        Assert.Equal(503, ex.Status);
+        Assert.Equal("auth.google_not_configured", ex.Code);
     }
 
     [Fact]

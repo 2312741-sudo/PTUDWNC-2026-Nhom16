@@ -44,9 +44,9 @@ export default function GoogleSignInButton({
   const isDev = process.env.NODE_ENV !== 'production';
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize client ID & API URL from localStorage if not configured in env
+  // Initialize client ID & API URL from localStorage only in Dev mode if not configured in env
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isDev) {
       const savedClientId = localStorage.getItem('google_client_id');
       if (savedClientId && !envClientId) {
         setClientId(savedClientId);
@@ -61,7 +61,7 @@ export default function GoogleSignInButton({
         setTestEmail(savedEmail);
       }
     }
-  }, [envClientId, initialEmail]);
+  }, [envClientId, initialEmail, isDev]);
 
   // Handle Google Credential Response from GIS SDK or Dev Mock
   const handleAuthPayload = useCallback(async (token: string) => {
@@ -187,8 +187,15 @@ export default function GoogleSignInButton({
       return;
     }
 
-    // When Client ID is not configured, open Assistant Modal to configure or test
-    setShowDevModal(true);
+    // When Client ID is not configured: open Assistant Modal only in Dev mode
+    if (isDev) {
+      setShowDevModal(true);
+    } else {
+      const msg =
+        'Đăng nhập Google chưa được kích hoạt trên môi trường này (thiếu NEXT_PUBLIC_GOOGLE_CLIENT_ID). Vui lòng đăng nhập bằng Email và Mật khẩu.';
+      setErrorMsg(msg);
+      onError?.(msg);
+    }
   };
 
   // Dev mode: Save custom Google Client ID & Custom API URL
@@ -233,14 +240,16 @@ export default function GoogleSignInButton({
             className="w-full flex justify-center min-h-[44px] transition-opacity duration-200"
           />
 
-          {/* Quick config button */}
-          <button
-            type="button"
-            onClick={() => setShowDevModal(true)}
-            className="text-[11px] text-gray-400 hover:text-emerald-600 mt-1.5 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <Settings className="w-3 h-3" /> Cấu hình Google Client ID / Chế độ thử nghiệm
-          </button>
+          {/* Quick config button (Dev mode only) */}
+          {isDev && (
+            <button
+              type="button"
+              onClick={() => setShowDevModal(true)}
+              className="text-[11px] text-gray-400 hover:text-emerald-600 mt-1.5 flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <Settings className="w-3 h-3" /> Cấu hình Google Client ID / Chế độ thử nghiệm
+            </button>
+          )}
         </div>
       ) : (
         /* Standard Google Sign-In Button compliant with Google Brand Guidelines */
@@ -274,10 +283,12 @@ export default function GoogleSignInButton({
             <span>{loading ? 'Đang kết nối...' : buttonText}</span>
           </button>
 
-          <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400" />
-            Bấm nút để cấu hình Google Client ID hoặc thử nghiệm 1-click
-          </p>
+          {isDev && (
+            <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Bấm nút để cấu hình Google Client ID hoặc thử nghiệm 1-click
+            </p>
+          )}
         </div>
       )}
 
@@ -297,8 +308,8 @@ export default function GoogleSignInButton({
         </div>
       )}
 
-      {/* Developer & Setup Assistant Modal (Never Asks for Google Password) */}
-      {showDevModal && (
+      {/* Developer & Setup Assistant Modal (Dev mode only, Never Asks for Google Password) */}
+      {isDev && showDevModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
           <div className="w-full max-w-lg bg-white rounded-3xl border border-gray-200 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}

@@ -11,6 +11,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { isAuthenticated: loggedIn, logout: storeLogout, user } = useAuthStore();
+  const isAdmin = loggedIn && !!user?.roles?.some((r) => r.toLowerCase() === 'admin');
   const { count: favCount, isLoaded: favLoaded } = useFavorites();
   const pathname = usePathname();
   const router = useRouter();
@@ -173,20 +174,24 @@ export default function Header() {
                 Công thức của tôi
               </Link>
             )}
-            <Link
-              href="/dashboard/categories"
-              className={`${pillBase} bg-amber-50 text-amber-800 hover:bg-amber-100`}
-            >
-              <Shield className="w-3.5 h-3.5 text-amber-600" />
-              Quản trị DM
-            </Link>
-            <Link
-              href="/dashboard/users"
-              className={`${pillBase} bg-blue-50 text-blue-800 hover:bg-blue-100`}
-            >
-              <Users className="w-3.5 h-3.5 text-blue-600" />
-              Người dùng
-            </Link>
+            {isAdmin && (
+              <>
+                <Link
+                  href="/dashboard/categories"
+                  className={`${pillBase} bg-amber-50 text-amber-800 hover:bg-amber-100`}
+                >
+                  <Shield className="w-3.5 h-3.5 text-amber-600" />
+                  Quản trị DM
+                </Link>
+                <Link
+                  href="/dashboard/users"
+                  className={`${pillBase} bg-blue-50 text-blue-800 hover:bg-blue-100`}
+                >
+                  <Users className="w-3.5 h-3.5 text-blue-600" />
+                  Người dùng
+                </Link>
+              </>
+            )}
             <Link
               href="/dashboard/favorites"
               aria-current={pathname?.startsWith('/dashboard/favorites') ? 'page' : undefined}
@@ -272,20 +277,24 @@ export default function Header() {
                 </Link>
               </>
             )}
-            <Link
-              href="/dashboard/categories"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg bg-amber-50 text-amber-800"
-            >
-              Quản trị Danh mục
-            </Link>
-            <Link
-              href="/dashboard/users"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg bg-blue-50 text-blue-800"
-            >
-              Người dùng & Tác giả
-            </Link>
+            {isAdmin && (
+              <>
+                <Link
+                  href="/dashboard/categories"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-lg bg-amber-50 text-amber-800"
+                >
+                  Quản trị Danh mục
+                </Link>
+                <Link
+                  href="/dashboard/users"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-lg bg-blue-50 text-blue-800"
+                >
+                  Người dùng & Tác giả
+                </Link>
+              </>
+            )}
             <Link
               href="/dashboard/favorites"
               onClick={() => setIsMobileMenuOpen(false)}

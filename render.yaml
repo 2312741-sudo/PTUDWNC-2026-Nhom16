@@ -24,6 +24,8 @@ services:
         value: culinary-blog
       - key: Jwt__Audience
         value: culinary-blog-client
+      - key: Authentication__Google__ClientId
+        sync: false
       # B2 (issue #21): Cấu hình MinIO/S3 trên Render. Cung cấp fallback changeme để không crash khi S3 chưa cấu hình trên Render dashboard.
       - key: Minio__Endpoint
         value: "localhost:9000"

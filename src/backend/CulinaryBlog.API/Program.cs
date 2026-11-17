@@ -314,6 +314,11 @@ builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document,
 builder.Services.AddControllers();
 var app = builder.Build();
 _ = app.Services.GetRequiredService<JwtSettings>();
+if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing") &&
+    string.IsNullOrWhiteSpace(builder.Configuration["Authentication:Google:ClientId"]))
+{
+    Log.Warning("Authentication:Google:ClientId chua duoc cau hinh; yeu cau dang nhap Google bang ID token that se bi tu choi (503).");
+}
 if (args.Contains("--migrate"))
 {
     using var scope = app.Services.CreateScope();
@@ -547,7 +552,7 @@ auth.MapPost("/forgot-password", async (ForgotPasswordCommand command, ISender s
 
 auth.MapPost("/google", async (GoogleLoginCommand command, ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(command, ct) }))
-    .WithName("GoogleLogin").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502);
+    .WithName("GoogleLogin").Produces<object>().ProducesValidationProblem().ProducesProblem(400).ProducesProblem(401).ProducesProblem(403).ProducesProblem(502).ProducesProblem(503);
 
 auth.MapGet("/users", async (ISender sender, CancellationToken ct) =>
     Results.Ok(new { data = await sender.Send(new GetUsersQuery(), ct) }))
