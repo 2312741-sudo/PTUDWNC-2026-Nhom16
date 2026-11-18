@@ -49,8 +49,8 @@ x-api-env: &api-env
   Jwt__SigningKey: ${JWT_SIGNING_KEY:?chua dat JWT_SIGNING_KEY - sinh bang openssl rand -base64 48}
   Jwt__Issuer: "culinary-blog"
   Jwt__Audience: "culinary-blog-client"
-  # Google OAuth Web Client ID (tuy chon cho staging; de trong thi Google login that se bi tu choi)
-  Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-}"
+  # Google OAuth Web Client ID (public client ID cho staging)
+  Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-757848098802-sn70ujlfbaf80mpancqc1btsacm1c9ls.apps.googleusercontent.com}"
   Authentication__Google__AllowDevTokens: "${GOOGLE_ALLOW_DEV_TOKENS:-false}"
   # W5-2.5 trace HTTP->DB: Seq dev chạy trên máy host (docker-compose.dev.yml, port 5341).
   # Trên server thật thay bằng URL Seq của môi trường staging.
@@ -194,7 +194,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: "http://localhost/api/v1"
         NEXT_PUBLIC_SITE_URL: "http://localhost"
-        NEXT_PUBLIC_GOOGLE_CLIENT_ID: "${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}"
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: "${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-757848098802-sn70ujlfbaf80mpancqc1btsacm1c9ls.apps.googleusercontent.com}"
     container_name: staging-culinary-frontend
     restart: unless-stopped
     depends_on:
@@ -208,7 +208,7 @@ services:
       # SSR/ISR trong container KHÔNG resolve được `localhost` (là chính nó) -> trỏ thẳng API nội bộ.
       API_INTERNAL_URL: "http://culinary-api:8080/api/v1"
       NEXT_PUBLIC_SITE_URL: "http://localhost"
-      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}"
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-757848098802-sn70ujlfbaf80mpancqc1btsacm1c9ls.apps.googleusercontent.com}"
     ports:
       - "3000:3000"
 

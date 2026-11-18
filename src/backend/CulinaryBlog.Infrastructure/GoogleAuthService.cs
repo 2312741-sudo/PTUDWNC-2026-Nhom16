@@ -69,7 +69,7 @@ public sealed class GoogleAuthService(
                 Picture: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150");
         }
 
-        var clientId = configuration["Authentication:Google:ClientId"];
+        var clientId = configuration["Authentication:Google:ClientId"]?.Trim();
         if (string.IsNullOrWhiteSpace(clientId))
         {
             logger.LogError("Thiếu cấu hình Authentication:Google:ClientId; từ chối xác thực Google ID Token để tránh bỏ qua kiểm tra Audience.");
