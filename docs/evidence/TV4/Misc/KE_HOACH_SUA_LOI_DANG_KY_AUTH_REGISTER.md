@@ -46,7 +46,7 @@ Sửa hai lỗi trên trang `/auth/register` đã xác định nguyên nhân tro
 | 5 | Đọc lỗi validation cả camelCase lẫn PascalCase; label password thêm "1 chữ thường" | `src/frontend/src/lib/api.ts`, `src/frontend/src/app/auth/register/page.tsx` | ✅ |
 | 6 | Cập nhật báo cáo: phần cảnh báo deploy Render/Vercel + trạng thái sau sửa | `docs/report/BAO_CAO_LOI_DANG_KY_GSI_VA_400.md` | ✅ |
 | 7 | Verify local: 4 bước CI backend, `tsc --noEmit`, `npm test`, `npm run build`, `docker compose config`, secret scan | — | ✅ (jest: 1 fail có sẵn trên `main`, xem §7) |
-| 8 | Commit → push origin → tạo PR (body có dẫn chứng Render) | — | ⬜ |
+| 8 | Commit → push origin → tạo PR (body có dẫn chứng Render) | — | ✅ — commit `627c5a0`, [PR #39](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/39) |
 
 ---
 
@@ -79,7 +79,7 @@ Phải chạy **sau khi** bản sửa được deploy lên Vercel; local không 
 
 ## 6. Tiêu chí hoàn thành
 
-- [ ] Code sửa xong, branch đẩy lên `origin`, PR đã mở với evidence Render trong body. *(chờ push/PR — cập nhật ở bước 8)*
+- [x] Code sửa xong, branch đẩy lên `origin`, PR đã mở với evidence Render trong body ([PR #39](https://github.com/2312741-sudo/PTUDWNC-2026-Nhom16/pull/39)).
 - [x] 4 bước backend CI xanh, **Failed = 0, Skipped = 0**.
 - [x] `npx tsc --noEmit`, `npm run build` xanh; `npm test` có 1 fail có sẵn trên `main` (§7).
 - [x] `docker compose -f docker-compose.dev.yml config --quiet` xanh.
