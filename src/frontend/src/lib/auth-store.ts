@@ -116,12 +116,22 @@ export const authStore = {
  * tự động re-render tức thì khi trạng thái đăng nhập thay đổi.
  */
 export function useAuthStore() {
-  const [state, setState] = useState<AuthState>(() => {
-    const initial = readStorage();
-    return {
-      ...initial,
-      isLoading: typeof window === 'undefined',
-    };
+  // Hydration an toàn: HTML server và lần render đầu tiên trên client PHẢI giống nhau.
+  // Không đọc localStorage ở đây — trên client initializer sẽ thấy token/user và render
+  // nhánh "đã đăng nhập", trong khi server render nhánh "chưa đăng nhập" → React báo
+  // hydration mismatch rồi dựng lại cả cây (Header.tsx:89). Đọc storage trong effect
+  // bên dưới, tức là chỉ sau khi component đã mount.
+  // Hydration an toàn: HTML server và lần render đầu tiên trên client PHẢI giống nhau.
+  // Không đọc localStorage ở đây — trên client initializer sẽ thấy token/user và render
+  // nhánh "đã đăng nhập", trong khi server render nhánh "chưa đăng nhập" → React báo
+  // hydration mismatch rồi dựng lại cả cây (Header.tsx:89). Đọc storage trong effect
+  // bên dưới, tức là chỉ sau khi component đã mount.
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    accessToken: null,
+    refreshToken: null,
+    isAuthenticated: false,
+    isLoading: true,
   });
 
   useEffect(() => {
