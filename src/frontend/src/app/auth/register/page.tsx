@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UtensilsCrossed, Mail, Lock, User, AtSign, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { register } from '@/lib/api';
@@ -52,12 +52,22 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleSuccess = (auth: any) => {
+  const handleGoogleSuccess = useCallback((auth: any) => {
     if (auth?.accessToken && auth?.user) {
       authStore.setAuth(auth);
     }
     router.push('/dashboard/profile');
-  };
+  }, [router]);
+
+  // Không truyền arrow function inline: dù GoogleSignInButton đã dùng ref, giữ callback ổn định
+  // giúp tránh re-render không cần thiết và khớp với effect khởi tạo GIS (initialize 1 lần).
+  const handleGoogleError = useCallback((err: string) => setErrorMessage(err), []);
+
+  // ApiExceptionHandler trả key camelCase ("password"/"fullName"); UI dùng PascalCase.
+  // Đọc cả hai dạng để không mất thông báo lỗi của bất kỳ field nào.
+  const errorOf = (field: string) =>
+    validationErrors[field]?.[0] ??
+    validationErrors[field.charAt(0).toLowerCase() + field.slice(1)]?.[0];
 
   return (
     <div className="flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-emerald-50/50 via-white to-gray-50/50">
@@ -105,8 +115,8 @@ export default function RegisterPage() {
                 className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-900"
               />
             </div>
-            {validationErrors.FullName && (
-              <p className="mt-1 text-xs text-red-500">{validationErrors.FullName[0]}</p>
+            {errorOf('FullName') && (
+              <p className="mt-1 text-xs text-red-500">{errorOf('FullName')}</p>
             )}
           </div>
 
@@ -126,8 +136,8 @@ export default function RegisterPage() {
                 className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-900"
               />
             </div>
-            {validationErrors.UserName && (
-              <p className="mt-1 text-xs text-red-500">{validationErrors.UserName[0]}</p>
+            {errorOf('UserName') && (
+              <p className="mt-1 text-xs text-red-500">{errorOf('UserName')}</p>
             )}
           </div>
 
@@ -147,15 +157,15 @@ export default function RegisterPage() {
                 className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-gray-900"
               />
             </div>
-            {validationErrors.Email && (
-              <p className="mt-1 text-xs text-red-500">{validationErrors.Email[0]}</p>
+            {errorOf('Email') && (
+              <p className="mt-1 text-xs text-red-500">{errorOf('Email')}</p>
             )}
           </div>
 
           {/* Password */}
           <div>
             <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
-              Mật khẩu (Tối thiểu 8 ký tự, 1 hoa, 1 số, 1 ký tự đặc biệt)
+              Mật khẩu (Tối thiểu 8 ký tự, 1 hoa, 1 thường, 1 số, 1 ký tự đặc biệt)
             </label>
             <div className="relative">
               <Lock className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -175,8 +185,8 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {validationErrors.Password && (
-              <p className="mt-1 text-xs text-red-500">{validationErrors.Password[0]}</p>
+            {errorOf('Password') && (
+              <p className="mt-1 text-xs text-red-500">{errorOf('Password')}</p>
             )}
           </div>
 
@@ -232,7 +242,7 @@ export default function RegisterPage() {
           initialEmail={email}
           buttonText="Đăng ký nhanh bằng Google"
           onSuccess={handleGoogleSuccess}
-          onError={(err) => setErrorMessage(err)}
+          onError={handleGoogleError}
         />
 
         {/* Footer Link */}

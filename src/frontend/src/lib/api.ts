@@ -519,6 +519,23 @@ export async function login(
   }
 }
 
+/**
+ * ApiExceptionHandler.cs trả lỗi validation với key camelCase (`password`, `fullName`, ...)
+ * trong khi các trang form đọc PascalCase (`Password`, `FullName`, ...). Chuẩn hóa cả hai
+ * dạng để thông báo lỗi cụ thể không bị nuốt khi chỉ còn title chung "Dữ liệu không hợp lệ.".
+ */
+function normalizeValidationErrors(
+  errors?: Record<string, string[]>
+): Record<string, string[]> | undefined {
+  if (!errors) return undefined;
+  const normalized: Record<string, string[]> = { ...errors };
+  for (const [key, messages] of Object.entries(errors)) {
+    const pascalCase = key.charAt(0).toUpperCase() + key.slice(1);
+    normalized[pascalCase] = messages;
+  }
+  return normalized;
+}
+
 export async function register(
   data: import('@/types/auth').RegisterRequest
 ): Promise<{ success: boolean; data?: import('@/types/auth').AuthResponse; error?: string; validationErrors?: Record<string, string[]> }> {
@@ -537,7 +554,7 @@ export async function register(
       return {
         success: false,
         error: result.detail || result.title || 'Đăng ký tài khoản thất bại.',
-        validationErrors: result.errors,
+        validationErrors: normalizeValidationErrors(result.errors),
       };
     }
 
