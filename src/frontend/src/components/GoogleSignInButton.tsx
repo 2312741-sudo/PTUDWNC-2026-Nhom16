@@ -44,6 +44,18 @@ export default function GoogleSignInButton({
   const isDev = process.env.NODE_ENV !== 'production';
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
+  // Giữ callback mới nhất qua ref để effect khởi tạo GIS KHÔNG phụ thuộc vào identity của
+  // onSuccess/onError. Nếu đưa chúng vào dependency, mỗi lần form đăng ký re-render (vd. gõ
+  // 1 ký tự) sẽ gọi lại initialize()/prompt() → GSI_LOGGER + FedCM NotAllowedError.
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  const promptedClientIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+  }, [onSuccess, onError]);
+
   // Initialize client ID & API URL from localStorage only in Dev mode if not configured in env
   useEffect(() => {
     if (typeof window !== 'undefined' && isDev) {
@@ -73,26 +85,26 @@ export default function GoogleSignInButton({
       if (res.success && res.data) {
         authStore.setAuth(res.data);
         setShowDevModal(false);
-        onSuccess?.(res.data);
+        onSuccessRef.current?.(res.data);
       } else {
         const msg = res.error || 'Đăng nhập Google không thành công.';
-        if (onError) {
-          onError(msg);
+        if (onErrorRef.current) {
+          onErrorRef.current(msg);
         } else {
           setErrorMsg(msg);
         }
       }
     } catch (err: any) {
       const msg = err.message || 'Lỗi kết nối tới hệ thống xác thực Google.';
-      if (onError) {
-        onError(msg);
+      if (onErrorRef.current) {
+        onErrorRef.current(msg);
       } else {
         setErrorMsg(msg);
       }
     } finally {
       setLoading(false);
     }
-  }, [onSuccess, onError]);
+  }, []);
 
   // Google GIS callback
   const handleGoogleCredentialResponse = useCallback((response: any) => {
@@ -100,11 +112,11 @@ export default function GoogleSignInButton({
     if (!idToken) {
       const msg = 'Không nhận được Google ID Token hợp lệ từ Google Identity Services.';
       setErrorMsg(msg);
-      onError?.(msg);
+      onErrorRef.current?.(msg);
       return;
     }
     handleAuthPayload(idToken);
-  }, [handleAuthPayload, onError]);
+  }, [handleAuthPayload]);
 
   // Load Google Identity Services (GIS) Web SDK
   useEffect(() => {
@@ -161,8 +173,12 @@ export default function GoogleSignInButton({
         width: 380,
       });
 
-      // Prompt One Tap if supported
-      window.google.accounts.id.prompt();
+      // Prompt One Tap tối đa 1 lần cho mỗi clientId. Gọi lại khi component re-render
+      // khiến FedCM từ chối: "Only one navigator.credentials.get request may be outstanding at one time".
+      if (promptedClientIdRef.current !== clientId) {
+        promptedClientIdRef.current = clientId;
+        window.google.accounts.id.prompt();
+      }
     } catch (err) {
       console.warn('Google Identity Services render error:', err);
     }
